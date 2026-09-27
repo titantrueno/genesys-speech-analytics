@@ -4,7 +4,8 @@ from datetime import date
 import pytest
 
 from app import auth
-from app.data.catalog import AGENTS_BY_QUEUE, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUES
+from app import ids
+from app.data.catalog import AGENT_IDS, AGENTS_BY_QUEUE, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS, QUEUES
 from app.data.generator import generate_dataset
 
 DATASET = {c.id: c for c in generate_dataset(seed=42, reference_date=date(2026, 9, 27))}
@@ -35,8 +36,10 @@ def test_default_list_matches_default_summary_volume(api):
 
 def test_list_item_has_spec_columns_and_full_summary(api):
     item = api.get("/api/conversations", params=PERIOD).json()["items"][0]
-    assert set(item) >= {"id", "started_at", "channel", "queue", "agent", "main_topic", "main_topic_label",
-                         "summary", "sentiment", "resolution", "csat", "duration_s"}
+    assert set(item) >= {"id", "started_at", "channel", "queue", "queue_id", "agent", "agent_id", "main_topic",
+                         "main_topic_label", "summary", "sentiment", "resolution", "csat", "duration_s"}
+    assert ids.is_valid(item["id"], ids.CONVERSATION)
+    assert item["queue_id"] == QUEUE_IDS[item["queue"]] and item["agent_id"] == AGENT_IDS[item["agent"]]
     source = DATASET[item["id"]]
     assert item["summary"] == source.analysis.summary
     assert item["main_topic_label"] == MAIN_TOPICS[source.analysis.main_topic].name
@@ -114,15 +117,27 @@ def test_detail_returns_full_conversation(api):
     assert body["main_topic_label"] == MAIN_TOPICS[source.analysis.main_topic].name
 
 
-def test_detail_unknown_id_returns_404(api):
-    assert api.get("/api/conversations/CNV-999999").status_code == 404
+@pytest.mark.parametrize("value", [
+    "CNV-999999", "no-es-un-id", ids.stable_id(ids.CONVERSATION, "no existe"),
+    "1CU-" + list(DATASET)[0][4:],
+])
+def test_detail_unknown_or_malformed_id_returns_404(api, value):
+    assert api.get(f"/api/conversations/{value}").status_code == 404
+
+
+def test_detail_accepts_lowercase_id(api):
+    conv_id = list(DATASET)[10]
+    response = api.get(f"/api/conversations/{conv_id.lower()}")
+    assert response.status_code == 200
+    assert response.json()["id"] == conv_id
 
 
 def test_catalog_lists_filter_values(api):
     body = api.get("/api/catalog").json()
-    assert [q for q in body["queues"]] == QUEUES
+    assert body["queues"] == [{"id": QUEUE_IDS[q], "name": q} for q in QUEUES]
     assert {t["code"]: t["name"] for t in body["main_topics"]} == {c: t.name for c, t in MAIN_TOPICS.items()}
     assert {a["name"] for a in body["agents"]} == {a for agents in AGENTS_BY_QUEUE.values() for a in agents}
+    assert all(a["id"] == AGENT_IDS[a["name"]] and a["queue_id"] == QUEUE_IDS[a["queue"]] for a in body["agents"])
     assert {c["code"] for c in body["compliance_checks"]} == set(COMPLIANCE_CHECKS)
     assert {c["code"] for c in body["channels"]} == {"voz", "chat"}
     assert {r["code"] for r in body["resolutions"]} == {"resuelta", "no_resuelta", "escalada"}
@@ -141,6 +156,7 @@ def test_catalog_available_to_dashboards_only_role_but_list_is_not(api):
 @pytest.mark.parametrize("params", [
     {"page": 0}, {"page_size": 500}, {"sort": "color"}, {"order": "up"},
     {"resolution": "quizas"}, {"churn_risk": "enorme"}, {"compliant": "tal vez"},
+    {"queue": "Particulares"}, {"agent": "Sergio Molina"},
 ])
 def test_invalid_list_parameters_return_422(api, params):
     assert api.get("/api/conversations", params=params).status_code == 422

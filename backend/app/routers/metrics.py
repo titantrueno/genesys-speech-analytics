@@ -20,6 +20,12 @@ KpiCode = Literal[
 DIMENSIONS = {
     "main_topic": lambda c: c.analysis.main_topic,
     "channel": lambda c: c.channel,
+    "queue": lambda c: c.queue_id,
+    "agent": lambda c: c.agent_id,
+}
+LABELS = {
+    "main_topic": lambda c: MAIN_TOPICS[c.analysis.main_topic].name,
+    "channel": lambda c: c.channel,
     "queue": lambda c: c.queue,
     "agent": lambda c: c.agent,
 }
@@ -87,9 +93,7 @@ def breakdown(
     for c in convs:
         groups[DIMENSIONS[dimension](c)].append(c)
     items = [
-        {"key": key,
-         "label": MAIN_TOPICS[key].name if dimension == "main_topic" else key,
-         "kpis": compute_kpis(group, followups)}
+        {"key": key, "label": LABELS[dimension](group[0]), "kpis": compute_kpis(group, followups)}
         for key, group in groups.items()
     ]
     items.sort(key=lambda i: (-i["kpis"]["volume"], i["label"]))

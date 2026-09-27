@@ -4,6 +4,7 @@ from typing import Literal
 
 from fastapi import Depends, HTTPException, Query, status
 
+from app import ids
 from app.data.store import followup_index, reference_date
 from app.models import Conversation
 
@@ -29,8 +30,8 @@ class ConversationFilters:
         return (
             (date_from or self.date_from) <= day <= (date_to or self.date_to)
             and (self.channel is None or conv.channel == self.channel)
-            and (not self.queues or conv.queue in self.queues)
-            and (not self.agents or conv.agent in self.agents)
+            and (not self.queues or conv.queue_id in self.queues)
+            and (not self.agents or conv.agent_id in self.agents)
             and (not self.main_topics or conv.analysis.main_topic in self.main_topics)
             and (not self.resolutions or conv.analysis.resolution in self.resolutions)
             and (not self.churn_risks or conv.analysis.churn_risk in self.churn_risks)
@@ -64,7 +65,17 @@ def conversation_filters(
     date_from = date_from or date_to - timedelta(days=DEFAULT_PERIOD_DAYS - 1)
     if date_from > date_to:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="'from' debe ser anterior o igual a 'to'")
-    return ConversationFilters(date_from, date_to, channel, queue, agent, main_topic)
+    return ConversationFilters(date_from, date_to, channel, _entity_ids(queue, ids.QUEUE, "queue"),
+                               _entity_ids(agent, ids.AGENT, "agent"), main_topic)
+
+
+def _entity_ids(values: list[str], prefix: str, param: str) -> list[str]:
+    normalized = [ids.normalize(v) for v in values]
+    invalid = [v for v in normalized if not ids.is_valid(v, prefix)]
+    if invalid:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT,
+                            detail=f"'{param}' espera identificadores {prefix}-UUID: {', '.join(invalid)}")
+    return normalized
 
 
 def conversation_list_filters(

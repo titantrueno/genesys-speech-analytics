@@ -17,7 +17,7 @@ La plataforma necesita que el acceso a cada sección dependa del rol del usuario
 ## Decisión
 
 - Hay usuarios demo en memoria, uno por rol base (`admin`, `supervisor`, `analista`, `viewer`), con una contraseña demo compartida documentada solo en el código y el README del backend.
-- El token es propio: payload JSON con `sub` y `exp` en base64url, firmado con HMAC-SHA256. El secreto sale de `AUTH_SECRET` (por defecto, un valor solo para desarrollo) y la caducidad de `AUTH_TOKEN_TTL_SECONDS` (8 h por defecto).
+- El token es propio: payload JSON con `sub` (identificador `1US-UUID` del usuario, ver [ADR-004](adr-004-identificadores-con-prefijo-y-uuid.md)) y `exp` en base64url, firmado con HMAC-SHA256. El secreto sale de `AUTH_SECRET` (por defecto, un valor solo para desarrollo) y la caducidad de `AUTH_TOKEN_TTL_SECONDS` (8 h por defecto).
 - En cada petición se vuelve a leer el usuario, así que desactivarlo o cambiar los permisos de su rol surte efecto sin emitir un token nuevo.
 - Los permisos son granulares: `dashboards:view`, `conversations:view`, `explorer:use`, `search:use`, `flows:view`, `flows:edit`, `config:view`, `config:edit` y `users:admin`.
 - Toda ruta de datos usa la dependencia única `require_permission(...)`, que acepta uno o varios permisos alternativos (por ejemplo, el catálogo de filtros sirve con `dashboards:view` o con `conversations:view`). Dos tests recorren el esquema OpenAPI:

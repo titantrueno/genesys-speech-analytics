@@ -5,7 +5,7 @@ import pytest
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
-from app import auth
+from app import auth, ids
 from app.main import app
 
 PUBLIC_ROUTES = {"/api/health", "/api/auth/login"}
@@ -51,6 +51,8 @@ def test_login_with_valid_credentials_returns_token_and_user(client):
     assert body["token_type"] == "bearer"
     assert body["access_token"]
     assert body["user"]["role"] == "analista"
+    assert ids.is_valid(body["user"]["id"], ids.USER)
+    assert body["user"]["id"] == ids.stable_id(ids.USER, DEMO_USERS["analista"])
     assert set(body["user"]["permissions"]) == EXPECTED_MATRIX["analista"]
 
 

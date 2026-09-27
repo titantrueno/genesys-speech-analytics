@@ -4,8 +4,9 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.auth import require_permission
-from app.data.catalog import AGENTS_BY_QUEUE, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUES
-from app.data.store import get_dataset
+from app import ids
+from app.data.catalog import AGENT_IDS, AGENTS_BY_QUEUE, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS, QUEUES
+from app.data.store import conversation_index, get_dataset
 from app.services.filters import ConversationFilters, conversation_list_filters
 
 router = APIRouter(prefix="/api", tags=["conversations"])
@@ -22,7 +23,9 @@ def _list_item(conv) -> dict:
         "id": conv.id,
         "started_at": conv.started_at,
         "channel": conv.channel,
+        "queue_id": conv.queue_id,
         "queue": conv.queue,
+        "agent_id": conv.agent_id,
         "agent": conv.agent,
         "main_topic": conv.analysis.main_topic,
         "main_topic_label": MAIN_TOPICS[conv.analysis.main_topic].name,
@@ -57,7 +60,7 @@ def list_conversations(
 
 @router.get("/conversations/{conversation_id}", dependencies=[Depends(require_permission("conversations:view"))])
 def get_conversation(conversation_id: str) -> dict:
-    conv = next((c for c in get_dataset() if c.id == conversation_id), None)
+    conv = conversation_index().get(ids.normalize(conversation_id))
     if conv is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
     return {**conv.model_dump(), "main_topic_label": MAIN_TOPICS[conv.analysis.main_topic].name}
@@ -67,8 +70,9 @@ def get_conversation(conversation_id: str) -> dict:
 def catalog() -> dict:
     return {
         "channels": [{"code": "voz", "label": "Voz"}, {"code": "chat", "label": "Chat"}],
-        "queues": QUEUES,
-        "agents": [{"name": name, "queue": queue} for queue, names in AGENTS_BY_QUEUE.items() for name in names],
+        "queues": [{"id": QUEUE_IDS[name], "name": name} for name in QUEUES],
+        "agents": [{"id": AGENT_IDS[name], "name": name, "queue_id": QUEUE_IDS[queue], "queue": queue}
+                   for queue, names in AGENTS_BY_QUEUE.items() for name in names],
         "main_topics": [{"code": t.code, "name": t.name} for t in MAIN_TOPICS.values()],
         "compliance_checks": [{"code": code, "label": label} for code, label in COMPLIANCE_CHECKS.items()],
         "resolutions": [{"code": "resuelta", "label": "Resuelta"}, {"code": "no_resuelta", "label": "No resuelta"},

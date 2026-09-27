@@ -6,7 +6,9 @@ from statistics import mean
 
 import pytest
 
-from app.data.catalog import MAIN_TOPICS
+from app import ids
+
+from app.data.catalog import AGENT_IDS, MAIN_TOPICS, QUEUE_IDS
 from app.data.generator import generate_dataset
 
 REF = date(2026, 9, 27)
@@ -30,8 +32,8 @@ def select(date_from, date_to, channel=None, queues=None, agents=None, topics=No
         c for c in DATASET
         if date_from <= c.started_at.date() <= date_to
         and (channel is None or c.channel == channel)
-        and (not queues or c.queue in queues)
-        and (not agents or c.agent in agents)
+        and (not queues or c.queue_id in queues)
+        and (not agents or c.agent_id in agents)
         and (not topics or c.analysis.main_topic in topics)
     ]
 
@@ -89,10 +91,10 @@ def test_summary_default_period_is_last_30_days(api):
     ({}, {}),
     ({"from": "2026-07-01", "to": "2026-08-15", "channel": "chat", "main_topic": "cargo_no_reconocido"},
      {"channel": "chat", "topics": ["cargo_no_reconocido"]}),
-    ({"from": "2026-09-01", "to": "2026-09-20", "queue": ["Tarjetas", "Fraude y seguridad"]},
-     {"queues": ["Tarjetas", "Fraude y seguridad"]}),
-    ({"from": "2026-08-01", "to": "2026-09-26", "agent": "Irene Vidal", "channel": "voz"},
-     {"agents": ["Irene Vidal"], "channel": "voz"}),
+    ({"from": "2026-09-01", "to": "2026-09-20", "queue": [QUEUE_IDS["Tarjetas"], QUEUE_IDS["Fraude y seguridad"]]},
+     {"queues": [QUEUE_IDS["Tarjetas"], QUEUE_IDS["Fraude y seguridad"]]}),
+    ({"from": "2026-08-01", "to": "2026-09-26", "agent": AGENT_IDS["Irene Vidal"], "channel": "voz"},
+     {"agents": [AGENT_IDS["Irene Vidal"]], "channel": "voz"}),
 ])
 def test_summary_matches_independent_calculation(api, params, filters):
     body = api.get("/api/metrics/summary", params=params).json()
@@ -163,7 +165,7 @@ def test_breakdown_sums_to_total_and_matches(api, dimension):
     assert sum(volumes) == len(convs)
 
     attr = {"main_topic": lambda c: c.analysis.main_topic, "channel": lambda c: c.channel,
-            "queue": lambda c: c.queue, "agent": lambda c: c.agent}[dimension]
+            "queue": lambda c: c.queue_id, "agent": lambda c: c.agent_id}[dimension]
     groups = defaultdict(list)
     for c in convs:
         groups[attr(c)].append(c)
@@ -172,6 +174,9 @@ def test_breakdown_sums_to_total_and_matches(api, dimension):
     assert_kpis_match(top["kpis"], expected_kpis(groups[top["key"]]))
     if dimension == "main_topic":
         assert all(i["label"] == MAIN_TOPICS[i["key"]].name for i in items)
+    names = {"queue": {v: k for k, v in QUEUE_IDS.items()}, "agent": {v: k for k, v in AGENT_IDS.items()}}
+    if dimension in names:
+        assert all(i["label"] == names[dimension][i["key"]] for i in items)
 
 
 def test_filters_by_main_topic_affect_all_metrics(api):
@@ -186,13 +191,16 @@ def test_filters_by_main_topic_affect_all_metrics(api):
     ("/api/metrics/timeseries", {"kpi": "volume", "granularity": "hora"}),
     ("/api/metrics/summary", {"from": "2026-09-10", "to": "2026-09-01"}),
     ("/api/metrics/summary", {"channel": "fax"}),
+    ("/api/metrics/summary", {"queue": "Tarjetas"}),
+    ("/api/metrics/summary", {"agent": "Irene Vidal"}),
+    ("/api/metrics/breakdown", {"dimension": "queue", "queue": QUEUE_IDS["Tarjetas"].replace("1QU", "1AG")}),
 ])
 def test_invalid_parameters_return_422(api, path, params):
     assert api.get(path, params=params).status_code == 422
 
 
 def test_empty_selection_returns_nulls_not_errors(api):
-    body = api.get("/api/metrics/summary", params={"agent": "Nadie Existe"}).json()
+    body = api.get("/api/metrics/summary", params={"agent": ids.stable_id(ids.AGENT, "Nadie Existe")}).json()
     values = kpi_map(body["kpis"])
     assert values["volume"] == 0
     assert values["csat_avg"] is None

@@ -34,3 +34,8 @@ def followup_index() -> dict[str, bool]:
         nxt = bisect_right(starts, conv.started_at)
         index[conv.id] = nxt < len(starts) and starts[nxt] <= conv.started_at + FCR_WINDOW
     return index
+
+
+@cache
+def conversation_index() -> dict[str, Conversation]:
+    return {conv.id: conv for conv in get_dataset()}
