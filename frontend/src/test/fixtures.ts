@@ -126,3 +126,57 @@ export const conversationRoutes = {
   'GET /api/conversations': ({ url }: { url: string }) => ({ status: 200, body: conversationListFixture(url) }),
   'GET /api/catalog': () => ({ status: 200, body: catalogFixture }),
 }
+
+export const conversationDetailFixture = {
+  id: 'CNV-000005',
+  channel: 'chat',
+  started_at: '2026-06-29T13:27:01',
+  duration_s: 494,
+  queue: 'Fraude y seguridad',
+  agent: 'Sergio Molina',
+  customer_id: 'CLI-00123',
+  main_topic_label: 'Cargo no reconocido',
+  turns: [
+    { speaker: 'bot', text: 'Hola, soy el asistente virtual de Banco Horizonte. ¿En qué puedo ayudarle?', offset_s: 0, sentiment: 0.1 },
+    { speaker: 'cliente', text: 'Hola, me ha aparecido un cargo de 366,12 € en TiendaYa Online que no reconozco.', offset_s: 2, sentiment: -0.5 },
+    { speaker: 'sistema', text: 'Sergio se ha unido a la conversación.', offset_s: 60, sentiment: 0 },
+    { speaker: 'agente', text: 'Hola, soy Sergio de Banco Horizonte. Ya he leído su consulta, lo reviso ahora mismo.', offset_s: 63, sentiment: 0.26 },
+    { speaker: 'cliente', text: 'No, nadie más la usa y la tengo aquí conmigo.', offset_s: 142, sentiment: -0.54 },
+    { speaker: 'agente', text: 'De acuerdo, voy a marcar el movimiento como posible fraude y abrir una reclamación.', offset_s: 159, sentiment: 0.44 },
+    { speaker: 'cliente', text: 'Pues vaya, tendré que ir a comisaría.', offset_s: 358, sentiment: -0.66 },
+    { speaker: 'sistema', text: 'La conversación ha finalizado.', offset_s: 491, sentiment: 0 },
+  ],
+  analysis: {
+    summary: 'La clienta escribe porque no reconoce un cargo de 366,12 € en TiendaYa Online. El agente revisa el movimiento y lo marca como posible fraude. Queda pendiente de que aporte la denuncia para abrir la reclamación.',
+    main_topic: 'cargo_no_reconocido',
+    secondary_topics: ['devolución', 'reiteración del problema'],
+    sentiment: -0.67,
+    sentiment_timeline: [0.1, -0.5, 0, 0.26, -0.54, 0.44, -0.66, 0],
+    resolution: 'no_resuelta',
+    csat: 1.3,
+    effort: 4.4,
+    churn_risk: 'alto',
+    compliance: { saludo: true, verificacion_identidad: false, proteccion_datos: true, no_solicitar_pin: true, bloqueo_preventivo: null, despedida: true },
+    entities: [{ type: 'importe', value: '366,12 €' }, { type: 'comercio', value: 'TiendaYa Online' }],
+    keywords: ['no reconozco', 'fraude'],
+  },
+}
+
+export const detailCatalog = {
+  ...catalogFixture,
+  compliance_checks: [
+    { code: 'saludo', label: 'Saludo e identificación del agente' },
+    { code: 'verificacion_identidad', label: 'Verificación de identidad del cliente' },
+    { code: 'proteccion_datos', label: 'Aviso de protección de datos' },
+    { code: 'no_solicitar_pin', label: 'No solicitar PIN ni claves completas' },
+    { code: 'bloqueo_preventivo', label: 'Ofrecimiento de bloqueo preventivo en casos de fraude' },
+    { code: 'despedida', label: 'Despedida con resumen de la gestión' },
+  ],
+}
+
+export const detailRoutes = {
+  ...conversationRoutes,
+  'GET /api/catalog': () => ({ status: 200, body: detailCatalog }),
+  'GET /api/conversations/CNV-000005': () => ({ status: 200, body: conversationDetailFixture }),
+  'GET /api/conversations/CNV-999999': () => ({ status: 404, body: { detail: 'Conversación no encontrada' } }),
+}

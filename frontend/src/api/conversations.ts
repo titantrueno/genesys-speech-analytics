@@ -49,3 +49,43 @@ export function useConversations(query: ConversationQuery) {
     placeholderData: keepPreviousData,
   })
 }
+
+export interface Turn {
+  speaker: 'cliente' | 'agente' | 'bot' | 'sistema'
+  text: string
+  offset_s: number
+  sentiment: number
+}
+
+export interface ConversationDetail {
+  id: string
+  channel: Channel
+  started_at: string
+  duration_s: number
+  queue: string
+  agent: string
+  customer_id: string
+  main_topic_label: string
+  turns: Turn[]
+  analysis: {
+    summary: string
+    main_topic: string
+    secondary_topics: string[]
+    sentiment: number
+    sentiment_timeline: number[]
+    resolution: Resolution
+    csat: number
+    effort: number
+    churn_risk: 'bajo' | 'medio' | 'alto'
+    compliance: Record<string, boolean | null>
+    entities: Array<{ type: 'importe' | 'producto' | 'fecha' | 'comercio'; value: string }>
+    keywords: string[]
+  }
+}
+
+export function useConversation(id: string) {
+  return useQuery({
+    queryKey: ['conversation', id],
+    queryFn: ({ signal }) => apiRequest<ConversationDetail>(`/api/conversations/${encodeURIComponent(id)}`, { signal }),
+  })
+}

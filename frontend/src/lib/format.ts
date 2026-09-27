@@ -50,3 +50,7 @@ export function trendOf(kpi: Pick<KpiSummary, 'delta' | 'higher_is_better'>): Tr
 export function formatShortDate(iso: string): string {
   return shortDate.format(new Date(`${iso}T00:00:00Z`))
 }
+
+export function formatOffset(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}

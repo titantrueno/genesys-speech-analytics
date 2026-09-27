@@ -8,6 +8,7 @@ import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { DashboardsIndex, DashboardsPage } from './dashboards/DashboardsPage'
 import { ConversationsPage } from './conversations/ConversationsPage'
+import { ConversationDetailPage } from './conversations/ConversationDetailPage'
 
 export type AppRouter = ReturnType<typeof createBrowserRouter>
 
@@ -18,6 +19,7 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
   ],
   '/conversaciones': [
     { index: true, element: <ConversationsPage /> },
+    { path: ':conversationId', element: <ConversationDetailPage /> },
   ],
 }
 
