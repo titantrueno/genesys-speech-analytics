@@ -35,3 +35,6 @@ No hay entradas afectadas salvo la nueva de patrones de interfaz. El criterio 23
 |---|---|---|
 | T1 | Hecha | `npm test`: 66 tests en verde (rojo previo: 11 fallos). Clic en cada una de las 10 columnas abre el detalle conservando `state.from`; el enlace de la fecha navega una sola vez; la fila no tiene `role` ni `tabindex` y mantiene un único enlace. |
 | T2 | Hecha | `npm test`: 70 tests en verde (rojo previo: 4 fallos). Ctrl+clic, Cmd+clic y clic central llaman a `window.open(detalle, '_blank', 'noopener')` sin navegar; con texto seleccionado no se navega. |
+| T3 | Hecha | Entrada `vault/ingenieria/patrones-de-interfaz.md` enlazada; auditoría `0`. En Chrome contra la API real: el clic en la celda del summary abre el detalle; volver restaura `?resolution=escalada&page=2&sort=sentiment&order=asc`; Ctrl/Cmd+clic abre una pestaña nueva sin mover la actual; arrastrar para seleccionar texto no navega; sin errores de consola. |
+
+**FE007 completada.** Siguiente: FE001 T9.
