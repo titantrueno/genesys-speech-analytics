@@ -12,3 +12,16 @@
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
+
+:root {
+  --chart-surface: #fcfcfb;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-muted: #898781;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --diverging-negative: #e34948;
+  --diverging-positive: #2a78d6;
+  --status-good-text: #006300;
+  --status-critical: #d03b3b;
+}
