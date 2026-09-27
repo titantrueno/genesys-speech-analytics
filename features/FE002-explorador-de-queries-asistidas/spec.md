@@ -1,44 +1,99 @@
 # FE002 — Explorador de queries asistidas
 
-> Estado: **pendiente de aprobación**. Depende de FE001 (API, datos mock, listado y detalle).
+> Estado: **pendiente de aprobación** (revisada el 2026-09-27 tras la entrega de `v0.1.0`). Depende de FE001, FE007 y FE008.
 
 ## Objetivo
 
-Permitir filtrar en tiempo real las conversaciones de un intervalo mediante un constructor de consultas asistido, con resultados y agregados que se actualizan al instante.
+Permitir filtrar en tiempo real las conversaciones de un intervalo mediante un constructor de consultas asistido (visual y en lenguaje natural), con recuento, KPIs y listado que se actualizan al instante.
+
+## Modelo de consulta
+
+```json
+{
+  "from": "2026-09-01",
+  "to": "2026-09-26",
+  "root": {
+    "op": "and",
+    "conditions": [
+      { "field": "channel", "operator": "is", "value": "chat" },
+      { "op": "or", "conditions": [
+        { "field": "sentiment", "operator": "lt", "value": -0.3 },
+        { "field": "resolution", "operator": "is", "value": "escalada" }
+      ]}
+    ]
+  }
+}
+```
+
+- Un grupo (`and` / `or`) contiene condiciones o grupos, con un máximo de **2 niveles** de anidamiento.
+- El intervalo es obligatorio. Por defecto son los últimos 30 días hasta la fecha de referencia del backend.
+
+## Campos y operadores
+
+| Tipo | Campos | Operadores |
+|---|---|---|
+| Categórico | canal, cola (`1QU-…`), agente (`1AG-…`), main topic, tema secundario, resolución, riesgo de abandono | `is`, `is_not`, `in`, `not_in` |
+| Numérico | sentimiento (-1..1), CSAT predicho (1–5), esfuerzo (1–5), duración (s), nº de turnos | `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `between` |
+| Check de cumplimiento | uno por check (saludo, verificación de identidad…) | `passes`, `fails`, `not_applicable` |
+| Texto | summary; transcripción (opcionalmente limitada a un hablante: cliente, agente o bot) | `contains`, `not_contains` (sin distinguir mayúsculas ni tildes) |
+| Booleano | recontacto en 7 días | `is` |
 
 ## Criterios de aceptación
 
-1. La sección **Explorador** muestra un selector de intervalo, un constructor de condiciones y un panel de resultados.
-2. Cada condición combina campo, operador y valor. Los campos cubren canal, cola, agente, main topic, tema secundario, summary (texto), sentimiento, resolución, CSAT predicho, esfuerzo, riesgo de abandono, duración, nº de turnos, check de cumplimiento, hablante y texto contenido.
-3. Los operadores dependen del tipo del campo: numérico (`=`, `≠`, `>`, `≥`, `<`, `≤`, `entre`), categórico (`es`, `no es`, `en`) y texto (`contiene`, `no contiene`). `GET /api/query/schema` expone el esquema y un test valida que el front solo ofrece operadores válidos para cada tipo.
-4. **Asistencia:** el valor de un campo categórico se autocompleta con los valores reales del intervalo y su recuento (`GET /api/query/suggest`).
-5. Las condiciones se agrupan con `Y` / `O`, con al menos un nivel de anidamiento.
-6. **Tiempo real:** al añadir, editar o quitar una condición, el recuento, el listado y los agregados se recalculan sin pulsar un botón, en menos de 1 s desde el último cambio (debounce ≤ 300 ms y respuesta de API < 500 ms).
-7. **Consulta en lenguaje natural asistida:** un campo de texto convierte frases sencillas en condiciones editables antes de ejecutarlas. Por ejemplo, «chats negativos de cargos no reconocidos escalados» produce `canal = chat`, `sentimiento < -0,3`, `main topic = cargo_no_reconocido` y `resolución = escalada`. El intérprete es mock basado en reglas, y hay un test con al menos 10 frases de ejemplo y sus condiciones esperadas.
-8. La consulta se muestra también en texto legible (p. ej. `canal = chat Y sentimiento < -0,3`) y se refleja en la URL, que se puede compartir.
-9. El panel de resultados muestra el recuento, un mini-resumen de KPIs de FE001 sobre el subconjunto y el listado reutilizando el componente de FE001. Al pulsar una fila se abre el detalle tipo chat.
-10. Las consultas se pueden guardar con un nombre, listar, cargar y borrar (persistencia en memoria del backend).
-11. Una consulta sin resultados muestra un estado vacío con la sugerencia de quitar la última condición.
-12. Las pruebas de backend cubren cada operador y la combinación `Y`/`O`, comparando con un filtrado independiente del dataset.
+### Backend
+
+1. `GET /api/query/schema` devuelve los campos con tipo, etiqueta, operadores válidos y, en los categóricos, los valores posibles con etiqueta. Cola y agente muestran el nombre y guardan el identificador.
+2. `POST /api/query/run` valida la consulta y devuelve `422` con un mensaje por condición si un campo, operador o valor no es válido (incluidos identificadores de otro tipo o más de 2 niveles de anidamiento). En caso contrario devuelve el total, los 13 KPIs de FE001 sobre el subconjunto y una página del listado (25, con el orden de FE001).
+3. Cada operador de cada tipo y la combinación `and`/`or` con anidamiento dan el mismo resultado que un filtrado independiente del dataset escrito en el test.
+4. `GET /api/query/suggest?field=&from=&to=` devuelve los valores de un campo categórico presentes en el intervalo, con su recuento y ordenados de mayor a menor.
+5. `POST /api/query/interpret` convierte una frase en español en una consulta editable, sin ejecutarla, e indica qué partes de la frase no ha entendido. Es un intérprete mock basado en reglas y sinónimos del dominio bancario. Hay un test con **al menos 12 frases** y su consulta esperada; por ejemplo, «chats negativos de cargos no reconocidos escalados» → `canal is chat`, `sentimiento lt -0,3`, `main topic is cargo_no_reconocido` y `resolución is escalada`.
+6. **Consultas guardadas:**
+   - se pueden crear (nombre y consulta), listar, obtener, renombrar y borrar;
+   - tienen identificador `1QY` (se activa en el registro de prefijos);
+   - pertenecen al usuario que las crea: otro usuario recibe `404` al acceder a ellas;
+   - se guardan en memoria.
+7. Todas las rutas exigen el permiso `explorer:use`; los tests que recorren las rutas de FE001 lo verifican automáticamente.
+8. `POST /api/query/run` responde en menos de 500 ms con 10 condiciones sobre el dataset completo.
+
+### Front
+
+9. La sección **Explorador** muestra el intervalo, el campo de lenguaje natural, el constructor de condiciones y el panel de resultados.
+10. En el constructor se añaden, editan y quitan condiciones y grupos `Y`/`O`. Para cada campo solo se ofrecen los operadores válidos de su tipo, y el control de valor se adapta: selector con sugerencias y recuento, número, rango o texto.
+11. **Tiempo real:** cualquier cambio vuelve a ejecutar la consulta sin pulsar un botón. Hay un debounce de 300 ms y las respuestas antiguas nunca sustituyen a una más reciente (test con respuestas desordenadas). Mientras se recalcula, se mantiene el resultado anterior atenuado.
+12. **Lenguaje natural:** al enviar una frase, las condiciones interpretadas se cargan en el constructor para revisarlas, y las partes no entendidas se muestran como aviso.
+13. La consulta se muestra en texto legible (`canal es Chat Y (sentimiento < -0,3 O resolución es Escalada)`) y se guarda en la URL, de modo que recargar o compartir el enlace reproduce la misma consulta.
+14. El panel de resultados muestra el recuento, las tarjetas de KPI de FE001 y el listado de FE001, con paginación, orden y fila navegable (patrón de FE007). Volver desde el detalle restaura la consulta.
+15. Las consultas guardadas se listan, se cargan en el constructor, se renombran y se borran desde la sección.
+16. Estados: cargando, error de la API (aviso sin bloquear el constructor) y sin resultados (sugerencia de quitar la última condición).
+
+### Calidad
+
+17. `./scripts/ci.sh` en verde.
+18. Verificación en Chrome contra la API real: construir, interpretar, guardar y recargar una consulta; el total del explorador coincide con el del listado de FE001 para una consulta expresable con sus filtros.
 
 ## Conocimiento afectado
 
-- [Glosario](../../vault/glosario/terminos-del-harness.md): hay que añadir «query asistida» y la notación de condiciones.
-- La nueva entrada de arquitectura de la plataforma (creada en FE001) debe incluir el motor de filtrado y el intérprete de lenguaje natural mock.
+- [Registro de identificadores](../../vault/ingenieria/registro-de-identificadores.md): activar `1QY`.
+- [Arquitectura de la plataforma](../../vault/arquitectura/arquitectura-de-la-plataforma.md): añadir el motor de consultas, el modelo de consulta y el intérprete mock.
+- [Glosario](../../vault/glosario/terminos-del-harness.md): añadir «query asistida», «condición» y «grupo».
+- [Lecciones de la construcción](../../vault/aprendizaje/lecciones-construccion-plataforma.md): revisar al planificar (estados de error, fechas de referencia, respuestas desordenadas).
+- [Revisión de FE001](../FE001-base-dashboards-y-detalle-conversaciones/REVIEW.md), hallazgo R9: el campo de check de cumplimiento permite ver las conversaciones que fallan un check concreto. Documentarlo al entregar.
 
 ## Alcance
 
-- API de esquema, sugerencias, ejecución de consultas y consultas guardadas.
-- Constructor visual de condiciones con grupos, intérprete de lenguaje natural por reglas y panel de resultados en tiempo real.
+- API de esquema, sugerencias, ejecución, interpretación y consultas guardadas.
+- Sección Explorador con constructor visual, lenguaje natural, resultados en tiempo real y consultas guardadas.
 
 ## Fuera de alcance
 
-- Intérprete de lenguaje natural basado en un LLM real.
-- Lenguaje de consulta escrito a mano por el usuario (tipo SQL).
-- Compartir consultas entre usuarios o gestionar permisos por consulta.
-- Alertas programadas sobre una consulta.
+- Intérprete basado en un LLM real.
+- Lenguaje de consulta escrito a mano (tipo SQL).
+- Compartir consultas entre usuarios, permisos por consulta y alertas programadas.
+- Persistencia entre reinicios.
+- Convertir una consulta en un dashboard.
 
 ## Riesgos y asunciones
 
-- **Asunción:** «tiempo real» significa que el resultado se actualiza al cambiar el filtro, no streaming de conversaciones nuevas.
-- **Riesgo:** un intérprete por reglas solo cubre frases previsibles. La UI siempre muestra las condiciones generadas para que el usuario las revise.
+- **Asunción:** «tiempo real» significa recalcular al cambiar la consulta, no recibir conversaciones nuevas en streaming.
+- **Riesgo:** un intérprete por reglas solo cubre frases previsibles. Se mitiga porque nunca ejecuta directamente, siempre muestra las condiciones para revisarlas, e indica lo que no entendió.
+- **Riesgo:** una consulta en la URL puede ser larga. Se serializa en JSON compacto codificado en base64url en un único parámetro `q`, y se valida al cargar.
