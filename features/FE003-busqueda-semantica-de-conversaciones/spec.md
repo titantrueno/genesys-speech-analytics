@@ -20,7 +20,7 @@ Encontrar conversaciones por significado y no solo por palabras exactas, llegand
 
 ## Conocimiento afectado
 
-- [Decisiones](../../vault/decisiones/Index.md): hay que crear ADR-004 (búsqueda vectorial ligera sustituible por embeddings reales).
+- [Decisiones](../../vault/decisiones/Index.md): hay que crear ADR-005 (búsqueda vectorial ligera sustituible por embeddings reales).
 - La nueva entrada de arquitectura de la plataforma debe incluir el índice, la interfaz `SearchEngine` y el diccionario de sinónimos.
 - [Glosario](../../vault/glosario/terminos-del-harness.md): hay que añadir «búsqueda semántica», «fragmento» y «puntuación de similitud».
 
@@ -36,5 +36,5 @@ Encontrar conversaciones por significado y no solo por palabras exactas, llegand
 
 ## Riesgos y asunciones
 
-- **Riesgo:** TF-IDF más sinónimos es una aproximación léxica. La calidad «semántica» depende del diccionario, y para el piloto real habrá que migrar a embeddings (ADR-004).
+- **Riesgo:** TF-IDF más sinónimos es una aproximación léxica. La calidad «semántica» depende del diccionario, y para el piloto real habrá que migrar a embeddings (ADR-005).
 - **Asunción:** el dataset mock contiene frases variadas por main topic bancario, de modo que la búsqueda tiene sentido.

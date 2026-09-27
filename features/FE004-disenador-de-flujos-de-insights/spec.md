@@ -27,7 +27,7 @@ Diseñar visualmente, con cajas drag & drop, flujos que toman una muestra de con
 
 - [Glosario](../../vault/glosario/terminos-del-harness.md): hay que añadir «flujo de insights», «sampling», «nodo» y «ejecución».
 - La nueva entrada de arquitectura de la plataforma debe incluir el formato JSON del flujo y el motor de ejecución simulado.
-- [Decisiones](../../vault/decisiones/Index.md): hay que crear ADR-005 (ejecución de prompts simulada y punto de extensión para un LLM real).
+- [Decisiones](../../vault/decisiones/Index.md): hay que crear ADR-006 (ejecución de prompts simulada y punto de extensión para un LLM real).
 
 ## Alcance
 
