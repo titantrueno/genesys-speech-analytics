@@ -38,3 +38,5 @@ No hay entradas afectadas salvo la nueva de patrones de interfaz. El criterio 23
 | T3 | Hecha | Entrada `vault/ingenieria/patrones-de-interfaz.md` enlazada; auditoría `0`. En Chrome contra la API real: el clic en la celda del summary abre el detalle; volver restaura `?resolution=escalada&page=2&sort=sentiment&order=asc`; Ctrl/Cmd+clic abre una pestaña nueva sin mover la actual; arrastrar para seleccionar texto no navega; sin errores de consola. |
 
 **FE007 completada.** Siguiente: FE001 T9.
+
+**Ciclo cerrado:** [VERIFY](VERIFY.md) · [REVIEW](REVIEW.md) · [SHIP](SHIP.md). Entregada en `v0.1.0`.

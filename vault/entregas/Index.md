@@ -14,4 +14,4 @@ Mantener la trazabilidad entre cambios enviados, evidencia de verificación y co
 
 ## Estado inicial
 
-Todavía no hay entregas registradas. `/ship` crea aquí una entrada por feature que enlaza su carpeta `features/FEXXX-descripcion-breve/`.
+- [Plataforma v0.1.0: dashboards, drill-down y detalle de conversaciones](2026-09-27-plataforma-v0-1-0.md) — FE001, FE007 y FE008.

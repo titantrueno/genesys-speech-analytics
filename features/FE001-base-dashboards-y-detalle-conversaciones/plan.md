@@ -184,3 +184,5 @@ frontend/
 | T9 | Hecha | READMEs de raíz, backend y front. Vault: propósito en `active`, nueva arquitectura de la plataforma (con la limitación del FCR en los últimos 7 días), glosario de producto, comandos en el ciclo de entrega, onboarding. `AGENTS.md` con los comandos reales. Carga diferida del dashboard: bundle principal de 741 kB a 397 kB y chunk de dashboards de 369 kB. Verificación final: backend 101 tests, front 70 tests, lint sin avisos, build sin aviso de tamaño, auditoría `0`, enlaces de los READMEs correctos. Prueba de humo en Chrome contra el build de producción: 11/11 comprobaciones sin errores de consola. |
 
 **FE001 completada (fase `/build`).** Siguiente fase del ciclo: `/test` (`VERIFY.md`), después `/review` y `/ship`.
+
+**Ciclo cerrado:** [VERIFY](VERIFY.md) · [REVIEW](REVIEW.md) · [SHIP](SHIP.md). Entregada en `v0.1.0`.

@@ -36,6 +36,8 @@ Entra con cualquiera de los usuarios demo que aparecen en la pantalla de login (
 
 ## Verificación
 
+`./scripts/ci.sh` ejecuta todos los gates (vault, tests, lint, build y auditoría de dependencias) y termina con código distinto de 0 si alguno falla. La misma pipeline está en `.github/workflows/ci.yml`. Por separado:
+
 ```bash
 cd backend && .venv/bin/pytest          # tests de la API
 cd frontend && npm test && npm run lint && npm run build
@@ -46,7 +48,7 @@ python3 scripts/audit_vault.py          # desde la raíz
 
 | Feature | Estado |
 |---|---|
-| FE001 Base, dashboards y detalle de conversaciones | Implementada |
-| FE007 Fila completa abre el detalle | Implementada |
-| FE008 Identificadores con prefijo y UUID | Implementada |
+| FE001 Base, dashboards y detalle de conversaciones | Entregada en `v0.1.0` |
+| FE007 Fila completa abre el detalle | Entregada en `v0.1.0` |
+| FE008 Identificadores con prefijo y UUID | Entregada en `v0.1.0` |
 | FE002–FE006 Explorador, búsqueda semántica, flujos, configuración, usuarios y roles | Especificadas (aparecen como «Próximamente») |

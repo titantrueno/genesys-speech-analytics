@@ -30,6 +30,7 @@
 
 ## Verificación
 
+- Gate completo antes de entregar: `./scripts/ci.sh` (código 0 obligatorio).
 - Backend: `cd backend && .venv/bin/pytest`.
 - Front: `cd frontend && npm test && npm run lint && npm run build`.
 - Para cambios de UI, arranca la API y la web (ver `README.md`) y comprueba el comportamiento en un navegador, no solo con tests.

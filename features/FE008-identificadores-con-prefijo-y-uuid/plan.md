@@ -81,3 +81,5 @@ Usos de identificadores antiguos localizados: `backend/app/auth.py`, `backend/ap
 | T4 | Hecha | `npm test`: 54 tests en verde (rojo previo: 3 fallos); tipos y lint limpios. Catálogo `{id, name}`, selectores de cola y agente por identificador con etiqueta de nombre, chips con nombre, identificador abreviado en el listado y completo en el detalle. En Chrome contra la API real, 7 drill-downs coinciden con los mismos valores que antes de FE008, incluido uno nuevo por cola (57 = 57), y el detalle abre con el identificador en minúsculas. |
 
 **FE008 completada.** Siguiente: FE007.
+
+**Ciclo cerrado:** [VERIFY](VERIFY.md) · [REVIEW](REVIEW.md) · [SHIP](SHIP.md). Entregada en `v0.1.0`.
