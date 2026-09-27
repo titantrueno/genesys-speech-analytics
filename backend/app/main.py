@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from app.routers import auth as auth_router
+
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Speech & Text Analytics API")
@@ -8,6 +10,7 @@ def create_app() -> FastAPI:
     def health() -> dict:
         return {"status": "ok"}
 
+    app.include_router(auth_router.router)
     return app
 
 

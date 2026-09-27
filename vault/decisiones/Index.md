@@ -16,3 +16,4 @@ Registrar decisiones relevantes, el contexto que las motivó y sus consecuencias
 
 - [ADR-001 — Markdown versionado y compatible con Obsidian](adr-001-markdown-y-obsidian.md)
 - [ADR-002 — Stack Vite + FastAPI con datos mock deterministas](adr-002-stack-vite-fastapi-mock.md)
+- [ADR-003 — Autenticación mock con permisos por rol](adr-003-auth-mock-por-roles.md)

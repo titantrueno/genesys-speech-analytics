@@ -174,3 +174,4 @@ frontend/
 | Id | Estado | Evidencia |
 |---|---|---|
 | T1 | Hecha | `backend/.venv/bin/pytest`: 12 tests en verde (rojo previo: 7 fallos por falta de datos, health y catálogo); auditoría del vault `0`. |
+| T2 | Hecha | `pytest`: 28 tests en verde (rojo previo: 15 fallos con stub de auth). Prueba de mutación: una ruta sin auth y otra solo con login rompen los tests de recorrido OpenAPI. Auditoría del vault `0`. |
