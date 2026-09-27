@@ -6,7 +6,8 @@ import { ComingSoonPage } from './pages/ComingSoonPage'
 import { HomeRedirect } from './pages/HomeRedirect'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
-import { DashboardsIndex, DashboardsPage } from './dashboards/DashboardsPage'
+import { DashboardsIndex } from './dashboards/DashboardsIndex'
+import { LoadingScreen } from './layout/LoadingScreen'
 import { ConversationsPage } from './conversations/ConversationsPage'
 import { ConversationDetailPage } from './conversations/ConversationDetailPage'
 
@@ -15,7 +16,11 @@ export type AppRouter = ReturnType<typeof createBrowserRouter>
 const SECTION_ROUTES: Record<string, RouteObject[]> = {
   '/dashboards': [
     { index: true, element: <DashboardsIndex /> },
-    { path: ':dashboardId', element: <DashboardsPage /> },
+    {
+      path: ':dashboardId',
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./dashboards/DashboardsPage')).DashboardsPage }),
+    },
   ],
   '/conversaciones': [
     { index: true, element: <ConversationsPage /> },

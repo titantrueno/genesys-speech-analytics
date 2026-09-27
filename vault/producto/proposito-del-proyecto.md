@@ -1,9 +1,9 @@
 ---
 title: "Propósito del proyecto"
 type: knowledge
-status: draft
+status: active
 owners: [equipo-del-proyecto]
-tags: [producto, pendiente]
+tags: [producto, speech-analytics, banca]
 created: 2026-09-27
 updated: 2026-09-27
 ---
@@ -12,19 +12,25 @@ updated: 2026-09-27
 
 ## Resumen
 
-**Hecho:** el proyecto se llama `genesys-speech-analytics` y todavía no contiene código de aplicación; solo el harness de trabajo (skills, vault y auditoría).
+**Hecho:** `genesys-speech-analytics` es una plataforma web de speech & text analytics para la **atención al cliente de un banco**. Analiza conversaciones a partir de **transcripciones de llamadas y chats**; nunca trabaja con grabaciones de audio.
 
-**Hipótesis:** por su nombre, el proyecto trabajará con analítica de voz sobre Genesys. Debe confirmarlo el propietario antes de tratarlo como hecho.
+## Usuarios y necesidad
 
-## Pendiente de definir
+Supervisores, analistas de calidad y responsables de experiencia de cliente necesitan:
 
-- Problema de negocio que resuelve y resultado esperado.
-- Usuarios y necesidades principales.
-- Alcance inicial y fuera de alcance.
-- Restricciones (datos, privacidad, plataforma, plazos).
+- ver KPIs agregados de la atención (volumen, resolución, escalado, FCR, satisfacción y esfuerzo predichos, cumplimiento, riesgo de abandono);
+- bajar de un KPI al listado de conversaciones que lo explican y a cada conversación, leída como un chat, con su análisis (summary, main topic, sentimiento, cumplimiento);
+- en fases posteriores: consultas asistidas, búsqueda semántica, flujos de generación de insights con prompts, configuración de la plataforma y gestión de usuarios y roles.
 
-Completa esta entrada, o crea la primera spec con `/spec`, y cambia `status` a `active` cuando esté respaldada por evidencia.
+## Alcance actual
+
+- **Implementado:** FE001 (dashboards, drill-down, listado y detalle), FE007 (fila clicable) y FE008 (identificadores `PREFIJO-UUID`).
+- **Especificado:** FE002 a FE006.
+- **Decisión:** en esta fase el backend solo sirve **datos mock** generados de forma determinista ([ADR-002](../decisiones/adr-002-stack-vite-fastapi-mock.md)). El catálogo de motivos de contacto está en el [catálogo de main topics](catalogo-de-main-topics.md).
+- **Hipótesis:** el catálogo de main topics y la lista de KPIs cubren las necesidades de un contact center bancario. Hay que validarlos con datos reales antes de integrar Genesys.
 
 ## Fuentes
 
-- [Instrucciones del proyecto](../../AGENTS.md)
+- [README del proyecto](../../README.md)
+- [Spec FE001](../../features/FE001-base-dashboards-y-detalle-conversaciones/spec.md)
+- [Specs de features](../../features/README.md)

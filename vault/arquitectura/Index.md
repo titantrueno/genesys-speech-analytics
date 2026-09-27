@@ -14,4 +14,5 @@ Describir la estructura técnica del proyecto, sus límites y la relación entre
 
 ## Estado inicial
 
+- [Arquitectura de la plataforma](arquitectura-de-la-plataforma.md)
 - [Arquitectura del harness](arquitectura-del-harness.md)

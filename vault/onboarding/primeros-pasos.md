@@ -12,10 +12,10 @@ updated: 2026-09-27
 
 ## Para personas
 
-1. Lee las [instrucciones del proyecto](../../AGENTS.md).
+1. Lee el [README del proyecto](../../README.md) para arrancar la API y la web, y las [instrucciones del proyecto](../../AGENTS.md).
 2. Recorre el [índice del vault](../Home.md).
 3. Consulta el [gobierno](../Governance.md) antes de crear conocimiento.
-4. Familiarízate con la [arquitectura](../arquitectura/arquitectura-del-harness.md), la [decisión inicial](../decisiones/adr-001-markdown-y-obsidian.md) y el [glosario](../glosario/terminos-del-harness.md).
+4. Familiarízate con la [arquitectura de la plataforma](../arquitectura/arquitectura-de-la-plataforma.md), la [del harness](../arquitectura/arquitectura-del-harness.md), la [decisión inicial](../decisiones/adr-001-markdown-y-obsidian.md) y el [glosario](../glosario/terminos-del-harness.md).
 5. Usa `/spec → /plan → /build → /test → /review → /ship` para ejecutar un cambio; su documentación vive en `features/FEXXX-descripcion-breve/`.
 
 ## Para agentes

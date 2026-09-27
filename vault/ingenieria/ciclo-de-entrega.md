@@ -34,6 +34,19 @@ updated: 2026-09-27
 - `/review` clasifica conocimiento faltante o desactualizado.
 - `/ship` actualiza entradas permanentes y registra la entrega en `vault/entregas/`.
 
+## Comandos del proyecto
+
+| Qué | Comando |
+|---|---|
+| Arrancar la API | `cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000` |
+| Arrancar la web | `cd frontend && npm run dev` |
+| Tests del backend | `cd backend && .venv/bin/pytest` |
+| Tests del front | `cd frontend && npm test` |
+| Lint y build del front | `cd frontend && npm run lint && npm run build` |
+| Auditoría del vault | `python3 scripts/audit_vault.py` |
+
+La primera vez hay que crear el entorno del backend (`python3 -m venv backend/.venv && backend/.venv/bin/pip install -r backend/requirements.txt`) e instalar el front (`cd frontend && npm install`).
+
 ## Regla operativa
 
 No se avanza cuando falta evidencia para superar el gate de la fase. Una tarea de build debe demostrar la transición rojo → verde y mantenerse separada de las siguientes.
@@ -41,6 +54,7 @@ No se avanza cuando falta evidencia para superar el gate de la fase. Una tarea d
 ## Fuentes
 
 - [Instrucciones del proyecto](../../AGENTS.md)
+- [README del proyecto](../../README.md)
 - [Skill spec](../../.devin/skills/spec/SKILL.md)
 - [Skill build](../../.devin/skills/build/SKILL.md)
 - [Skill test](../../.devin/skills/test/SKILL.md)

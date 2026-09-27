@@ -1,14 +1,9 @@
-import { Navigate, NavLink, useLocation, useParams } from 'react-router'
+import { NavLink, useParams } from 'react-router'
 import { useSummary } from '../api/metrics'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { DASHBOARDS } from './definitions'
 import { FilterBar } from './FilterBar'
 import { useDashboardFilters } from './useDashboardFilters'
-
-export function DashboardsIndex() {
-  const { search } = useLocation()
-  return <Navigate to={`${DASHBOARDS[0].id}${search}`} replace />
-}
 
 export function DashboardsPage() {
   const { dashboardId } = useParams()

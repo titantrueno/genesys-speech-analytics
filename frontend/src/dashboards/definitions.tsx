@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { DEFAULT_DASHBOARD_ID } from './DashboardsIndex'
 import { BreakdownBars, BreakdownTable, ChannelSplit, ComplianceChecks, KpiRow, TimeseriesWidget } from './widgets'
 
 export interface DashboardDefinition {
@@ -10,7 +11,7 @@ export interface DashboardDefinition {
 
 export const DASHBOARDS: DashboardDefinition[] = [
   {
-    id: 'vision-general',
+    id: DEFAULT_DASHBOARD_ID,
     title: 'Visión general',
     description: 'Volumen, resolución y satisfacción de la atención al cliente.',
     render: () => (

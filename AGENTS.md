@@ -30,5 +30,7 @@
 
 ## Verificación
 
-- Ejecuta `python -m unittest discover -v` para correr las pruebas del proyecto cuando existan tests.
+- Backend: `cd backend && .venv/bin/pytest`.
+- Front: `cd frontend && npm test && npm run lint && npm run build`.
+- Para cambios de UI, arranca la API y la web (ver `README.md`) y comprueba el comportamiento en un navegador, no solo con tests.
 - Ejecuta `python scripts/audit_vault.py` para validar enlaces, metadatos, entradas huérfanas y posibles secretos. Un código distinto de `0` bloquea el avance.
