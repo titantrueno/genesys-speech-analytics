@@ -14,10 +14,11 @@ const dateTime = new Intl.DateTimeFormat('es-ES', { dateStyle: 'long', timeStyle
 function BackLink() {
   const location = useLocation()
   const from = (location.state as { from?: Pick<Location, 'pathname' | 'search'> } | null)?.from
-  const to = from?.pathname === '/conversaciones' ? `/conversaciones${from.search}` : '/conversaciones'
+  const toExplorer = from?.pathname === '/explorador'
+  const to = from && (toExplorer || from.pathname === '/conversaciones') ? `${from.pathname}${from.search}` : '/conversaciones'
   return (
     <Link to={to} className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
-      <ArrowLeft className="size-4" aria-hidden />Volver al listado
+      <ArrowLeft className="size-4" aria-hidden />{toExplorer ? 'Volver al explorador' : 'Volver al listado'}
     </Link>
   )
 }

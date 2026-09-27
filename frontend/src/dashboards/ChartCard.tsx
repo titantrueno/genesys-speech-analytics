@@ -1,11 +1,7 @@
 import { useState, type ReactNode } from 'react'
 
-export function LoadError() {
-  return (
-    <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-      No se han podido cargar los datos. Revisa los filtros o prueba a limpiarlos.
-    </p>
-  )
+export function LoadError({ message = 'No se han podido cargar los datos. Revisa los filtros o prueba a limpiarlos.' }: { message?: string }) {
+  return <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>
 }
 
 interface Props {

@@ -1,9 +1,15 @@
 import { useMemo } from 'react'
+import type { KpiSummary } from '../api/metrics'
+import { ConversationTable, Pagination } from '../conversations/ConversationTable'
+import { nextSort } from '../conversations/sorting'
+import { LoadError } from '../dashboards/ChartCard'
+import { KpiTile } from '../dashboards/KpiTile'
+import { formatInteger } from '../lib/format'
 import { ApiError } from '../api/client'
 import { LoadingScreen } from '../layout/LoadingScreen'
 import { useQuerySchema } from './api'
 import { GroupEditor, type GroupHandlers } from './GroupEditor'
-import { useDebouncedValue, useQueryRun } from './hooks'
+import { useDebouncedValue, useQueryRun, type QueryRunResponse } from './hooks'
 import {
   addCondition, addGroup, newCondition, pathFromApi, pruneIncomplete, queryToText, removeNode, replaceCondition, setGroupOp,
   type ExplorerQuery, type QuerySchema,
@@ -25,7 +31,7 @@ function validationErrors(error: unknown, toOriginal: Map<string, number[]>): Ma
 }
 
 function Explorer({ schema }: { schema: QuerySchema }) {
-  const { query, invalidLink, setQuery, page, sort, order } = useExplorerState()
+  const { query, invalidLink, setQuery, page, sort, order, setListing } = useExplorerState()
   const pruned = useMemo(() => pruneIncomplete(query, schema), [query, schema])
   const debounced = useDebouncedValue(pruned.query, 300)
   const run = useQueryRun(debounced, { page, sort, order })
@@ -72,8 +78,59 @@ function Explorer({ schema }: { schema: QuerySchema }) {
           <span>{queryToText(query, schema)}</span>
         </p>
       </div>
-      {run.data && <p className="text-sm text-slate-600">{run.data.total} conversaciones</p>}
+      <Results run={run} validation={errors.size > 0} sort={sort} order={order} page={page}
+        onSort={(key) => setListing(nextSort({ sort, order }, key))}
+        onPage={(next) => setListing({ page: next })}
+        onRemoveLast={query.root.conditions.length > 0 ? () => edit(removeNode(query, [query.root.conditions.length - 1])) : undefined} />
     </div>
+  )
+}
+
+const RESULT_KPIS = ['volume', 'aht_s', 'resolution_rate', 'escalation_rate', 'csat_avg', 'sentiment_avg']
+
+function Results({ run, validation, sort, order, page, onSort, onPage, onRemoveLast }: {
+  run: ReturnType<typeof useQueryRun>
+  validation: boolean
+  sort: Parameters<typeof nextSort>[0]['sort']
+  order: Parameters<typeof nextSort>[0]['order']
+  page: number
+  onSort: (key: Parameters<typeof nextSort>[1]) => void
+  onPage: (page: number) => void
+  onRemoveLast?: () => void
+}) {
+  const data: QueryRunResponse | undefined = run.data
+  const kpis = (data?.kpis ?? []).filter((k) => RESULT_KPIS.includes(k.code))
+    .map((k): KpiSummary => ({ ...k, previous: null, delta: null, delta_pct: null }))
+  return (
+    <section aria-label="Resultados" className="space-y-3">
+      {validation && <p className="text-sm text-red-700">Revisa las condiciones marcadas.</p>}
+      {run.isError && !validation && <LoadError message="No se han podido cargar los resultados." />}
+      {!data && run.isPending && <p role="status" className="text-sm text-slate-500">Cargando resultados…</p>}
+      {data && (
+        <>
+          <p className="text-sm font-medium text-slate-700">
+            {formatInteger(data.total)} {data.total === 1 ? 'conversación' : 'conversaciones'}
+          </p>
+          {data.total > 0 && (
+            <div className={`grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6 ${run.isFetching ? 'opacity-60' : ''}`}>
+              {kpis.map((kpi) => <KpiTile key={kpi.code} kpi={kpi} comparison={false} />)}
+            </div>
+          )}
+          <ConversationTable items={data.items} sort={sort} order={order} onSort={onSort} dimmed={run.isFetching}
+            empty={
+              <div className="space-y-2 py-10 text-center text-sm text-slate-500">
+                <p>No hay conversaciones que cumplan la consulta.</p>
+                {onRemoveLast && (
+                  <button type="button" onClick={onRemoveLast} className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50">
+                    Quitar la última condición
+                  </button>
+                )}
+              </div>
+            } />
+          <Pagination page={page} pages={data.pages} onPage={onPage} />
+        </>
+      )}
+    </section>
   )
 }
 

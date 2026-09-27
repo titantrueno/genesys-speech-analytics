@@ -18,7 +18,8 @@ export const USERS: Record<'admin' | 'viewer' | 'analista', User> = {
   },
 }
 
-type Handler = (init: RequestInit & { url: string }) => { status: number; body?: unknown }
+type Reply = { status: number; body?: unknown }
+type Handler = (init: RequestInit & { url: string }) => Reply | Promise<Reply>
 
 export function mockApi(routes: Record<string, Handler>) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
@@ -26,7 +27,7 @@ export function mockApi(routes: Record<string, Handler>) {
     const key = `${init.method ?? 'GET'} ${new URL(url, 'http://localhost').pathname}`
     const handler = routes[key]
     if (!handler) return new Response(JSON.stringify({ detail: `sin mock: ${key}` }), { status: 404 })
-    const { status, body } = handler({ ...init, url })
+    const { status, body } = await handler({ ...init, url })
     return new Response(body === undefined ? null : JSON.stringify(body), {
       status, headers: { 'Content-Type': 'application/json' },
     })

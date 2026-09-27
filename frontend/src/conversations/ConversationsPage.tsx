@@ -1,21 +1,14 @@
-import type { MouseEvent } from 'react'
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, MessageSquareText, Phone, X } from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router'
-import { useConversations, type ConversationListItem, type ConversationQuery, type SortKey, type SortOrder } from '../api/conversations'
+import { X } from 'lucide-react'
+import { useConversations, type ConversationQuery, type SortKey } from '../api/conversations'
 import { useCatalog } from '../api/metrics'
 import { FilterBar } from '../dashboards/FilterBar'
 import { useDashboardFilters } from '../dashboards/useDashboardFilters'
-import { formatDecimal, formatDuration, formatInteger, shortId } from '../lib/format'
-import { activeFilterChips, CHANNEL_LABELS } from './labels'
-import { ResolutionBadge, SentimentValue } from './badges'
+import { formatInteger } from '../lib/format'
+import { ConversationTable, Pagination } from './ConversationTable'
+import { nextSort } from './sorting'
+import { activeFilterChips } from './labels'
 
 const PAGE_SIZE = 25
-const dateTime = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-
-function firstSentence(text: string): string {
-  const match = text.match(/^.*?[.!?](?=\s|$)/)
-  return match ? match[0] : text
-}
 
 function useConversationQuery(): ConversationQuery {
   const { filters, params } = useDashboardFilters()
@@ -34,74 +27,6 @@ function useConversationQuery(): ConversationQuery {
   }
 }
 
-function SortHeader({ label, sortKey, query, onSort }: {
-  label: string; sortKey: SortKey; query: ConversationQuery; onSort: (key: SortKey) => void
-}) {
-  const active = query.sort === sortKey
-  const Icon = !active ? ArrowUpDown : query.order === 'asc' ? ArrowUp : ArrowDown
-  return (
-    <th scope="col" aria-sort={active ? (query.order === 'asc' ? 'ascending' : 'descending') : undefined} className="px-2.5 py-2 font-medium">
-      <button type="button" onClick={() => onSort(sortKey)} className={`inline-flex items-center gap-1 ${active ? 'text-slate-900' : ''} hover:text-slate-900`}>
-        {label}
-        <Icon className="size-3.5" aria-hidden />
-      </button>
-    </th>
-  )
-}
-
-const INTERACTIVE = 'a, button, input, select, textarea, label'
-
-function Row({ item }: { item: ConversationListItem }) {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const href = `/conversaciones/${item.id}`
-  const ChannelIcon = item.channel === 'voz' ? Phone : MessageSquareText
-
-  const openInNewTab = () => window.open(href, '_blank', 'noopener')
-
-  function onRowClick(event: MouseEvent<HTMLTableRowElement>) {
-    if ((event.target as Element).closest(INTERACTIVE)) return
-    if (window.getSelection()?.toString()) return
-    if (event.ctrlKey || event.metaKey) {
-      openInNewTab()
-      return
-    }
-    navigate(href, { state: { from: location } })
-  }
-
-  function onRowAuxClick(event: MouseEvent<HTMLTableRowElement>) {
-    if (event.button !== 1 || (event.target as Element).closest(INTERACTIVE)) return
-    event.preventDefault()
-    openInNewTab()
-  }
-
-  return (
-    <tr onClick={onRowClick} onAuxClick={onRowAuxClick} className="cursor-pointer border-b border-slate-100 align-top hover:bg-brand-50/60">
-      <td className="px-2.5 py-2.5 whitespace-nowrap">
-        <Link to={href} state={{ from: location }} className="font-medium text-brand-700 hover:underline">
-          {dateTime.format(new Date(item.started_at))}
-        </Link>
-        <p className="font-mono text-[11px] text-slate-400" title={item.id}>{shortId(item.id)}</p>
-      </td>
-      <td className="px-2.5 py-2.5 whitespace-nowrap">
-        <span className="inline-flex items-center gap-1.5 text-slate-700"><ChannelIcon className="size-3.5 text-slate-400" aria-hidden />{CHANNEL_LABELS[item.channel]}</span>
-      </td>
-      <td className="px-2.5 py-2.5 text-slate-700">{item.queue}</td>
-      <td className="px-2.5 py-2.5 text-slate-700">{item.agent}</td>
-      <td className="px-2.5 py-2.5">
-        <span className="inline-block rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{item.main_topic_label}</span>
-      </td>
-      <td className="min-w-56 px-2.5 py-2.5 text-slate-600">
-        <span title={item.summary} className="line-clamp-2">{firstSentence(item.summary)}</span>
-      </td>
-      <td className="px-2.5 py-2.5 text-right whitespace-nowrap text-slate-700 tabular-nums">{formatDuration(item.duration_s)}</td>
-      <td className="px-2.5 py-2.5 whitespace-nowrap"><SentimentValue value={item.sentiment} /></td>
-      <td className="px-2.5 py-2.5"><ResolutionBadge resolution={item.resolution} /></td>
-      <td className="px-2.5 py-2.5 text-right text-slate-700 tabular-nums">{formatDecimal(item.csat, 2)}</td>
-    </tr>
-  )
-}
-
 export function ConversationsPage() {
   const { update, params } = useDashboardFilters()
   const query = useConversationQuery()
@@ -110,9 +35,9 @@ export function ConversationsPage() {
   const chips = activeFilterChips(params, catalog)
 
   function onSort(key: SortKey) {
-    const order: SortOrder = query.sort === key && query.order === 'desc' ? 'asc' : 'desc'
-    const isDefault = key === 'date' && order === 'desc'
-    update({ sort: isDefault ? undefined : key, order: isDefault ? undefined : order })
+    const next = nextSort(query, key)
+    const isDefault = next.sort === 'date' && next.order === 'desc'
+    update({ sort: isDefault ? undefined : next.sort, order: isDefault ? undefined : next.order })
   }
   const goToPage = (page: number) => update({ page: page > 1 ? String(page) : undefined })
 
@@ -139,43 +64,9 @@ export function ConversationsPage() {
         </ul>
       )}
       {isError && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">No se han podido cargar las conversaciones.</p>}
-      <div className={`overflow-x-auto rounded-xl border border-slate-200 bg-white transition-opacity ${isFetching ? 'opacity-60' : ''}`}>
-        <table aria-label="Conversaciones" className="w-full text-sm">
-          <thead className="border-b border-slate-200 bg-slate-50 text-left text-xs text-slate-500">
-            <tr>
-              <SortHeader label="Fecha" sortKey="date" query={query} onSort={onSort} />
-              <th scope="col" className="px-2.5 py-2 font-medium">Canal</th>
-              <th scope="col" className="px-2.5 py-2 font-medium">Cola</th>
-              <th scope="col" className="px-2.5 py-2 font-medium">Agente</th>
-              <th scope="col" className="px-2.5 py-2 font-medium">Main topic</th>
-              <th scope="col" className="px-2.5 py-2 font-medium">Summary</th>
-              <SortHeader label="Duración" sortKey="duration" query={query} onSort={onSort} />
-              <SortHeader label="Sentimiento" sortKey="sentiment" query={query} onSort={onSort} />
-              <th scope="col" className="px-2.5 py-2 font-medium">Resolución</th>
-              <th scope="col" className="px-2.5 py-2 text-right font-medium">CSAT</th>
-            </tr>
-          </thead>
-          <tbody>{data?.items.map((item) => <Row key={item.id} item={item} />)}</tbody>
-        </table>
-        {data && data.total === 0 && (
-          <p className="py-12 text-center text-sm text-slate-500">No hay conversaciones con estos filtros. Prueba a quitar alguno.</p>
-        )}
-      </div>
-      {data && data.pages > 1 && (
-        <nav aria-label="Paginación" className="flex items-center justify-between text-sm text-slate-600">
-          <span>Página {query.page} de {data.pages}</span>
-          <div className="flex gap-2">
-            <button type="button" disabled={query.page <= 1} onClick={() => goToPage(query.page - 1)}
-              className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 disabled:opacity-40">
-              <ChevronLeft className="size-4" aria-hidden />Anterior
-            </button>
-            <button type="button" disabled={query.page >= data.pages} onClick={() => goToPage(query.page + 1)}
-              className="inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 disabled:opacity-40">
-              Siguiente<ChevronRight className="size-4" aria-hidden />
-            </button>
-          </div>
-        </nav>
-      )}
+      <ConversationTable items={data?.items ?? []} sort={query.sort} order={query.order} onSort={onSort} dimmed={isFetching}
+        empty={data && <p className="py-12 text-center text-sm text-slate-500">No hay conversaciones con estos filtros. Prueba a quitar alguno.</p>} />
+      {data && <Pagination page={query.page} pages={data.pages} onPage={goToPage} />}
     </div>
   )
 }
