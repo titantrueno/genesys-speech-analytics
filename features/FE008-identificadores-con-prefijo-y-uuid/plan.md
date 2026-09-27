@@ -70,3 +70,9 @@ Usos de identificadores antiguos localizados: `backend/app/auth.py`, `backend/ap
 ## Riesgos del plan
 
 - **Resultado de T3 de FE001:** debe mantenerse, porque el contenido no cambia; solo cambian los identificadores. Si se usara el mismo generador aleatorio para los identificadores, cambiarían todos los datos. Por eso se usa uno independiente.
+
+## Progreso
+
+| Id | Estado | Evidencia |
+|---|---|---|
+| T1 | Hecha | `tests/test_ids.py`: 9 tests en verde (rojo previo: 9 fallos con el módulo vacío), incluido el que compara `PREFIXES` con la tabla del vault. Registro, ADR-004, glosario y regla en `AGENTS.md`. Auditoría `0`. |

@@ -18,6 +18,12 @@
   - Ejemplo: `features/FE001-transcripcion-de-llamadas-genesys/spec.md`.
 - `/spec` crea la carpeta; el resto de fases escriben sus artefactos en esa misma carpeta. No reutilices ni renumeres un `FE` existente.
 
+## Identificadores
+
+- Todo identificador de entidad usa el formato `PREFIJO-UUID` en mayúsculas (por ejemplo `1CO-4B2E9A7F-3D1C-4A9B-8E5D-8F0A6C3E71AB`).
+- Antes de crear una entidad nueva, consulta `vault/ingenieria/registro-de-identificadores.md`. Si su prefijo no existe, regístralo allí y en `backend/app/ids.py` en el mismo cambio.
+- Genera y valida identificadores solo con `backend/app/ids.py`; nunca los construyas a mano.
+
 ## Skills
 
 - Los skills del ciclo viven en `.devin/skills/<nombre>/SKILL.md`: `spec → plan → build → test → review → ship`, más `vault`.

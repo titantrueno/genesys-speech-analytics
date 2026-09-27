@@ -20,6 +20,8 @@ updated: 2026-09-27
 - **Spec:** contrato de alcance y criterios de aceptación verificables.
 - **TDD:** ciclo en el que una prueba falla primero y la implementación mínima la hace pasar.
 - **Default-FAIL:** principio por el que la ausencia de evidencia se trata como fallo.
+- **Identificador de entidad:** valor `PREFIJO-UUID` en mayúsculas (por ejemplo `1CO-4B2E9A7F-…`) que identifica una conversación, un cliente, un usuario, etc. Ver el [registro de identificadores](../ingenieria/registro-de-identificadores.md).
+- **Prefijo:** tres caracteres (`1` + dos letras) que indican el tipo de entidad de un identificador.
 - **ADR:** registro del contexto, decisión, alternativas y consecuencias de una decisión arquitectónica.
 
 ## Fuentes
