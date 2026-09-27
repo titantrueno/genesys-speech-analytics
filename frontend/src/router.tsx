@@ -10,6 +10,7 @@ import { DashboardsIndex } from './dashboards/DashboardsIndex'
 import { LoadingScreen } from './layout/LoadingScreen'
 import { ConversationsPage } from './conversations/ConversationsPage'
 import { ConversationDetailPage } from './conversations/ConversationDetailPage'
+import { ExplorerPage } from './explorer/ExplorerPage'
 
 export type AppRouter = ReturnType<typeof createBrowserRouter>
 
@@ -25,6 +26,9 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
   '/conversaciones': [
     { index: true, element: <ConversationsPage /> },
     { path: ':conversationId', element: <ConversationDetailPage /> },
+  ],
+  '/explorador': [
+    { index: true, element: <ExplorerPage /> },
   ],
 }
 

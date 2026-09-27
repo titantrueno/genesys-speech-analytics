@@ -232,3 +232,33 @@ export const explorerSchemaFixture = {
     { key: 'repeat_contact', label: 'Recontacto en 7 días', type: 'boolean', operators: ops(['is'], OP_LABELS) },
   ],
 }
+
+export const SUGGESTIONS: Record<string, Array<{ value: string; label: string; count: number }>> = {
+  channel: [{ value: 'voz', label: 'Voz', count: 192 }, { value: 'chat', label: 'Chat', count: 127 }],
+  resolution: [{ value: 'resuelta', label: 'Resuelta', count: 209 }, { value: 'escalada', label: 'Escalada', count: 51 }],
+  main_topic: [{ value: 'cajeros', label: 'Incidencia en cajero', count: 14 }],
+  queue: [{ value: QUEUE.tarjetas.id, label: 'Tarjetas', count: 51 }],
+}
+
+export function runResult(total: number, items = Array.from({ length: Math.min(total, 25) }, (_, i) => conversationItem(i))) {
+  return {
+    period: { from: '2026-08-28', to: '2026-09-26' },
+    kpis: summaryFixture.kpis.map(({ code, label, unit, higher_is_better, value }) => ({ code, label, unit, higher_is_better, value })),
+    total, page: 1, page_size: 25, pages: Math.ceil(total / 25), items,
+  }
+}
+
+export function explorerRoutes(runBodies: unknown[], run: (body: unknown, url: string) => { status: number; body?: unknown } = () => ({ status: 200, body: runResult(60) })) {
+  return {
+    'GET /api/query/schema': () => ({ status: 200, body: explorerSchemaFixture }),
+    'GET /api/query/suggest': ({ url }: { url: string }) => {
+      const field = new URL(url, 'http://localhost').searchParams.get('field') ?? ''
+      return { status: 200, body: { field, values: SUGGESTIONS[field] ?? [] } }
+    },
+    'POST /api/query/run': (init: RequestInit & { url: string }) => {
+      const body = JSON.parse(String(init.body))
+      runBodies.push(body)
+      return run(body, init.url)
+    },
+  }
+}

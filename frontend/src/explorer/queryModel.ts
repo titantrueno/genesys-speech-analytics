@@ -151,6 +151,17 @@ export function updateCondition(query: ExplorerQuery, path: NodePath, patch: Par
   }
 }
 
+export function replaceCondition(query: ExplorerQuery, path: NodePath, condition: Condition): ExplorerQuery {
+  const index = path[path.length - 1]
+  return {
+    ...query,
+    root: mapGroup(query.root, path.slice(0, -1), (g) => ({
+      ...g,
+      conditions: g.conditions.map((child, i) => (i === index && !isGroup(child) ? condition : child)),
+    })),
+  }
+}
+
 export function removeNode(query: ExplorerQuery, path: NodePath): ExplorerQuery {
   const index = path[path.length - 1]
   return {
@@ -162,4 +173,83 @@ export function removeNode(query: ExplorerQuery, path: NodePath): ExplorerQuery 
 export function pathFromApi(apiPath: string): NodePath | null {
   if (!apiPath.startsWith('root')) return null
   return [...apiPath.matchAll(/conditions\[(\d+)\]/g)].map((m) => Number(m[1]))
+}
+
+function clamp(value: number, field: FieldSchema): number {
+  return Math.min(field.max ?? value, Math.max(field.min ?? value, value))
+}
+
+function defaultValue(field: FieldSchema, operator: string): ConditionValue {
+  switch (field.type) {
+    case 'categorical': {
+      const first = field.values?.[0]?.value ?? ''
+      return operator === 'in' || operator === 'not_in' ? [first] : first
+    }
+    case 'numeric': {
+      const base = clamp(0, field)
+      return operator === 'between' ? [base, base] : base
+    }
+    case 'text': return ''
+    case 'boolean': return true
+    case 'check': return undefined
+  }
+}
+
+export function newCondition(field: FieldSchema): Condition {
+  const operator = field.operators[0].key
+  return withValue({ field: field.key, operator }, defaultValue(field, operator))
+}
+
+function withValue(cond: Condition, value: ConditionValue): Condition {
+  const next: Condition = { field: cond.field, operator: cond.operator }
+  if (value !== undefined) next.value = value
+  if (cond.speaker) next.speaker = cond.speaker
+  return next
+}
+
+export function changeOperator(cond: Condition, operator: string, field: FieldSchema): Condition {
+  const multiple = (op: string) => op === 'in' || op === 'not_in'
+  let value = cond.value
+  if (field.type === 'categorical' && multiple(operator) !== multiple(cond.operator)) {
+    value = multiple(operator) ? [String(value ?? field.values?.[0]?.value ?? '')] : (value as string[] | undefined)?.[0]
+  }
+  if (field.type === 'numeric' && (operator === 'between') !== (cond.operator === 'between')) {
+    value = operator === 'between' ? [Number(value ?? 0), Number(value ?? 0)] : (value as number[] | undefined)?.[0]
+  }
+  return withValue({ ...cond, operator }, value)
+}
+
+export function isComplete(cond: Condition, field: FieldSchema | undefined): boolean {
+  if (!field) return true
+  if (field.type === 'text') return typeof cond.value === 'string' && cond.value.trim() !== ''
+  if (field.type === 'numeric') {
+    const values = Array.isArray(cond.value) ? cond.value : [cond.value]
+    return values.every((v) => typeof v === 'number' && Number.isFinite(v))
+  }
+  if (field.type === 'categorical' && Array.isArray(cond.value)) return cond.value.length > 0
+  return true
+}
+
+const pathKey = (path: NodePath) => path.join('.')
+
+/** Quita condiciones incompletas antes de enviar; devuelve cómo traducir rutas de la consulta enviada a las originales. */
+export function pruneIncomplete(query: ExplorerQuery, schema: QuerySchema): { query: ExplorerQuery; toOriginal: Map<string, NodePath> } {
+  const toOriginal = new Map<string, NodePath>()
+  const fields = new Map(schema.fields.map((f) => [f.key, f]))
+  function prune(group: Group, original: NodePath, sent: NodePath): Group {
+    const conditions: QueryNode[] = []
+    group.conditions.forEach((node, i) => {
+      const originalPath = [...original, i]
+      if (isGroup(node)) {
+        const sentPath = [...sent, conditions.length]
+        toOriginal.set(pathKey(sentPath), originalPath)
+        conditions.push(prune(node, originalPath, sentPath))
+      } else if (isComplete(node, fields.get(node.field))) {
+        toOriginal.set(pathKey([...sent, conditions.length]), originalPath)
+        conditions.push(node)
+      }
+    })
+    return { op: group.op, conditions }
+  }
+  return { query: { ...query, root: prune(query.root, [], []) }, toOriginal }
 }

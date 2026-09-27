@@ -10,10 +10,12 @@ export const tokenStorage = {
 
 export class ApiError extends Error {
   readonly status: number
+  readonly detail: unknown
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, detail?: unknown) {
     super(message)
     this.status = status
+    this.detail = detail
   }
 }
 
@@ -55,7 +57,7 @@ export async function apiRequest<T>(
   if (!response.ok) {
     const detail = await response.json().then((b) => b?.detail, () => undefined)
     if (response.status === 401 && token) unauthorizedListeners.forEach((listener) => listener())
-    throw new ApiError(response.status, typeof detail === 'string' ? detail : `Error ${response.status}`)
+    throw new ApiError(response.status, typeof detail === 'string' ? detail : `Error ${response.status}`, detail)
   }
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T)
 }
