@@ -1,0 +1,19 @@
+import os
+
+os.environ.setdefault("DATA_SEED", "42")
+os.environ.setdefault("DATA_REFERENCE_DATE", "2026-09-27")
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+
+from app import auth  # noqa: E402
+from app.main import app  # noqa: E402
+
+
+@pytest.fixture
+def api():
+    auth.reset_store()
+    client = TestClient(app)
+    admin = auth.get_store().find_by_email("admin@bancohorizonte.demo")
+    client.headers["Authorization"] = f"Bearer {auth.create_token(admin)}"
+    return client
