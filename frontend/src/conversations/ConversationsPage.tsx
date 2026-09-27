@@ -1,5 +1,6 @@
+import type { MouseEvent } from 'react'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, MessageSquareText, Phone, X } from 'lucide-react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useConversations, type ConversationListItem, type ConversationQuery, type SortKey, type SortOrder } from '../api/conversations'
 import { useCatalog } from '../api/metrics'
 import { FilterBar } from '../dashboards/FilterBar'
@@ -49,13 +50,23 @@ function SortHeader({ label, sortKey, query, onSort }: {
   )
 }
 
+const INTERACTIVE = 'a, button, input, select, textarea, label'
+
 function Row({ item }: { item: ConversationListItem }) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const href = `/conversaciones/${item.id}`
   const ChannelIcon = item.channel === 'voz' ? Phone : MessageSquareText
+
+  function onRowClick(event: MouseEvent<HTMLTableRowElement>) {
+    if ((event.target as Element).closest(INTERACTIVE)) return
+    navigate(href, { state: { from: location } })
+  }
+
   return (
-    <tr className="border-b border-slate-100 align-top hover:bg-slate-50">
+    <tr onClick={onRowClick} className="cursor-pointer border-b border-slate-100 align-top hover:bg-brand-50/60">
       <td className="px-2.5 py-2.5 whitespace-nowrap">
-        <Link to={`/conversaciones/${item.id}`} state={{ from: location }} className="font-medium text-brand-700 hover:underline">
+        <Link to={href} state={{ from: location }} className="font-medium text-brand-700 hover:underline">
           {dateTime.format(new Date(item.started_at))}
         </Link>
         <p className="font-mono text-[11px] text-slate-400" title={item.id}>{shortId(item.id)}</p>

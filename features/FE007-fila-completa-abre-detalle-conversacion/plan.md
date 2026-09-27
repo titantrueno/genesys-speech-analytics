@@ -28,3 +28,9 @@ No hay entradas afectadas salvo la nueva de patrones de interfaz. El criterio 23
 
 - **Qué:** entrada `vault/ingenieria/patrones-de-interfaz.md` enlazada desde el índice de ingeniería.
 - **Hecho cuando:** la auditoría del vault devuelve `0` y, en Chrome contra la API real, el clic en la celda del summary abre el detalle y volver restaura el listado.
+
+## Progreso
+
+| Id | Estado | Evidencia |
+|---|---|---|
+| T1 | Hecha | `npm test`: 66 tests en verde (rojo previo: 11 fallos). Clic en cada una de las 10 columnas abre el detalle conservando `state.from`; el enlace de la fecha navega una sola vez; la fila no tiene `role` ni `tabindex` y mantiene un único enlace. |
