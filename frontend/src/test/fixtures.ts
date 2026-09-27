@@ -201,3 +201,34 @@ export const detailRoutes = {
   [`GET /api/conversations/${DETAIL_ID}`]: () => ({ status: 200, body: conversationDetailFixture }),
   [`GET /api/conversations/${MISSING_ID}`]: () => ({ status: 404, body: { detail: 'Conversación no encontrada' } }),
 }
+
+const ops = (keys: string[], labels: Record<string, string>) => keys.map((key) => ({ key, label: labels[key] }))
+const OP_LABELS: Record<string, string> = {
+  is: 'es', is_not: 'no es', in: 'es alguno de', not_in: 'no es ninguno de', eq: '=', ne: '≠', gt: '>', gte: '≥',
+  lt: '<', lte: '≤', between: 'entre', passes: 'cumple', fails: 'no cumple', not_applicable: 'no aplica',
+  contains: 'contiene', not_contains: 'no contiene',
+}
+const CATEGORICAL = ['is', 'is_not', 'in', 'not_in']
+const NUMERIC = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'between']
+
+export const explorerSchemaFixture = {
+  reference_date: '2026-09-27',
+  default_period: { from: '2026-08-28', to: '2026-09-26' },
+  fields: [
+    { key: 'channel', label: 'Canal', type: 'categorical', operators: ops(CATEGORICAL, OP_LABELS),
+      values: [{ value: 'voz', label: 'Voz' }, { value: 'chat', label: 'Chat' }] },
+    { key: 'queue', label: 'Cola', type: 'categorical', operators: ops(CATEGORICAL, OP_LABELS),
+      values: [QUEUE.particulares, QUEUE.tarjetas, QUEUE.fraude].map((q) => ({ value: q.id, label: q.name })) },
+    { key: 'main_topic', label: 'Main topic', type: 'categorical', operators: ops(CATEGORICAL, OP_LABELS),
+      values: [{ value: 'cajeros', label: 'Incidencia en cajero' }, { value: 'comisiones', label: 'Reclamación de comisiones' }] },
+    { key: 'resolution', label: 'Resolución', type: 'categorical', operators: ops(CATEGORICAL, OP_LABELS),
+      values: [{ value: 'resuelta', label: 'Resuelta' }, { value: 'no_resuelta', label: 'No resuelta' }, { value: 'escalada', label: 'Escalada' }] },
+    { key: 'sentiment', label: 'Sentimiento', type: 'numeric', operators: ops(NUMERIC, OP_LABELS), min: -1, max: 1 },
+    { key: 'duration', label: 'Duración (s)', type: 'numeric', operators: ops(NUMERIC, OP_LABELS), min: 0, max: 86400 },
+    { key: 'check:verificacion_identidad', label: 'Verificación de identidad del cliente', type: 'check',
+      operators: ops(['passes', 'fails', 'not_applicable'], OP_LABELS) },
+    { key: 'transcript', label: 'Transcripción', type: 'text', operators: ops(['contains', 'not_contains'], OP_LABELS),
+      speakers: ['cliente', 'agente', 'bot'] },
+    { key: 'repeat_contact', label: 'Recontacto en 7 días', type: 'boolean', operators: ops(['is'], OP_LABELS) },
+  ],
+}
