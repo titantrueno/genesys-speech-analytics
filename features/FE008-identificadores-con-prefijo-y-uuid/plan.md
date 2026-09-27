@@ -76,3 +76,4 @@ Usos de identificadores antiguos localizados: `backend/app/auth.py`, `backend/ap
 | Id | Estado | Evidencia |
 |---|---|---|
 | T1 | Hecha | `tests/test_ids.py`: 9 tests en verde (rojo previo: 9 fallos con el módulo vacío), incluido el que compara `PREFIXES` con la tabla del vault. Registro, ADR-004, glosario y regla en `AGENTS.md`. Auditoría `0`. |
+| T2 | Hecha | 92 tests en verde (rojo previo: 3 fallos). Conversaciones `1CO` y clientes `1CU` con UUID v4 de un generador aleatorio independiente (`Random("ids:{seed}")`). La huella de contenido previa a FE008 se mantiene idéntica: recuentos por topic, cola, resolución y canal, suma de duraciones y de sentimiento, 472 clientes. `agent_id` y `queue_id` como v5. Los usuarios demo pasan a `1US` en esta tarea (adelantado de T3), porque el test que busca patrones antiguos en `app/` los detectaba. |

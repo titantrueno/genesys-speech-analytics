@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+from app import ids
+
 BANK_NAME = "Banco Horizonte"
 
 QUEUES = [
@@ -21,6 +23,9 @@ AGENTS_BY_QUEUE = {
     "Inversión y ahorro": ["Beatriz Santos", "Tomás Herrera"],
     "Empresas": ["Clara Domínguez", "Víctor Gallego", "Rocío Medina"],
 }
+
+QUEUE_IDS = {name: ids.stable_id(ids.QUEUE, name) for name in QUEUES}
+AGENT_IDS = {name: ids.stable_id(ids.AGENT, name) for names in AGENTS_BY_QUEUE.values() for name in names}
 
 COMPLIANCE_CHECKS = {
     "saludo": "Saludo e identificación del agente",

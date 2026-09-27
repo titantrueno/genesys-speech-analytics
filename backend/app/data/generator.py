@@ -1,13 +1,16 @@
 import random
 from datetime import date, datetime, time, timedelta
 
+from app import ids
 from app.data.catalog import (
+    AGENT_IDS,
     AGENTS_BY_QUEUE,
     BANK_NAME,
     FRAUD_SPIKE_DAYS,
     FRAUD_TOPICS,
     MAIN_TOPICS,
     PRODUCTS_BY_QUEUE,
+    QUEUE_IDS,
     MainTopic,
 )
 from app.data.scenarios import OUTCOMES, SCENARIOS
@@ -65,12 +68,12 @@ def _spanish_date(day: date) -> str:
     return f"{day.day} de {MONTHS[day.month - 1]}"
 
 
-def _build_customers(rng: random.Random) -> list[dict]:
+def _build_customers(rng: random.Random, id_rng: random.Random) -> list[dict]:
     customers = []
-    for i in range(1, CUSTOMER_POOL + 1):
+    for _ in range(CUSTOMER_POOL):
         first, gender = rng.choice(FIRST_NAMES)
         customers.append({
-            "id": f"CLI-{i:05d}",
+            "id": ids.new_id(ids.CUSTOMER, id_rng),
             "name": f"{first} {rng.choice(LAST_NAMES)}",
             "gender": gender,
             "dni": _fake_dni(rng),
@@ -222,7 +225,9 @@ def _build_conversation(rng, customer, topic, started_at, channel, resolution) -
         channel=channel,
         started_at=started_at,
         duration_s=turns[-1].offset_s + rng.randint(3, 12),
+        queue_id=QUEUE_IDS[queue],
         queue=queue,
+        agent_id=AGENT_IDS[agent],
         agent=agent,
         customer_id=customer["id"],
         turns=turns,
@@ -274,7 +279,8 @@ def _timed_turns(rng, script, channel, topic, resolution) -> list[Turn]:
 
 def generate_dataset(seed: int, reference_date: date, size: int = 1000) -> list[Conversation]:
     rng = random.Random(seed)
-    customers = _build_customers(rng)
+    id_rng = random.Random(f"ids:{seed}")
+    customers = _build_customers(rng, id_rng)
     pending_followups: list[tuple[dict, MainTopic, datetime]] = []
     conversations: list[Conversation] = []
 
@@ -296,6 +302,6 @@ def generate_dataset(seed: int, reference_date: date, size: int = 1000) -> list[
                 pending_followups.append((customer, topic, follow_up))
 
     conversations.sort(key=lambda c: c.started_at)
-    for i, conversation in enumerate(conversations, start=1):
-        conversation.id = f"CNV-{i:06d}"
+    for conversation in conversations:
+        conversation.id = ids.new_id(ids.CONVERSATION, id_rng)
     return conversations

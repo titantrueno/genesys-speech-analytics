@@ -9,6 +9,7 @@ from app.data.generator import generate_dataset
 
 DATASET = {c.id: c for c in generate_dataset(seed=42, reference_date=date(2026, 9, 27))}
 PERIOD = {"from": "2026-07-01", "to": "2026-09-26"}
+SAMPLE_ID = list(DATASET)[499]
 
 
 def kpis(api, **params):
@@ -147,7 +148,7 @@ def test_invalid_list_parameters_return_422(api, params):
 
 @pytest.mark.parametrize("path,params", [
     ("/api/conversations", {"from": "2026-06-30", "to": "2026-09-26", "sort": "sentiment", "page_size": 100}),
-    ("/api/conversations/CNV-000500", {}),
+    (f"/api/conversations/{SAMPLE_ID}", {}),
     ("/api/catalog", {}),
 ])
 def test_conversation_endpoints_respond_under_500ms(api, path, params):

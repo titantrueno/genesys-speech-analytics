@@ -1,11 +1,13 @@
 import re
+from pathlib import Path
 from collections import Counter
 from datetime import date, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.data.catalog import MAIN_TOPICS, QUEUES, RESULT_MARKERS
+from app import ids
+from app.data.catalog import AGENTS_BY_QUEUE, MAIN_TOPICS, QUEUES, RESULT_MARKERS
 from app.data.generator import generate_dataset
 from app.main import app
 
@@ -58,6 +60,8 @@ def test_generation_is_deterministic(dataset):
 def test_size_ids_and_date_range(dataset):
     assert len(dataset) == 1000
     assert len({c.id for c in dataset}) == 1000
+    assert all(ids.is_valid(c.id, ids.CONVERSATION) for c in dataset)
+    assert all(ids.is_valid(c.customer_id, ids.CUSTOMER) for c in dataset)
     start = datetime.combine(REF - timedelta(days=90), datetime.min.time())
     end = datetime.combine(REF, datetime.min.time())
     assert all(start <= c.started_at < end for c in dataset)
@@ -141,3 +145,37 @@ def test_fake_identifiers_have_valid_format(dataset):
     assert ibans and dnis
     assert all(iban_is_valid(i) for i in ibans)
     assert all("TRWAGMYFPDXBNJZSQVHLCKE"[int(num) % 23] == letter for num, letter in dnis)
+
+
+def test_agents_and_queues_have_stable_ids(dataset):
+    for c in dataset:
+        assert c.agent_id == ids.stable_id(ids.AGENT, c.agent)
+        assert c.queue_id == ids.stable_id(ids.QUEUE, c.queue)
+    assert {c.agent_id for c in dataset} <= {ids.stable_id(ids.AGENT, a) for agents in AGENTS_BY_QUEUE.values() for a in agents}
+
+
+def test_content_is_unchanged_by_the_identifier_format(dataset):
+    """Huella del dataset (seed 42, 2026-09-27) anterior a FE008: solo deben cambiar los identificadores."""
+    assert dict(Counter(c.analysis.main_topic for c in dataset)) == {
+        "acceso_banca_digital": 106, "alta_cliente": 25, "baja_cancelacion": 51, "bloqueo_tarjeta": 91, "cajeros": 40,
+        "cargo_no_reconocido": 166, "comisiones": 68, "consulta_saldo_movimientos": 63, "contratacion_producto": 54,
+        "datos_personales": 21, "prestamos_hipotecas": 54, "recibos_domiciliaciones": 54, "reclamacion_queja": 19,
+        "tarjeta_denegada": 81, "transferencias_bizum": 107,
+    }
+    assert dict(Counter(c.queue for c in dataset)) == {
+        "Banca digital": 141, "Empresas": 65, "Fraude y seguridad": 154, "Inversión y ahorro": 37,
+        "Particulares": 369, "Préstamos e hipotecas": 62, "Tarjetas": 172,
+    }
+    assert dict(Counter(c.analysis.resolution for c in dataset)) == {"escalada": 172, "no_resuelta": 205, "resuelta": 623}
+    assert dict(Counter(c.channel for c in dataset)) == {"chat": 391, "voz": 609}
+    assert sum(c.duration_s for c in dataset) == 230337
+    assert round(sum(c.analysis.sentiment for c in dataset), 2) == 1.66
+    assert len({c.customer_id for c in dataset}) == 472
+
+
+def test_no_hand_built_legacy_identifiers_in_code():
+    app_dir = Path(__file__).resolve().parents[1] / "app"
+    legacy = re.compile(r"CNV-|CLI-|[\"']u-[a-z]")
+    offenders = [f"{f.name}:{n}" for f in app_dir.rglob("*.py")
+                 for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1) if legacy.search(line)]
+    assert offenders == []

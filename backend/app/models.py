@@ -41,7 +41,9 @@ class Conversation(BaseModel):
     channel: Channel
     started_at: datetime
     duration_s: int
+    queue_id: str
     queue: str
+    agent_id: str
     agent: str
     customer_id: str
     turns: list[Turn]

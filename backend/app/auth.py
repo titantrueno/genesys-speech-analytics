@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app import ids
+
 DEMO_PASSWORD = "demo"
 TOKEN_TTL_SECONDS = int(os.environ.get("AUTH_TOKEN_TTL_SECONDS", 8 * 3600))
 _SECRET = os.environ.get("AUTH_SECRET", "dev-only-insecure-secret").encode()
@@ -37,10 +39,10 @@ DEFAULT_ROLES = {
 }
 
 DEMO_USERS = [
-    ("u-admin", "Admin Demo", "admin@bancohorizonte.demo", "admin"),
-    ("u-supervisor", "Supervisora Demo", "supervisor@bancohorizonte.demo", "supervisor"),
-    ("u-analista", "Analista Demo", "analista@bancohorizonte.demo", "analista"),
-    ("u-viewer", "Viewer Demo", "viewer@bancohorizonte.demo", "viewer"),
+    ("Admin Demo", "admin@bancohorizonte.demo", "admin"),
+    ("Supervisora Demo", "supervisor@bancohorizonte.demo", "supervisor"),
+    ("Analista Demo", "analista@bancohorizonte.demo", "analista"),
+    ("Viewer Demo", "viewer@bancohorizonte.demo", "viewer"),
 ]
 
 
@@ -70,7 +72,8 @@ class UserStore:
 
 def _new_store() -> UserStore:
     store = UserStore(roles={role: set(perms) for role, perms in DEFAULT_ROLES.items()})
-    for user_id, name, email, role in DEMO_USERS:
+    for name, email, role in DEMO_USERS:
+        user_id = ids.stable_id(ids.USER, email)
         store.users[user_id] = User(user_id, name, email, role)
     return store
 
