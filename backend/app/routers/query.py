@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from app.auth import User, require_permission
 from app.data.store import followup_index, get_dataset, reference_date
 from app.query.engine import run_query
+from app.query.interpreter import interpret, validate_text
 from app.query.saved import SavedQuery, get_saved_store
 from app.query.fields import FIELDS
 from app.query.model import Query, QueryError, default_period, parse_query
@@ -136,3 +137,16 @@ def update_saved(query_id: str, body: SavedQueryPatch, user: User = Depends(EXPL
 def delete_saved(query_id: str, user: User = Depends(EXPLORER)) -> Response:
     get_saved_store().delete(_owned(query_id, user))
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+class InterpretIn(BaseModel):
+    text: str
+
+
+@router.post("/interpret")
+def interpret_text(body: InterpretIn) -> dict:
+    problem = validate_text(body.text)
+    if problem:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=problem)
+    query, unrecognized = interpret(body.text)
+    return {"query": query, "unrecognized": unrecognized}
