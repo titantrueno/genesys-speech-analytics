@@ -15,3 +15,4 @@ Conservar el contexto de producto y negocio que explica qué problema resuelve e
 ## Estado inicial
 
 - [Propósito del proyecto](proposito-del-proyecto.md)
+- [Catálogo de main topics bancarios](catalogo-de-main-topics.md)

@@ -168,3 +168,9 @@ frontend/
 - **Python 3.14:** si alguna dependencia no tiene wheel para 3.14, se fija la versión compatible más reciente o se crea el venv con `uv` y Python 3.12. Se decide en T1 con evidencia.
 - **Realismo de los datos:** la calidad de las plantillas de T1 condiciona todo lo demás. Se dedica T1 entera al generador y sus tests, sin mezclarla con la API.
 - **Sin Git:** sin repositorio no hay commits atómicos por tarea. Hay que ejecutar `git init` antes de empezar T1.
+
+## Progreso
+
+| Id | Estado | Evidencia |
+|---|---|---|
+| T1 | Hecha | `backend/.venv/bin/pytest`: 12 tests en verde (rojo previo: 7 fallos por falta de datos, health y catálogo); auditoría del vault `0`. |
