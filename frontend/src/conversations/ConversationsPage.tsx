@@ -4,7 +4,7 @@ import { useConversations, type ConversationListItem, type ConversationQuery, ty
 import { useCatalog } from '../api/metrics'
 import { FilterBar } from '../dashboards/FilterBar'
 import { useDashboardFilters } from '../dashboards/useDashboardFilters'
-import { formatDuration, formatInteger } from '../lib/format'
+import { formatDuration, formatInteger, shortId } from '../lib/format'
 import { activeFilterChips, CHANNEL_LABELS } from './labels'
 import { ResolutionBadge, SentimentValue } from './badges'
 
@@ -58,7 +58,7 @@ function Row({ item }: { item: ConversationListItem }) {
         <Link to={`/conversaciones/${item.id}`} state={{ from: location }} className="font-medium text-brand-700 hover:underline">
           {dateTime.format(new Date(item.started_at))}
         </Link>
-        <p className="text-xs text-slate-400">{item.id}</p>
+        <p className="font-mono text-[11px] text-slate-400" title={item.id}>{shortId(item.id)}</p>
       </td>
       <td className="px-2.5 py-2.5 whitespace-nowrap">
         <span className="inline-flex items-center gap-1.5 text-slate-700"><ChannelIcon className="size-3.5 text-slate-400" aria-hidden />{CHANNEL_LABELS[item.channel]}</span>

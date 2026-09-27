@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { conversationRoutes, metricsRoutes } from '../test/fixtures'
+import { conversationRoutes, metricsRoutes, QUEUE } from '../test/fixtures'
 import { renderApp, signedInAs, USERS } from '../test/utils'
 
 async function openDashboard(path: string) {
@@ -42,13 +42,13 @@ describe('drill-down desde dashboards', () => {
   })
 
   it('una barra de main topic sustituye el filtro de main topic del dashboard', async () => {
-    const { router } = await openDashboard('/dashboards/vision-general?main_topic=cajeros&main_topic=acceso_banca_digital&queue=Tarjetas')
+    const { router } = await openDashboard(`/dashboards/vision-general?main_topic=cajeros&main_topic=acceso_banca_digital&queue=${QUEUE.tarjetas.id}`)
     const list = await screen.findByRole('list', { name: 'Distribución por main topic' })
     await userEvent.setup().click(within(list).getByRole('link', { name: /Cargo no reconocido/ }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/conversaciones'))
     expect(params(router).getAll('main_topic')).toEqual(['cargo_no_reconocido'])
-    expect(params(router).get('queue')).toBe('Tarjetas')
+    expect(params(router).get('queue')).toBe(QUEUE.tarjetas.id)
   })
 
   it('una barra de un KPI por cola combina la cola y el filtro del KPI', async () => {
@@ -56,7 +56,7 @@ describe('drill-down desde dashboards', () => {
     const list = await screen.findByRole('list', { name: 'Cumplimiento por cola' })
     await userEvent.setup().click(within(list).getByRole('link', { name: /Fraude y seguridad/ }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/conversaciones'))
-    expect(params(router).get('queue')).toBe('Fraude y seguridad')
+    expect(params(router).get('queue')).toBe(QUEUE.fraude.id)
     expect(params(router).get('compliant')).toBe('true')
   })
 

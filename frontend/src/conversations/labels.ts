@@ -25,8 +25,10 @@ export function activeFilterChips(params: URLSearchParams, catalog?: Catalog): C
   }
   const topicNames = new Map(catalog?.main_topics.map((t) => [t.code, t.name]))
   multi('main_topic', 'Main topic', (v) => topicNames.get(v) ?? v)
-  multi('queue', 'Cola', (v) => v)
-  multi('agent', 'Agente', (v) => v)
+  const queueNames = new Map(catalog?.queues.map((q) => [q.id, q.name]))
+  const agentNames = new Map(catalog?.agents.map((a) => [a.id, a.name]))
+  multi('queue', 'Cola', (v) => queueNames.get(v) ?? (catalog ? 'desconocida' : '…'))
+  multi('agent', 'Agente', (v) => agentNames.get(v) ?? (catalog ? 'desconocido' : '…'))
   multi('resolution', 'Resolución', (v) => RESOLUTION_LABELS[v] ?? v)
   multi('churn_risk', 'Riesgo de abandono', (v) => CHURN_LABELS[v] ?? v)
 

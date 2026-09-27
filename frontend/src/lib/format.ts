@@ -54,3 +54,7 @@ export function formatShortDate(iso: string): string {
 export function formatOffset(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
+
+export function shortId(id: string): string {
+  return id.slice(0, 12)
+}

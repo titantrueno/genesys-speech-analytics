@@ -56,7 +56,7 @@ describe('rutas protegidas', () => {
     renderApp('/dashboards')
     expect(await screen.findByText('Admin Demo')).toBeInTheDocument()
     const headers = new Headers(fetchMock.mock.calls[0][1]?.headers)
-    expect(headers.get('Authorization')).toBe('Bearer token-u-admin')
+    expect(headers.get('Authorization')).toBe(`Bearer token-${USERS.admin.id}`)
   })
 
   it('un token rechazado por la API cierra la sesión y vuelve al login', async () => {

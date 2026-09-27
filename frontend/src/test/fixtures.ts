@@ -1,3 +1,19 @@
+export function fakeId(prefix: string, n: number): string {
+  return `${prefix}-${n.toString(16).toUpperCase().padStart(8, '0')}-0000-4000-8000-${String(n).padStart(12, '0')}`
+}
+
+export const QUEUE = {
+  particulares: { id: fakeId('1QU', 1), name: 'Particulares' },
+  tarjetas: { id: fakeId('1QU', 2), name: 'Tarjetas' },
+  fraude: { id: fakeId('1QU', 3), name: 'Fraude y seguridad' },
+}
+export const AGENT = {
+  sergio: { id: fakeId('1AG', 1), name: 'Sergio Molina', queue_id: QUEUE.fraude.id, queue: 'Fraude y seguridad' },
+  irene: { id: fakeId('1AG', 2), name: 'Irene Vidal', queue_id: fakeId('1QU', 4), queue: 'Banca digital' },
+}
+export const DETAIL_ID = fakeId('1CO', 5)
+export const MISSING_ID = fakeId('1CO', 999999)
+
 const KPI_META: Array<[string, string, string, boolean]> = [
   ['volume', 'Volumen', 'conversaciones', true],
   ['aht_s', 'Duración media (AHT)', 's', false],
@@ -56,8 +72,8 @@ export function timeseriesFixture(url: string) {
 const BREAKDOWN_KEYS: Record<string, Array<[string, string]>> = {
   main_topic: [['cargo_no_reconocido', 'Cargo no reconocido'], ['acceso_banca_digital', 'Acceso a banca digital'], ['cajeros', 'Incidencia en cajero']],
   channel: [['voz', 'voz'], ['chat', 'chat']],
-  queue: [['Particulares', 'Particulares'], ['Fraude y seguridad', 'Fraude y seguridad']],
-  agent: [['Sergio Molina', 'Sergio Molina'], ['Irene Vidal', 'Irene Vidal']],
+  queue: [[QUEUE.particulares.id, QUEUE.particulares.name], [QUEUE.fraude.id, QUEUE.fraude.name]],
+  agent: [[AGENT.sergio.id, AGENT.sergio.name], [AGENT.irene.id, AGENT.irene.name]],
 }
 
 export function breakdownFixture(url: string) {
@@ -72,8 +88,8 @@ export function breakdownFixture(url: string) {
 
 export const catalogFixture = {
   channels: [{ code: 'voz', label: 'Voz' }, { code: 'chat', label: 'Chat' }],
-  queues: ['Particulares', 'Tarjetas', 'Fraude y seguridad'],
-  agents: [{ name: 'Sergio Molina', queue: 'Fraude y seguridad' }, { name: 'Irene Vidal', queue: 'Banca digital' }],
+  queues: [QUEUE.particulares, QUEUE.tarjetas, QUEUE.fraude],
+  agents: [AGENT.sergio, AGENT.irene],
   main_topics: [
     { code: 'cargo_no_reconocido', name: 'Cargo no reconocido' },
     { code: 'acceso_banca_digital', name: 'Acceso a banca digital' },
@@ -98,11 +114,13 @@ const LIST_TOPICS: Array<[string, string]> = [
 export function conversationItem(i: number) {
   const [code, label] = LIST_TOPICS[i % LIST_TOPICS.length]
   return {
-    id: `CNV-${String(1000 - i).padStart(6, '0')}`,
+    id: fakeId('1CO', 1000 - i),
     started_at: `2026-09-${String(26 - (i % 20)).padStart(2, '0')}T10:${String(i % 60).padStart(2, '0')}:00`,
     channel: i % 2 ? 'chat' : 'voz',
-    queue: i % 3 ? 'Particulares' : 'Fraude y seguridad',
-    agent: i % 2 ? 'Irene Vidal' : 'Sergio Molina',
+    queue_id: (i % 3 ? QUEUE.particulares : QUEUE.fraude).id,
+    queue: (i % 3 ? QUEUE.particulares : QUEUE.fraude).name,
+    agent_id: (i % 2 ? AGENT.irene : AGENT.sergio).id,
+    agent: (i % 2 ? AGENT.irene : AGENT.sergio).name,
     main_topic: code,
     main_topic_label: label,
     summary: `La clienta llama porque no reconoce un cargo número ${i}. El agente revisa el movimiento. Queda resuelta con una reclamación abierta.`,
@@ -128,13 +146,15 @@ export const conversationRoutes = {
 }
 
 export const conversationDetailFixture = {
-  id: 'CNV-000005',
+  id: DETAIL_ID,
   channel: 'chat',
   started_at: '2026-06-29T13:27:01',
   duration_s: 494,
+  queue_id: QUEUE.fraude.id,
   queue: 'Fraude y seguridad',
+  agent_id: AGENT.sergio.id,
   agent: 'Sergio Molina',
-  customer_id: 'CLI-00123',
+  customer_id: fakeId('1CU', 123),
   main_topic_label: 'Cargo no reconocido',
   turns: [
     { speaker: 'bot', text: 'Hola, soy el asistente virtual de Banco Horizonte. ¿En qué puedo ayudarle?', offset_s: 0, sentiment: 0.1 },
@@ -177,6 +197,6 @@ export const detailCatalog = {
 export const detailRoutes = {
   ...conversationRoutes,
   'GET /api/catalog': () => ({ status: 200, body: detailCatalog }),
-  'GET /api/conversations/CNV-000005': () => ({ status: 200, body: conversationDetailFixture }),
-  'GET /api/conversations/CNV-999999': () => ({ status: 404, body: { detail: 'Conversación no encontrada' } }),
+  [`GET /api/conversations/${DETAIL_ID}`]: () => ({ status: 200, body: conversationDetailFixture }),
+  [`GET /api/conversations/${MISSING_ID}`]: () => ({ status: 404, body: { detail: 'Conversación no encontrada' } }),
 }

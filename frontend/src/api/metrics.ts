@@ -44,8 +44,8 @@ export interface BreakdownResponse {
 
 export interface Catalog {
   channels: Array<{ code: string; label: string }>
-  queues: string[]
-  agents: Array<{ name: string; queue: string }>
+  queues: Array<{ id: string; name: string }>
+  agents: Array<{ id: string; name: string; queue_id: string; queue: string }>
   main_topics: Array<{ code: string; name: string }>
   compliance_checks: Array<{ code: string; label: string }>
   resolutions: Array<{ code: string; label: string }>

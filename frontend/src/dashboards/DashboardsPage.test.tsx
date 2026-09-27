@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { metricsRoutes } from '../test/fixtures'
+import { metricsRoutes, QUEUE } from '../test/fixtures'
 import { renderApp, signedInAs, USERS } from '../test/utils'
 
 function requests(fetchMock: ReturnType<typeof signedInAs>, path: string) {
@@ -112,7 +112,7 @@ describe('filtros globales', () => {
   })
 
   it('al montar con filtros en la URL los restaura en los controles y en las peticiones', async () => {
-    const { fetchMock } = await openDashboard('/dashboards/vision-general?from=2026-09-01&to=2026-09-20&channel=voz&queue=Tarjetas')
+    const { fetchMock } = await openDashboard(`/dashboards/vision-general?from=2026-09-01&to=2026-09-20&channel=voz&queue=${QUEUE.tarjetas.id}`)
     await screen.findByRole('group', { name: 'Volumen' })
     expect(screen.getByLabelText('Canal')).toHaveValue('voz')
     expect(screen.getByLabelText('Desde')).toHaveValue('2026-09-01')
@@ -121,7 +121,7 @@ describe('filtros globales', () => {
     const summary = lastRequest(fetchMock, '/api/metrics/summary').searchParams
     expect(summary.get('from')).toBe('2026-09-01')
     expect(summary.get('to')).toBe('2026-09-20')
-    expect(summary.getAll('queue')).toEqual(['Tarjetas'])
+    expect(summary.getAll('queue')).toEqual([QUEUE.tarjetas.id])
   })
 
   it('el preset de periodo fija un rango de N días en la URL', async () => {

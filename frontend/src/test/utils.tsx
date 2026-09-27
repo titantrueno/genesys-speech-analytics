@@ -10,10 +10,10 @@ export const ALL_PERMISSIONS: Permission[] = [
 ]
 
 export const USERS: Record<'admin' | 'viewer' | 'analista', User> = {
-  admin: { id: 'u-admin', name: 'Admin Demo', email: 'admin@bancohorizonte.demo', role: 'admin', permissions: ALL_PERMISSIONS },
-  viewer: { id: 'u-viewer', name: 'Viewer Demo', email: 'viewer@bancohorizonte.demo', role: 'viewer', permissions: ['dashboards:view', 'conversations:view'] },
+  admin: { id: '1US-00000001-0000-5000-8000-000000000001', name: 'Admin Demo', email: 'admin@bancohorizonte.demo', role: 'admin', permissions: ALL_PERMISSIONS },
+  viewer: { id: '1US-00000002-0000-5000-8000-000000000002', name: 'Viewer Demo', email: 'viewer@bancohorizonte.demo', role: 'viewer', permissions: ['dashboards:view', 'conversations:view'] },
   analista: {
-    id: 'u-analista', name: 'Analista Demo', email: 'analista@bancohorizonte.demo', role: 'analista',
+    id: '1US-00000003-0000-5000-8000-000000000003', name: 'Analista Demo', email: 'analista@bancohorizonte.demo', role: 'analista',
     permissions: ['dashboards:view', 'conversations:view', 'explorer:use', 'search:use', 'flows:view', 'flows:edit'],
   },
 }

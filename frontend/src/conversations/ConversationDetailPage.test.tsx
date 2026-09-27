@@ -1,13 +1,13 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { detailRoutes } from '../test/fixtures'
+import { DETAIL_ID, detailRoutes, MISSING_ID } from '../test/fixtures'
 import { renderApp, signedInAs, USERS } from '../test/utils'
 
-async function openDetail(path = '/conversaciones/CNV-000005') {
+async function openDetail(path = `/conversaciones/${DETAIL_ID}`) {
   signedInAs(USERS.viewer, detailRoutes)
   const result = renderApp(path)
-  await screen.findByRole('heading', { level: 1, name: /CNV-000005/ })
+  await screen.findByRole('heading', { level: 1, name: new RegExp(DETAIL_ID) })
   return result
 }
 
@@ -107,7 +107,7 @@ describe('detalle de conversación', () => {
     signedInAs(USERS.viewer, detailRoutes)
     const { router } = renderApp('/conversaciones?main_topic=cajeros&page=2&sort=duration&order=asc')
     await screen.findByRole('heading', { level: 1, name: 'Conversaciones' })
-    await router.navigate('/conversaciones/CNV-000005', { state: { from: { pathname: '/conversaciones', search: '?main_topic=cajeros&page=2&sort=duration&order=asc' } } })
+    await router.navigate(`/conversaciones/${DETAIL_ID}`, { state: { from: { pathname: '/conversaciones', search: '?main_topic=cajeros&page=2&sort=duration&order=asc' } } })
     await userEvent.setup().click(await screen.findByRole('link', { name: /volver al listado/i }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/conversaciones'))
     expect(router.state.location.search).toBe('?main_topic=cajeros&page=2&sort=duration&order=asc')
@@ -122,7 +122,7 @@ describe('detalle de conversación', () => {
 
   it('una conversación inexistente muestra un aviso', async () => {
     signedInAs(USERS.viewer, detailRoutes)
-    renderApp('/conversaciones/CNV-999999')
+    renderApp(`/conversaciones/${MISSING_ID}`)
     expect(await screen.findByText(/conversación no encontrada/i)).toBeInTheDocument()
   })
 })

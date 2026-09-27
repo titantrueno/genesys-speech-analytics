@@ -11,7 +11,9 @@ export interface ConversationListItem {
   id: string
   started_at: string
   channel: Channel
+  queue_id: string
   queue: string
+  agent_id: string
   agent: string
   main_topic: string
   main_topic_label: string
@@ -62,7 +64,9 @@ export interface ConversationDetail {
   channel: Channel
   started_at: string
   duration_s: number
+  queue_id: string
   queue: string
+  agent_id: string
   agent: string
   customer_id: string
   main_topic_label: string

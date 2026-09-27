@@ -45,10 +45,10 @@ export function FilterBar({ effectivePeriod }: { effectivePeriod?: Period }) {
         </select>
       </label>
       <MultiSelect label="Cola" allLabel="Todas" selected={filters.queue}
-        options={(catalog?.queues ?? []).map((q) => ({ value: q, label: q }))}
+        options={(catalog?.queues ?? []).map((q) => ({ value: q.id, label: q.name }))}
         onChange={(queue) => update({ queue })} />
       <MultiSelect label="Agente" allLabel="Todos" selected={filters.agent}
-        options={(catalog?.agents ?? []).map((a) => ({ value: a.name, label: a.name }))}
+        options={(catalog?.agents ?? []).map((a) => ({ value: a.id, label: a.name }))}
         onChange={(agent) => update({ agent })} />
       <MultiSelect label="Main topic" allLabel="Todos" selected={filters.main_topic}
         options={(catalog?.main_topics ?? []).map((t) => ({ value: t.code, label: t.name }))}

@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { catalogFixture, conversationRoutes } from '../test/fixtures'
+import { catalogFixture, conversationRoutes, fakeId, QUEUE } from '../test/fixtures'
 import { mockApi, renderApp, signedInAs, USERS } from '../test/utils'
 
 function lastListRequest(fetchMock: ReturnType<typeof mockApi>) {
@@ -27,6 +27,15 @@ describe('listado de conversaciones', () => {
     expect(within(table).getAllByRole('row')).toHaveLength(26)
   })
 
+  it('muestra el identificador abreviado y el completo al pasar el ratón', async () => {
+    await openList()
+    const table = await screen.findByRole('table', { name: 'Conversaciones' })
+    const full = fakeId('1CO', 1000)
+    const short = within(table).getByText(full.slice(0, 12))
+    expect(short).toHaveAttribute('title', full)
+    expect(within(table).queryByText(full)).toBeNull()
+  })
+
   it('el summary muestra la primera frase y el texto completo al pasar el ratón', async () => {
     await openList()
     const cell = await screen.findByText('La clienta llama porque no reconoce un cargo número 0.')
@@ -37,7 +46,7 @@ describe('listado de conversaciones', () => {
     const { router } = await openList('/conversaciones?channel=voz&page=2')
     const table = await screen.findByRole('table', { name: 'Conversaciones' })
     await userEvent.setup().click(within(table).getAllByRole('link')[0])
-    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/conversaciones\/CNV-/))
+    await waitFor(() => expect(router.state.location.pathname).toMatch(/^\/conversaciones\/1CO-/))
     const state = router.state.location.state as { from?: { search: string } }
     expect(state.from?.search).toBe('?channel=voz&page=2')
   })
@@ -105,4 +114,12 @@ describe('listado de conversaciones', () => {
     })
     expect(await screen.findByText(/no hay conversaciones con estos filtros/i)).toBeInTheDocument()
   })
+})
+
+it('los chips de cola y agente muestran el nombre aunque la URL lleve el identificador', async () => {
+  signedInAs(USERS.admin, conversationRoutes)
+  renderApp(`/conversaciones?queue=${QUEUE.fraude.id}`)
+  const chips = await screen.findByRole('list', { name: 'Filtros activos' })
+  expect(await within(chips).findByText('Cola: Fraude y seguridad')).toBeInTheDocument()
+  expect(within(chips).queryByText(new RegExp(QUEUE.fraude.id))).toBeNull()
 })
