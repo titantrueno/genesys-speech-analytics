@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { conversationRoutes, fakeId } from '../test/fixtures'
 import { renderApp, signedInAs, USERS } from '../test/utils'
 
@@ -44,5 +44,42 @@ describe('fila clicable del listado', () => {
     expect(firstRow).not.toHaveAttribute('tabindex')
     expect(within(firstRow).getAllByRole('link')).toHaveLength(1)
     expect(firstRow.className).toContain('cursor-pointer')
+  })
+})
+
+describe('fila clicable: pestaña nueva y selección de texto', () => {
+  it.each([
+    ['Ctrl', '{Control>}'],
+    ['Cmd', '{Meta>}'],
+  ])('%s+clic abre el detalle en una pestaña nueva sin navegar', async (_name, key) => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const { router, firstRow, firstId } = await openList()
+    const cell = within(firstRow).getAllByRole('cell')[5]
+    const user = userEvent.setup()
+    await user.keyboard(key)
+    await user.click(cell)
+    expect(open).toHaveBeenCalledWith(`/conversaciones/${firstId}`, '_blank', 'noopener')
+    expect(router.state.location.pathname).toBe('/conversaciones')
+  })
+
+  it('el clic central abre el detalle en una pestaña nueva', async () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+    const { router, firstRow, firstId } = await openList()
+    const cell = within(firstRow).getAllByRole('cell')[3]
+    await userEvent.setup().pointer({ keys: '[MouseMiddle]', target: cell })
+    expect(open).toHaveBeenCalledWith(`/conversaciones/${firstId}`, '_blank', 'noopener')
+    expect(router.state.location.pathname).toBe('/conversaciones')
+  })
+
+  it('si hay texto seleccionado en la fila no navega', async () => {
+    const { router, firstRow } = await openList()
+    const summaryCell = within(firstRow).getAllByRole('cell')[5]
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      toString: () => 'no reconoce un cargo',
+      containsNode: () => true,
+      anchorNode: summaryCell.firstChild,
+    } as unknown as Selection)
+    await userEvent.setup().click(summaryCell)
+    expect(router.state.location.pathname).toBe('/conversaciones')
   })
 })
