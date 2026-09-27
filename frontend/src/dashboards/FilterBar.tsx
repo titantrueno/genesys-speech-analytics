@@ -1,21 +1,22 @@
 import { X } from 'lucide-react'
 import { useCatalog, type Period } from '../api/metrics'
 import { MultiSelect } from '../components/MultiSelect'
-import { DEFAULT_PRESET, matchingPreset, PERIOD_PRESETS, presetRange, useDashboardFilters } from './useDashboardFilters'
+import { DEFAULT_PRESET, matchingPreset, parseIsoDate, PERIOD_PRESETS, presetRange, useDashboardFilters } from './useDashboardFilters'
 
 const inputClass = 'h-9 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700'
 
 export function FilterBar({ effectivePeriod }: { effectivePeriod?: Period }) {
   const { filters, update, clear, activeCount } = useDashboardFilters()
   const { data: catalog } = useCatalog()
-  const preset = matchingPreset(filters.from, filters.to)
-  const fallback = effectivePeriod ?? presetRange(DEFAULT_PRESET)
+  const today = catalog ? parseIsoDate(catalog.reference_date) : new Date()
+  const preset = matchingPreset(filters.from, filters.to, today)
+  const fallback = effectivePeriod ?? presetRange(DEFAULT_PRESET, today)
   const from = filters.from ?? fallback.from
   const to = filters.to ?? fallback.to
 
   function onPreset(value: string) {
     if (value === 'custom') return
-    update(Number(value) === DEFAULT_PRESET ? { from: undefined, to: undefined } : presetRange(Number(value)))
+    update(Number(value) === DEFAULT_PRESET ? { from: undefined, to: undefined } : presetRange(Number(value), today))
   }
 
   return (

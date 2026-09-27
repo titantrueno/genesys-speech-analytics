@@ -43,6 +43,7 @@ export interface BreakdownResponse {
 }
 
 export interface Catalog {
+  reference_date: string
   channels: Array<{ code: string; label: string }>
   queues: Array<{ id: string; name: string }>
   agents: Array<{ id: string; name: string; queue_id: string; queue: string }>

@@ -87,6 +87,7 @@ export function breakdownFixture(url: string) {
 }
 
 export const catalogFixture = {
+  reference_date: '2026-07-01',
   channels: [{ code: 'voz', label: 'Voz' }, { code: 'chat', label: 'Chat' }],
   queues: [QUEUE.particulares, QUEUE.tarjetas, QUEUE.fraude],
   agents: [AGENT.sergio, AGENT.irene],

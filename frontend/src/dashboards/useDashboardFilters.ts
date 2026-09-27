@@ -25,10 +25,15 @@ export function presetRange(days: number, today = new Date()): { from: string; t
   return { from: isoDate(from), to: isoDate(to) }
 }
 
-export function matchingPreset(from?: string, to?: string): number | 'custom' {
+export function parseIsoDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+export function matchingPreset(from?: string, to?: string, today = new Date()): number | 'custom' {
   if (!from && !to) return DEFAULT_PRESET
   const match = PERIOD_PRESETS.find((days) => {
-    const range = presetRange(days)
+    const range = presetRange(days, today)
     return range.from === from && range.to === to
   })
   return match ?? 'custom'

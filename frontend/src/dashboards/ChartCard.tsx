@@ -1,16 +1,25 @@
 import { useState, type ReactNode } from 'react'
 
+export function LoadError() {
+  return (
+    <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+      No se han podido cargar los datos. Revisa los filtros o prueba a limpiarlos.
+    </p>
+  )
+}
+
 interface Props {
   title: string
   subtitle?: string
   actions?: ReactNode
   table?: ReactNode
   loading?: boolean
+  error?: boolean
   children: ReactNode
   className?: string
 }
 
-export function ChartCard({ title, subtitle, actions, table, loading, children, className = '' }: Props) {
+export function ChartCard({ title, subtitle, actions, table, loading, error, children, className = '' }: Props) {
   const [showTable, setShowTable] = useState(false)
   return (
     <section className={`rounded-xl border border-slate-200 bg-[var(--chart-surface)] p-4 ${className}`}>
@@ -30,7 +39,7 @@ export function ChartCard({ title, subtitle, actions, table, loading, children, 
         </div>
       </header>
       <div className={`transition-opacity ${loading ? 'opacity-50' : ''}`}>
-        {showTable ? table : children}
+        {error ? <LoadError /> : showTable ? table : children}
       </div>
     </section>
   )

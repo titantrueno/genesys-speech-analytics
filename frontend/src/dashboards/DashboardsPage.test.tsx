@@ -133,6 +133,17 @@ describe('filtros globales', () => {
     expect(days).toBe(6)
   })
 
+  it('las opciones rápidas de periodo usan la fecha de referencia del backend, no la del navegador', async () => {
+    const { router } = await openDashboard()
+    const period = await screen.findByLabelText('Periodo')
+    await userEvent.setup().selectOptions(period, '7')
+    await waitFor(() => expect(router.state.location.search).toContain('from='))
+    const params = new URLSearchParams(router.state.location.search)
+    expect(params.get('from')).toBe('2026-06-24')
+    expect(params.get('to')).toBe('2026-06-30')
+    expect(screen.getByLabelText('Periodo')).toHaveValue('7')
+  })
+
   it('limpiar filtros vuelve al periodo por defecto', async () => {
     const { router } = await openDashboard('/dashboards/vision-general?channel=chat&main_topic=cajeros')
     await userEvent.setup().click(await screen.findByRole('button', { name: /limpiar filtros/i }))
@@ -155,5 +166,20 @@ describe('filtros globales', () => {
     const table = await within(card).findByRole('table')
     expect(within(table).getAllByRole('row')).toHaveLength(4)
     expect(within(table).getByText('18')).toBeInTheDocument()
+  })
+})
+
+describe('errores de la API', () => {
+  it('si la API rechaza los filtros, los widgets muestran un aviso en vez de quedarse cargando', async () => {
+    signedInAs(USERS.analista, {
+      ...metricsRoutes,
+      'GET /api/metrics/summary': () => ({ status: 422, body: { detail: "'queue' espera identificadores 1QU-UUID: PARTICULARES" } }),
+      'GET /api/metrics/breakdown': () => ({ status: 422, body: { detail: 'filtro no válido' } }),
+      'GET /api/metrics/timeseries': () => ({ status: 500, body: { detail: 'error' } }),
+    })
+    renderApp('/dashboards/vision-general?queue=Particulares')
+    await waitFor(() => expect(screen.getAllByRole('alert').length).toBeGreaterThanOrEqual(5))
+    for (const alert of screen.getAllByRole('alert')) expect(alert).toHaveTextContent(/no se han podido cargar/i)
+    expect(document.querySelector('.animate-pulse')).toBeNull()
   })
 })

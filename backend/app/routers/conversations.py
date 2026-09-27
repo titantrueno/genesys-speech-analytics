@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app.auth import require_permission
 from app import ids
 from app.data.catalog import AGENT_IDS, AGENTS_BY_QUEUE, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS, QUEUES
-from app.data.store import conversation_index, get_dataset
+from app.data.store import conversation_index, get_dataset, reference_date
 from app.services.filters import ConversationFilters, conversation_list_filters
 
 router = APIRouter(prefix="/api", tags=["conversations"])
@@ -69,6 +69,7 @@ def get_conversation(conversation_id: str) -> dict:
 @router.get("/catalog", dependencies=[Depends(require_permission("dashboards:view", "conversations:view"))])
 def catalog() -> dict:
     return {
+        "reference_date": reference_date().isoformat(),
         "channels": [{"code": "voz", "label": "Voz"}, {"code": "chat", "label": "Chat"}],
         "queues": [{"id": QUEUE_IDS[name], "name": name} for name in QUEUES],
         "agents": [{"id": AGENT_IDS[name], "name": name, "queue_id": QUEUE_IDS[queue], "queue": queue}

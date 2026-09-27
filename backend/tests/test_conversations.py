@@ -172,3 +172,10 @@ def test_conversation_endpoints_respond_under_500ms(api, path, params):
     start = time.perf_counter()
     assert api.get(path, params=params).status_code == 200
     assert time.perf_counter() - start < 0.5
+
+
+def test_catalog_exposes_reference_date_used_by_default_periods(api):
+    body = api.get("/api/catalog").json()
+    assert body["reference_date"] == "2026-09-27"
+    summary = api.get("/api/metrics/summary").json()
+    assert summary["period"]["to"] == "2026-09-26"
