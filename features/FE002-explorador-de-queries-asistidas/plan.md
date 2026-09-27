@@ -139,3 +139,9 @@
 
 - **La extracción del listado (T2, T7) toca código entregado:** la cubren los tests existentes de FE001 y FE007, que deben seguir en verde en cada commit.
 - **UI del constructor:** es la pieza más grande. Si T7 no cabe en una sesión, se divide en T7a (constructor) y T7b (resultados) sin cambiar los criterios.
+
+## Progreso
+
+| Id | Estado | Evidencia |
+|---|---|---|
+| T1 | Hecha | `tests/test_query_model.py`: 26 tests en verde (rojo previo: 26 fallos con stub); suite de 134 tests. Esquema con 20 campos (6 checks) y operadores por tipo; validación de campo, operador, valor, lista, número, rango, `between`, identificadores de otro tipo, texto vacío, hablante, booleano, profundidad > 2 y `from > to`, con la ruta de la condición y todos los errores a la vez. `/api/query/schema` protegido por `explorer:use` (los tests de recorrido lo cubren). Los temas secundarios pasan al catálogo (`SECONDARY_TOPICS`), sin cambiar la huella del dataset. |

@@ -11,6 +11,7 @@ from app.data.catalog import (
     MAIN_TOPICS,
     PRODUCTS_BY_QUEUE,
     QUEUE_IDS,
+    REPEATED_COMPLAINT_TOPIC,
     MainTopic,
 )
 from app.data.scenarios import OUTCOMES, SCENARIOS
@@ -211,7 +212,7 @@ def _build_conversation(rng, customer, topic, started_at, channel, resolution) -
 
     secondary = rng.sample(topic.secondary, k=min(len(topic.secondary), rng.randint(1, 2)))
     if repeated_complaint:
-        secondary.append("reiteración del problema")
+        secondary.append(REPEATED_COMPLAINT_TOPIC)
 
     text = " ".join(t.text.lower() for t in turns)
     templates = " ".join(t for _, t in core) + scenario["motivo"] + scenario["gestion"]

@@ -151,5 +151,8 @@ MAIN_TOPICS = {
     ]
 }
 
+REPEATED_COMPLAINT_TOPIC = "reiteración del problema"
+SECONDARY_TOPICS = sorted({s for t in MAIN_TOPICS.values() for s in t.secondary} | {REPEATED_COMPLAINT_TOPIC})
+
 FRAUD_SPIKE_DAYS = range(18, 25)
 FRAUD_TOPICS = {"cargo_no_reconocido"}
