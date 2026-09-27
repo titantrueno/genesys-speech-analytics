@@ -143,14 +143,16 @@ def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(_bea
     return _user_from_token(credentials.credentials)
 
 
-def require_permission(permission: str):
-    if permission not in ALL_PERMISSIONS:
-        raise ValueError(f"Permiso desconocido: {permission}")
+def require_permission(*permissions: str):
+    """Exige al menos uno de los permisos indicados."""
+    unknown = [p for p in permissions if p not in ALL_PERMISSIONS]
+    if not permissions or unknown:
+        raise ValueError(f"Permisos desconocidos: {unknown}")
 
     def dependency(user: User = Depends(current_user)) -> User:
-        if permission not in get_store().permissions_for(user.role):
-            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=f"Falta el permiso {permission}")
+        if not get_store().permissions_for(user.role) & set(permissions):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=f"Falta el permiso {' o '.join(permissions)}")
         return user
 
-    dependency.permission = permission
+    dependency.permissions = permissions
     return dependency

@@ -4,6 +4,7 @@ from typing import Callable
 
 from app.data.catalog import COMPLIANCE_CHECKS
 from app.models import Conversation
+from app.services.filters import is_compliant
 
 
 @dataclass(frozen=True)
@@ -46,10 +47,6 @@ def round_value(value):
     return round(value, 2) + 0.0 if isinstance(value, float) else value
 
 
-def _compliant(conv: Conversation) -> bool:
-    return all(v for v in conv.analysis.compliance.values() if v is not None)
-
-
 def _first_agent_offset(conv: Conversation) -> int:
     return next(t.offset_s for t in conv.turns if t.speaker == "agente")
 
@@ -71,7 +68,7 @@ def _raw_kpis(convs: list[Conversation], followups: dict[str, bool]) -> dict[str
         "fcr_rate": _pct(convs, lambda c: not followups[c.id]),
         "csat_avg": _avg(c.analysis.csat for c in convs),
         "effort_avg": _avg(c.analysis.effort for c in convs),
-        "compliance_rate": _pct(convs, _compliant),
+        "compliance_rate": _pct(convs, is_compliant),
         "churn_high_pct": _pct(convs, lambda c: c.analysis.churn_risk == "alto"),
         "first_response_s": _avg(_first_agent_offset(c) for c in chats),
         "avg_turns": _avg(len(c.turns) for c in convs),
