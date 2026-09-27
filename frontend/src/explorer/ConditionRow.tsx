@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { MultiSelect } from '../components/MultiSelect'
 import { useSuggestions } from './api'
 import { changeOperator, isComplete, newCondition, type Condition, type FieldSchema, type QuerySchema, type Speaker } from './queryModel'
@@ -11,9 +11,11 @@ function NumberInput({ label, value, min, max, onChange }: {
 }) {
   const external = typeof value === 'number' ? String(value) : ''
   const [draft, setDraft] = useState(external)
-  useEffect(() => {
+  const [previous, setPrevious] = useState(value)
+  if (value !== previous) {
+    setPrevious(value)
     if (Number(draft) !== value) setDraft(external)
-  }, [external])
+  }
   return (
     <input type="number" step="any" aria-label={label} className={`${control} w-28`} value={draft} min={min} max={max}
       onChange={(e) => {
