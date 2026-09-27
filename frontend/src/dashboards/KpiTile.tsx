@@ -1,4 +1,5 @@
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from 'lucide-react'
+import { Link } from 'react-router'
 import type { KpiSummary } from '../api/metrics'
 import { formatDelta, formatKpi, trendOf } from '../lib/format'
 
@@ -8,13 +9,15 @@ const TREND_STYLE = {
   estable: { className: 'text-slate-500', label: 'Estable' },
 } as const
 
-export function KpiTile({ kpi }: { kpi: KpiSummary }) {
+export function KpiTile({ kpi, href }: { kpi: KpiSummary; href: string }) {
   const delta = formatDelta(kpi)
   const trend = trendOf(kpi)
   const Arrow = kpi.delta === null || kpi.delta === 0 ? ArrowRight : kpi.delta > 0 ? ArrowUpRight : ArrowDownRight
 
   return (
-    <div role="group" aria-label={kpi.label} className="rounded-xl border border-slate-200 bg-white p-4">
+    <div role="group" aria-label={kpi.label}
+      className="rounded-xl border border-slate-200 bg-white transition-colors focus-within:ring-2 focus-within:ring-brand-100 hover:border-brand-500">
+      <Link to={href} className="block p-4 focus:outline-none" title="Ver las conversaciones de este KPI">
       <p className="text-sm text-slate-500">{kpi.label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-900">{formatKpi(kpi.value, kpi.unit)}</p>
       {delta && trend ? (
@@ -28,6 +31,7 @@ export function KpiTile({ kpi }: { kpi: KpiSummary }) {
       ) : (
         <p className="mt-2 text-xs text-slate-400">Sin datos del periodo anterior</p>
       )}
+      </Link>
     </div>
   )
 }

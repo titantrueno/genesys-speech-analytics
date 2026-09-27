@@ -7,6 +7,7 @@ import { HomeRedirect } from './pages/HomeRedirect'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { DashboardsIndex, DashboardsPage } from './dashboards/DashboardsPage'
+import { ConversationsPage } from './conversations/ConversationsPage'
 
 export type AppRouter = ReturnType<typeof createBrowserRouter>
 
@@ -14,6 +15,9 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
   '/dashboards': [
     { index: true, element: <DashboardsIndex /> },
     { path: ':dashboardId', element: <DashboardsPage /> },
+  ],
+  '/conversaciones': [
+    { index: true, element: <ConversationsPage /> },
   ],
 }
 

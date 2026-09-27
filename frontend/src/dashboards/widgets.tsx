@@ -1,7 +1,9 @@
 import { useBreakdown, useSummary, useTimeseries, type Dimension, type KpiCode } from '../api/metrics'
+import { Link } from 'react-router'
 import { formatKpi, formatShortDate } from '../lib/format'
 import { ChartCard, DataTable } from './ChartCard'
 import { RankedBars, SplitBar, TimeseriesChart } from './charts'
+import { dimensionDrill, drillDownHref, KPI_DRILL } from './drilldown'
 import { KpiTile } from './KpiTile'
 import { KPI_META } from './kpiMeta'
 import { useDashboardFilters } from './useDashboardFilters'
@@ -18,7 +20,9 @@ export function KpiRow({ codes }: { codes: KpiCode[] }) {
   const byCode = new Map(data.kpis.map((k) => [k.code, k]))
   return (
     <div className={`grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6 ${isFetching ? 'opacity-60' : ''}`}>
-      {codes.map((code) => byCode.get(code)).filter((k) => k !== undefined).map((kpi) => <KpiTile key={kpi.code} kpi={kpi} />)}
+      {codes.map((code) => byCode.get(code)).filter((k) => k !== undefined).map((kpi) => (
+        <KpiTile key={kpi.code} kpi={kpi} href={drillDownHref(filters, KPI_DRILL[kpi.code])} />
+      ))}
     </div>
   )
 }
@@ -28,6 +32,8 @@ export function TimeseriesWidget({ kpi, title }: { kpi: KpiCode; title: string }
   const { data, isFetching } = useTimeseries(kpi, granularity, filters)
   const unit = KPI_META[kpi].unit
   const points = data?.points ?? []
+  const hrefFor = (p: { period_start: string; period_end: string }) =>
+    drillDownHref(filters, KPI_DRILL[kpi], { from: p.period_start, to: p.period_end })
   const toggle = (
     <div className="flex rounded-md border border-slate-200 p-0.5 text-xs">
       {(['day', 'week'] as const).map((g) => (
@@ -44,10 +50,12 @@ export function TimeseriesWidget({ kpi, title }: { kpi: KpiCode; title: string }
       className="lg:col-span-2"
       table={<DataTable caption={title} columns={[granularity === 'day' ? 'Día' : 'Semana', KPI_META[kpi].short]}
         rows={points.map((p) => [
-          p.period_start === p.period_end ? formatShortDate(p.period_start) : `${formatShortDate(p.period_start)} – ${formatShortDate(p.period_end)}`,
+          <Link key="period" to={hrefFor(p)} className="text-brand-700 hover:underline">
+            {p.period_start === p.period_end ? formatShortDate(p.period_start) : `${formatShortDate(p.period_start)} – ${formatShortDate(p.period_end)}`}
+          </Link>,
           formatKpi(p.value, unit),
         ])} />}>
-      <TimeseriesChart points={points} unit={unit} />
+      <TimeseriesChart points={points} unit={unit} hrefFor={hrefFor} />
     </ChartCard>
   )
 }
@@ -62,10 +70,12 @@ export function BreakdownBars({ title, dimension, kpi, order = 'desc', diverging
     .map((i) => ({ key: i.key, label: i.label, value: i.kpis[kpi] }))
     .sort((a, b) => (order === 'desc' ? (b.value ?? 0) - (a.value ?? 0) : (a.value ?? 0) - (b.value ?? 0)))
   const format = (v: number | null) => formatKpi(v, unit)
+  const hrefFor = (item: { key: string }) => drillDownHref(filters, KPI_DRILL[kpi], dimensionDrill(dimension, item.key))
   return (
     <ChartCard title={title} subtitle={subtitle} loading={isFetching}
-      table={<DataTable caption={title} columns={['', KPI_META[kpi].short]} rows={items.map((i) => [i.label, format(i.value)])} />}>
-      <RankedBars label={title} items={items} format={format} diverging={diverging}
+      table={<DataTable caption={title} columns={['', KPI_META[kpi].short]}
+        rows={items.map((i) => [<Link key="label" to={hrefFor(i)} className="text-brand-700 hover:underline">{i.label}</Link>, format(i.value)])} />}>
+      <RankedBars label={title} items={items} format={format} diverging={diverging} hrefFor={hrefFor}
         maxValue={unit === '%' ? 100 : unit === '1-5' ? 5 : undefined} />
     </ChartCard>
   )
@@ -81,7 +91,7 @@ export function ChannelSplit() {
   return (
     <ChartCard title="Volumen por canal" loading={isFetching}
       table={<DataTable caption="Volumen por canal" columns={['Canal', 'Volumen']} rows={parts.map((p) => [p.label, formatKpi(p.value, 'conversaciones')])} />}>
-      <SplitBar label="Volumen por canal" parts={parts} />
+      <SplitBar label="Volumen por canal" parts={parts} hrefFor={(key) => drillDownHref(filters, { channel: key })} />
     </ChartCard>
   )
 }
@@ -105,7 +115,10 @@ export function BreakdownTable({ title, dimension, codes }: { title: string; dim
   return (
     <ChartCard title={title} loading={isFetching} className="lg:col-span-2">
       <DataTable caption={title} columns={['', ...codes.map((c) => KPI_META[c].short)]}
-        rows={(data?.items ?? []).map((i) => [i.label, ...codes.map((c) => formatKpi(i.kpis[c], KPI_META[c].unit))])} />
+        rows={(data?.items ?? []).map((i) => [
+          <Link key="label" to={drillDownHref(filters, dimensionDrill(dimension, i.key))} className="text-brand-700 hover:underline">{i.label}</Link>,
+          ...codes.map((c) => formatKpi(i.kpis[c], KPI_META[c].unit)),
+        ])} />
     </ChartCard>
   )
 }

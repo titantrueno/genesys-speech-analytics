@@ -90,3 +90,39 @@ export const metricsRoutes = {
   'GET /api/metrics/breakdown': ({ url }: { url: string }) => ({ status: 200, body: breakdownFixture(url) }),
   'GET /api/catalog': () => ({ status: 200, body: catalogFixture }),
 }
+
+const LIST_TOPICS: Array<[string, string]> = [
+  ['cargo_no_reconocido', 'Cargo no reconocido'], ['acceso_banca_digital', 'Acceso a banca digital'], ['cajeros', 'Incidencia en cajero'],
+]
+
+export function conversationItem(i: number) {
+  const [code, label] = LIST_TOPICS[i % LIST_TOPICS.length]
+  return {
+    id: `CNV-${String(1000 - i).padStart(6, '0')}`,
+    started_at: `2026-09-${String(26 - (i % 20)).padStart(2, '0')}T10:${String(i % 60).padStart(2, '0')}:00`,
+    channel: i % 2 ? 'chat' : 'voz',
+    queue: i % 3 ? 'Particulares' : 'Fraude y seguridad',
+    agent: i % 2 ? 'Irene Vidal' : 'Sergio Molina',
+    main_topic: code,
+    main_topic_label: label,
+    summary: `La clienta llama porque no reconoce un cargo número ${i}. El agente revisa el movimiento. Queda resuelta con una reclamación abierta.`,
+    sentiment: i % 3 ? 0.35 : -0.52,
+    resolution: ['resuelta', 'no_resuelta', 'escalada'][i % 3],
+    csat: 3.4,
+    duration_s: 180 + i,
+  }
+}
+
+export function conversationListFixture(url: string, total = 60) {
+  const params = new URL(url, 'http://localhost').searchParams
+  const page = Number(params.get('page') ?? 1)
+  const pageSize = Number(params.get('page_size') ?? 25)
+  const start = (page - 1) * pageSize
+  const items = Array.from({ length: Math.max(0, Math.min(pageSize, total - start)) }, (_, k) => conversationItem(start + k))
+  return { total, page, page_size: pageSize, pages: Math.ceil(total / pageSize), items }
+}
+
+export const conversationRoutes = {
+  'GET /api/conversations': ({ url }: { url: string }) => ({ status: 200, body: conversationListFixture(url) }),
+  'GET /api/catalog': () => ({ status: 200, body: catalogFixture }),
+}

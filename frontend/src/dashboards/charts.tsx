@@ -1,15 +1,17 @@
+import { Link, useNavigate } from 'react-router'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts'
 import type { KpiUnit, TimeseriesResponse } from '../api/metrics'
 import { formatKpi, formatShortDate } from '../lib/format'
 
 export interface BarItem { key: string; label: string; value: number | null }
 
-export function RankedBars({ label, items, format, maxValue, diverging = false }: {
+export function RankedBars({ label, items, format, maxValue, diverging = false, hrefFor }: {
   label: string
   items: BarItem[]
   format: (value: number | null) => string
   maxValue?: number
   diverging?: boolean
+  hrefFor?: (item: BarItem) => string
 }) {
   const max = maxValue ?? Math.max(...items.map((i) => Math.abs(i.value ?? 0)), 1)
   if (items.length === 0) return <EmptyState />
@@ -21,7 +23,12 @@ export function RankedBars({ label, items, format, maxValue, diverging = false }
         const text = format(item.value)
         return (
           <li key={item.key} className="grid grid-cols-[minmax(0,14rem)_1fr] items-center gap-3 text-sm" title={`${item.label}: ${text}`}>
-            <span className="truncate text-slate-700">{item.label}</span>
+            {hrefFor ? (
+              <Link to={hrefFor(item)} aria-label={`${item.label}: ${text}. Ver conversaciones`}
+                className="truncate text-slate-700 underline-offset-2 hover:text-brand-700 hover:underline">
+                {item.label}
+              </Link>
+            ) : <span className="truncate text-slate-700">{item.label}</span>}
             {diverging ? (
               <div className="grid grid-cols-2 items-center">
                 <div className="flex items-center justify-end gap-1.5 border-r border-[var(--chart-axis)] pr-px">
@@ -46,23 +53,31 @@ export function RankedBars({ label, items, format, maxValue, diverging = false }
   )
 }
 
-export function SplitBar({ label, parts }: { label: string; parts: Array<{ key: string; label: string; value: number; color: string }> }) {
+export function SplitBar({ label, parts, hrefFor }: {
+  label: string
+  parts: Array<{ key: string; label: string; value: number; color: string }>
+  hrefFor: (key: string) => string
+}) {
+  const navigate = useNavigate()
   const total = parts.reduce((sum, p) => sum + p.value, 0)
   if (total === 0) return <EmptyState />
   return (
     <div>
       <div role="img" aria-label={`${label}: ${parts.map((p) => `${p.label} ${p.value}`).join(', ')}`} className="flex h-6 gap-0.5">
         {parts.map((p) => (
-          <div key={p.key} className="h-full first:rounded-l last:rounded-r" title={`${p.label}: ${p.value}`}
+          <div key={p.key} className="h-full cursor-pointer first:rounded-l last:rounded-r hover:opacity-80" title={`${p.label}: ${p.value}`}
+            onClick={() => navigate(hrefFor(p.key))}
             style={{ width: `${(p.value / total) * 100}%`, background: p.color }} />
         ))}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+      <ul aria-label={label} className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
         {parts.map((p) => (
-          <li key={p.key} className="flex items-center gap-2 text-slate-700">
-            <span aria-hidden className="size-2.5 rounded-sm" style={{ background: p.color }} />
-            {p.label}
-            <span className="text-slate-500 tabular-nums">{p.value} · {Math.round((p.value / total) * 100)} %</span>
+          <li key={p.key}>
+            <Link to={hrefFor(p.key)} className="flex items-center gap-2 text-slate-700 hover:text-brand-700">
+              <span aria-hidden className="size-2.5 rounded-sm" style={{ background: p.color }} />
+              {p.label}
+              <span className="text-slate-500 tabular-nums">{p.value} · {Math.round((p.value / total) * 100)} %</span>
+            </Link>
           </li>
         ))}
       </ul>
@@ -85,12 +100,21 @@ function TimeseriesTooltip({ active, payload, unit }: TooltipContentProps & { un
   )
 }
 
-export function TimeseriesChart({ points, unit }: { points: TimeseriesResponse['points']; unit: KpiUnit }) {
+export function TimeseriesChart({ points, unit, hrefFor }: {
+  points: TimeseriesResponse['points']
+  unit: KpiUnit
+  hrefFor: (point: TimeseriesResponse['points'][number]) => string
+}) {
+  const navigate = useNavigate()
   if (points.length === 0) return <EmptyState />
   return (
     <div className="h-60">
       <ResponsiveContainer width="100%" height="100%" initialDimension={{ width: 600, height: 240 }}>
-        <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} className="cursor-pointer"
+          onClick={(state) => {
+            const point = points[Number(state.activeIndex)]
+            if (point) navigate(hrefFor(point))
+          }}>
           <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
           <XAxis dataKey="period_start" tickFormatter={formatShortDate} stroke="var(--chart-axis)"
             tick={{ fill: 'var(--chart-muted)', fontSize: 11 }} tickLine={false} minTickGap={24} />

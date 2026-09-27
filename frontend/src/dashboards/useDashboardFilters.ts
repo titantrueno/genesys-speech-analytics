@@ -2,7 +2,12 @@ import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import type { Granularity, MetricsFilters } from '../api/metrics'
 
-export type FilterChanges = Partial<Record<keyof MetricsFilters | 'granularity', string | string[] | undefined>>
+export type FilterChanges = Record<string, string | string[] | undefined>
+
+export const FILTER_KEYS = [
+  'from', 'to', 'channel', 'queue', 'agent', 'main_topic',
+  'resolution', 'churn_risk', 'sentiment_lt', 'compliant', 'repeat_contact',
+] as const
 
 export const PERIOD_PRESETS = [7, 30, 90] as const
 export const DEFAULT_PRESET = 30
@@ -46,6 +51,7 @@ export function useDashboardFilters() {
   const update = useCallback((changes: FilterChanges) => {
     setParams((prev) => {
       const next = new URLSearchParams(prev)
+      if (!('page' in changes)) next.delete('page')
       for (const [key, value] of Object.entries(changes)) {
         next.delete(key)
         for (const item of Array.isArray(value) ? value : [value]) {
@@ -58,7 +64,7 @@ export function useDashboardFilters() {
 
   const clear = useCallback(() => setParams(new URLSearchParams()), [setParams])
 
-  const activeCount = ['channel', 'queue', 'agent', 'main_topic', 'from', 'to'].filter((key) => params.has(key)).length
+  const activeCount = FILTER_KEYS.filter((key) => params.has(key)).length
 
-  return { filters, granularity, update, clear, activeCount, search: params.toString() }
+  return { filters, granularity, update, clear, activeCount, params, search: params.toString() }
 }
