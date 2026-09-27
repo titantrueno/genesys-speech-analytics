@@ -8,6 +8,7 @@ CUSTOMER = "1CU"
 USER = "1US"
 AGENT = "1AG"
 QUEUE = "1QU"
+SAVED_QUERY = "1QY"
 
 PREFIXES = {
     CONVERSATION: "Conversación",
@@ -18,7 +19,7 @@ PREFIXES = {
     "1RO": "Rol",
     "1TP": "Main topic",
     "1CK": "Check de cumplimiento",
-    "1QY": "Consulta guardada",
+    SAVED_QUERY: "Consulta guardada",
     "1FL": "Flujo de insights",
     "1ND": "Nodo de flujo",
     "1RN": "Ejecución de flujo",

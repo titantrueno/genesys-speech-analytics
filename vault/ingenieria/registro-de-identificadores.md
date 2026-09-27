@@ -35,7 +35,7 @@ updated: 2026-09-27
 | `1RO` | Rol | Reservado (FE006) |
 | `1TP` | Main topic | Reservado (FE005) |
 | `1CK` | Check de cumplimiento | Reservado (FE005) |
-| `1QY` | Consulta guardada | Reservado (FE002) |
+| `1QY` | Consulta guardada | Activo (FE002) |
 | `1FL` | Flujo de insights | Reservado (FE004) |
 | `1ND` | Nodo de flujo | Reservado (FE004) |
 | `1RN` | Ejecución de flujo | Reservado (FE004) |

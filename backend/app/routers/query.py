@@ -1,11 +1,14 @@
 from collections import Counter
 from datetime import date
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query as QueryParam, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query as QueryParam, Response, status
 
-from app.auth import require_permission
+from pydantic import BaseModel, Field
+
+from app.auth import User, require_permission
 from app.data.store import followup_index, get_dataset, reference_date
 from app.query.engine import run_query
+from app.query.saved import SavedQuery, get_saved_store
 from app.query.fields import FIELDS
 from app.query.model import Query, QueryError, default_period, parse_query
 from app.services.kpis import KPI_DEFS, compute_kpis
@@ -65,3 +68,71 @@ def suggest(
     values = [{"value": v, "label": labels.get(v, v), "count": n} for v, n in counts.items()]
     values.sort(key=lambda item: (-item["count"], item["label"]))
     return {"field": field, "period": {"from": date_from.isoformat(), "to": date_to.isoformat()}, "values": values}
+
+
+EXPLORER = require_permission("explorer:use")
+
+
+class SavedQueryIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    query: dict
+
+
+class SavedQueryPatch(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=80)
+    query: dict | None = None
+
+
+def _canonical(payload: dict) -> dict:
+    try:
+        parsed = parse_query(payload)
+    except QueryError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.errors) from None
+    canonical = parsed.model_dump(mode="json", by_alias=True)
+    for key in ("from", "to"):
+        if key not in payload:
+            canonical.pop(key, None)
+    return canonical
+
+
+def _clean_name(name: str) -> str:
+    cleaned = name.strip()
+    if not cleaned:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El nombre no puede estar vacío")
+    return cleaned
+
+
+def _owned(query_id: str, user: User) -> SavedQuery:
+    item = get_saved_store().get(user.id, query_id)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Consulta guardada no encontrada")
+    return item
+
+
+@router.get("/saved")
+def list_saved(user: User = Depends(EXPLORER)) -> dict:
+    return {"items": [q.to_dict() for q in get_saved_store().list_for(user.id)]}
+
+
+@router.post("/saved", status_code=status.HTTP_201_CREATED)
+def create_saved(body: SavedQueryIn, user: User = Depends(EXPLORER)) -> dict:
+    return get_saved_store().create(user.id, _clean_name(body.name), _canonical(body.query)).to_dict()
+
+
+@router.get("/saved/{query_id}")
+def get_saved(query_id: str, user: User = Depends(EXPLORER)) -> dict:
+    return _owned(query_id, user).to_dict()
+
+
+@router.patch("/saved/{query_id}")
+def update_saved(query_id: str, body: SavedQueryPatch, user: User = Depends(EXPLORER)) -> dict:
+    item = _owned(query_id, user)
+    name = _clean_name(body.name) if body.name is not None else None
+    query = _canonical(body.query) if body.query is not None else None
+    return get_saved_store().update(item, name, query).to_dict()
+
+
+@router.delete("/saved/{query_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_saved(query_id: str, user: User = Depends(EXPLORER)) -> Response:
+    get_saved_store().delete(_owned(query_id, user))
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
