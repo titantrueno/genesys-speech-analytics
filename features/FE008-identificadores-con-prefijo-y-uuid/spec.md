@@ -10,12 +10,12 @@ Que todo identificador de entidad de la plataforma tenga el formato `PREFIJO-UUI
 
 ```text
 1CO-4B2E9A7F-3D1C-4A9B-8E5D-8F0A6C3E71AB
-└┬┘ └──────────────── UUID RFC 4122 ───────────────┘
+└┬┘ └──────────────── UUID RFC 9562 ───────────────┘
 prefijo
 ```
 
 - **Prefijo:** `1` seguido de dos letras mayúsculas.
-- **UUID:** estándar RFC 4122 en mayúsculas.
+- **UUID:** estándar RFC 9562 en mayúsculas.
   - **v4 (aleatorio)** para entidades que se crean: conversaciones y clientes.
   - **v5 (derivado del nombre)** para entidades de catálogo que deben ser estables: agentes, colas y usuarios demo.
 - **Expresión regular de validación:** `^1[A-Z]{2}-[0-9A-F]{8}-[0-9A-F]{4}-[45][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$`.

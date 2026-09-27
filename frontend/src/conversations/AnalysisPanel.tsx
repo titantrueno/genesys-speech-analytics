@@ -2,11 +2,11 @@ import { CheckCircle2, CircleMinus, XCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { ConversationDetail } from '../api/conversations'
 import { useCatalog } from '../api/metrics'
+import { formatDecimal } from '../lib/format'
 import { ResolutionBadge, SentimentValue } from './badges'
 import { CHURN_LABELS } from './labels'
 import { SentimentTimeline } from './SentimentTimeline'
 
-const oneDecimal = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const ENTITY_LABELS: Record<string, string> = { importe: 'Importe', producto: 'Producto', fecha: 'Fecha', comercio: 'Comercio' }
 const CHURN_STYLE: Record<string, string> = {
   bajo: 'text-[var(--status-good-text)]',
@@ -48,8 +48,8 @@ export function AnalysisPanel({ conversation, activeTurn, onSelectTurn }: Props)
       <Section title="Resultado">
         <dl>
           <Metric label="Resolución"><ResolutionBadge resolution={a.resolution} /></Metric>
-          <Metric label="CSAT predicho">{oneDecimal.format(a.csat)} / 5</Metric>
-          <Metric label="Esfuerzo del cliente">{oneDecimal.format(a.effort)} / 5</Metric>
+          <Metric label="CSAT predicho">{formatDecimal(a.csat, 1)} / 5</Metric>
+          <Metric label="Esfuerzo del cliente">{formatDecimal(a.effort, 1)} / 5</Metric>
           <Metric label="Riesgo de abandono"><span className={CHURN_STYLE[a.churn_risk]}>{CHURN_LABELS[a.churn_risk]}</span></Metric>
           <Metric label="Sentimiento global"><SentimentValue value={a.sentiment} /></Metric>
         </dl>

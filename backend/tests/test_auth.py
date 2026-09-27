@@ -151,3 +151,10 @@ def test_every_data_route_requires_a_permission(client):
             continue
         response = client.request(method, url, headers=bearer(token))
         assert response.status_code == 403, (method, path, response.status_code)
+
+
+@pytest.mark.parametrize("token", ["abc.ñ", "é.é", "ñ", "a.b.c", ".", ""])
+def test_malformed_or_non_ascii_token_returns_401_not_500(token):
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.get("/api/auth/me", headers={"Authorization": ("Bearer " + token).encode("latin-1")})
+    assert response.status_code == 401, token

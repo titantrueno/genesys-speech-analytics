@@ -15,3 +15,4 @@ Conservar conocimiento reutilizable obtenido durante implementación, depuració
 ## Estado inicial
 
 - [Lecciones iniciales del harness](lecciones-iniciales.md)
+- [Lecciones de la construcción de la plataforma](lecciones-construccion-plataforma.md)

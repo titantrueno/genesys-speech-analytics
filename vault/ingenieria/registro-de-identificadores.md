@@ -19,7 +19,7 @@ updated: 2026-09-27
 **Formato:** `1CO-4B2E9A7F-3D1C-4A9B-8E5D-8F0A6C3E71AB`, siempre en mayúsculas.
 
 - **Prefijo:** `1` seguido de dos letras mayúsculas, con un guion como separador.
-- **UUID RFC 4122:**
+- **UUID RFC 9562:**
   - **v4 (aleatorio):** para entidades que se crean, como conversaciones o clientes.
   - **v5 (derivado del nombre, namespace fijo del proyecto):** para entidades de catálogo que deben ser estables, como agentes, colas o usuarios demo.
 - **Validación:** `^1[A-Z]{2}-[0-9A-F]{8}-[0-9A-F]{4}-[45][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$`.
@@ -59,4 +59,4 @@ updated: 2026-09-27
 - [ADR-004 — Identificadores con prefijo y UUID](../decisiones/adr-004-identificadores-con-prefijo-y-uuid.md)
 - [Spec FE008](../../features/FE008-identificadores-con-prefijo-y-uuid/spec.md)
 - [Implementación](../../backend/app/ids.py)
-- [RFC 4122](https://www.rfc-editor.org/rfc/rfc4122)
+- [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562) (sustituye a RFC 4122)

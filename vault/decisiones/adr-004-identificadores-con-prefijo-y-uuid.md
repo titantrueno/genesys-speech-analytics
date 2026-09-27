@@ -16,7 +16,7 @@ Los identificadores eran heterogéneos: `CNV-000001` secuenciales en las convers
 
 ## Decisión
 
-Todo identificador de entidad es `PREFIJO-UUID` en mayúsculas: un prefijo registrado, un guion y un UUID RFC 4122 (v4 para entidades creadas y v5 para catálogos estables). El formato y los prefijos viven en el [registro de identificadores](../ingenieria/registro-de-identificadores.md) y en `backend/app/ids.py`, y un test mantiene ambos sincronizados.
+Todo identificador de entidad es `PREFIJO-UUID` en mayúsculas: un prefijo registrado, un guion y un UUID RFC 9562 (v4 para entidades creadas y v5 para catálogos estables). El formato y los prefijos viven en el [registro de identificadores](../ingenieria/registro-de-identificadores.md) y en `backend/app/ids.py`, y un test mantiene ambos sincronizados.
 
 ## Alternativas
 
@@ -35,4 +35,4 @@ Todo identificador de entidad es `PREFIJO-UUID` en mayúsculas: un prefijo regis
 
 - [Spec FE008](../../features/FE008-identificadores-con-prefijo-y-uuid/spec.md)
 - [Registro de identificadores](../ingenieria/registro-de-identificadores.md)
-- [RFC 4122](https://www.rfc-editor.org/rfc/rfc4122)
+- [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562) (sustituye a RFC 4122)

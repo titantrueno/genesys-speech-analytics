@@ -5,13 +5,12 @@ import { useConversations, type ConversationListItem, type ConversationQuery, ty
 import { useCatalog } from '../api/metrics'
 import { FilterBar } from '../dashboards/FilterBar'
 import { useDashboardFilters } from '../dashboards/useDashboardFilters'
-import { formatDuration, formatInteger, shortId } from '../lib/format'
+import { formatDecimal, formatDuration, formatInteger, shortId } from '../lib/format'
 import { activeFilterChips, CHANNEL_LABELS } from './labels'
 import { ResolutionBadge, SentimentValue } from './badges'
 
 const PAGE_SIZE = 25
 const dateTime = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-const csatFormat = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 function firstSentence(text: string): string {
   const match = text.match(/^.*?[.!?](?=\s|$)/)
@@ -98,7 +97,7 @@ function Row({ item }: { item: ConversationListItem }) {
       <td className="px-2.5 py-2.5 text-right whitespace-nowrap text-slate-700 tabular-nums">{formatDuration(item.duration_s)}</td>
       <td className="px-2.5 py-2.5 whitespace-nowrap"><SentimentValue value={item.sentiment} /></td>
       <td className="px-2.5 py-2.5"><ResolutionBadge resolution={item.resolution} /></td>
-      <td className="px-2.5 py-2.5 text-right text-slate-700 tabular-nums">{csatFormat.format(item.csat)}</td>
+      <td className="px-2.5 py-2.5 text-right text-slate-700 tabular-nums">{formatDecimal(item.csat, 2)}</td>
     </tr>
   )
 }

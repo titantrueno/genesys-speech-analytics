@@ -1,12 +1,11 @@
 import type { KeyboardEvent } from 'react'
 import type { Turn } from '../api/conversations'
-import { formatOffset } from '../lib/format'
+import { formatOffset, formatSigned } from '../lib/format'
 import { sentimentTone } from './labels'
 
 const WIDTH = 320
 const HEIGHT = 150
 const M = { top: 12, right: 12, bottom: 24, left: 28 }
-const signed = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' })
 
 interface Props {
   turns: Turn[]
@@ -37,7 +36,7 @@ export function SentimentTimeline({ turns, activeTurn, onSelect }: Props) {
             <line x1={M.left} x2={WIDTH - M.right} y1={y(v)} y2={y(v)}
               stroke={v === 0 ? 'var(--chart-axis)' : 'var(--chart-grid)'} strokeWidth={1} />
             <text x={M.left - 6} y={y(v)} dy="0.32em" textAnchor="end" fontSize={10} fill="var(--chart-muted)">
-              {v === 0 ? '0' : signed.format(v).replace(',00', '')}
+              {v === 0 ? '0' : formatSigned(v).replace(',00', '')}
             </text>
           </g>
         ))}
@@ -47,9 +46,9 @@ export function SentimentTimeline({ turns, activeTurn, onSelect }: Props) {
           const active = activeTurn === p.index
           return (
             <g key={p.index} role="button" tabIndex={0} className="cursor-pointer outline-none [&:focus-visible>circle:last-child]:stroke-[var(--series-1)]"
-              aria-label={`Turno ${p.index + 1}: sentimiento ${signed.format(p.turn.sentiment)} (${tone.label.toLowerCase()})`}
+              aria-label={`Turno ${p.index + 1}: sentimiento ${formatSigned(p.turn.sentiment)} (${tone.label.toLowerCase()})`}
               onClick={() => onSelect(p.index)} onKeyDown={(e) => onKey(e, p.index)}>
-              <title>{`Turno ${p.index + 1} · ${formatOffset(p.turn.offset_s)} · ${signed.format(p.turn.sentiment)}`}</title>
+              <title>{`Turno ${p.index + 1} · ${formatOffset(p.turn.offset_s)} · ${formatSigned(p.turn.sentiment)}`}</title>
               <circle cx={x(i)} cy={y(p.turn.sentiment)} r={12} fill="transparent" />
               <circle cx={x(i)} cy={y(p.turn.sentiment)} r={active ? 6 : 4.5} fill={tone.color}
                 stroke={active ? 'var(--series-1)' : 'var(--chart-surface)'} strokeWidth={2} />

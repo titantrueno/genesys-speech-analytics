@@ -58,3 +58,11 @@ export function formatOffset(seconds: number): string {
 export function shortId(id: string): string {
   return id.slice(0, 12)
 }
+
+export function formatDecimal(value: number, digits: 1 | 2): string {
+  return (digits === 1 ? oneDecimal : twoDecimals).format(value)
+}
+
+export function formatSigned(value: number): string {
+  return signedTwo.format(value)
+}

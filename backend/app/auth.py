@@ -115,7 +115,7 @@ def _unauthorized(detail: str) -> HTTPException:
 def _user_from_token(token: str) -> User:
     try:
         payload_b64, signature = token.split(".")
-        if not hmac.compare_digest(signature, _sign(payload_b64)):
+        if not hmac.compare_digest(signature.encode(), _sign(payload_b64).encode()):
             raise ValueError("firma inválida")
         payload = json.loads(_b64decode(payload_b64))
     except ValueError:

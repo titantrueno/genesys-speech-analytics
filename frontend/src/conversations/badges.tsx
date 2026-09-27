@@ -1,5 +1,6 @@
 import { AlertTriangle, ArrowUpRight, CheckCircle2 } from 'lucide-react'
 import type { Resolution } from '../api/conversations'
+import { formatSigned } from '../lib/format'
 import { RESOLUTION_LABELS, sentimentTone } from './labels'
 
 const RESOLUTION_STYLE: Record<Resolution, { icon: typeof CheckCircle2; className: string }> = {
@@ -17,14 +18,13 @@ export function ResolutionBadge({ resolution }: { resolution: Resolution }) {
   )
 }
 
-const signed = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' })
 
 export function SentimentValue({ value }: { value: number }) {
   const tone = sentimentTone(value)
   return (
     <span className="inline-flex items-center gap-1.5 text-slate-700 tabular-nums" title={tone.label}>
       <span aria-hidden className="size-2 rounded-full" style={{ background: tone.color }} />
-      {signed.format(value)}
+      {formatSigned(value)}
       <span className="sr-only">{tone.label}</span>
     </span>
   )
