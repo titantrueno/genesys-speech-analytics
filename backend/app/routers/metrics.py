@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 
 from app.auth import require_permission
-from app.data.catalog import MAIN_TOPICS
+from app.config.store import topic_name
 from app.data.store import followup_index, get_dataset
 from app.services.filters import ConversationFilters, conversation_filters
 from app.services.kpis import KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta, delta_pct, round_value
@@ -24,7 +24,7 @@ DIMENSIONS = {
     "agent": lambda c: c.agent_id,
 }
 LABELS = {
-    "main_topic": lambda c: MAIN_TOPICS[c.analysis.main_topic].name,
+    "main_topic": lambda c: topic_name(c.analysis.main_topic),
     "channel": lambda c: c.channel,
     "queue": lambda c: c.queue,
     "agent": lambda c: c.agent,

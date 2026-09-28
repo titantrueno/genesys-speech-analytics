@@ -151,6 +151,25 @@ MAIN_TOPICS = {
     ]
 }
 
+# Descripción inicial de cada main topic (columna «Ejemplos» del catálogo de FE001); se edita en Configuración (FE005).
+MAIN_TOPIC_DESCRIPTIONS = {
+    "alta_cliente": "Apertura de cuenta, alta online, documentación necesaria.",
+    "baja_cancelacion": "Cancelar la cuenta o la tarjeta, portabilidad a otro banco.",
+    "contratacion_producto": "Tarjeta de crédito, préstamo personal, seguro, depósito.",
+    "cargo_no_reconocido": "Compra desconocida, posible fraude, suscripción no autorizada.",
+    "bloqueo_tarjeta": "Robo o pérdida, bloqueo preventivo, desbloqueo.",
+    "acceso_banca_digital": "Usuario bloqueado, claves, firma o SMS de confirmación, app.",
+    "transferencias_bizum": "Transferencia no recibida, errónea o retenida, límites de Bizum.",
+    "comisiones": "Comisión de mantenimiento, de descubierto o por uso de cajero.",
+    "recibos_domiciliaciones": "Devolución de recibo, domiciliar nómina o recibos.",
+    "prestamos_hipotecas": "Cuota, amortización anticipada, subrogación, carencia.",
+    "tarjeta_denegada": "Pago rechazado, límite de tarjeta, compra online bloqueada.",
+    "cajeros": "Dinero no entregado, tarjeta retenida, ingreso no abonado.",
+    "datos_personales": "Domicilio, teléfono, email, actualización del DNI.",
+    "consulta_saldo_movimientos": "Saldo, extractos, certificados.",
+    "reclamacion_queja": "Mala atención, esperas, queja formal al Servicio de Atención al Cliente.",
+}
+
 REPEATED_COMPLAINT_TOPIC = "reiteración del problema"
 SECONDARY_TOPICS = sorted({s for t in MAIN_TOPICS.values() for s in t.secondary} | {REPEATED_COMPLAINT_TOPIC})
 

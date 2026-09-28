@@ -20,7 +20,8 @@ from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
 from app.flows.outputs import build_metric, build_report, build_table
 from app.flows.prompting import PromptRunner
 from app.flows.sampling import candidates, draw_sample
-from app.flows.store import Flow, now
+from app.clock import now
+from app.flows.store import Flow
 from app.models import Conversation
 from app.privacy.masking import masked
 

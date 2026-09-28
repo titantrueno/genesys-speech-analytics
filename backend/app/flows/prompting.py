@@ -9,7 +9,7 @@ import json
 import re
 from typing import Any, Protocol
 
-from app.data.catalog import MAIN_TOPICS
+from app.config.store import topic_name
 from app.flows.model import PromptConfig
 from app.flows.rules import VARIABLE
 from app.models import Conversation
@@ -31,7 +31,7 @@ def sentiment_class(value: float) -> str:
 
 
 def _topic_name(conv: Conversation) -> str:
-    return MAIN_TOPICS[conv.analysis.main_topic].name
+    return topic_name(conv.analysis.main_topic)
 
 
 def _as_text(value: Any) -> str:

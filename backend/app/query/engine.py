@@ -3,7 +3,7 @@ from functools import cache
 from app.data.store import conversation_index
 from app.models import Conversation
 from app.privacy.masking import masked, masking_enabled
-from app.query.fields import FIELDS, normalize_text
+from app.query.fields import get_fields, normalize_text
 from app.query.model import Condition, Group, Query
 
 
@@ -61,7 +61,7 @@ def _text(cond: Condition, conv: Conversation) -> bool:
 
 
 def _condition(cond: Condition, conv: Conversation) -> bool:
-    fdef = FIELDS[cond.field]
+    fdef = get_fields()[cond.field]
     if fdef.type == "text":
         return _text(cond, conv)
     value = fdef.extract(conv)

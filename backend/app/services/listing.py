@@ -3,7 +3,7 @@ from typing import Literal
 
 from fastapi import Query as QueryParam
 
-from app.data.catalog import MAIN_TOPICS
+from app.config.store import topic_name
 from app.models import Conversation
 from app.privacy.masking import shown
 
@@ -27,7 +27,7 @@ def list_item(conv: Conversation) -> dict:
         "agent_id": conv.agent_id,
         "agent": conv.agent,
         "main_topic": conv.analysis.main_topic,
-        "main_topic_label": MAIN_TOPICS[conv.analysis.main_topic].name,
+        "main_topic_label": topic_name(conv.analysis.main_topic),
         "summary": shown(conv).analysis.summary,
         "sentiment": conv.analysis.sentiment,
         "resolution": conv.analysis.resolution,

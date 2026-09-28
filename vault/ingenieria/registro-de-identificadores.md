@@ -33,7 +33,8 @@ updated: 2026-09-28
 | `1AG` | Agente | Activo (FE008) |
 | `1QU` | Cola | Activo (FE008) |
 | `1RO` | Rol | Reservado (FE006) |
-| `1TP` | Main topic | Reservado (FE005, constante `TOPIC`) |
+| `1TP` | Main topic | Activo (FE005) |
+| `1TS` | Tema secundario | Activo (FE005) |
 | `1CK` | Check de cumplimiento | Reservado (FE005, constante `CHECK`) |
 | `1QY` | Consulta guardada | Activo (FE002) |
 | `1FL` | Flujo de insights | Activo (FE004) |

@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from app import ids
-from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS, SECONDARY_TOPICS
+from app.config.store import Config, get_config
+from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, QUEUE_IDS
 from app.data.store import followup_index
 from app.models import Conversation
 
@@ -40,6 +41,8 @@ class FieldDef:
     id_prefix: str | None = None
     multi_valued: bool = False
     speakers: bool = False
+    # Valores válidos que ya no se ofrecen (temas desactivados): se aceptan en consultas, pero no salen en el esquema.
+    hidden: frozenset[str] = frozenset()
 
     @property
     def operators(self) -> list[str]:
@@ -51,7 +54,7 @@ class FieldDef:
             "operators": [{"key": o, "label": OPERATOR_LABELS[o]} for o in self.operators],
         }
         if self.values:
-            data["values"] = [{"value": v, "label": label} for v, label in self.values]
+            data["values"] = [{"value": v, "label": label} for v, label in self.values if v not in self.hidden]
         if self.min is not None:
             data["min"], data["max"] = self.min, self.max
         if self.speakers:
@@ -59,36 +62,55 @@ class FieldDef:
         return data
 
 
-def _labels(codes, labels=None):
-    return [(c, (labels or {}).get(c, c)) for c in codes]
+def _topic_field(key: str, label: str, topics, extract, multi_valued: bool = False) -> FieldDef:
+    return FieldDef(key, label, "categorical", extract, [(t.code, t.name) for t in topics.values()],
+                    multi_valued=multi_valued, hidden=frozenset(t.code for t in topics.values() if not t.active))
 
 
-_FIELD_LIST = [
-    FieldDef("channel", "Canal", "categorical", lambda c: c.channel, [("voz", "Voz"), ("chat", "Chat")]),
-    FieldDef("queue", "Cola", "categorical", lambda c: c.queue_id,
-             [(qid, name) for name, qid in QUEUE_IDS.items()], id_prefix=ids.QUEUE),
-    FieldDef("agent", "Agente", "categorical", lambda c: c.agent_id,
-             [(aid, name) for name, aid in AGENT_IDS.items()], id_prefix=ids.AGENT),
-    FieldDef("main_topic", "Main topic", "categorical", lambda c: c.analysis.main_topic,
-             [(code, t.name) for code, t in MAIN_TOPICS.items()]),
-    FieldDef("secondary_topic", "Tema secundario", "categorical", lambda c: c.analysis.secondary_topics,
-             _labels(SECONDARY_TOPICS), multi_valued=True),
-    FieldDef("resolution", "Resolución", "categorical", lambda c: c.analysis.resolution,
-             [("resuelta", "Resuelta"), ("no_resuelta", "No resuelta"), ("escalada", "Escalada")]),
-    FieldDef("churn_risk", "Riesgo de abandono", "categorical", lambda c: c.analysis.churn_risk,
-             [("bajo", "Bajo"), ("medio", "Medio"), ("alto", "Alto")]),
-    FieldDef("sentiment", "Sentimiento", "numeric", lambda c: c.analysis.sentiment, min=-1, max=1),
-    FieldDef("csat", "CSAT predicho", "numeric", lambda c: c.analysis.csat, min=1, max=5),
-    FieldDef("effort", "Esfuerzo del cliente", "numeric", lambda c: c.analysis.effort, min=1, max=5),
-    FieldDef("duration", "Duración (s)", "numeric", lambda c: c.duration_s, min=0, max=86400),
-    FieldDef("turns", "Nº de turnos", "numeric", lambda c: len(c.turns), min=0, max=1000),
-    *[
-        FieldDef(f"check:{code}", label, "check", lambda c, code=code: c.analysis.compliance.get(code))
-        for code, label in COMPLIANCE_CHECKS.items()
-    ],
-    FieldDef("summary", "Summary", "text", lambda c: c.analysis.summary),
-    FieldDef("transcript", "Transcripción", "text", lambda c: c.turns, speakers=True),
-    FieldDef("repeat_contact", "Recontacto en 7 días", "boolean", lambda c: followup_index()[c.id]),
-]
+def build_fields(config: Config) -> dict[str, "FieldDef"]:
+    return {f.key: f for f in _field_list(config)}
 
-FIELDS: dict[str, FieldDef] = {f.key: f for f in _FIELD_LIST}
+
+def _field_list(config: Config) -> list[FieldDef]:
+    return [
+        FieldDef("channel", "Canal", "categorical", lambda c: c.channel, [("voz", "Voz"), ("chat", "Chat")]),
+        FieldDef("queue", "Cola", "categorical", lambda c: c.queue_id,
+                 [(qid, name) for name, qid in QUEUE_IDS.items()], id_prefix=ids.QUEUE),
+        FieldDef("agent", "Agente", "categorical", lambda c: c.agent_id,
+                 [(aid, name) for name, aid in AGENT_IDS.items()], id_prefix=ids.AGENT),
+        _topic_field("main_topic", "Main topic", config.main_topics, lambda c: c.analysis.main_topic),
+        _topic_field("secondary_topic", "Tema secundario", config.secondary_topics,
+                     lambda c: c.analysis.secondary_topics, multi_valued=True),
+        FieldDef("resolution", "Resolución", "categorical", lambda c: c.analysis.resolution,
+                 [("resuelta", "Resuelta"), ("no_resuelta", "No resuelta"), ("escalada", "Escalada")]),
+        FieldDef("churn_risk", "Riesgo de abandono", "categorical", lambda c: c.analysis.churn_risk,
+                 [("bajo", "Bajo"), ("medio", "Medio"), ("alto", "Alto")]),
+        FieldDef("sentiment", "Sentimiento", "numeric", lambda c: c.analysis.sentiment, min=-1, max=1),
+        FieldDef("csat", "CSAT predicho", "numeric", lambda c: c.analysis.csat, min=1, max=5),
+        FieldDef("effort", "Esfuerzo del cliente", "numeric", lambda c: c.analysis.effort, min=1, max=5),
+        FieldDef("duration", "Duración (s)", "numeric", lambda c: c.duration_s, min=0, max=86400),
+        FieldDef("turns", "Nº de turnos", "numeric", lambda c: len(c.turns), min=0, max=1000),
+        *[
+            FieldDef(f"check:{code}", label, "check", lambda c, code=code: c.analysis.compliance.get(code))
+            for code, label in COMPLIANCE_CHECKS.items()
+        ],
+        FieldDef("summary", "Summary", "text", lambda c: c.analysis.summary),
+        FieldDef("transcript", "Transcripción", "text", lambda c: c.turns, speakers=True),
+        FieldDef("repeat_contact", "Recontacto en 7 días", "boolean", lambda c: followup_index()[c.id]),
+    ]
+
+
+_cache: tuple[Config, dict[str, FieldDef]] | None = None
+
+
+def get_fields() -> dict[str, FieldDef]:
+    """Campos del explorador según la configuración vigente (FE005).
+
+    Se reconstruyen solo cuando cambia la instantánea de configuración, que es inmutable: se compara por identidad y no
+    por versión, porque la versión vuelve a 0 al reiniciar el store.
+    """
+    global _cache
+    config = get_config()
+    if _cache is None or _cache[0] is not config:
+        _cache = (config, build_fields(config))
+    return _cache[1]

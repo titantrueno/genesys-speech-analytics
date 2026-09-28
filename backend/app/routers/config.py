@@ -1,19 +1,22 @@
 """API de configuración (FE005). Lecturas con `config:view`; escrituras con `config:edit`; el nombre, público."""
 from collections import Counter
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from functools import cache
-from typing import Any, Literal, TypeVar
+from typing import Any, Callable, Literal, TypeVar
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, ValidationError
 
 from app import ids
 from app.auth import User, require_permission
 from app.config.model import LANGUAGES, SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, field_errors, timezones
 from app.config.store import Config, Connector, get_config, get_config_store
+from app.config.taxonomy import (MainTopicIn, SecondaryTopicIn, Topic, main_topic_usage,
+                                 secondary_topic_usage)
+from app.query.fields import normalize_text
 from app.data.store import get_dataset
 from app.flows.catalog import MODELS, PROVIDERS
-from app.flows.store import now
+from app.clock import now
 
 router = APIRouter(prefix="/api/config", tags=["config"])
 
@@ -122,3 +125,109 @@ def sync_connector(connector_id: str, user: User = Depends(EDIT)) -> dict:
 @router.get("/audit", dependencies=[Depends(VIEW)])
 def list_audit(section: Literal[*SECTIONS] | None = Query(None)) -> dict:  # type: ignore[valid-type]
     return {"items": [e.to_dict() for e in get_config_store().audit(section)]}
+
+
+# --- Taxonomía ---
+
+@dataclass(frozen=True)
+class TopicKind:
+    field: str  # atributo de `Config`
+    prefix: str
+    model: type[MainTopicIn]
+    label: str
+    usage: Callable[[], Counter]
+    unique_names: bool
+
+
+TOPIC_KINDS = {
+    "main-topics": TopicKind("main_topics", ids.TOPIC, MainTopicIn, "Main topic", main_topic_usage, True),
+    "secondary-topics": TopicKind("secondary_topics", ids.SECONDARY_TOPIC, SecondaryTopicIn, "Tema secundario",
+                                  secondary_topic_usage, False),
+}
+TopicKindParam = Literal["main-topics", "secondary-topics"]
+
+
+def _topic_body(kind: TopicKind, topic: Topic) -> dict:
+    return {"id": topic.id, **topic.audit_value(), "conversations": kind.usage()[topic.code]}
+
+
+def _unprocessable(field: str, message: str) -> HTTPException:
+    return HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT,
+                         detail=[{"loc": ["body", field], "msg": message, "type": "value_error"}])
+
+
+def _find_topic(kind: TopicKind, topic_id: str) -> Topic:
+    topic_id = ids.normalize(topic_id)
+    topic = next((t for t in getattr(get_config(), kind.field).values() if t.id == topic_id), None)
+    if topic is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{kind.label} no encontrado")
+    return topic
+
+
+def _check_unique_name(kind: TopicKind, topics: dict[str, Topic], name: str, code: str) -> None:
+    if kind.unique_names and any(normalize_text(t.name) == normalize_text(name) and t.code != code
+                                 for t in topics.values()):
+        raise _unprocessable("name", "Ya existe otro con ese nombre")
+
+
+def _element(kind: TopicKind, topic: Topic) -> str:
+    return f"{kind.label} «{topic.name}»"
+
+
+@router.get("/taxonomy", dependencies=[Depends(VIEW)])
+def read_taxonomy() -> dict:
+    config = get_config()
+    return {name.replace("-", "_"): [_topic_body(kind, t) for t in getattr(config, kind.field).values()]
+            for name, kind in TOPIC_KINDS.items()}
+
+
+@router.post("/taxonomy/{kind_name}", status_code=status.HTTP_201_CREATED)
+def create_topic(kind_name: TopicKindParam, payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
+    kind = TOPIC_KINDS[kind_name]
+    topic = Topic.from_input(kind.prefix, _parse(kind.model, payload))
+
+    def change(c: Config):
+        topics = getattr(c, kind.field)
+        if topic.code in topics:
+            raise _unprocessable("code", "Ya existe un elemento con ese código")
+        _check_unique_name(kind, topics, topic.name, topic.code)
+        return None, topic.audit_value(), {kind.field: {**topics, topic.code: topic}}
+
+    get_config_store().apply_change(user, "taxonomia", _element(kind, topic), change)
+    return _topic_body(kind, topic)
+
+
+@router.put("/taxonomy/{kind_name}/{topic_id}")
+def update_topic(kind_name: TopicKindParam, topic_id: str, payload: Any = Body(...),
+                 user: User = Depends(EDIT)) -> dict:
+    kind = TOPIC_KINDS[kind_name]
+    current = _find_topic(kind, topic_id)
+    data = _parse(kind.model, payload)
+    if data.code != current.code:
+        raise _unprocessable("code", "El código no se puede cambiar")
+    topic = Topic.from_input(kind.prefix, data)
+
+    def change(c: Config):
+        topics = getattr(c, kind.field)
+        _check_unique_name(kind, topics, topic.name, topic.code)
+        return topics[topic.code].audit_value(), topic.audit_value(), {kind.field: {**topics, topic.code: topic}}
+
+    get_config_store().apply_change(user, "taxonomia", _element(kind, current), change)
+    return _topic_body(kind, topic)
+
+
+@router.delete("/taxonomy/{kind_name}/{topic_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_topic(kind_name: TopicKindParam, topic_id: str, user: User = Depends(EDIT)) -> Response:
+    kind = TOPIC_KINDS[kind_name]
+    topic = _find_topic(kind, topic_id)
+    if kind.usage()[topic.code]:
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            detail="Está asignado a conversaciones: no se puede borrar, solo desactivar")
+
+    def change(c: Config):
+        topics = dict(getattr(c, kind.field))
+        removed = topics.pop(topic.code)
+        return removed.audit_value(), None, {kind.field: topics}
+
+    get_config_store().apply_change(user, "taxonomia", _element(kind, topic), change)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

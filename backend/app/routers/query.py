@@ -10,7 +10,7 @@ from app.data.store import followup_index, get_dataset, reference_date
 from app.query.engine import run_query
 from app.query.interpreter import interpret, validate_text
 from app.query.saved import SavedQuery, get_saved_store
-from app.query.fields import FIELDS
+from app.query.fields import get_fields
 from app.query.model import Query, QueryError, default_period, parse_query
 from app.services.kpis import KPI_DEFS, compute_kpis
 from app.services.listing import PageParams, paginate
@@ -26,7 +26,7 @@ FIELD_CATALOG = require_permission("explorer:use", "flows:view")
 def schema() -> dict:
     date_from, date_to = default_period()
     return {
-        "fields": [f.schema() for f in FIELDS.values()],
+        "fields": [f.schema() for f in get_fields().values()],
         "reference_date": reference_date().isoformat(),
         "default_period": {"from": date_from.isoformat(), "to": date_to.isoformat()},
     }
@@ -57,7 +57,7 @@ def suggest(
     date_from: date | None = QueryParam(None, alias="from"),
     date_to: date | None = QueryParam(None, alias="to"),
 ) -> dict:
-    fdef = FIELDS.get(field)
+    fdef = get_fields().get(field)
     if fdef is None or fdef.type != "categorical":
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"'{field}' no es un campo categórico")
     default_from, default_to = default_period()

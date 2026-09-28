@@ -13,6 +13,7 @@ FLOW = "1FL"
 NODE = "1ND"
 RUN = "1RN"
 TOPIC = "1TP"
+SECONDARY_TOPIC = "1TS"
 CHECK = "1CK"
 CONNECTOR = "1CN"
 AUDIT = "1AU"
@@ -25,6 +26,7 @@ PREFIXES = {
     QUEUE: "Cola",
     "1RO": "Rol",
     TOPIC: "Main topic",
+    SECONDARY_TOPIC: "Tema secundario",
     CHECK: "Check de cumplimiento",
     SAVED_QUERY: "Consulta guardada",
     FLOW: "Flujo de insights",

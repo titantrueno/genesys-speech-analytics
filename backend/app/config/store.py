@@ -12,7 +12,8 @@ from typing import Any, Callable
 from app import ids
 from app.auth import User
 from app.config.model import AiConfig, GeneralConfig, PrivacyConfig
-from app.flows.store import now
+from app.config.taxonomy import Topic, initial_main_topics, initial_secondary_topics
+from app.clock import now
 
 _rng = random.SystemRandom()
 
@@ -59,6 +60,13 @@ class Config:
     privacy: PrivacyConfig = PrivacyConfig(pii_masking=True)
     ai: AiConfig = AiConfig(provider="simulado", model="mock-rapido")
     connectors: dict[str, Connector] = field(default_factory=_default_connectors)
+    main_topics: dict[str, Topic] = field(default_factory=initial_main_topics)
+    secondary_topics: dict[str, Topic] = field(default_factory=initial_secondary_topics)
+
+    def topic_name(self, code: str) -> str:
+        """Nombre vigente de un main topic, esté o no activo."""
+        topic = self.main_topics.get(code)
+        return topic.name if topic else code
 
 
 Change = Callable[[Config], tuple[Any, Any, dict[str, Any]]]
@@ -108,3 +116,7 @@ def get_config() -> Config:
 def reset_config_store() -> None:
     global _store
     _store = ConfigStore()
+
+
+def topic_name(code: str) -> str:
+    return get_config().topic_name(code)

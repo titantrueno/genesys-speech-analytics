@@ -1,26 +1,16 @@
 """Flujos de insights en memoria (FE004). Se pierden al reiniciar la API, como el resto de escrituras (ADR-002)."""
 import random
-import threading
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 from app import ids
 from app.auth import User
+from app.clock import now
 from app.flows import catalog
 from app.flows.model import Graph
 from app.flows.rules import validate
 
 _rng = random.SystemRandom()
-_clock_lock = threading.Lock()
-_last_time = datetime.min.replace(tzinfo=timezone.utc)
-
-
-def now() -> datetime:
-    """Hora actual estrictamente creciente, para que el orden por modificación sea estable."""
-    global _last_time
-    with _clock_lock:
-        _last_time = max(datetime.now(timezone.utc), _last_time + timedelta(microseconds=1))
-        return _last_time
 
 
 @dataclass

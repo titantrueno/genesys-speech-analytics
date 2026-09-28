@@ -2,7 +2,8 @@
 import re
 from datetime import timedelta
 
-from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS
+from app.config.store import get_config
+from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, QUEUE_IDS
 from app.data.store import reference_date
 from app.query.fields import normalize_text
 
@@ -154,7 +155,9 @@ def interpret(text: str) -> tuple[dict, list[str]]:
     if agents:
         conditions.append(_one_or_many("agent", agents))
 
-    topics = [code for code in MAIN_TOPICS if code in TOPIC_PATTERNS and m.take(TOPIC_PATTERNS[code])]
+    # Solo los main topics activos con patrones propios; uno nuevo no se interpreta hasta tener patrones (FE005).
+    topics = [code for code, t in get_config().main_topics.items()
+              if t.active and code in TOPIC_PATTERNS and m.take(TOPIC_PATTERNS[code])]
     if topics:
         conditions.append(_one_or_many("main_topic", topics))
 

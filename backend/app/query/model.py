@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, Validatio
 
 from app import ids
 from app.data.store import reference_date
-from app.query.fields import FIELDS, SPEAKERS, FieldDef
+from app.query.fields import SPEAKERS, FieldDef, get_fields
 
 MAX_DEPTH = 2
 MAX_CONDITIONS = 50
@@ -74,7 +74,7 @@ def _is_number(value: Any) -> bool:
 
 
 def _check_condition(cond: Condition, path: str) -> str | None:
-    fdef: FieldDef | None = FIELDS.get(cond.field)
+    fdef: FieldDef | None = get_fields().get(cond.field)
     if fdef is None:
         return f"Campo desconocido: {cond.field}"
     if cond.operator not in fdef.operators:
