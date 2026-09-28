@@ -22,6 +22,7 @@ from app.flows.prompting import PromptRunner
 from app.flows.sampling import candidates, draw_sample
 from app.flows.store import Flow, now
 from app.models import Conversation
+from app.privacy.masking import masked
 
 PENDING, RUNNING, OK, ERROR = "pendiente", "en_curso", "ok", "error"
 ACTIVE = {PENDING, RUNNING}
@@ -220,7 +221,8 @@ class FlowExecutor:
         run.update_node(node.id, total=len(sample), processed=len(sample))
         if not sample:
             raise NodeFailure("La muestra está vacía: ninguna conversación cumple los filtros.")
-        return sample
+        # Los prompts y los outputs trabajan siempre con texto enmascarado, esté o no activado el interruptor (FE005).
+        return [masked(conv) for conv in sample]
 
     def _prompt(self, run: Run, node: PromptNode, conversations: list[Conversation],
                 previous: dict[str, Any] | None) -> dict[str, Any]:

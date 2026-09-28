@@ -5,6 +5,7 @@ from fastapi import Query as QueryParam
 
 from app.data.catalog import MAIN_TOPICS
 from app.models import Conversation
+from app.privacy.masking import shown
 
 SortKey = Literal["date", "duration", "sentiment"]
 SortOrder = Literal["asc", "desc"]
@@ -27,7 +28,7 @@ def list_item(conv: Conversation) -> dict:
         "agent": conv.agent,
         "main_topic": conv.analysis.main_topic,
         "main_topic_label": MAIN_TOPICS[conv.analysis.main_topic].name,
-        "summary": conv.analysis.summary,
+        "summary": shown(conv).analysis.summary,
         "sentiment": conv.analysis.sentiment,
         "resolution": conv.analysis.resolution,
         "csat": conv.analysis.csat,

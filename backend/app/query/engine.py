@@ -2,18 +2,25 @@ from functools import cache
 
 from app.data.store import conversation_index
 from app.models import Conversation
+from app.privacy.masking import masked, masking_enabled
 from app.query.fields import FIELDS, normalize_text
 from app.query.model import Condition, Group, Query
 
 
+def _source(conversation_id: str, masked_text: bool) -> Conversation:
+    conv = conversation_index()[conversation_id]
+    return masked(conv) if masked_text else conv
+
+
+# El texto se busca tal como se muestra: enmascarado si el interruptor de Privacidad está activado (FE005).
 @cache
-def _normalized_summary(conversation_id: str) -> str:
-    return normalize_text(conversation_index()[conversation_id].analysis.summary)
+def _normalized_summary(conversation_id: str, masked_text: bool) -> str:
+    return normalize_text(_source(conversation_id, masked_text).analysis.summary)
 
 
 @cache
-def _normalized_turns(conversation_id: str) -> tuple[tuple[str, str], ...]:
-    return tuple((t.speaker, normalize_text(t.text)) for t in conversation_index()[conversation_id].turns)
+def _normalized_turns(conversation_id: str, masked_text: bool) -> tuple[tuple[str, str], ...]:
+    return tuple((t.speaker, normalize_text(t.text)) for t in _source(conversation_id, masked_text).turns)
 
 
 def _categorical(cond: Condition, value) -> bool:
@@ -44,10 +51,11 @@ def _check(cond: Condition, value: bool | None) -> bool:
 
 def _text(cond: Condition, conv: Conversation) -> bool:
     needle = normalize_text(cond.value)
+    masked_text = masking_enabled()
     if cond.field == "summary":
-        found = needle in _normalized_summary(conv.id)
+        found = needle in _normalized_summary(conv.id, masked_text)
     else:
-        found = any(needle in text for speaker, text in _normalized_turns(conv.id)
+        found = any(needle in text for speaker, text in _normalized_turns(conv.id, masked_text)
                     if cond.speaker is None or speaker == cond.speaker)
     return found if cond.operator == "contains" else not found
 

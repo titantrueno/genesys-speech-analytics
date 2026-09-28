@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app import ids
 from app.auth import require_permission
 from app.data.store import conversation_index, get_dataset
+from app.privacy.masking import masked, shown
 from app.search.engine import Hit, SearchEngine, best_per_conversation
 from app.search.text import matching_terms, tokenize
 from app.search.tfidf import TfidfEngine
@@ -21,7 +22,8 @@ SIMILAR_COUNT = 10
 
 @cache
 def build_default_engine() -> SearchEngine:
-    return TfidfEngine(get_dataset())
+    # El índice nunca contiene datos personales, esté o no activado el enmascarado (FE005).
+    return TfidfEngine([masked(conv) for conv in get_dataset()])
 
 
 def get_search_engine() -> SearchEngine:
@@ -44,7 +46,7 @@ def _score(hit: Hit) -> float:
 
 def _result(hit: Hit, terms: list[str]) -> dict:
     fragment = hit.fragment
-    conv = conversation_index()[fragment.conversation_id]
+    conv = shown(conversation_index()[fragment.conversation_id])
     return {
         "conversation_id": conv.id,
         "start_turn": fragment.start_turn,
