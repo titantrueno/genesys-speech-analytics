@@ -78,3 +78,7 @@ export interface ComplianceCheck {
 
 /** Error de validación de FastAPI (`422`): ruta del campo y mensaje. */
 export interface FieldIssue { loc: Array<string | number>; msg: string; type: string }
+
+export type TopicKind = 'main-topics' | 'secondary-topics'
+export type TopicInput = Omit<Topic, 'id' | 'conversations'>
+export type CheckInput = Omit<ComplianceCheck, 'id' | 'evaluation' | 'builtin'>

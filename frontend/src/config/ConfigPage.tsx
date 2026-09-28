@@ -4,9 +4,12 @@ import { useAuth } from '../auth/useAuth'
 import { useConfig } from './api'
 import { AuditLog } from './AuditLog'
 import { AiTab } from './tabs/AiTab'
+import { ComplianceTab } from './tabs/ComplianceTab'
 import { GeneralTab } from './tabs/GeneralTab'
+import { KpisTab } from './tabs/KpisTab'
 import { PrivacyTab } from './tabs/PrivacyTab'
 import { SourcesTab } from './tabs/SourcesTab'
+import { TaxonomyTab } from './tabs/TaxonomyTab'
 import type { PlatformConfig, SectionCode } from './types'
 
 type TabProps = { config: PlatformConfig; canEdit: boolean }
@@ -14,9 +17,9 @@ type TabProps = { config: PlatformConfig; canEdit: boolean }
 const TABS: Array<{ code: SectionCode; label: string; render: (props: TabProps) => ReactNode }> = [
   { code: 'general', label: 'General', render: (p) => <GeneralTab {...p} /> },
   { code: 'fuentes', label: 'Fuentes de datos', render: (p) => <SourcesTab canEdit={p.canEdit} /> },
-  { code: 'taxonomia', label: 'Taxonomía', render: () => null },
-  { code: 'kpis', label: 'KPIs y objetivos', render: () => null },
-  { code: 'cumplimiento', label: 'Cumplimiento', render: () => null },
+  { code: 'taxonomia', label: 'Taxonomía', render: (p) => <TaxonomyTab canEdit={p.canEdit} /> },
+  { code: 'kpis', label: 'KPIs y objetivos', render: (p) => <KpisTab {...p} /> },
+  { code: 'cumplimiento', label: 'Cumplimiento', render: (p) => <ComplianceTab canEdit={p.canEdit} /> },
   { code: 'privacidad', label: 'Privacidad', render: (p) => <PrivacyTab {...p} /> },
   { code: 'modelos', label: 'Modelos de IA', render: (p) => <AiTab {...p} /> },
 ]

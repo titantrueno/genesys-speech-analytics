@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react'
 
 export const input = 'h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 aria-[invalid=true]:border-red-500'
 
@@ -50,5 +50,26 @@ export function Card({ title, description, children }: { title: string; descript
       </header>
       {children}
     </section>
+  )
+}
+
+export const smallButton = 'inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-50'
+
+/** Acción en dos pasos: el primer clic pide confirmación en la propia fila. */
+export function ConfirmAction({ label, question, onConfirm, disabled }: {
+  label: string; question: string; onConfirm: () => void; disabled?: boolean
+}) {
+  const [asking, setAsking] = useState(false)
+  if (!asking) {
+    return <button type="button" className={smallButton} disabled={disabled} onClick={() => setAsking(true)}>{label}</button>
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-slate-600">
+      {question}
+      <button type="button" className={`${smallButton} text-red-700`} onClick={() => { setAsking(false); onConfirm() }}>
+        Confirmar
+      </button>
+      <button type="button" className={smallButton} onClick={() => setAsking(false)}>No</button>
+    </span>
   )
 }

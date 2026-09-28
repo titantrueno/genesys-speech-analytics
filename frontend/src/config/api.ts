@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, apiRequest } from '../api/client'
-import type { AuditEntry, ComplianceCheck, Connector, FieldIssue, PlatformConfig, SectionCode, Taxonomy } from './types'
+import type {
+  AuditEntry, CheckInput, ComplianceCheck, Connector, FieldIssue, PlatformConfig, SectionCode, Taxonomy, Topic, TopicInput, TopicKind,
+} from './types'
 
 export const CONFIG_KEY = ['config']
 
@@ -64,6 +66,23 @@ export const configRequests = {
   privacy: (body: unknown) => apiRequest<PlatformConfig>('/api/config/privacy', { method: 'PUT', body }),
   ai: (body: unknown) => apiRequest<PlatformConfig>('/api/config/ai', { method: 'PUT', body }),
   sync: (id: string) => apiRequest<Connector>(`/api/config/connectors/${id}/sync`, { method: 'POST' }),
+  kpi: ({ code, ...body }: { code: string } & Record<string, unknown>) =>
+    apiRequest<PlatformConfig>(`/api/config/kpis/${code}`, { method: 'PUT', body }),
+  createTopic: ({ kind, body }: { kind: TopicKind; body: TopicInput }) =>
+    apiRequest<Topic>(`/api/config/taxonomy/${kind}`, { method: 'POST', body }),
+  updateTopic: ({ kind, id, body }: { kind: TopicKind; id: string; body: TopicInput }) =>
+    apiRequest<Topic>(`/api/config/taxonomy/${kind}/${id}`, { method: 'PUT', body }),
+  deleteTopic: ({ kind, id }: { kind: TopicKind; id: string }) =>
+    apiRequest<void>(`/api/config/taxonomy/${kind}/${id}`, { method: 'DELETE' }),
+  createCheck: (body: CheckInput) => apiRequest<ComplianceCheck>('/api/config/compliance-checks', { method: 'POST', body }),
+  updateCheck: ({ id, body }: { id: string; body: CheckInput }) =>
+    apiRequest<ComplianceCheck>(`/api/config/compliance-checks/${id}`, { method: 'PUT', body }),
+  deleteCheck: (id: string) => apiRequest<void>(`/api/config/compliance-checks/${id}`, { method: 'DELETE' }),
+}
+
+/** Primer error de un campo o de alguno de sus elementos (`keywords`, `keywords.0`…). */
+export function errorFor(errors: Record<string, string>, field: string): string | undefined {
+  return errors[field] ?? Object.entries(errors).find(([key]) => key.startsWith(`${field}.`))?.[1]
 }
 
 /** Errores por campo de una respuesta `422` (clave: último elemento de la ruta, o `campo.índice` en listas). */

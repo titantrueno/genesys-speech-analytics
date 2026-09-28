@@ -1,4 +1,4 @@
-import type { AuditEntry, Connector, KpiConfig, PlatformConfig } from '../config/types'
+import type { AuditEntry, ComplianceCheck, Connector, KpiConfig, PlatformConfig, Taxonomy, Topic } from '../config/types'
 import { fakeId } from './fixtures'
 
 export const KPI_CONFIG: KpiConfig[] = [
@@ -49,3 +49,27 @@ export function auditEntry(n: number, overrides: Partial<AuditEntry> = {}): Audi
     ...overrides,
   }
 }
+
+export function topic(n: number, overrides: Partial<Topic> = {}): Topic {
+  return {
+    id: fakeId('1TP', n), code: `topic_${n}`, name: `Topic ${n}`, description: '', keywords: [], active: true,
+    conversations: 0, ...overrides,
+  }
+}
+
+export const TAXONOMY: Taxonomy = {
+  main_topics: [
+    topic(1, { code: 'cajeros', name: 'Incidencia en cajero', description: 'Dinero no entregado.', keywords: ['cajero'], conversations: 41 }),
+    topic(2, { code: 'criptoactivos', name: 'Criptoactivos', keywords: ['bitcoin'], conversations: 0 }),
+  ],
+  secondary_topics: [
+    topic(3, { id: fakeId('1TS', 3), code: 'compras online', name: 'compras online', conversations: 120 }),
+  ],
+}
+
+export const CHECKS: ComplianceCheck[] = [
+  { id: fakeId('1CK', 1), code: 'saludo', name: 'Saludo e identificación del agente', description: 'Saluda.',
+    phrases: ['le atiende'], channel: 'ambos', active: true, evaluation: 'analisis', builtin: true },
+  { id: fakeId('1CK', 2), code: 'oferta_encuesta', name: 'Ofrecimiento de encuesta', description: '',
+    phrases: ['valore la atención', 'encuesta'], channel: 'voz', active: true, evaluation: 'frases', builtin: false },
+]
