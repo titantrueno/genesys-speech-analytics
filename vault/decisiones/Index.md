@@ -18,3 +18,4 @@ Registrar decisiones relevantes, el contexto que las motivó y sus consecuencias
 - [ADR-002 — Stack Vite + FastAPI con datos mock deterministas](adr-002-stack-vite-fastapi-mock.md)
 - [ADR-003 — Autenticación mock con permisos por rol](adr-003-auth-mock-por-roles.md)
 - [ADR-004 — Identificadores con prefijo y UUID](adr-004-identificadores-con-prefijo-y-uuid.md)
+- [ADR-005 — Búsqueda vectorial ligera sustituible por embeddings](adr-005-busqueda-vectorial-ligera.md)

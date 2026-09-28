@@ -243,3 +243,23 @@ def test_each_labelled_query_answers_in_under_500_ms(api):
         search(api, q, **FULL)
         elapsed = time.perf_counter() - started
         assert elapsed < 0.5, (q, elapsed)
+
+
+# --- Umbral en contexto (criterio 19) -----------------------------------------------------------
+
+def test_max_score_is_the_best_score_before_the_threshold(api):
+    q = "no puedo entrar en la app"
+    open_search = search(api, q, **FULL)
+    assert open_search["max_score"] == open_search["results"][0]["score"]
+    capped = search(api, q, min_score=1, **FULL)
+    assert capped["total"] == 0
+    assert capped["max_score"] == open_search["max_score"]
+    fragments = search(api, q, group="fragment", min_score=0.2, **FULL)
+    assert fragments["max_score"] == open_search["max_score"]
+
+
+def test_max_score_respects_filters_and_is_null_without_matches(api):
+    q = "no puedo entrar en la app"
+    chat = search(api, q, channel="chat", **FULL)
+    assert chat["max_score"] == chat["results"][0]["score"]
+    assert search(api, "zzqx wwvk", **FULL)["max_score"] is None

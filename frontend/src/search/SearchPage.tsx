@@ -14,7 +14,9 @@ import { useSearchState } from './useSearchState'
 const inputClass = 'h-9 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700'
 const labelClass = 'flex flex-col gap-1 text-xs font-medium text-slate-500'
 
-function ThresholdSlider({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+const percent = (score: number) => Math.round(score * 100)
+
+function ThresholdSlider({ value, best, onChange }: { value: number; best?: number | null; onChange: (value: number) => void }) {
   const external = Math.round(value * 100)
   const [draft, setDraft] = useState(external)
   const [previous, setPrevious] = useState(external)
@@ -29,13 +31,25 @@ function ThresholdSlider({ value, onChange }: { value: number; onChange: (value:
     if (debounced !== external) onChange(debounced / 100)
   }, [debounced]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <label className={labelClass}>
+    <label className={`relative ${labelClass}`}>
       Puntuación mínima
       <span className="flex h-9 items-center gap-2">
-        <input type="range" min={0} max={100} step={5} value={draft} aria-label="Puntuación mínima"
-          onChange={(e) => setDraft(Number(e.target.value))} className="w-32 accent-brand-600" />
+        <span className="relative flex w-32 items-center">
+          <input type="range" min={0} max={100} step={5} value={draft} aria-label="Puntuación mínima"
+            onChange={(e) => setDraft(Number(e.target.value))} className="w-full accent-brand-600" />
+          {best != null && (
+            <span data-testid="max-score-mark" aria-hidden title="Mejor puntuación de esta búsqueda"
+              className="pointer-events-none absolute -top-1 h-5 w-0.5 -translate-x-1/2 rounded bg-amber-500"
+              style={{ left: `${percent(best)}%` }} />
+          )}
+        </span>
         <span className="w-10 text-sm text-slate-700 tabular-nums">{draft} %</span>
       </span>
+      {best != null && (
+        <span className="absolute top-full mt-0.5 whitespace-nowrap text-[11px] font-normal text-slate-500">
+          Mejor puntuación de esta búsqueda: {percent(best)} %
+        </span>
+      )}
     </label>
   )
 }
@@ -54,6 +68,8 @@ export function SearchPage() {
   const fallback = catalog ? presetRange(DEFAULT_PRESET, parseIsoDate(catalog.reference_date)) : undefined
   const from = raw.from ?? run.data?.period.from ?? fallback?.from ?? ''
   const to = raw.to ?? run.data?.period.to ?? fallback?.to ?? ''
+
+  const setThreshold = (score: number) => update({ min_score: score > 0 ? String(score) : undefined })
 
   function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -75,7 +91,7 @@ export function SearchPage() {
             <Search className="size-4" aria-hidden />Buscar
           </button>
         </form>
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-wrap items-end gap-x-3 gap-y-5 pb-3">
           <label className={labelClass}>
             Desde
             <input type="date" className={inputClass} value={from} max={to || undefined}
@@ -96,7 +112,7 @@ export function SearchPage() {
           </label>
           <MultiSelect label="Cola" allLabel="Todas" selected={raw.queue} onChange={(queue) => update({ queue })}
             options={(catalog?.queues ?? []).map((q) => ({ value: q.id, label: q.name }))} />
-          <ThresholdSlider value={raw.minScore} onChange={(score) => update({ min_score: score > 0 ? String(score) : undefined })} />
+          <ThresholdSlider value={raw.minScore} best={search ? run.data?.max_score : null} onChange={setThreshold} />
           <label className={labelClass}>
             Mostrar
             <select className={inputClass} value={raw.group}
@@ -107,7 +123,7 @@ export function SearchPage() {
           </label>
         </div>
       </div>
-      {search ? <Results run={run} group={search.group} /> : (
+      {search ? <Results run={run} group={search.group} minScore={search.min_score} onThreshold={setThreshold} /> : (
         <p className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
           Escribe lo que buscas con tus palabras: encontraremos conversaciones que hablen de lo mismo aunque no usen los mismos términos.
         </p>
@@ -116,7 +132,12 @@ export function SearchPage() {
   )
 }
 
-function Results({ run, group }: { run: ReturnType<typeof useSemanticSearch>; group: 'conversation' | 'fragment' }) {
+function Results({ run, group, minScore, onThreshold }: {
+  run: ReturnType<typeof useSemanticSearch>
+  group: 'conversation' | 'fragment'
+  minScore: number
+  onThreshold: (score: number) => void
+}) {
   const data: SearchResponse | undefined = run.data
   const unit = group === 'fragment' ? ['fragmento', 'fragmentos'] : ['conversación', 'conversaciones']
   const apiMessage = run.error instanceof ApiError && run.error.status === 422 && typeof run.error.detail === 'string'
@@ -134,10 +155,7 @@ function Results({ run, group }: { run: ReturnType<typeof useSemanticSearch>; gr
             )}
           </div>
           {data.results.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 bg-white py-10 text-center text-sm text-slate-500">
-              <p>No hay resultados para esta búsqueda.</p>
-              <p>Baja la puntuación mínima o amplía el intervalo.</p>
-            </div>
+            <EmptyResults best={data.max_score} minScore={minScore} onThreshold={onThreshold} />
           ) : (
             <div className={`space-y-3 transition-opacity ${run.isFetching ? 'opacity-60' : ''}`}>
               {data.results.map((result) => <ResultCard key={`${result.conversation_id}-${result.start_turn}`} result={result} />)}
@@ -146,5 +164,28 @@ function Results({ run, group }: { run: ReturnType<typeof useSemanticSearch>; gr
         </>
       )}
     </section>
+  )
+}
+
+function EmptyResults({ best, minScore, onThreshold }: { best: number | null; minScore: number; onThreshold: (score: number) => void }) {
+  const box = 'space-y-2 rounded-xl border border-slate-200 bg-white py-10 text-center text-sm text-slate-500'
+  if (best !== null && minScore > best) {
+    // Múltiplo de 5 por debajo de la mejor puntuación, el paso del control.
+    const adjusted = Math.floor(percent(best) / 5) * 5
+    return (
+      <div className={box}>
+        <p>Ningún resultado alcanza el {percent(minScore)} %; la mejor coincidencia puntúa un {percent(best)} %.</p>
+        <button type="button" onClick={() => onThreshold(adjusted / 100)}
+          className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50">
+          Ajustar el umbral a {adjusted} %
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className={box}>
+      <p>No hay resultados para esta búsqueda.</p>
+      <p>Baja la puntuación mínima o amplía el intervalo.</p>
+    </div>
   )
 }

@@ -287,6 +287,7 @@ export function searchResponse(total: number, count = Math.min(total, 20), extra
     expansions: ['cargo', 'no reconozco', 'fraude'],
     period: { from: '2026-06-01', to: '2026-06-30' },
     total,
+    max_score: count > 0 ? searchResult(0).score : null,
     results: Array.from({ length: count }, (_, i) => searchResult(i)),
     ...extra,
   }

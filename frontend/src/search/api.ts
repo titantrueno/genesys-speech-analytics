@@ -30,6 +30,7 @@ export interface SearchResponse {
   expansions: string[]
   period: Period
   total: number
+  max_score: number | null
   results: SearchResult[]
 }
 

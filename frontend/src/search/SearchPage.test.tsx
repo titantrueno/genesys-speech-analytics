@@ -147,6 +147,34 @@ describe('búsqueda semántica: resultados', () => {
   })
 })
 
+describe('búsqueda semántica: umbral en contexto', () => {
+  it('muestra la mejor puntuación de la búsqueda junto al umbral y la marca en la escala', async () => {
+    openSearch(`/busqueda?q=${encodeURIComponent(Q)}`)
+    expect(await screen.findByText('Mejor puntuación de esta búsqueda: 87 %')).toBeInTheDocument()
+    expect(screen.getByTestId('max-score-mark')).toHaveStyle({ left: '87%' })
+  })
+
+  it('si el umbral deja la búsqueda vacía lo explica y permite ajustarlo a la mejor puntuación', async () => {
+    const { router, last } = openSearch(`/busqueda?q=${encodeURIComponent(Q)}&min_score=0.4`, (url) => ({
+      status: 200,
+      body: url.searchParams.get('min_score') === '0.4' ? searchResponse(0, 0, { max_score: 0.3642 }) : searchResponse(3),
+    }))
+    expect(await screen.findByText('Ningún resultado alcanza el 40 %; la mejor coincidencia puntúa un 36 %.')).toBeInTheDocument()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Ajustar el umbral a 35 %' }))
+    await waitFor(() => expect(last().get('min_score')).toBe('0.35'))
+    expect(new URLSearchParams(router.state.location.search).get('min_score')).toBe('0.35')
+    expect(await screen.findByText('3 conversaciones')).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: /puntuación mínima/i })).toHaveValue('35')
+  })
+
+  it('sin coincidencias no culpa al umbral', async () => {
+    openSearch(`/busqueda?q=${encodeURIComponent(Q)}`, () => ({ status: 200, body: searchResponse(0) }))
+    expect(await screen.findByText(/no hay resultados/i)).toBeInTheDocument()
+    expect(screen.queryByText(/ningún resultado alcanza/i)).toBeNull()
+    expect(screen.queryByText(/mejor puntuación de esta búsqueda/i)).toBeNull()
+  })
+})
+
 describe('búsqueda semántica: abrir un resultado', () => {
   it('un clic en la tarjeta abre el detalle en su turno y pasa la búsqueda como origen', async () => {
     const { router, first } = openSearch(`/busqueda?q=${encodeURIComponent(Q)}&group=fragment`)

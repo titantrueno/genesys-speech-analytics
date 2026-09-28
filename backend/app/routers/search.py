@@ -68,7 +68,8 @@ def semantic(
     if not q.strip():
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="La consulta no puede estar vacía")
     candidates = {conv.id for conv in filters.apply(get_dataset())}
-    hits = [hit for hit in engine.search(q, candidates) if _score(hit) >= min_score]
+    matched = engine.search(q, candidates)
+    hits = [hit for hit in matched if _score(hit) >= min_score]
     if group == "conversation":
         hits = best_per_conversation(hits)
     expansions = engine.expansions(q)
@@ -78,6 +79,8 @@ def semantic(
         "expansions": expansions,
         "period": {"from": filters.date_from.isoformat(), "to": filters.date_to.isoformat()},
         "total": len(hits),
+        # Mejor puntuación antes del umbral, para situar el control en la UI (criterio 19).
+        "max_score": _score(matched[0]) if matched else None,
         "results": [_result(hit, terms) for hit in hits[:limit]],
     }
 
