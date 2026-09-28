@@ -81,3 +81,35 @@ def test_partially_understood_phrase_keeps_known_parts(api):
 @pytest.mark.parametrize("payload", [{}, {"text": ""}, {"text": "   "}, {"text": "x" * 501}])
 def test_invalid_input_returns_422(api, payload):
     assert api.post("/api/query/interpret", json=payload).status_code == 422
+
+
+@pytest.mark.parametrize("phrase,dates,expected", [
+    ("chats de los últimos 0 días", {"from": "2026-09-26", "to": "2026-09-26"}, [c("channel", "is", "chat")]),
+    ("quejas de los últimos 1000000000 días", {"from": "2016-09-29", "to": "2026-09-26"},
+     [c("main_topic", "is", "reclamacion_queja")]),
+    ("llamadas de menos de 1000000000 segundos", {}, [c("channel", "is", "voz"), c("duration", "lt", 86400)]),
+    ('chats que mencionen "   "', {}, [c("channel", "is", "chat")]),
+])
+def test_extreme_numbers_and_empty_quotes_still_give_a_valid_query(api, phrase, dates, expected):
+    response = api.post("/api/query/interpret", json={"text": phrase})
+    assert response.status_code == 200, response.text
+    query = response.json()["query"]
+    assert {k: query[k] for k in ("from", "to") if k in query} == dates
+    assert canonical(query["root"]["conditions"]) == canonical(expected)
+    parse_query(query)
+
+
+def test_any_combination_of_known_expressions_gives_a_valid_query(api):
+    import random
+    pieces = ["chats", "llamadas", "negativos", "positivos", "neutros", "escalados", "resueltos", "sin resolver",
+              "de fraude", "de bizum", "cajeros", "comisiones", "bajas", "quejas", "cola de tarjetas", "cola de empresas",
+              "Irene Vidal", "con recontacto", "incumplen algún check", "sin verificar la identidad", "esta semana", "ayer",
+              "en los últimos {n} días", "que duren más de {n} minutos", "de menos de {n} segundos", "riesgo alto",
+              "insatisfechos", "con esfuerzo alto", 'que mencionen "{w}"', "clientes que dicen «hola»", "el último mes"]
+    rng = random.Random(2026)
+    for _ in range(500):
+        phrase = " ".join(rng.choice(pieces).format(n=rng.choice([0, 1, 7, 999, 10**9]), w=rng.choice(["x", "  "]))
+                          for _ in range(rng.randint(1, 5)))
+        response = api.post("/api/query/interpret", json={"text": phrase})
+        assert response.status_code == 200, phrase
+        parse_query(response.json()["query"])

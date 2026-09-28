@@ -20,16 +20,21 @@ import { useExplorerState } from './useExplorerState'
 
 const inputClass = 'h-9 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700'
 
-function validationErrors(error: unknown, toOriginal: Map<string, number[]>): Map<string, string> {
-  const errors = new Map<string, string>()
-  if (!(error instanceof ApiError) || error.status !== 422 || !Array.isArray(error.detail)) return errors
+interface ValidationErrors { byPath: Map<string, string>; general: string[] }
+
+function validationErrors(error: unknown, toOriginal: Map<string, number[]>): ValidationErrors {
+  const result: ValidationErrors = { byPath: new Map(), general: [] }
+  if (!(error instanceof ApiError) || error.status !== 422 || !Array.isArray(error.detail)) return result
   for (const item of error.detail as Array<{ path: string; message: string }>) {
     const sentPath = pathFromApi(item.path)
-    if (sentPath === null) continue
+    if (sentPath === null || sentPath.length === 0) {
+      result.general.push(item.message)
+      continue
+    }
     const original = toOriginal.get(sentPath.join('.')) ?? sentPath
-    errors.set(original.join('.'), item.message)
+    result.byPath.set(original.join('.'), item.message)
   }
-  return errors
+  return result
 }
 
 function Explorer({ schema }: { schema: QuerySchema }) {
@@ -76,7 +81,7 @@ function Explorer({ schema }: { schema: QuerySchema }) {
               onChange={(e) => e.target.value && edit({ ...query, from, to: e.target.value })} />
           </label>
         </div>
-        <GroupEditor group={query.root} path={[]} schema={schema} from={from} to={to} errors={errors} handlers={handlers} />
+        <GroupEditor group={query.root} path={[]} schema={schema} from={from} to={to} errors={errors.byPath} handlers={handlers} />
         <p className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">
           <span className="mr-1 font-medium text-slate-900">Consulta:</span>
           <span>{queryToText(query, schema)}</span>
@@ -84,7 +89,7 @@ function Explorer({ schema }: { schema: QuerySchema }) {
       </div>
         <SavedQueries current={pruned.query} onLoad={edit} />
       </div>
-      <Results run={run} validation={errors.size > 0} sort={sort} order={order} page={page}
+      <Results run={run} validation={errors} sort={sort} order={order} page={page}
         onSort={(key) => setListing(nextSort({ sort, order }, key))}
         onPage={(next) => setListing({ page: next })}
         onRemoveLast={query.root.conditions.length > 0 ? () => edit(removeNode(query, [query.root.conditions.length - 1])) : undefined} />
@@ -96,7 +101,7 @@ const RESULT_KPIS = ['volume', 'aht_s', 'resolution_rate', 'escalation_rate', 'c
 
 function Results({ run, validation, sort, order, page, onSort, onPage, onRemoveLast }: {
   run: ReturnType<typeof useQueryRun>
-  validation: boolean
+  validation: ValidationErrors
   sort: Parameters<typeof nextSort>[0]['sort']
   order: Parameters<typeof nextSort>[0]['order']
   page: number
@@ -109,8 +114,11 @@ function Results({ run, validation, sort, order, page, onSort, onPage, onRemoveL
     .map((k): KpiSummary => ({ ...k, previous: null, delta: null, delta_pct: null }))
   return (
     <section aria-label="Resultados" className="space-y-3">
-      {validation && <p className="text-sm text-red-700">Revisa las condiciones marcadas.</p>}
-      {run.isError && !validation && <LoadError message="No se han podido cargar los resultados." />}
+      {validation.byPath.size > 0 && <p className="text-sm text-red-700">Revisa las condiciones marcadas.</p>}
+      {validation.general.map((message) => <p key={message} role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>)}
+      {run.isError && validation.byPath.size === 0 && validation.general.length === 0 && (
+        <LoadError message="No se han podido cargar los resultados." />
+      )}
       {!data && run.isPending && <p role="status" className="text-sm text-slate-500">Cargando resultados…</p>}
       {data && (
         <>

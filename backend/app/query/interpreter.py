@@ -38,6 +38,8 @@ STOPWORDS = {
     "hay", "son", "esta", "este", "estas", "estos",
 }
 MAX_TEXT = 500
+MAX_DAYS = 3650
+MAX_DURATION_S = 86400
 
 
 class _Matcher:
@@ -74,11 +76,12 @@ def interpret(text: str) -> tuple[dict, list[str]]:
         if match.group("who"):
             speaker = "cliente" if match.group("who").startswith("cliente") else "agente"
         span = match.span("q")
-        conditions.append(_cond("transcript", "contains", original[span[0]:span[1]].strip(),
-                                **({"speaker": speaker} if speaker else {})))
+        literal = original[span[0]:span[1]].strip()
+        if literal:
+            conditions.append(_cond("transcript", "contains", literal, **({"speaker": speaker} if speaker else {})))
 
     for match in m.take(r"(?:en )?(?:los )?ultimos? (\d+) dias"):
-        days = int(match.group(1))
+        days = min(max(int(match.group(1)), 1), MAX_DAYS)
         period = {"from": (ref - timedelta(days=days)).isoformat(), "to": yesterday.isoformat()}
     if m.take(r"esta semana"):
         period = {"from": (yesterday - timedelta(days=yesterday.weekday())).isoformat(), "to": yesterday.isoformat()}
@@ -90,7 +93,7 @@ def interpret(text: str) -> tuple[dict, list[str]]:
         period = {"from": yesterday.isoformat(), "to": yesterday.isoformat()}
 
     for match in m.take(r"(?:que )?(?:duren|duran|de) (mas|menos) de (\d+) (minutos?|segundos?)"):
-        seconds = int(match.group(2)) * (60 if match.group(3).startswith("minuto") else 1)
+        seconds = min(int(match.group(2)) * (60 if match.group(3).startswith("minuto") else 1), MAX_DURATION_S)
         conditions.append(_cond("duration", "gt" if match.group(1) == "mas" else "lt", seconds))
 
     if m.take(r"(?:que )?incumpl\w*(?: (?:algun|alguno de los|los))?(?: checks?)?|incumplimientos?"):

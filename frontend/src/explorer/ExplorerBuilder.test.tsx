@@ -163,3 +163,12 @@ describe('constructor de consultas', () => {
     expect(await within(row('1')).findByRole('alert')).toHaveTextContent('Valor no válido para Canal: fax')
   })
 })
+
+describe('errores de validación sin condición asociada', () => {
+  it('se muestran como aviso general', async () => {
+    await openExplorer('/explorador', () => ({
+      status: 422, body: { detail: [{ path: 'from', message: "'from' debe ser anterior o igual a 'to'" }] },
+    }))
+    expect(await screen.findByRole('alert')).toHaveTextContent("'from' debe ser anterior o igual a 'to'")
+  })
+})
