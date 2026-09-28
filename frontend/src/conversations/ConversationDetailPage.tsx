@@ -1,8 +1,9 @@
-import { ArrowLeft, MessageSquareText, Phone } from 'lucide-react'
-import { useCallback, useRef, useState } from 'react'
-import { Link, useLocation, useParams, type Location } from 'react-router'
+import { ArrowLeft, MessageSquareText, Phone, ScanSearch } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useParams, useSearchParams, type Location } from 'react-router'
 import { ApiError } from '../api/client'
 import { useConversation } from '../api/conversations'
+import { useAuth } from '../auth/useAuth'
 import { LoadingScreen } from '../layout/LoadingScreen'
 import { formatDuration } from '../lib/format'
 import { AnalysisPanel } from './AnalysisPanel'
@@ -11,38 +12,63 @@ import { CHANNEL_LABELS } from './labels'
 
 const dateTime = new Intl.DateTimeFormat('es-ES', { dateStyle: 'long', timeStyle: 'short' })
 
+const BACK_LABELS: Record<string, string> = {
+  '/conversaciones': 'Volver al listado',
+  '/explorador': 'Volver al explorador',
+  '/busqueda': 'Volver a la búsqueda',
+}
+
 function BackLink() {
   const location = useLocation()
   const from = (location.state as { from?: Pick<Location, 'pathname' | 'search'> } | null)?.from
-  const toExplorer = from?.pathname === '/explorador'
-  const to = from && (toExplorer || from.pathname === '/conversaciones') ? `${from.pathname}${from.search}` : '/conversaciones'
+  const known = from && from.pathname in BACK_LABELS ? from : undefined
+  const to = known ? `${known.pathname}${known.search}` : '/conversaciones'
   return (
     <Link to={to} className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
-      <ArrowLeft className="size-4" aria-hidden />{toExplorer ? 'Volver al explorador' : 'Volver al listado'}
+      <ArrowLeft className="size-4" aria-hidden />{BACK_LABELS[known?.pathname ?? '/conversaciones']}
     </Link>
   )
+}
+
+/** Turno de `?turn=N` (enlace desde la búsqueda); `null` si no es un índice válido de la conversación. */
+function parseTurn(value: string | null, turnCount: number | undefined): number | null {
+  if (value === null || turnCount === undefined || !/^\d+$/.test(value)) return null
+  const turn = Number(value)
+  return turn < turnCount ? turn : null
 }
 
 export function ConversationDetailPage() {
   const { conversationId = '' } = useParams()
   const { data: conversation, error, isLoading } = useConversation(conversationId)
+  const { can } = useAuth()
+  const [params] = useSearchParams()
   const turnElements = useRef(new Map<number, HTMLLIElement>())
   const chatRef = useRef<HTMLDivElement>(null)
-  const [activeTurn, setActiveTurn] = useState<number | null>(null)
+  const urlTurn = parseTurn(params.get('turn'), conversation?.turns.length)
+  const [chosenTurn, setChosenTurn] = useState<number | null>(null)
+  const activeTurn = chosenTurn ?? urlTurn
 
   const registerTurn = useCallback((index: number, element: HTMLLIElement | null) => {
     if (element) turnElements.current.set(index, element)
     else turnElements.current.delete(index)
   }, [])
 
-  const selectTurn = useCallback((index: number) => {
+  const scrollToTurn = useCallback((index: number) => {
     const element = turnElements.current.get(index)
     const container = chatRef.current
     if (element && container) {
       container.scrollTo({ top: element.offsetTop - container.clientHeight / 2 + element.offsetHeight / 2, behavior: 'smooth' })
     }
-    setActiveTurn(index)
   }, [])
+
+  const selectTurn = useCallback((index: number) => {
+    scrollToTurn(index)
+    setChosenTurn(index)
+  }, [scrollToTurn])
+
+  useEffect(() => {
+    if (urlTurn !== null) scrollToTurn(urlTurn)
+  }, [urlTurn, scrollToTurn])
 
   if (isLoading) return <LoadingScreen />
   if (error || !conversation) {
@@ -77,7 +103,15 @@ export function ConversationDetailPage() {
               <span>{formatDuration(conversation.duration_s)}</span>
             </p>
           </div>
-          <span className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white">{conversation.main_topic_label}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            {can('search:use') && (
+              <Link to={`/busqueda?similar=${conversation.id}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
+                <ScanSearch className="size-4" aria-hidden />Buscar conversaciones similares
+              </Link>
+            )}
+            <span className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white">{conversation.main_topic_label}</span>
+          </div>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-slate-700"><span className="font-medium text-slate-900">Summary. </span>{conversation.analysis.summary}</p>
       </section>

@@ -4,6 +4,7 @@ import { SentimentValue } from '../conversations/badges'
 import { CHANNEL_LABELS } from '../conversations/labels'
 import { useRowNavigation } from '../conversations/useRowNavigation'
 import { highlight } from '../lib/highlight'
+import type { ConversationListItem } from '../api/conversations'
 import type { SearchResult } from './api'
 
 const dateTime = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -21,9 +22,14 @@ export function ScoreBar({ score }: { score: number }) {
   )
 }
 
-export function ResultCard({ result }: { result: SearchResult }) {
-  const conv = result.conversation
-  const href = `/conversaciones/${result.conversation_id}?turn=${result.start_turn}`
+/** Tarjeta navegable de una conversación: con fragmento (búsqueda) o sin él (similares). */
+export function ResultCard({ conversation: conv, score, href, turns, highlights = [] }: {
+  conversation: ConversationListItem
+  score: number
+  href: string
+  turns?: SearchResult['turns']
+  highlights?: string[]
+}) {
   const { onClick, onAuxClick, linkState } = useRowNavigation(href)
   const ChannelIcon = conv.channel === 'voz' ? Phone : MessageSquareText
   const speaker = (s: SearchResult['turns'][number]['speaker']) => s === 'agente' ? conv.agent : s === 'bot' ? 'Asistente virtual' : 'Cliente'
@@ -41,17 +47,19 @@ export function ResultCard({ result }: { result: SearchResult }) {
           <span className="rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{conv.main_topic_label}</span>
           <SentimentValue value={conv.sentiment} />
         </div>
-        <ScoreBar score={result.score} />
+        <ScoreBar score={score} />
       </header>
-      <ol className="mt-3 space-y-1 border-l-2 border-brand-200 pl-3 text-sm leading-relaxed text-slate-800">
-        {result.turns.map((turn) => (
-          <li key={turn.index}>
-            <span className="font-medium text-slate-900">{speaker(turn.speaker)}</span>
-            <span className="text-slate-400">: </span>
-            {highlight(turn.text, result.highlights)}
-          </li>
-        ))}
-      </ol>
+      {turns && (
+        <ol className="mt-3 space-y-1 border-l-2 border-brand-200 pl-3 text-sm leading-relaxed text-slate-800">
+          {turns.map((turn) => (
+            <li key={turn.index}>
+              <span className="font-medium text-slate-900">{speaker(turn.speaker)}</span>
+              <span className="text-slate-400">: </span>
+              {highlight(turn.text, highlights)}
+            </li>
+          ))}
+        </ol>
+      )}
       <p className="mt-2 line-clamp-2 text-xs text-slate-500" title={conv.summary}>{conv.summary}</p>
     </article>
   )

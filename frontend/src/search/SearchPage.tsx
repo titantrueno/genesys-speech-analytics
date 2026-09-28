@@ -1,13 +1,14 @@
 import { Search } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { ApiError } from '../api/client'
 import { useCatalog } from '../api/metrics'
 import { MultiSelect } from '../components/MultiSelect'
 import { LoadError } from '../dashboards/ChartCard'
 import { parseIsoDate, presetRange, DEFAULT_PRESET } from '../dashboards/useDashboardFilters'
 import { useDebouncedValue } from '../explorer/hooks'
-import { formatInteger } from '../lib/format'
-import { useSemanticSearch, type SearchResponse } from './api'
+import { formatInteger, shortId } from '../lib/format'
+import { useSemanticSearch, useSimilar, type SearchResponse } from './api'
 import { ResultCard } from './ResultCard'
 import { useSearchState } from './useSearchState'
 
@@ -55,7 +56,7 @@ function ThresholdSlider({ value, best, onChange }: { value: number; best?: numb
 }
 
 export function SearchPage() {
-  const { search, raw, update } = useSearchState()
+  const { search, similar, raw, update } = useSearchState()
   const { data: catalog } = useCatalog()
   const run = useSemanticSearch(search)
   const [draft, setDraft] = useState(raw.q)
@@ -123,7 +124,9 @@ export function SearchPage() {
           </label>
         </div>
       </div>
-      {search ? <Results run={run} group={search.group} minScore={search.min_score} onThreshold={setThreshold} /> : (
+      {similar ? <SimilarResults conversationId={similar} /> : search ? (
+        <Results run={run} group={search.group} minScore={search.min_score} onThreshold={setThreshold} />
+      ) : (
         <p className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
           Escribe lo que buscas con tus palabras: encontraremos conversaciones que hablen de lo mismo aunque no usen los mismos términos.
         </p>
@@ -158,7 +161,10 @@ function Results({ run, group, minScore, onThreshold }: {
             <EmptyResults best={data.max_score} minScore={minScore} onThreshold={onThreshold} />
           ) : (
             <div className={`space-y-3 transition-opacity ${run.isFetching ? 'opacity-60' : ''}`}>
-              {data.results.map((result) => <ResultCard key={`${result.conversation_id}-${result.start_turn}`} result={result} />)}
+              {data.results.map((result) => (
+                <ResultCard key={`${result.conversation_id}-${result.start_turn}`} conversation={result.conversation} score={result.score}
+                  href={`/conversaciones/${result.conversation_id}?turn=${result.start_turn}`} turns={result.turns} highlights={result.highlights} />
+              ))}
             </div>
           )}
         </>
@@ -187,5 +193,30 @@ function EmptyResults({ best, minScore, onThreshold }: { best: number | null; mi
       <p>No hay resultados para esta búsqueda.</p>
       <p>Baja la puntuación mínima o amplía el intervalo.</p>
     </div>
+  )
+}
+
+function SimilarResults({ conversationId }: { conversationId: string }) {
+  const { data, error, isPending } = useSimilar(conversationId)
+  const notFound = error instanceof ApiError && error.status === 404
+  return (
+    <section aria-labelledby="similar-title" className="space-y-3">
+      <h2 id="similar-title" className="text-sm font-medium text-slate-700">
+        Conversaciones similares a{' '}
+        <Link to={`/conversaciones/${conversationId}`} className="font-mono text-brand-700 hover:underline" title={conversationId}>
+          {shortId(conversationId)}
+        </Link>
+      </h2>
+      {notFound && <LoadError message="La conversación de origen no existe." />}
+      {error && !notFound && <LoadError message="No se han podido cargar las conversaciones similares." />}
+      {isPending && <p role="status" className="text-sm text-slate-500">Buscando conversaciones similares…</p>}
+      {data && (
+        <div className="space-y-3">
+          {data.results.map((r) => (
+            <ResultCard key={r.conversation_id} conversation={r.conversation} score={r.score} href={`/conversaciones/${r.conversation_id}`} />
+          ))}
+        </div>
+      )}
+    </section>
   )
 }

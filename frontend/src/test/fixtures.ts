@@ -292,3 +292,14 @@ export function searchResponse(total: number, count = Math.min(total, 20), extra
     ...extra,
   }
 }
+
+export function similarResponse(originId: string, count = 10) {
+  return {
+    conversation_id: originId,
+    results: Array.from({ length: count }, (_, i) => ({
+      conversation_id: conversationItem(i + 1).id,
+      score: Math.round((0.9 - i * 0.03) * 10000) / 10000,
+      conversation: conversationItem(i + 1),
+    })),
+  }
+}

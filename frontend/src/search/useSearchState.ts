@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router'
 import type { Channel } from '../api/conversations'
 import type { SearchGroup, SearchParams } from './api'
 
-export type SearchChanges = Partial<Record<'q' | 'from' | 'to' | 'channel' | 'min_score' | 'group', string | undefined>> & {
+export type SearchChanges = Partial<Record<'q' | 'from' | 'to' | 'channel' | 'min_score' | 'group' | 'similar', string | undefined>> & {
   queue?: string[]
 }
 
@@ -11,9 +11,11 @@ export type SearchChanges = Partial<Record<'q' | 'from' | 'to' | 'channel' | 'mi
 export function useSearchState() {
   const [params, setParams] = useSearchParams()
 
+  const similar = params.get('similar')?.trim() || null
+
   const search = useMemo((): SearchParams | null => {
     const q = params.get('q')?.trim() ?? ''
-    if (!q) return null
+    if (!q || params.get('similar')?.trim()) return null
     const channel = (['voz', 'chat'] as const).find((c) => c === params.get('channel')) as Channel | undefined
     const minScore = Number(params.get('min_score'))
     return {
@@ -30,6 +32,8 @@ export function useSearchState() {
   const update = useCallback((changes: SearchChanges) => {
     setParams((prev) => {
       const next = new URLSearchParams(prev)
+      // Una búsqueda de texto sale de la vista de similares.
+      if ('q' in changes) next.delete('similar')
       for (const [key, value] of Object.entries(changes)) {
         next.delete(key)
         for (const item of Array.isArray(value) ? value : [value]) if (item) next.append(key, item)
@@ -47,5 +51,5 @@ export function useSearchState() {
     minScore: search?.min_score ?? Math.min(1, Math.max(0, Number(params.get('min_score')) || 0)),
     group: (params.get('group') === 'fragment' ? 'fragment' : 'conversation') as SearchGroup,
   }
-  return { search, raw, update }
+  return { search, similar, raw, update }
 }

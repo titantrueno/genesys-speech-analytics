@@ -53,3 +53,17 @@ export function useSemanticSearch(params: SearchParams | null) {
     retry: false,
   })
 }
+
+export interface SimilarResponse {
+  conversation_id: string
+  results: Array<{ conversation_id: string; score: number; conversation: ConversationListItem }>
+}
+
+export function useSimilar(conversationId: string | null) {
+  return useQuery({
+    queryKey: ['search', 'similar', conversationId],
+    queryFn: ({ signal }) => apiRequest<SimilarResponse>(`/api/search/similar/${encodeURIComponent(conversationId!)}`, { signal }),
+    enabled: conversationId !== null,
+    retry: false,
+  })
+}
