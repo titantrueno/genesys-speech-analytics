@@ -263,3 +263,31 @@ export function explorerRoutes(runBodies: unknown[], run: (body: unknown, url: s
     },
   }
 }
+
+export function searchResult(i: number, score = 0.87 - i * 0.05) {
+  const conversation = conversationItem(i)
+  return {
+    conversation_id: conversation.id,
+    start_turn: 3,
+    end_turn: 5,
+    score: Math.round(score * 10000) / 10000,
+    turns: [
+      { index: 3, speaker: 'cliente', text: 'Me ha aparecido un cargo que no reconozco en la tarjeta.' },
+      { index: 4, speaker: 'agente', text: 'Entiendo su preocupación, reviso el movimiento.' },
+      { index: 5, speaker: 'cliente', text: 'Gracias, no he sido yo.' },
+    ],
+    highlights: ['cargo', 'reconozco'],
+    conversation,
+  }
+}
+
+export function searchResponse(total: number, count = Math.min(total, 20), extra: Record<string, unknown> = {}) {
+  return {
+    query: 'me han cobrado algo que no he comprado',
+    expansions: ['cargo', 'no reconozco', 'fraude'],
+    period: { from: '2026-06-01', to: '2026-06-30' },
+    total,
+    results: Array.from({ length: count }, (_, i) => searchResult(i)),
+    ...extra,
+  }
+}

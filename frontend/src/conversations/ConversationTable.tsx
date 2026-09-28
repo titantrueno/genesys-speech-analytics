@@ -1,11 +1,12 @@
-import type { MouseEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, MessageSquareText, Phone } from 'lucide-react'
-import { Link, useLocation, useNavigate } from 'react-router'
+import { Link } from 'react-router'
 import type { ConversationListItem, SortKey, SortOrder } from '../api/conversations'
 import { formatDecimal, formatDuration, shortId } from '../lib/format'
 import { CHANNEL_LABELS } from './labels'
 import { ResolutionBadge, SentimentValue } from './badges'
 import type { SortState } from './sorting'
+import { useRowNavigation } from './useRowNavigation'
 
 const dateTime = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -30,36 +31,15 @@ function SortHeader({ label, sortKey, query, onSort }: {
   )
 }
 
-const INTERACTIVE = 'a, button, input, select, textarea, label'
-
 function Row({ item }: { item: ConversationListItem }) {
-  const location = useLocation()
-  const navigate = useNavigate()
   const href = `/conversaciones/${item.id}`
+  const { onClick, onAuxClick, linkState } = useRowNavigation(href)
   const ChannelIcon = item.channel === 'voz' ? Phone : MessageSquareText
 
-  const openInNewTab = () => window.open(href, '_blank', 'noopener')
-
-  function onRowClick(event: MouseEvent<HTMLTableRowElement>) {
-    if ((event.target as Element).closest(INTERACTIVE)) return
-    if (window.getSelection()?.toString()) return
-    if (event.ctrlKey || event.metaKey) {
-      openInNewTab()
-      return
-    }
-    navigate(href, { state: { from: location } })
-  }
-
-  function onRowAuxClick(event: MouseEvent<HTMLTableRowElement>) {
-    if (event.button !== 1 || (event.target as Element).closest(INTERACTIVE)) return
-    event.preventDefault()
-    openInNewTab()
-  }
-
   return (
-    <tr onClick={onRowClick} onAuxClick={onRowAuxClick} className="cursor-pointer border-b border-slate-100 align-top hover:bg-brand-50/60">
+    <tr onClick={onClick} onAuxClick={onAuxClick} className="cursor-pointer border-b border-slate-100 align-top hover:bg-brand-50/60">
       <td className="px-2.5 py-2.5 whitespace-nowrap">
-        <Link to={href} state={{ from: location }} className="font-medium text-brand-700 hover:underline">
+        <Link to={href} state={linkState} className="font-medium text-brand-700 hover:underline">
           {dateTime.format(new Date(item.started_at))}
         </Link>
         <p className="font-mono text-[11px] text-slate-400" title={item.id}>{shortId(item.id)}</p>

@@ -11,6 +11,7 @@ import { LoadingScreen } from './layout/LoadingScreen'
 import { ConversationsPage } from './conversations/ConversationsPage'
 import { ConversationDetailPage } from './conversations/ConversationDetailPage'
 import { ExplorerPage } from './explorer/ExplorerPage'
+import { SearchPage } from './search/SearchPage'
 
 export type AppRouter = ReturnType<typeof createBrowserRouter>
 
@@ -29,6 +30,9 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
   ],
   '/explorador': [
     { index: true, element: <ExplorerPage /> },
+  ],
+  '/busqueda': [
+    { index: true, element: <SearchPage /> },
   ],
 }
 
