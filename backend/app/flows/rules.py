@@ -1,0 +1,154 @@
+"""Conexiones y validación de completitud de un flujo (FE004, criterios 2 y 4).
+
+`validate` no bloquea el guardado: bloquea la ejecución y alimenta el botón «Validar» del editor.
+"""
+import copy
+import re
+from dataclasses import asdict, dataclass
+
+from app.flows import catalog
+from app.flows.connections import Rejection, connection_rejection
+from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
+from app.query.model import QueryError, parse_query
+
+VARIABLE = re.compile(r"\{\{\s*([^{}]*?)\s*\}\}")
+FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+@dataclass(frozen=True)
+class Issue:
+    code: str
+    message: str
+    node_id: str | None = None
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+def can_connect(graph: Graph, source: str, target: str) -> Rejection | None:
+    types = {n.id: n.type for n in graph.nodes}
+    return connection_rejection(types, [(e.source, e.target) for e in graph.edges], source, target)
+
+
+def template_variables(template: str) -> list[str]:
+    return VARIABLE.findall(template)
+
+
+def _normalized(text: str) -> str:
+    return text.strip().casefold()
+
+
+def _missing(pairs: list[tuple[str, bool]]) -> list[str]:
+    return [label for label, present in pairs if not present]
+
+
+def _sampling(node: SamplingNode) -> list[Issue]:
+    cfg = node.config
+    missing = _missing([
+        ("filtros", cfg.query is not None),
+        ("método", cfg.method is not None),
+        ("tamaño de muestra", cfg.size is not None),
+        ("criterio de estratificación", cfg.method != "estratificado" or cfg.stratify_by is not None),
+        ("criterio de orden", cfg.method != "primeros_n" or cfg.order_by is not None),
+        ("sentido del orden", cfg.method != "primeros_n" or cfg.order is not None),
+    ])
+    issues = [Issue("node_unconfigured", f"Sampling sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    if cfg.query is not None:
+        try:
+            parse_query(copy.deepcopy(cfg.query))
+        except QueryError as exc:
+            detail = "; ".join(e["message"] for e in exc.errors)
+            issues.append(Issue("invalid_config", f"Los filtros del Sampling no son válidos: {detail}", node.id))
+    return issues
+
+
+def _output_format(node: PromptNode) -> list[Issue]:
+    fmt = node.config.output
+    if fmt is None or fmt.type == "texto":
+        return []
+    if fmt.type == "etiqueta":
+        labels = [_normalized(label) for label in fmt.labels or []]
+        if len(labels) < 2 or "" in labels or len(set(labels)) != len(labels):
+            return [Issue("invalid_config", "El formato «etiqueta» necesita al menos 2 etiquetas distintas y no vacías.", node.id)]
+        return []
+    names = [f.name for f in fmt.fields or []]
+    if not names:
+        return [Issue("invalid_config", "El esquema JSON necesita al menos un campo.", node.id)]
+    invalid = [n for n in names if not FIELD_NAME.match(n)]
+    if invalid:
+        return [Issue("invalid_config", f"Nombre de campo no válido: {', '.join(invalid)} (letras, números y _, sin empezar por número).", node.id)]
+    if len({n.casefold() for n in names}) != len(names):
+        return [Issue("invalid_config", "El esquema JSON tiene campos repetidos.", node.id)]
+    return []
+
+
+def _prompt(node: PromptNode, graph: Graph) -> list[Issue]:
+    cfg = node.config
+    template = (cfg.template or "").strip()
+    missing = _missing([("plantilla", bool(template)), ("modelo", cfg.model is not None),
+                        ("temperatura", cfg.temperature is not None), ("formato de salida", cfg.output is not None)])
+    issues = [Issue("node_unconfigured", f"Prompt sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    if template:
+        used = template_variables(template)
+        unknown = sorted({v for v in used if v not in catalog.VARIABLES})
+        if unknown:
+            issues.append(Issue("unknown_variable", f"Variable desconocida: {', '.join('{{' + v + '}}' for v in unknown)}.", node.id))
+        if not any(v in catalog.VARIABLES for v in used):
+            issues.append(Issue("prompt_without_variables",
+                                "El prompt no usa ninguna variable: todas las conversaciones recibirían el mismo texto.", node.id))
+        chained = any(isinstance(graph.node(source), PromptNode) for source in graph.inputs(node.id))
+        if catalog.PREVIOUS_RESULT in used and not chained:
+            issues.append(Issue("previous_result_without_chain",
+                                "{{resultado_anterior}} solo está disponible en un prompt conectado a otro prompt.", node.id))
+    return issues + _output_format(node)
+
+
+def _output(node: OutputNode, graph: Graph) -> list[Issue]:
+    cfg = node.config
+    missing = _missing([("tipo", cfg.kind is not None), ("nombre de destino", bool((cfg.destination or "").strip())),
+                        ("agregación", cfg.kind != "metrica" or cfg.aggregation is not None)])
+    issues = [Issue("node_unconfigured", f"Output sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    if cfg.kind == "metrica":
+        for source in graph.inputs(node.id):
+            prompt = graph.node(source)
+            fmt = prompt.config.output if isinstance(prompt, PromptNode) else None
+            if fmt is not None and fmt.type != "etiqueta":
+                issues.append(Issue("metric_requires_labels",
+                                    "Una métrica agregada necesita un prompt con formato «etiqueta».", node.id))
+    return issues
+
+
+def _disconnected(node, graph: Graph) -> Issue | None:
+    has_input, has_output = bool(graph.inputs(node.id)), bool(graph.outputs(node.id))
+    loose = {"sampling": not has_output, "prompt": not (has_input and has_output), "output": not has_input}[node.type]
+    if not loose:
+        return None
+    needs = {"sampling": "conéctalo a un Prompt", "prompt": "necesita una entrada y al menos una salida",
+             "output": "conéctale un Prompt"}[node.type]
+    return Issue("disconnected_node", f"{catalog.NODE_TYPES[node.type]} suelto: {needs}.", node.id)
+
+
+def validate(graph: Graph) -> list[Issue]:
+    types = [n.type for n in graph.nodes]
+    issues: list[Issue] = []
+    if "sampling" not in types:
+        issues.append(Issue("missing_sampling", "El flujo necesita un nodo Sampling."))
+    if "output" not in types:
+        issues.append(Issue("missing_output", "El flujo necesita al menos un nodo Output."))
+    destinations: set[str] = set()
+    for node in graph.nodes:
+        if isinstance(node, SamplingNode):
+            issues += _sampling(node)
+        elif isinstance(node, PromptNode):
+            issues += _prompt(node, graph)
+        else:
+            issues += _output(node, graph)
+            destination = _normalized(node.config.destination or "")
+            if destination and destination in destinations:
+                issues.append(Issue("duplicate_destination",
+                                    f"Ya hay otro Output con el destino «{node.config.destination.strip()}».", node.id))
+            destinations.add(destination)
+        loose = _disconnected(node, graph)
+        if loose:
+            issues.append(loose)
+    return issues

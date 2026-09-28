@@ -25,7 +25,8 @@
 - **Dos niveles de validación:**
   - la **integridad** (tipos, identificadores, rangos y reglas de conexión) se exige siempre al guardar, así que un borrador incompleto se puede guardar pero nunca un grafo imposible;
   - la **completitud** (criterio 4) solo bloquea la ejecución.
-- **Reglas compartidas:** `frontend/src/flows/rules.cases.json` contiene casos de conexión y de validación (grafo → errores esperados). Lo ejecutan `backend/tests/test_flow_rules.py` y `frontend/src/flows/rules.test.ts`, para que las dos implementaciones no diverjan.
+- **Reglas compartidas:** las reglas de conexión deben responder al instante en el lienzo, así que existen en Python y en TypeScript. `frontend/src/flows/rules.cases.json` contiene los casos de conexión (grafo, conexión propuesta y código esperado) y lo ejecutan `backend/tests/test_flow_rules.py` y `frontend/src/flows/rules.test.ts`, para que las dos implementaciones no diverjan.
+- **Validación en el backend:** «Validar» envía el grafo actual, aunque no esté guardado, a `POST /api/flows/validate`. Así la completitud (que incluye validar la consulta de FE002) tiene una sola implementación.
 - **Ejecución:** `BackgroundTasks` ejecuta el flujo sobre una copia del grafo guardado. El ritmo lo marca un retardo por elemento configurable (`FLOW_RUN_STEP_DELAY_MS`, 0 en los tests), para que el progreso sea visible en la demo. El estado se lee siempre como copia, bajo un cerrojo.
 - **Vista de ejecución:** al ejecutar, el editor navega a `/flujos/{id}/ejecuciones/{runId}`. Esa misma vista sirve para el progreso, los resultados y reabrir una ejecución del historial.
 
@@ -105,7 +106,7 @@
 
 - **Qué:**
   - `@xyflow/react`;
-  - `flows/graph.ts`: conversión JSON ↔ lienzo, claves temporales y `rules.ts` (reglas y validación, con los casos compartidos);
+  - `flows/graph.ts`: conversión JSON ↔ lienzo y claves temporales; `flows/rules.ts`: reglas de conexión, con los casos compartidos;
   - `flows/FlowEditorPage.tsx`: paleta (arrastrar o botón), lienzo con zoom, desplazamiento, `Controls` y `MiniMap`, conexión con `isValidConnection` y aviso del motivo, borrar con Supr, Guardar, Validar (lista y marcas) y aviso de cambios sin guardar.
 - **Hecho cuando:** hay tests para:
   - las reglas del front con `rules.cases.json`;
@@ -164,7 +165,7 @@
 
 | Id | Estado | Evidencia |
 |---|---|---|
-| T1 | Pendiente | |
+| T1 | Hecha | `tests/test_flow_rules.py`: 88 tests en verde (rojo previo: 87 fallos con stubs; pasaba solo el que comprueba que los casos compartidos cubren todos los códigos); suite de 405. `app/flows/`: `catalog.py` (opciones y límites), `connections.py` (reglas de conexión en tipos primitivos, con `Rejection(code, message)`), `model.py` (Pydantic con `extra="forbid"` y sin `inf`/`nan`; `parse_graph` valida el sobre, cada nodo por separado y las conexiones de forma incremental, y devuelve **todos** los errores con su ruta) y `rules.py` (`can_connect` y `validate` con 11 códigos). `frontend/src/flows/rules.cases.json`: 21 casos de conexión compartidos (7 códigos). Propiedad con semilla fija sobre 500 grafos (la mitad, flujos válidos con mutaciones): sin excepciones, los guardables son acíclicos, sin duplicados, con pares admitidos y una entrada como máximo; los válidos tienen un output y todos sus nodos alcanzables desde un sampling (151 guardables y 72 válidos). Mutaciones detectadas (12 de 12): sin ciclo, sin entrada única, sin duplicadas, `resultado_anterior` sin cadena, prompt sin salida, identificadores repetidos, destinos repetidos, métrica sin etiquetas, una sola etiqueta, límite de nodos, filtros sin validar e `inf` admitido. `ids.py`: constantes `FLOW`, `NODE` y `RUN`. |
 | T2 | Pendiente | |
 | T3 | Pendiente | |
 | T4 | Pendiente | |

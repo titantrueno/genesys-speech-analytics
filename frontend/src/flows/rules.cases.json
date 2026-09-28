@@ -1,0 +1,35 @@
+{
+  "description": "Casos compartidos de las reglas de conexión de FE004. Los ejecutan backend/tests/test_flow_rules.py y frontend/src/flows/rules.test.ts; expected es el código del rechazo o null si la conexión se admite.",
+  "nodes": [
+    { "id": "tmp-s1", "type": "sampling" },
+    { "id": "tmp-s2", "type": "sampling" },
+    { "id": "tmp-p1", "type": "prompt" },
+    { "id": "tmp-p2", "type": "prompt" },
+    { "id": "tmp-p3", "type": "prompt" },
+    { "id": "tmp-o1", "type": "output" },
+    { "id": "tmp-o2", "type": "output" }
+  ],
+  "cases": [
+    { "name": "sampling a prompt", "edges": [], "connect": ["tmp-s1", "tmp-p1"], "expected": null },
+    { "name": "prompts en cadena", "edges": [], "connect": ["tmp-p1", "tmp-p2"], "expected": null },
+    { "name": "prompt a output", "edges": [], "connect": ["tmp-p1", "tmp-o1"], "expected": null },
+    { "name": "varios outputs desde un prompt", "edges": [["tmp-p1", "tmp-o1"]], "connect": ["tmp-p1", "tmp-o2"], "expected": null },
+    { "name": "varios prompts desde un sampling", "edges": [["tmp-s1", "tmp-p1"]], "connect": ["tmp-s1", "tmp-p2"], "expected": null },
+    { "name": "cadena larga sin ciclo", "edges": [["tmp-s1", "tmp-p1"], ["tmp-p1", "tmp-p2"]], "connect": ["tmp-p2", "tmp-p3"], "expected": null },
+    { "name": "sampling directo a output", "edges": [], "connect": ["tmp-s1", "tmp-o1"], "expected": "invalid_pair" },
+    { "name": "sampling a sampling", "edges": [], "connect": ["tmp-s1", "tmp-s2"], "expected": "invalid_pair" },
+    { "name": "prompt a sampling", "edges": [], "connect": ["tmp-p1", "tmp-s1"], "expected": "invalid_pair" },
+    { "name": "output a prompt", "edges": [], "connect": ["tmp-o1", "tmp-p1"], "expected": "invalid_pair" },
+    { "name": "output a output", "edges": [], "connect": ["tmp-o1", "tmp-o2"], "expected": "invalid_pair" },
+    { "name": "output a sampling", "edges": [], "connect": ["tmp-o1", "tmp-s1"], "expected": "invalid_pair" },
+    { "name": "bucle sobre un prompt", "edges": [], "connect": ["tmp-p1", "tmp-p1"], "expected": "self_loop" },
+    { "name": "conexión duplicada", "edges": [["tmp-s1", "tmp-p1"]], "connect": ["tmp-s1", "tmp-p1"], "expected": "duplicate" },
+    { "name": "prompt con la entrada ocupada", "edges": [["tmp-s1", "tmp-p1"]], "connect": ["tmp-s2", "tmp-p1"], "expected": "input_taken" },
+    { "name": "prompt encadenado con la entrada ocupada", "edges": [["tmp-s1", "tmp-p2"]], "connect": ["tmp-p1", "tmp-p2"], "expected": "input_taken" },
+    { "name": "output con la entrada ocupada", "edges": [["tmp-p1", "tmp-o1"]], "connect": ["tmp-p2", "tmp-o1"], "expected": "input_taken" },
+    { "name": "ciclo de dos prompts", "edges": [["tmp-p1", "tmp-p2"]], "connect": ["tmp-p2", "tmp-p1"], "expected": "cycle" },
+    { "name": "ciclo de tres prompts", "edges": [["tmp-p1", "tmp-p2"], ["tmp-p2", "tmp-p3"]], "connect": ["tmp-p3", "tmp-p1"], "expected": "cycle" },
+    { "name": "nodo de origen inexistente", "edges": [], "connect": ["tmp-x", "tmp-p1"], "expected": "unknown_node" },
+    { "name": "nodo de destino inexistente", "edges": [], "connect": ["tmp-s1", "tmp-x"], "expected": "unknown_node" }
+  ]
+}

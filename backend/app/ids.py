@@ -9,6 +9,9 @@ USER = "1US"
 AGENT = "1AG"
 QUEUE = "1QU"
 SAVED_QUERY = "1QY"
+FLOW = "1FL"
+NODE = "1ND"
+RUN = "1RN"
 
 PREFIXES = {
     CONVERSATION: "Conversación",
@@ -20,9 +23,9 @@ PREFIXES = {
     "1TP": "Main topic",
     "1CK": "Check de cumplimiento",
     SAVED_QUERY: "Consulta guardada",
-    "1FL": "Flujo de insights",
-    "1ND": "Nodo de flujo",
-    "1RN": "Ejecución de flujo",
+    FLOW: "Flujo de insights",
+    NODE: "Nodo de flujo",
+    RUN: "Ejecución de flujo",
     "1CN": "Conector de datos",
     "1AU": "Entrada de auditoría",
 }
