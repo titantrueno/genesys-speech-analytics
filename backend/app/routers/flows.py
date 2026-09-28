@@ -2,13 +2,15 @@
 import copy
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Response, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
 from app.auth import User, require_permission
 from app.data.store import get_dataset
 from app.flows import catalog
 from app.flows.model import Graph, GraphError, parse_graph
+from app.flows.prompting import MockPromptRunner, PromptRunner
+from app.flows.runs import FlowExecutor, Run, get_run_store, step_delay_seconds
 from app.flows.rules import validate
 from app.flows.store import Flow, get_flow_store
 from app.query.engine import run_query
@@ -50,8 +52,16 @@ def parsed_graph(payload: Any = Body(...)) -> Graph:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.errors) from None
 
 
+def get_prompt_runner() -> PromptRunner:
+    """Punto de sustitución del motor de prompts (ADR-006): hoy simulado, mañana un LLM real."""
+    return MockPromptRunner()
+
+
 def _summary(flow: Flow) -> dict:
-    return {**flow.summary(), "last_run": None}
+    runs = get_run_store().list(flow.id)
+    last = runs[0].summary() if runs else None
+    return {**flow.summary(),
+            "last_run": {"id": last["id"], "created_at": last["created_at"], "status": last["status"]} if last else None}
 
 
 @router.get("", dependencies=[Depends(VIEW)])
@@ -132,5 +142,39 @@ def duplicate_flow(flow_id: str, user: User = Depends(EDIT)) -> dict:
 
 @router.delete("/{flow_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(EDIT)])
 def delete_flow(flow_id: str) -> Response:
-    get_flow_store().delete(_flow(flow_id))
+    flow = _flow(flow_id)
+    get_flow_store().delete(flow)
+    get_run_store().delete_flow(flow.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{flow_id}/runs", status_code=status.HTTP_202_ACCEPTED)
+def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(EDIT),
+              runner: PromptRunner = Depends(get_prompt_runner)) -> dict:
+    flow = _flow(flow_id)
+    issues = validate(flow.graph)
+    if issues:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=[issue.to_dict() for issue in issues])
+    run = get_run_store().start(flow, user)
+    if run is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="Ya hay una ejecución en curso de este flujo")
+    snapshot = run.snapshot()
+    background.add_task(FlowExecutor(runner, step_delay_seconds()).execute, run)
+    return snapshot
+
+
+def _run(flow_id: str, run_id: str) -> Run:
+    run = get_run_store().get(_flow(flow_id).id, run_id)
+    if run is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Ejecución no encontrada")
+    return run
+
+
+@router.get("/{flow_id}/runs", dependencies=[Depends(VIEW)])
+def list_runs(flow_id: str) -> dict:
+    return {"items": [run.summary() for run in get_run_store().list(_flow(flow_id).id)]}
+
+
+@router.get("/{flow_id}/runs/{run_id}", dependencies=[Depends(VIEW)])
+def get_run(flow_id: str, run_id: str) -> dict:
+    return _run(flow_id, run_id).snapshot()
