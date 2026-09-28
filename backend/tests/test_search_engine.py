@@ -72,7 +72,8 @@ def small_engine():
         _conv(["El cajero no me dio el dinero", "Abro una incidencia del cajero"]),
         _conv(["El cajero no me dio el dinero", "Abro una incidencia del cajero"]),
     ]
-    return convs, TfidfEngine(convs)
+    # Sin expansión: estos tests prueban el modelo vectorial; la expansión se prueba en test_search_relevance.
+    return convs, TfidfEngine(convs, synonyms=())
 
 
 def test_engine_implements_the_search_engine_interface(small_engine):

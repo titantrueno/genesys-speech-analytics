@@ -8,6 +8,7 @@ from collections.abc import Collection, Iterable
 from app.models import Conversation
 from app.query.fields import normalize_text
 from app.search.engine import Fragment, Hit, build_fragments
+from app.search.synonyms import expand
 
 # «no» y «sin» cambian el sentido («no reconozco»), así que no son palabras vacías.
 STOPWORDS = {
@@ -17,11 +18,17 @@ STOPWORDS = {
 }
 NGRAM_SIZES = (3, 4, 5)
 WORD_WEIGHT = 0.5
+# Peso de los términos añadidos por la expansión respecto a los de la consulta.
+EXPANSION_WEIGHT = 0.5
 _WORD_RE = re.compile(r"[a-z0-9]+")
 
 
 def tokenize(text: str) -> list[str]:
     return [w for w in _WORD_RE.findall(normalize_text(text)) if w not in STOPWORDS]
+
+
+def _tf(counts: Counter) -> dict[str, float]:
+    return {term: 1 + math.log(count) for term, count in counts.items()}
 
 
 def char_ngrams(words: Iterable[str]) -> Iterable[str]:
@@ -49,13 +56,13 @@ class _SparseIndex:
         # Postings como pares de arrays compactos (documento, peso): una lista de tuplas ocupaba unos 300 MB.
         self.postings: dict[str, tuple[array, array]] = {}
         for doc, counts in enumerate(documents):
-            for term, weight in self.vector(counts).items():
+            for term, weight in self.vector(_tf(counts)).items():
                 docs, weights = self.postings.setdefault(term, (array("I"), array("f")))
                 docs.append(doc)
                 weights.append(weight)
 
-    def vector(self, counts: Counter) -> dict[str, float]:
-        raw = {t: (1 + math.log(c)) * self.idf[t] for t, c in counts.items() if self.idf.get(t)}
+    def vector(self, tf: dict[str, float]) -> dict[str, float]:
+        raw = {t: w * self.idf[t] for t, w in tf.items() if self.idf.get(t)}
         norm = math.sqrt(sum(w * w for w in raw.values()))
         return {t: w / norm for t, w in raw.items()} if norm else {}
 
@@ -79,14 +86,23 @@ class _Blocks:
         self.words = _SparseIndex([Counter(w) for w in words], groups)
         self.chars = _SparseIndex([Counter(char_ngrams(w)) for w in words], groups)
 
-    def scores(self, text: str) -> dict[int, float]:
+    def scores(self, text: str, expansions: Iterable[str] = ()) -> dict[int, float]:
         words = tokenize(text)
+        extra = [w for expression in expansions for w in tokenize(expression)]
         combined: dict[int, float] = defaultdict(float)
-        for index, counts, weight in ((self.words, Counter(words), WORD_WEIGHT),
-                                      (self.chars, Counter(char_ngrams(words)), 1 - WORD_WEIGHT)):
-            for doc, score in index.scores(index.vector(counts)).items():
+        for index, terms, weight in ((self.words, _query_terms(words, extra, lambda ws: ws), WORD_WEIGHT),
+                                     (self.chars, _query_terms(words, extra, char_ngrams), 1 - WORD_WEIGHT)):
+            for doc, score in index.scores(index.vector(terms)).items():
                 combined[doc] += weight * score
         return combined
+
+
+def _query_terms(words, extra, features) -> dict[str, float]:
+    """TF de la consulta: los términos de la expansión ausentes en ella entran con `EXPANSION_WEIGHT`."""
+    tf = _tf(Counter(features(words)))
+    for term, weight in _tf(Counter(features(extra))).items():
+        tf.setdefault(term, EXPANSION_WEIGHT * weight)
+    return tf
 
 
 def _ranked(scores: dict[int, float]) -> list[tuple[int, float]]:
@@ -94,7 +110,9 @@ def _ranked(scores: dict[int, float]) -> list[tuple[int, float]]:
 
 
 class TfidfEngine:
-    def __init__(self, conversations: list[Conversation]):
+    def __init__(self, conversations: list[Conversation], synonyms: list[list[str]] | None = None):
+        """`synonyms=None` usa el diccionario del dominio; `()` desactiva la expansión."""
+        self._synonyms = synonyms
         self.fragments: list[Fragment] = [f for conv in conversations for f in build_fragments(conv)]
         self._fragments = _Blocks([f.text for f in self.fragments], [f.conversation_id for f in self.fragments])
         self._conversation_ids = [conv.id for conv in conversations]
@@ -104,9 +122,12 @@ class TfidfEngine:
         self._conversations = _Blocks(list(self._conversation_texts.values()), self._conversation_ids)
 
     def search(self, text: str, candidates: Collection[str] | None = None) -> list[Hit]:
-        ranked = _ranked(self._fragments.scores(text))
+        ranked = _ranked(self._fragments.scores(text, self.expansions(text)))
         hits = (Hit(self.fragments[doc], score) for doc, score in ranked)
         return [h for h in hits if candidates is None or h.fragment.conversation_id in candidates]
+
+    def expansions(self, text: str) -> list[str]:
+        return expand(text, self._synonyms) if self._synonyms != () else []
 
     def similar(self, conversation_id: str, k: int = 10) -> list[tuple[str, float]]:
         text = self._conversation_texts[conversation_id]

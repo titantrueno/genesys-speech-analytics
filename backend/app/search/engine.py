@@ -27,6 +27,10 @@ class SearchEngine(Protocol):
 
     def search(self, text: str, candidates: Collection[str] | None = None) -> list[Hit]: ...
 
+    def expansions(self, text: str) -> list[str]:
+        """Términos que el motor añade a la consulta (vacío en un motor sin expansión)."""
+        ...
+
     def similar(self, conversation_id: str, k: int = 10) -> list[tuple[str, float]]: ...
 
 

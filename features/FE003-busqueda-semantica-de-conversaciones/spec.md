@@ -18,9 +18,11 @@ Encontrar conversaciones por significado y no solo por palabras exactas, llegand
 
 1. El backend indexa por fragmentos con una representación vectorial ligera (TF-IDF de palabras y n-gramas de caracteres, sin tildes ni mayúsculas) y similitud coseno. El motor implementa una interfaz `SearchEngine` (indexar, buscar, similares) y la API solo depende de esa interfaz; un test sustituye el motor por uno falso sin cambiar la API.
 2. El índice se construye al arrancar la API (evento de arranque), no en la primera búsqueda, y no se añaden dependencias nuevas al backend.
-3. Un diccionario de sinónimos y expresiones del dominio amplía la consulta. Hay un test con **al menos 8 pares** frase → main topic en los que la frase no comparte ninguna palabra con contenido con los guiones de ese main topic: con el diccionario, el main topic esperado aparece en el top 5, y sin él, no. Por ejemplo:
+3. Un diccionario de sinónimos y expresiones del dominio amplía la consulta. Hay un test con **al menos 8 pares** frase → main topic en los que la frase no comparte ninguna palabra con contenido con los turnos de ese main topic en el dataset (incluidos los valores que rellenan los guiones, como los comercios): con el diccionario, el main topic esperado aparece en el top 5, y sin él, no. Por ejemplo:
    - «me han cobrado algo que no he comprado» → `cargo_no_reconocido` («cargo que no reconozco»);
-   - «quiero irme a otra entidad» → `baja_cancelacion` («me voy a otro banco»).
+   - «abandono la entidad y traslado mis ahorros a la competencia» → `baja_cancelacion` («me voy a otro banco»).
+
+   *Ajuste en T2:* el ejemplo original, «quiero irme a otra entidad», comparte «irme» y «quiero» con los guiones de `baja_cancelacion`, así que no cumplía el propio criterio.
 4. `GET /api/search/semantic` acepta:
    - `q`: texto de 1 a 500 caracteres;
    - `from` y `to`: por defecto, el periodo por defecto de la plataforma (30 días hasta la fecha de referencia);
