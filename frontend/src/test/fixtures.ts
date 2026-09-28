@@ -251,6 +251,7 @@ export function runResult(total: number, items = Array.from({ length: Math.min(t
 export function explorerRoutes(runBodies: unknown[], run: (body: unknown, url: string) => { status: number; body?: unknown } = () => ({ status: 200, body: runResult(60) })) {
   return {
     'GET /api/query/schema': () => ({ status: 200, body: explorerSchemaFixture }),
+    'GET /api/query/saved': () => ({ status: 200, body: { items: [] } }),
     'GET /api/query/suggest': ({ url }: { url: string }) => {
       const field = new URL(url, 'http://localhost').searchParams.get('field') ?? ''
       return { status: 200, body: { field, values: SUGGESTIONS[field] ?? [] } }

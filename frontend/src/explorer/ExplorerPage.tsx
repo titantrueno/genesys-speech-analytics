@@ -9,6 +9,8 @@ import { ApiError } from '../api/client'
 import { LoadingScreen } from '../layout/LoadingScreen'
 import { useQuerySchema } from './api'
 import { GroupEditor, type GroupHandlers } from './GroupEditor'
+import { NaturalLanguage } from './NaturalLanguage'
+import { SavedQueries } from './SavedQueries'
 import { useDebouncedValue, useQueryRun, type QueryRunResponse } from './hooks'
 import {
   addCondition, addGroup, newCondition, pathFromApi, pruneIncomplete, queryToText, removeNode, replaceCondition, setGroupOp,
@@ -59,7 +61,9 @@ function Explorer({ schema }: { schema: QuerySchema }) {
           El enlace de la consulta no es válido; se ha cargado una consulta vacía.
         </p>
       )}
-      <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
+        <NaturalLanguage onQuery={edit} />
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
             Desde
@@ -77,6 +81,8 @@ function Explorer({ schema }: { schema: QuerySchema }) {
           <span className="mr-1 font-medium text-slate-900">Consulta:</span>
           <span>{queryToText(query, schema)}</span>
         </p>
+      </div>
+        <SavedQueries current={pruned.query} onLoad={edit} />
       </div>
       <Results run={run} validation={errors.size > 0} sort={sort} order={order} page={page}
         onSort={(key) => setListing(nextSort({ sort, order }, key))}
