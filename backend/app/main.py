@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import auth as auth_router
+from app.routers import config as config_router
 from app.routers import conversations as conversations_router
 from app.routers import flows as flows_router
 from app.routers import metrics as metrics_router
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(query_router.router)
     app.include_router(search_router.router)
     app.include_router(flows_router.router)
+    app.include_router(config_router.router)
     return app
 
 

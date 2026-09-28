@@ -10,6 +10,8 @@ MAX_SAMPLE_SIZE = 1000
 
 # Modelos simulados: ninguno llama a un LLM (ver vault/decisiones/adr-006-ejecucion-de-prompts-simulada.md).
 MODELS = {"mock-rapido": "Simulado rápido", "mock-preciso": "Simulado preciso"}
+# Proveedores de la configuración (FE005): listas mock, sin claves ni secretos.
+PROVIDERS = {"simulado": {"label": "Simulado (sin LLM)", "models": list(MODELS)}}
 VARIABLES = {
     "transcripcion": "Transcripción completa, turno a turno",
     "summary": "Summary de la conversación",

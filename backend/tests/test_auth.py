@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from app import auth, ids
 from app.main import app
 
-PUBLIC_ROUTES = {"/api/health", "/api/auth/login"}
+PUBLIC_ROUTES = {"/api/health", "/api/auth/login", "/api/config/public"}
 AUTH_ONLY_ROUTES = {"/api/auth/me"}
 DEMO_USERS = {
     "admin": "admin@bancohorizonte.demo",

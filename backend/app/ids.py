@@ -12,6 +12,10 @@ SAVED_QUERY = "1QY"
 FLOW = "1FL"
 NODE = "1ND"
 RUN = "1RN"
+TOPIC = "1TP"
+CHECK = "1CK"
+CONNECTOR = "1CN"
+AUDIT = "1AU"
 
 PREFIXES = {
     CONVERSATION: "Conversación",
@@ -20,14 +24,14 @@ PREFIXES = {
     AGENT: "Agente",
     QUEUE: "Cola",
     "1RO": "Rol",
-    "1TP": "Main topic",
-    "1CK": "Check de cumplimiento",
+    TOPIC: "Main topic",
+    CHECK: "Check de cumplimiento",
     SAVED_QUERY: "Consulta guardada",
     FLOW: "Flujo de insights",
     NODE: "Nodo de flujo",
     RUN: "Ejecución de flujo",
-    "1CN": "Conector de datos",
-    "1AU": "Entrada de auditoría",
+    CONNECTOR: "Conector de datos",
+    AUDIT: "Entrada de auditoría",
 }
 
 _NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, "speech-analytics.bancohorizonte.demo")

@@ -38,6 +38,7 @@ Durante FE001, FE007, FE008, FE002, FE003 y FE004 aparecieron comportamientos de
 20. **FE004:** una prueba de carrera sin forzar la ventana solo detectaba la mutación a veces; con un `active` lento es determinista.
 21. **FE004:** filtrar la salida del build con `grep` volvió a ocultar un error de tipos (como en la lección 10).
 22. **FE004:** en T7 y T8 el código se escribió antes que los tests. Las mutaciones encontraron dos tests débiles: uno no esperaba al debounce y otro miraba el DOM cuando el defecto solo estaba en el JSON.
+23. **FE005:** una mutación de Python de la misma longitud que el original (`old` → `new`) «sobrevivía»: el `.pyc` en caché se valida por tamaño y marca de tiempo en segundos, así que el test ejecutaba el código sin mutar.
 
 ## Causa
 
@@ -66,6 +67,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Para probar trabajo en segundo plano, expón un gancho por paso y prueba también con un servidor real.
 - Comprueba el build y el lint por su código de salida, nunca por una salida filtrada.
 - Si el código precede al test, demuestra el rojo con mutaciones y comprueba qué mira el test (DOM o datos).
+- Ejecuta las mutaciones de Python sin caché de bytecode (`python -B` y `PYTHONDONTWRITEBYTECODE=1`); una mutación que sobrevive se confirma a mano antes de tocar el test.
 
 ## Acción preventiva
 
@@ -82,4 +84,5 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Verificación de FE002](../../features/FE002-explorador-de-queries-asistidas/VERIFY.md)
 - [Plan y evidencia de FE003](../../features/FE003-busqueda-semantica-de-conversaciones/plan.md)
 - [Plan y evidencia de FE004](../../features/FE004-disenador-de-flujos-de-insights/plan.md)
+- [Plan y evidencia de FE005](../../features/FE005-configuracion-de-la-plataforma/plan.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

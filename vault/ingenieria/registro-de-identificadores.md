@@ -33,14 +33,14 @@ updated: 2026-09-28
 | `1AG` | Agente | Activo (FE008) |
 | `1QU` | Cola | Activo (FE008) |
 | `1RO` | Rol | Reservado (FE006) |
-| `1TP` | Main topic | Reservado (FE005) |
-| `1CK` | Check de cumplimiento | Reservado (FE005) |
+| `1TP` | Main topic | Reservado (FE005, constante `TOPIC`) |
+| `1CK` | Check de cumplimiento | Reservado (FE005, constante `CHECK`) |
 | `1QY` | Consulta guardada | Activo (FE002) |
 | `1FL` | Flujo de insights | Activo (FE004) |
 | `1ND` | Nodo de flujo | Activo (FE004) |
 | `1RN` | Ejecución de flujo | Activo (FE004) |
-| `1CN` | Conector de datos | Reservado (FE005) |
-| `1AU` | Entrada de auditoría | Reservado (FE005/FE006) |
+| `1CN` | Conector de datos | Activo (FE005) |
+| `1AU` | Entrada de auditoría | Activo (FE005; FE006 lo reutilizará) |
 
 ## Cómo añadir un prefijo
 

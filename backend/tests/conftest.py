@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from app import auth  # noqa: E402
 from app.main import app  # noqa: E402
+from app.config.store import reset_config_store  # noqa: E402
 from app.flows.runs import reset_run_store  # noqa: E402
 from app.flows.store import reset_flow_store  # noqa: E402
 from app.query.saved import reset_saved_store  # noqa: E402
@@ -20,6 +21,7 @@ def api():
     reset_saved_store()
     reset_flow_store()
     reset_run_store()
+    reset_config_store()
     client = TestClient(app)
     admin = auth.get_store().find_by_email("admin@bancohorizonte.demo")
     client.headers["Authorization"] = f"Bearer {auth.create_token(admin)}"
