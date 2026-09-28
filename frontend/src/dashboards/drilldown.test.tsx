@@ -76,7 +76,7 @@ describe('drill-down desde dashboards', () => {
   it('una fila de la tabla por main topic y un segmento de canal llevan al listado', async () => {
     const { router } = await openDashboard('/dashboards/vision-general')
     const table = await screen.findByRole('table', { name: 'KPIs por main topic' })
-    await userEvent.setup().click(within(table).getByRole('link', { name: 'Incidencia en cajero' }))
+    await userEvent.setup().click(await within(table).findByRole('link', { name: 'Incidencia en cajero' }))
     await waitFor(() => expect(params(router).get('main_topic')).toBe('cajeros'))
 
     router.navigate('/dashboards/vision-general')
