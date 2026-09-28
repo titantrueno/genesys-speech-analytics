@@ -43,6 +43,16 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
       HydrateFallback: LoadingScreen,
       lazy: async () => ({ Component: (await import('./flows/FlowEditorPage')).FlowEditorPage }),
     },
+    {
+      path: ':flowId/ejecuciones',
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./flows/RunPage')).RunsPage }),
+    },
+    {
+      path: ':flowId/ejecuciones/:runId',
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./flows/RunPage')).RunPage }),
+    },
   ],
 }
 

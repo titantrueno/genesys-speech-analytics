@@ -18,14 +18,21 @@ const BACK_LABELS: Record<string, string> = {
   '/busqueda': 'Volver a la búsqueda',
 }
 
+// Orígenes con parámetros en la ruta (FE004: la tabla de resultados de una ejecución de flujo).
+const BACK_PATTERNS: Array<[RegExp, string]> = [[/^\/flujos\/[^/]+\/ejecuciones\/[^/]+$/, 'Volver a la ejecución']]
+
+function backLabel(pathname: string): string | undefined {
+  return BACK_LABELS[pathname] ?? BACK_PATTERNS.find(([pattern]) => pattern.test(pathname))?.[1]
+}
+
 function BackLink() {
   const location = useLocation()
   const from = (location.state as { from?: Pick<Location, 'pathname' | 'search'> } | null)?.from
-  const known = from && from.pathname in BACK_LABELS ? from : undefined
-  const to = known ? `${known.pathname}${known.search}` : '/conversaciones'
+  const label = from ? backLabel(from.pathname) : undefined
+  const to = from && label ? `${from.pathname}${from.search}` : '/conversaciones'
   return (
     <Link to={to} className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
-      <ArrowLeft className="size-4" aria-hidden />{BACK_LABELS[known?.pathname ?? '/conversaciones']}
+      <ArrowLeft className="size-4" aria-hidden />{label ?? BACK_LABELS['/conversaciones']}
     </Link>
   )
 }

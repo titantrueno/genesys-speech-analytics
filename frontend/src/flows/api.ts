@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '../api/client'
 import type { ExplorerQuery } from '../explorer/queryModel'
-import type { Flow, FlowCatalog, FlowGraph, FlowSummary, Issue, Run } from './types'
+import type { Flow, FlowCatalog, FlowGraph, FlowSummary, Issue, Run, RunSummary } from './types'
 
 const FLOWS_KEY = ['flows']
 
@@ -98,5 +98,26 @@ export function useEstimate(query: ExplorerQuery | undefined, size: number | und
     enabled: query !== undefined,
     placeholderData: keepPreviousData,
     staleTime: 60_000,
+  })
+}
+
+export const RUN_POLL_MS = 500
+const isActive = (run: Run | undefined) => run?.status === 'pendiente' || run?.status === 'en_curso'
+
+export function useRuns(flowId: string) {
+  return useQuery({
+    queryKey: ['flow-runs', flowId],
+    queryFn: ({ signal }) => apiRequest<{ items: RunSummary[] }>(`/api/flows/${flowId}/runs`, { signal }),
+    staleTime: 0,
+  })
+}
+
+/** Detalle de una ejecución; mientras no termina se consulta cada medio segundo (el progreso llega por polling). */
+export function useRun(flowId: string, runId: string) {
+  return useQuery({
+    queryKey: ['flow-run', flowId, runId],
+    queryFn: ({ signal }) => apiRequest<Run>(`/api/flows/${flowId}/runs/${runId}`, { signal }),
+    refetchInterval: (query) => (isActive(query.state.data) ? RUN_POLL_MS : false),
+    staleTime: 0,
   })
 }
