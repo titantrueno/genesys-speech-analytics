@@ -65,7 +65,7 @@ export function ConditionRow({ label, cond, schema, from, to, error, onChange, o
   return (
     <div role="group" aria-label={`Condición ${label}`} className="rounded-lg border border-slate-200 bg-white p-2.5">
       <div className="flex flex-wrap items-center gap-2">
-        <select aria-label="Campo" className={control} value={cond.field}
+        <select aria-label="Campo" className={`${control} w-56`} value={cond.field}
           onChange={(e) => {
             const next = schema.fields.find((f) => f.key === e.target.value)
             if (next) onChange(newCondition(next))

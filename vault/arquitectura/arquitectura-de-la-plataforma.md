@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [arquitectura, frontend, backend, api, mock]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Arquitectura de la plataforma
@@ -34,6 +34,22 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 3. **Contrato de drill-down:** cada elemento de un dashboard navega a `/conversaciones` con los filtros del dashboard más un filtro que selecciona el **numerador** de su KPI (`frontend/src/dashboards/drilldown.ts`). Los tests del backend garantizan que el total del listado coincide con el valor mostrado.
 4. El detalle carga `GET /api/conversations/{id}` y el catálogo para las etiquetas de los checks.
 
+### Motor de consultas (FE002)
+
+- **Modelo:** un intervalo más un árbol de grupos `and`/`or` (máximo 2 niveles) con condiciones `{field, operator, value, speaker?}`. `backend/app/query/model.py` valida y devuelve **todos** los errores con la ruta de cada condición (`root.conditions[1].conditions[0]`).
+- **Campos:** registro tipado en `backend/app/query/fields.py`:
+  - categóricos, numéricos, texto y booleanos;
+  - un campo por cada check de cumplimiento, con «cumple / no cumple / no aplica»;
+  - cola y agente con identificadores `1QU`/`1AG` y etiqueta de nombre.
+- **Evaluación:** `backend/app/query/engine.py`. El texto se compara sin distinguir mayúsculas ni tildes, con caché por conversación y filtro opcional por hablante. `POST /api/query/run` reutiliza `compute_kpis` y `services/listing.py`, así que explorador y listado devuelven las mismas filas.
+- **Intérprete:** `backend/app/query/interpreter.py`, mock por reglas y sinónimos bancarios, sin LLM. Nunca ejecuta: devuelve una consulta editable y las palabras no entendidas.
+- **Consultas guardadas:** en memoria, privadas de cada usuario (otro usuario recibe `404`), con identificador `1QY`. Una consulta guardada sin fechas sigue siendo relativa al periodo por defecto.
+- **Front:**
+  - la consulta vive en la URL (`q`, JSON en base64url);
+  - las condiciones incompletas no se envían;
+  - debounce de 300 ms;
+  - las respuestas antiguas no sustituyen a las nuevas, porque TanStack Query guarda cada consulta bajo su propia clave.
+
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral).
@@ -53,3 +69,4 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [ADR-002 — Stack](../decisiones/adr-002-stack-vite-fastapi-mock.md)
 - [README del backend](../../backend/README.md)
 - [README del frontend](../../frontend/README.md)
+- [Spec FE002](../../features/FE002-explorador-de-queries-asistidas/spec.md)

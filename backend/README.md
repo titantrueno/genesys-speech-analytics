@@ -51,7 +51,12 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 | `GET /api/metrics/breakdown?dimension=main_topic\|channel\|queue\|agent` | `dashboards:view` | KPIs por grupo. |
 | `GET /api/conversations` | `conversations:view` | Listado filtrado, paginado (25) y ordenado. |
 | `GET /api/conversations/{id}` | `conversations:view` | Conversación completa con análisis. |
-| `GET /api/catalog` | `dashboards:view` o `conversations:view` | Valores de los filtros. |
+| `GET /api/catalog` | `dashboards:view` o `conversations:view` | Valores de los filtros y fecha de referencia. |
+| `GET /api/query/schema` | `explorer:use` | Campos del explorador con tipo, operadores y valores. |
+| `POST /api/query/run` | `explorer:use` | Ejecuta una consulta: total, 13 KPIs y página del listado (`page`, `page_size`, `sort`, `order`). |
+| `GET /api/query/suggest?field=` | `explorer:use` | Valores de un campo categórico en el intervalo, con recuento. |
+| `POST /api/query/interpret` | `explorer:use` | Frase en español → consulta editable y palabras no entendidas. |
+| `GET/POST /api/query/saved`, `GET/PATCH/DELETE /api/query/saved/{id}` | `explorer:use` | Consultas guardadas privadas del usuario (`1QY-…`). |
 
 **Filtros comunes:** `from`, `to` (por defecto, los últimos 30 días), `channel`, `queue` (IDs `1QU-…`), `agent` (IDs `1AG-…`), `main_topic` (códigos). El listado admite además `resolution`, `churn_risk`, `sentiment_lt`, `compliant` y `repeat_contact`, que usa el drill-down desde los KPIs.
 
@@ -67,6 +72,7 @@ app/
   models.py          # modelos Pydantic
   data/              # catálogo bancario, guiones, generador y store
   services/          # filtros y cálculo de KPIs
-  routers/           # auth, metrics, conversations
+  query/             # modelo, campos, motor, intérprete y consultas guardadas del explorador
+  routers/           # auth, metrics, conversations, query
 tests/
 ```

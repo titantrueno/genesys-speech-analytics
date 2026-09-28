@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [glosario, harness]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Términos del harness
@@ -33,6 +33,9 @@ updated: 2026-09-27
 - **CSAT predicho:** satisfacción estimada de 1 a 5 a partir del contenido de la conversación.
 - **Esfuerzo del cliente:** esfuerzo estimado de 1 a 5 que la gestión exige al cliente.
 - **Riesgo de abandono:** probabilidad (baja, media o alta) de que el cliente deje el banco.
+- **Query asistida:** consulta del explorador construida visualmente o a partir de una frase, que se revisa antes de ejecutarse.
+- **Condición:** regla `campo operador valor` de una query (por ejemplo, `Sentimiento < -0,3`).
+- **Grupo:** conjunto de condiciones combinadas con Y (`and`) u O (`or`); puede anidarse un nivel.
 - **Drill-down:** navegar de un elemento agregado de un dashboard al listado de las conversaciones que lo componen.
 
 ## Fuentes
