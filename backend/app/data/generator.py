@@ -1,11 +1,13 @@
 import random
 from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from app import ids
 from app.data.catalog import (
     AGENT_IDS,
     AGENTS_BY_QUEUE,
     BANK_NAME,
+    BANK_TIMEZONE,
     FRAUD_SPIKE_DAYS,
     FRAUD_TOPICS,
     MAIN_TOPICS,
@@ -89,7 +91,7 @@ def _pick_start(rng: random.Random, reference_date: date) -> datetime:
         if day.weekday() < 5 or rng.random() < 0.4:
             break
     hour = rng.choices(range(8, 22), weights=[3, 6, 8, 8, 7, 5, 4, 5, 6, 6, 5, 4, 3, 2])[0]
-    return datetime.combine(day, time(hour, rng.randint(0, 59), rng.randint(0, 59)))
+    return datetime.combine(day, time(hour, rng.randint(0, 59), rng.randint(0, 59)), tzinfo=ZoneInfo(BANK_TIMEZONE))
 
 
 def _pick_topic(rng: random.Random, started_at: datetime, reference_date: date) -> MainTopic:

@@ -6,12 +6,15 @@ entrada y ninguno rechazado la crea. Se pierde al reiniciar la API, como el rest
 import random
 import threading
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import date, datetime, tzinfo
+from functools import cache
 from typing import Any, Callable
+from zoneinfo import ZoneInfo
 
 from app import ids
 from app.auth import User
 from app.config.checks import Check, initial_checks
+from app.config.kpis import KpiTarget, initial_kpis
 from app.config.model import AiConfig, GeneralConfig, PrivacyConfig
 from app.config.taxonomy import Topic, initial_main_topics, initial_secondary_topics
 from app.clock import now
@@ -64,6 +67,7 @@ class Config:
     main_topics: dict[str, Topic] = field(default_factory=initial_main_topics)
     secondary_topics: dict[str, Topic] = field(default_factory=initial_secondary_topics)
     checks: dict[str, Check] = field(default_factory=initial_checks)
+    kpis: dict[str, KpiTarget] = field(default_factory=initial_kpis)
 
     def topic_name(self, code: str) -> str:
         """Nombre vigente de un main topic, esté o no activo."""
@@ -122,3 +126,17 @@ def reset_config_store() -> None:
 
 def topic_name(code: str) -> str:
     return get_config().topic_name(code)
+
+
+@cache
+def _zone(name: str) -> ZoneInfo:
+    return ZoneInfo(name)
+
+
+def current_zone() -> tzinfo:
+    """Zona horaria configurada: en ella se interpretan los filtros de fecha y los días de las series (FE005)."""
+    return _zone(get_config().general.timezone)
+
+
+def local_day(moment: datetime, zone: tzinfo | None = None) -> date:
+    return moment.astimezone(zone or current_zone()).date()

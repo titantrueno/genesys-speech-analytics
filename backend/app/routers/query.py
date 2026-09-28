@@ -6,6 +6,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query as QueryParam
 from pydantic import BaseModel, Field
 
 from app.auth import User, require_permission
+from app.config.store import current_zone, local_day
 from app.data.store import followup_index, get_dataset, reference_date
 from app.query.engine import run_query
 from app.query.interpreter import interpret, validate_text
@@ -65,8 +66,9 @@ def suggest(
     if date_from > date_to:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="'from' debe ser anterior o igual a 'to'")
     counts: Counter[str] = Counter()
+    zone = current_zone()
     for conv in get_dataset():
-        if date_from <= conv.started_at.date() <= date_to:
+        if date_from <= local_day(conv.started_at, zone) <= date_to:
             value = fdef.extract(conv)
             counts.update(set(value) if fdef.multi_valued else [value])
     labels = dict(fdef.values)

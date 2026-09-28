@@ -1,11 +1,12 @@
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, timedelta, tzinfo
 from typing import Literal
 
 from fastapi import Depends, HTTPException, Query, status
 
 from app import ids
 from app.config.compliance import is_compliant
+from app.config.store import current_zone, local_day
 from app.data.store import followup_index, reference_date
 from app.models import Conversation
 
@@ -26,8 +27,9 @@ class ConversationFilters:
     compliant: bool | None = None
     repeat_contact: bool | None = None
 
-    def matches(self, conv: Conversation, date_from: date | None = None, date_to: date | None = None) -> bool:
-        day = conv.started_at.date()
+    def matches(self, conv: Conversation, date_from: date | None = None, date_to: date | None = None,
+                zone: tzinfo | None = None) -> bool:
+        day = local_day(conv.started_at, zone)
         return (
             (date_from or self.date_from) <= day <= (date_to or self.date_to)
             and (self.channel is None or conv.channel == self.channel)
@@ -42,7 +44,8 @@ class ConversationFilters:
         )
 
     def apply(self, convs, date_from: date | None = None, date_to: date | None = None) -> list[Conversation]:
-        return [c for c in convs if self.matches(c, date_from, date_to)]
+        zone = current_zone()
+        return [c for c in convs if self.matches(c, date_from, date_to, zone)]
 
     def previous_period(self) -> tuple[date, date]:
         length = self.date_to - self.date_from

@@ -10,10 +10,12 @@ from pydantic import BaseModel, ValidationError
 from app import ids
 from app.auth import User, require_permission
 from app.config.checks import Check, CheckIn
+from app.config.kpis import DASHBOARDS, KpiTarget, KpiTargetIn
 from app.config.model import LANGUAGES, SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, field_errors, timezones
 from app.config.store import Config, Connector, get_config, get_config_store
 from app.config.taxonomy import (MainTopicIn, SecondaryTopicIn, Topic, main_topic_usage,
                                  secondary_topic_usage)
+from app.services.kpis import KPI_DEFS
 from app.text import normalize_text
 from app.data.store import get_dataset
 from app.flows.catalog import MODELS, PROVIDERS
@@ -52,6 +54,7 @@ def _options() -> dict:
         "providers": [{"value": v, "label": p["label"], "models": [{"value": m, "label": MODELS[m]} for m in p["models"]]}
                       for v, p in PROVIDERS.items()],
         "sections": [{"value": v, "label": label} for v, label in SECTIONS.items()],
+        "dashboards": [{"value": v, "label": label} for v, label in DASHBOARDS.items()],
     }
 
 
@@ -61,6 +64,8 @@ def config_body(config: Config) -> dict:
         "general": config.general.model_dump(),
         "privacy": config.privacy.model_dump(),
         "ai": {**config.ai.model_dump(), "simulated": True},
+        "kpis": [{"code": k.code, "label": k.label, "unit": k.unit, "higher_is_better": k.higher_is_better,
+                  **config.kpis[k.code].to_dict()} for k in KPI_DEFS],
         "options": _options(),
     }
 
@@ -301,3 +306,21 @@ def delete_check(check_id: str, user: User = Depends(EDIT)) -> Response:
 
     get_config_store().apply_change(user, "cumplimiento", _check_element(check), change)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# --- KPIs y objetivos ---
+
+@router.put("/kpis/{code}")
+def update_kpi(code: str, payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
+    kpi = next((k for k in KPI_DEFS if k.code == code), None)
+    if kpi is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="KPI no encontrado")
+    data = _parse(KpiTargetIn, payload)
+    try:
+        data.validate_for(kpi)
+    except ValidationError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=field_errors(exc)) from None
+    target = KpiTarget(data.target, data.green, data.amber, tuple(data.dashboards))
+    config = get_config_store().apply_change(user, "kpis", kpi.label, lambda c: (
+        c.kpis[code].to_dict(), target.to_dict(), {"kpis": {**c.kpis, code: target}}))
+    return config_body(config)

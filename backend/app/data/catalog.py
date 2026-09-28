@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from app import ids
 
 BANK_NAME = "Banco Horizonte"
+# Las conversaciones se generan en la hora local del banco (FE005: los días se calculan en la zona configurada).
+BANK_TIMEZONE = "Europe/Madrid"
 
 QUEUES = [
     "Particulares",

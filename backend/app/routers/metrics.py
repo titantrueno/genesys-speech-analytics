@@ -5,7 +5,8 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 
 from app.auth import require_permission
-from app.config.store import topic_name
+from app.config.kpis import DASHBOARDS
+from app.config.store import current_zone, get_config, local_day, topic_name
 from app.data.store import followup_index, get_dataset
 from app.services.filters import ConversationFilters, conversation_filters
 from app.services.kpis import KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta, delta_pct, round_value
@@ -36,7 +37,12 @@ def _period(date_from: date, date_to: date) -> dict:
 
 
 @router.get("/summary")
-def summary(filters: ConversationFilters = Depends(conversation_filters)) -> dict:
+def summary(
+    filters: ConversationFilters = Depends(conversation_filters),
+    dashboard: Literal[tuple(DASHBOARDS)] | None = None,  # type: ignore[valid-type]
+) -> dict:
+    """KPIs del periodo y del anterior, con su estado según los umbrales. Con `dashboard`, solo los que se muestran en él."""
+    targets = get_config().kpis
     dataset, followups = get_dataset(), followup_index()
     prev_from, prev_to = filters.previous_period()
     current_convs = filters.apply(dataset)
@@ -49,8 +55,10 @@ def summary(filters: ConversationFilters = Depends(conversation_filters)) -> dic
             {"code": k.code, "label": k.label, "unit": k.unit, "higher_is_better": k.higher_is_better,
              "value": round_value(current[k.code]), "previous": round_value(previous[k.code]),
              "delta": delta(current[k.code], previous[k.code]),
-             "delta_pct": delta_pct(current[k.code], previous[k.code], k.unit)}
-            for k in KPI_DEFS
+             "delta_pct": delta_pct(current[k.code], previous[k.code], k.unit),
+             "target": targets[k.code].target,
+             "status": targets[k.code].status(round_value(current[k.code]), k.higher_is_better)}
+            for k in KPI_DEFS if dashboard is None or dashboard in targets[k.code].dashboards
         ],
         "compliance_by_check": compliance_by_check(current_convs),
     }
@@ -71,9 +79,10 @@ def timeseries(
     filters: ConversationFilters = Depends(conversation_filters),
 ) -> dict:
     convs, followups = filters.apply(get_dataset()), followup_index()
+    zone = current_zone()
     by_day = defaultdict(list)
     for c in convs:
-        by_day[c.started_at.date()].append(c)
+        by_day[local_day(c.started_at, zone)].append(c)
     points = []
     for start, end in _buckets(filters.date_from, filters.date_to, granularity):
         bucket = [c for offset in range((end - start).days + 1) for c in by_day[start + timedelta(days=offset)]]

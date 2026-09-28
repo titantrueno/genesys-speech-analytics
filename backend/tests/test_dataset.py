@@ -2,12 +2,13 @@ import re
 from pathlib import Path
 from collections import Counter
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app import ids
-from app.data.catalog import AGENTS_BY_QUEUE, MAIN_TOPICS, QUEUES, RESULT_MARKERS
+from app.data.catalog import AGENTS_BY_QUEUE, BANK_TIMEZONE, MAIN_TOPICS, QUEUES, RESULT_MARKERS
 from app.data.generator import generate_dataset
 from app.main import app
 
@@ -62,8 +63,9 @@ def test_size_ids_and_date_range(dataset):
     assert len({c.id for c in dataset}) == 1000
     assert all(ids.is_valid(c.id, ids.CONVERSATION) for c in dataset)
     assert all(ids.is_valid(c.customer_id, ids.CUSTOMER) for c in dataset)
-    start = datetime.combine(REF - timedelta(days=90), datetime.min.time())
-    end = datetime.combine(REF, datetime.min.time())
+    bank = ZoneInfo(BANK_TIMEZONE)
+    start = datetime.combine(REF - timedelta(days=90), datetime.min.time(), tzinfo=bank)
+    end = datetime.combine(REF, datetime.min.time(), tzinfo=bank)
     assert all(start <= c.started_at < end for c in dataset)
     assert {c.channel for c in dataset} == {"voz", "chat"}
 

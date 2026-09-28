@@ -1,6 +1,7 @@
 from functools import cache
 
 from app.data.store import conversation_index
+from app.config.store import current_zone, local_day
 from app.models import Conversation
 from app.privacy.masking import masked, masking_enabled
 from app.query.fields import get_fields
@@ -85,5 +86,6 @@ def evaluate(node: Group | Condition, conv: Conversation) -> bool:
 
 
 def run_query(query: Query, conversations: list[Conversation]) -> list[Conversation]:
+    zone = current_zone()
     return [c for c in conversations
-            if query.date_from <= c.started_at.date() <= query.date_to and evaluate(query.root, c)]
+            if query.date_from <= local_day(c.started_at, zone) <= query.date_to and evaluate(query.root, c)]

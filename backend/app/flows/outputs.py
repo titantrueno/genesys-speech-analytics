@@ -4,7 +4,7 @@ from collections import Counter
 from math import floor
 from typing import Any
 
-from app.config.store import topic_name
+from app.config.store import current_zone, local_day, topic_name
 from app.flows.model import OutputConfig
 from app.models import Conversation
 from app.services.listing import list_item
@@ -44,7 +44,8 @@ def _decimal(value: float) -> str:
 
 def build_report(conversations: list[Conversation], results: dict[str, Any], config: OutputConfig) -> dict:
     size = len(conversations)
-    days = sorted(conv.started_at.date() for conv in conversations)
+    zone = current_zone()
+    days = sorted(local_day(conv.started_at, zone) for conv in conversations)
     topics = Counter(topic_name(conv.analysis.main_topic) for conv in conversations)
     topic_counts = [count for _, count in topics.most_common()]
     shares = dict(zip([name for name, _ in topics.most_common()], percentages(topic_counts)))
