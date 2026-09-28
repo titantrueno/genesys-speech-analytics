@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from app import ids
 from app.auth import require_permission
 from app.data.store import conversation_index, get_dataset
-from app.search.engine import Hit, SearchEngine
+from app.search.engine import Hit, SearchEngine, best_per_conversation
 from app.search.text import matching_terms, tokenize
 from app.search.tfidf import TfidfEngine
 from app.services.filters import ConversationFilters, conversation_filters
@@ -70,8 +70,7 @@ def semantic(
     candidates = {conv.id for conv in filters.apply(get_dataset())}
     hits = [hit for hit in engine.search(q, candidates) if _score(hit) >= min_score]
     if group == "conversation":
-        seen: set[str] = set()
-        hits = [h for h in hits if not (h.fragment.conversation_id in seen or seen.add(h.fragment.conversation_id))]
+        hits = best_per_conversation(hits)
     expansions = engine.expansions(q)
     terms = tokenize(q) + [w for expression in expansions for w in tokenize(expression)]
     return {

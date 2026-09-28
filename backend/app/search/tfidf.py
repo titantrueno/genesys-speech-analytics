@@ -13,6 +13,9 @@ NGRAM_SIZES = (3, 4, 5)
 WORD_WEIGHT = 0.5
 # Peso de los términos añadidos por la expansión respecto a los de la consulta.
 EXPANSION_WEIGHT = 0.5
+# Peso de lo que dice el cliente al elegir el fragmento que representa a una conversación (criterio 18).
+# 0,8 es el menor valor medido que deja las despedidas plantilladas por debajo del 10 % (0,5 → 20 %).
+CUSTOMER_WEIGHT = 0.8
 
 
 def _tf(counts: Counter) -> dict[str, float]:
@@ -98,11 +101,25 @@ def _ranked(scores: dict[int, float]) -> list[tuple[int, float]]:
 
 
 class TfidfEngine:
-    def __init__(self, conversations: list[Conversation], synonyms: list[list[str]] | None = None):
-        """`synonyms=None` usa el diccionario del dominio; `()` desactiva la expansión."""
+    def __init__(self, conversations: list[Conversation], synonyms: list[list[str]] | None = None,
+                 customer_weight: float = CUSTOMER_WEIGHT):
+        """`synonyms=None` usa el diccionario del dominio; `()` desactiva la expansión.
+
+        La puntuación de un fragmento es `(1 − customer_weight)·cos(fragmento) + customer_weight·cos(turnos del
+        cliente)`: así, una despedida plantillada que nombra el tema no supera a lo que cuenta el cliente.
+        """
         self._synonyms = synonyms
-        self.fragments: list[Fragment] = [f for conv in conversations for f in build_fragments(conv)]
-        self._fragments = _Blocks([f.text for f in self.fragments], [f.conversation_id for f in self.fragments])
+        self._customer_weight = customer_weight
+        self.fragments: list[Fragment] = []
+        customer_texts: list[str] = []
+        for conv in conversations:
+            for fragment in build_fragments(conv):
+                self.fragments.append(fragment)
+                customer_texts.append("\n".join(conv.turns[i].text for i in fragment.turns
+                                                 if conv.turns[i].speaker == "cliente"))
+        groups = [f.conversation_id for f in self.fragments]
+        self._fragments = _Blocks([f.text for f in self.fragments], groups)
+        self._customer = _Blocks(customer_texts, groups) if customer_weight else None
         self._conversation_ids = [conv.id for conv in conversations]
         self._conversation_texts = {
             conv.id: "\n".join(t.text for t in conv.turns if t.speaker != "sistema") for conv in conversations
@@ -110,8 +127,15 @@ class TfidfEngine:
         self._conversations = _Blocks(list(self._conversation_texts.values()), self._conversation_ids)
 
     def search(self, text: str, candidates: Collection[str] | None = None) -> list[Hit]:
-        ranked = _ranked(self._fragments.scores(text, self.expansions(text)))
-        hits = (Hit(self.fragments[doc], score) for doc, score in ranked)
+        expansions = self.expansions(text)
+        ranked = _ranked(self._fragments.scores(text, expansions))
+        customer = self._customer.scores(text, expansions) if self._customer is not None else {}
+        w = self._customer_weight
+
+        def focus(doc: int, score: float) -> float:
+            return min(1.0, (1 - w) * score + w * customer.get(doc, 0.0)) if self._customer is not None else score
+
+        hits = (Hit(self.fragments[doc], score, focus(doc, score)) for doc, score in ranked)
         return [h for h in hits if candidates is None or h.fragment.conversation_id in candidates]
 
     def expansions(self, text: str) -> list[str]:

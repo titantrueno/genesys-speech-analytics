@@ -52,6 +52,15 @@ Encontrar conversaciones por significado y no solo por palabras exactas, llegand
 16. `./scripts/ci.sh` en verde.
 17. Verificación en Chrome contra la API real: buscar una frase del par del criterio 3, ajustar el umbral y la agrupación, abrir un resultado en su turno, volver, y buscar similares desde el detalle, sin errores de consola.
 
+### Ampliación aprobada el 2026-09-28 (tras la verificación de T5)
+
+18. **Peso de lo que dice el cliente:** al agrupar por conversación, el fragmento que representa a cada conversación se elige con una puntuación que combina la similitud del fragmento completo y la de los turnos del cliente de ese fragmento. El orden y la puntuación de las conversaciones siguen siendo los del mejor fragmento completo. En las consultas de los criterios 3 y 8, menos del **10 %** de los fragmentos representativos del top 5 es la despedida plantillada («Resumiendo, hemos revisado su consulta sobre…»), frente al 35 % medido en T5. Los criterios 3, 8 y 9 se siguen cumpliendo.
+
+   *Ajuste en T5b:* aplicar el peso a la puntuación de ranking bajaba los pares del criterio 3 de 9/9 a 6/9 y la relevancia de 23/24 a 21/24, porque parte del acierto venía de la despedida plantillada, que nombra el tema. Por eso el peso decide solo qué fragmento se muestra.
+
+19. **Umbral en contexto:** la respuesta de `GET /api/search/semantic` incluye `max_score`, la mejor puntuación de la búsqueda antes de aplicar el umbral (`null` si no hay coincidencias). La UI muestra junto al control del umbral la mejor puntuación de la búsqueda y marca su posición en la escala. Si el umbral deja la búsqueda sin resultados, lo explica («Ningún resultado alcanza el 40 %; la mejor coincidencia puntúa un 36 %») y ofrece ajustar el umbral a la mejor puntuación con un clic.
+20. La limitación del enfoque léxico (la puntuación absoluta es baja, depende del diccionario y no entiende el significado) queda documentada en ADR-005, junto con la migración a embeddings que la resolvería.
+
 ## Conocimiento afectado
 
 - [Decisiones](../../vault/decisiones/Index.md): crear **ADR-005** (búsqueda vectorial ligera en memoria, sustituible por embeddings reales detrás de `SearchEngine`).

@@ -17,8 +17,10 @@ class Fragment:
 
 @dataclass(frozen=True)
 class Hit:
+    """`score` ordena y filtra; `focus` indica cuánto representa el fragmento a su conversación (criterio 18)."""
     fragment: Fragment
     score: float
+    focus: float = 0.0
 
 
 @runtime_checkable
@@ -49,3 +51,18 @@ def build_fragments(conv: Conversation) -> list[Fragment]:
         if pos + FRAGMENT_TURNS >= len(indexed):
             break
     return fragments
+
+
+def best_per_conversation(hits: list[Hit]) -> list[Hit]:
+    """Una entrada por conversación, en el orden de su mejor `score`, con el fragmento de mayor `focus`.
+
+    `hits` debe venir ordenado por `score` descendente; ante empate de `focus` gana el de mayor `score`.
+    """
+    groups: dict[str, list[Hit]] = {}
+    for hit in hits:
+        groups.setdefault(hit.fragment.conversation_id, []).append(hit)
+    result = []
+    for group in groups.values():
+        representative = max(group, key=lambda h: h.focus)
+        result.append(Hit(representative.fragment, group[0].score, representative.focus))
+    return result

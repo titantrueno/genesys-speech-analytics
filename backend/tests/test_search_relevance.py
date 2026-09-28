@@ -4,6 +4,7 @@ import pytest
 
 from app.data.store import get_dataset
 from app.query.fields import normalize_text
+from app.search.engine import best_per_conversation
 from app.search.synonyms import SYNONYMS, expand
 from app.search.text import tokenize
 from app.search.tfidf import TfidfEngine
@@ -29,15 +30,13 @@ def plain_engine():
     return TfidfEngine(get_dataset(), synonyms=())
 
 
+def top_hits(engine, text):
+    """Fragmento representativo de las 5 mejores conversaciones, como `group=conversation`."""
+    return best_per_conversation(engine.search(text))[:TOP]
+
+
 def top_topics(engine, topics, text) -> list[str]:
-    """Main topics de las 5 mejores conversaciones (mejor fragmento de cada una), como `group=conversation`."""
-    seen: list[str] = []
-    for hit in engine.search(text):
-        if hit.fragment.conversation_id not in seen:
-            seen.append(hit.fragment.conversation_id)
-        if len(seen) == TOP:
-            break
-    return [topics[cid] for cid in seen]
+    return [topics[hit.fragment.conversation_id] for hit in top_hits(engine, text)]
 
 
 def topic_words(topic: str) -> set[str]:
@@ -88,3 +87,14 @@ def test_every_dictionary_group_reaches_the_corpus():
         assert len(group) >= 2, group
         patterns = [re.compile(r"\b" + normalize_text(e).replace("*", r"\w*") + r"\b") for e in group]
         assert any(p.search(corpus) for p in patterns), f"grupo sin términos en el corpus: {group}"
+
+
+CLOSING = "Resumiendo, hemos revisado su consulta sobre"
+
+
+def test_closing_template_is_rarely_the_best_fragment(engine):
+    """Criterio 18: el fragmento representativo prioriza lo que dice el cliente sobre la despedida plantillada."""
+    hits = [hit for query, _ in LABELLED_QUERIES + PARAPHRASE_PAIRS for hit in top_hits(engine, query)]
+    share = sum(CLOSING in hit.fragment.text for hit in hits) / len(hits)
+    print(f"\n[despedidas] {share:.0%} de los mejores fragmentos del top {TOP}")
+    assert share < 0.10

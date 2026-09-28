@@ -64,9 +64,10 @@ def test_highlights_exist_literally_in_the_fragment(api):
         for term in result["highlights"]:
             assert term in text
             assert len(term) >= 3
-    top = {normalize_text(t) for t in body["results"][0]["highlights"]}
-    assert "cargo" in top
-    assert any(word.startswith("recono") for word in top)  # «reconozco», «reconocido»…
+    top = body["results"][0]
+    assert any(normalize_text(word).startswith("recono") for word in top["highlights"])  # «reconozco», «reconocido»…
+    customer_text = " ".join(t["text"] for t in top["turns"] if t["speaker"] == "cliente")
+    assert any(word in customer_text for word in top["highlights"])  # criterio 18: habla el cliente
 
 
 def test_highlights_include_expansion_terms_and_inflections(api):
@@ -85,19 +86,19 @@ def test_results_are_sorted_and_rounded(api):
 
 # --- Agrupación, umbral y límite ----------------------------------------------------------------
 
-def test_group_by_conversation_keeps_the_best_fragment(api):
+def test_group_by_conversation_scores_each_conversation_by_its_best_fragment(api):
     q = "quiero cerrar la cuenta y cancelar las tarjetas"
     grouped = search(api, q, limit=100, **FULL)
     fragments = search(api, q, group="fragment", limit=100, **FULL)
     ids = [r["conversation_id"] for r in grouped["results"]]
     assert len(ids) == len(set(ids))
     assert fragments["total"] > grouped["total"]
-    best = {}
-    for r in fragments["results"]:
-        best.setdefault(r["conversation_id"], r)
+    engine = search_router.get_search_engine()
     for r in grouped["results"]:
-        if r["conversation_id"] in best:
-            assert r == best[r["conversation_id"]]
+        own = [h for h in engine.search(q) if h.fragment.conversation_id == r["conversation_id"]]
+        assert r["score"] == round(own[0].score, 4)
+        representative = max(own, key=lambda h: h.focus)
+        assert (r["start_turn"], r["end_turn"]) == (representative.fragment.start_turn, representative.fragment.end_turn)
 
 
 def test_min_score_filters_and_total_counts_before_limit(api):

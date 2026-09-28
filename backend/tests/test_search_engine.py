@@ -7,7 +7,7 @@ import pytest
 from app import ids
 from app.data.store import get_dataset
 from app.models import Analysis, Conversation, Turn
-from app.search.engine import SearchEngine, build_fragments
+from app.search.engine import Hit, SearchEngine, best_per_conversation, build_fragments
 from app.search.tfidf import TfidfEngine
 
 _rng = random.Random(3)
@@ -72,8 +72,8 @@ def small_engine():
         _conv(["El cajero no me dio el dinero", "Abro una incidencia del cajero"]),
         _conv(["El cajero no me dio el dinero", "Abro una incidencia del cajero"]),
     ]
-    # Sin expansión: estos tests prueban el modelo vectorial; la expansión se prueba en test_search_relevance.
-    return convs, TfidfEngine(convs, synonyms=())
+    # Sin expansión ni peso del cliente: estos tests prueban el modelo vectorial puro.
+    return convs, TfidfEngine(convs, synonyms=(), customer_weight=0)
 
 
 def test_engine_implements_the_search_engine_interface(small_engine):
@@ -121,6 +121,31 @@ def test_search_can_be_limited_to_candidate_conversations(small_engine):
     convs, engine = small_engine
     hits = engine.search("cajero dinero", candidates={convs[3].id})
     assert {h.fragment.conversation_id for h in hits} == {convs[3].id}
+
+
+def test_terms_said_by_the_customer_weigh_more():
+    said_by_customer = _conv(["Tengo un cargo que no reconozco", "Vale, lo reviso"])
+    said_by_agent = _conv(["Vale, lo reviso", "Tengo un cargo que no reconozco"])
+    other = _conv(["El cajero no me dio el dinero", "Abro una incidencia"])
+    engine = TfidfEngine([said_by_customer, said_by_agent, other], synonyms=())
+    hits = {h.fragment.conversation_id: h for h in engine.search("cargo que no reconozco")}
+    customer, agent = hits[said_by_customer.id], hits[said_by_agent.id]
+    assert customer.score == pytest.approx(agent.score)
+    assert customer.focus > agent.focus > 0
+    assert all(0 <= h.focus <= 1 for h in hits.values())
+
+
+def test_best_per_conversation_orders_by_score_and_picks_the_highest_focus():
+    conv_a, conv_b = _conv(["a"] * 6), _conv(["b"] * 3)
+    fa1, fa2, fa3 = build_fragments(conv_a)
+    [fb] = build_fragments(conv_b)
+    hits = [Hit(fa1, 0.9, 0.2), Hit(fb, 0.8, 0.8), Hit(fa2, 0.7, 0.6), Hit(fa3, 0.5, 0.6)]
+    assert best_per_conversation(hits) == [Hit(fa2, 0.9, 0.6), Hit(fb, 0.8, 0.8)]
+
+
+def test_without_customer_weight_focus_equals_score(small_engine):
+    _, engine = small_engine
+    assert all(h.focus == h.score for h in engine.search("cajero dinero"))
 
 
 # --- Similares ----------------------------------------------------------------------------------
