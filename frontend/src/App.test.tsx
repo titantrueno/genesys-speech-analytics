@@ -102,8 +102,8 @@ describe('navegación por permisos', () => {
 
   it('una sección aún no implementada muestra "Próximamente"', async () => {
     signedInAs(USERS.admin)
-    renderApp('/flujos')
-    expect(await screen.findByRole('heading', { name: 'Flujos de insights' })).toBeInTheDocument()
+    renderApp('/configuracion')
+    expect(await screen.findByRole('heading', { name: 'Configuración' })).toBeInTheDocument()
     expect(screen.getByText(/próximamente/i)).toBeInTheDocument()
   })
 

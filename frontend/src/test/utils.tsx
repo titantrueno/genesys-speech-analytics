@@ -9,12 +9,17 @@ export const ALL_PERMISSIONS: Permission[] = [
   'flows:view', 'flows:edit', 'config:view', 'config:edit', 'users:admin',
 ]
 
-export const USERS: Record<'admin' | 'viewer' | 'analista', User> = {
+export const USERS: Record<'admin' | 'viewer' | 'analista' | 'lector', User> = {
   admin: { id: '1US-00000001-0000-5000-8000-000000000001', name: 'Admin Demo', email: 'admin@bancohorizonte.demo', role: 'admin', permissions: ALL_PERMISSIONS },
   viewer: { id: '1US-00000002-0000-5000-8000-000000000002', name: 'Viewer Demo', email: 'viewer@bancohorizonte.demo', role: 'viewer', permissions: ['dashboards:view', 'conversations:view'] },
   analista: {
     id: '1US-00000003-0000-5000-8000-000000000003', name: 'Analista Demo', email: 'analista@bancohorizonte.demo', role: 'analista',
     permissions: ['dashboards:view', 'conversations:view', 'explorer:use', 'search:use', 'flows:view', 'flows:edit'],
+  },
+  // Rol que solo puede ver flujos (FE004); con los roles por defecto no existe, FE006 permitirá crearlo.
+  lector: {
+    id: '1US-00000004-0000-5000-8000-000000000004', name: 'Lectora Demo', email: 'lectora@bancohorizonte.demo', role: 'lector_flujos',
+    permissions: ['flows:view'],
   },
 }
 

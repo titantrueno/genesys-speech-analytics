@@ -12,6 +12,7 @@ import { ConversationsPage } from './conversations/ConversationsPage'
 import { ConversationDetailPage } from './conversations/ConversationDetailPage'
 import { ExplorerPage } from './explorer/ExplorerPage'
 import { SearchPage } from './search/SearchPage'
+import { FlowsPage } from './flows/FlowsPage'
 
 export type AppRouter = ReturnType<typeof createBrowserRouter>
 
@@ -33,6 +34,9 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
   ],
   '/busqueda': [
     { index: true, element: <SearchPage /> },
+  ],
+  '/flujos': [
+    { index: true, element: <FlowsPage /> },
   ],
 }
 

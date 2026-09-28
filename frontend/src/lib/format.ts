@@ -7,6 +7,7 @@ const twoDecimals = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, ma
 const signedTwo = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' })
 const signedOne = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: 'exceptZero' })
 const shortDate = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+const dateTime = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export const EMPTY_VALUE = '—'
 
@@ -65,4 +66,9 @@ export function formatDecimal(value: number, digits: 1 | 2): string {
 
 export function formatSigned(value: number): string {
   return signedTwo.format(value)
+}
+
+/** Fecha y hora en la zona del navegador («27 sept, 10:30»). */
+export function formatDateTime(iso: string): string {
+  return dateTime.format(new Date(iso))
 }

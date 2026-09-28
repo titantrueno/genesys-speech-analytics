@@ -12,5 +12,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Las fechas con hora se muestran en la zona del navegador; los tests fijan UTC para ser deterministas.
+    env: { TZ: 'UTC' },
   },
 })
