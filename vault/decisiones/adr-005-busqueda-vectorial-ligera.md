@@ -18,7 +18,7 @@ FE003 pide encontrar conversaciones por significado y llegar al fragmento releva
 
 - **Motor léxico en memoria, detrás de una interfaz.** La API solo conoce `SearchEngine` (`search`, `expansions` y `similar`, en `backend/app/search/engine.py`) y lo obtiene con `get_search_engine()`, sustituible con `dependency_overrides`. La implementación actual es `TfidfEngine`.
 - **Fragmentos:** ventanas de 3 turnos con paso 2, sin turnos de `sistema`.
-- **Puntuación:** TF-IDF en Python puro de palabras y n-gramas de caracteres (3–5), con coseno en 0–1 e índice invertido compacto (`array`). El índice se construye al arrancar la API: unos 2,5 s y unos 43 MB para el fragmento completo.
+- **Puntuación:** TF-IDF en Python puro de palabras y n-gramas de caracteres (3–5), con coseno en 0–1 e índice invertido compacto (`array`). El índice se construye al arrancar la API: unos 2,5 s y unos 52 MB retenidos (fragmentos, turnos del cliente y conversaciones), con un pico transitorio de unos 260 MB durante la construcción.
 - **IDF por conversación y sin suavizado:** el texto que aparece en casi todas las conversaciones (saludo, verificación, despedida) pesa casi cero.
 - **Diccionario de sinónimos del dominio** (`backend/app/search/synonyms.py`): los términos añadidos pesan la mitad que los de la consulta y se devuelven a la UI.
 - **Dos puntuaciones por fragmento:**

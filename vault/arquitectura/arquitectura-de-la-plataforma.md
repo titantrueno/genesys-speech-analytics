@@ -71,15 +71,15 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 
 ### Rendimiento
 
-- Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días, a cambio de unos 2,5 s de arranque y unos 45 MB de índice.
-- En el front, el dashboard se carga en diferido: el bundle principal ocupa unos 397 kB y el chunk de dashboards, con Recharts, unos 369 kB.
+- Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
+- En el front, el dashboard se carga en diferido: el bundle principal ocupa unos 437 kB (397 kB antes de FE003) y el chunk de dashboards, con Recharts, unos 366 kB.
 
 ## Límites y excepciones
 
 - Sin persistencia: todo cambio de estado se pierde al reiniciar la API.
 - **FCR:** para conversaciones de los últimos 7 días del dataset aún no ha pasado la ventana de recontacto, así que su FCR es optimista. Es un **hecho** del cálculo que hay que tener en cuenta al comparar periodos recientes.
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
-- Las conversaciones de voz muestran DNI e IBAN ficticios sin enmascarar hasta FE005.
+- Las conversaciones de voz muestran DNI e IBAN ficticios sin enmascarar hasta FE005. La búsqueda semántica indexa los números como palabras, así que buscar un DNI encuentra sus conversaciones; FE005 debe enmascararlos también en el índice.
 - La búsqueda semántica es léxica: sus limitaciones medidas (puntuaciones bajas, dependencia del diccionario, sesgo hacia texto plantillado) están en [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md).
 
 ## Fuentes

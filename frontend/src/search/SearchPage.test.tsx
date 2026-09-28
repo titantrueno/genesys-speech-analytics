@@ -68,6 +68,13 @@ describe('búsqueda semántica: formulario y URL', () => {
     expect(screen.getByLabelText('Mostrar')).toHaveValue('fragment')
   })
 
+  it.each(['abc', '5', '-0.2', 'NaN', 'Infinity'])('un umbral no válido en la URL (%s) se ignora', async (value) => {
+    const { last } = openSearch(`/busqueda?q=${encodeURIComponent(Q)}&min_score=${value}`)
+    await screen.findByText('3 conversaciones')
+    expect(last().get('min_score')).toBeNull()
+    expect(screen.getByRole('slider', { name: /puntuación mínima/i })).toHaveValue('0')
+  })
+
   it('canal, cola e intervalo relanzan la búsqueda', async () => {
     const { last } = openSearch(`/busqueda?q=${encodeURIComponent(Q)}`)
     await screen.findByText('3 conversaciones')
