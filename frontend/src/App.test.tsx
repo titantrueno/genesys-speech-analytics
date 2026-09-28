@@ -23,7 +23,7 @@ describe('login', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/dashboards'))
     expect(await screen.findByText('Analista Demo')).toBeInTheDocument()
     expect(sessionStorage.getItem('sta.token')).toBe('tok-123')
-    const [, init] = fetchMock.mock.calls[0]
+    const [, init] = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/api/auth/login'))!
     expect(JSON.parse(String(init?.body))).toEqual({ email: 'analista@bancohorizonte.demo', password: 'demo' })
   })
 

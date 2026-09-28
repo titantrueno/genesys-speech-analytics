@@ -5,12 +5,11 @@ import { ApiError } from '../api/client'
 import { useConversation } from '../api/conversations'
 import { useAuth } from '../auth/useAuth'
 import { LoadingScreen } from '../layout/LoadingScreen'
-import { formatDuration } from '../lib/format'
+import { formatDateTimeLong, formatDuration } from '../lib/format'
 import { AnalysisPanel } from './AnalysisPanel'
 import { ChatTranscript } from './ChatTranscript'
 import { CHANNEL_LABELS } from './labels'
 
-const dateTime = new Intl.DateTimeFormat('es-ES', { dateStyle: 'long', timeStyle: 'short' })
 
 const BACK_LABELS: Record<string, string> = {
   '/conversaciones': 'Volver al listado',
@@ -104,7 +103,7 @@ export function ConversationDetailPage() {
                 <span>{CHANNEL_LABELS[conversation.channel]}</span>
                 {conversation.channel === 'voz' && <span className="font-normal text-slate-500">(transcripción)</span>}
               </span>
-              <span>{dateTime.format(new Date(conversation.started_at))}</span>
+              <span>{formatDateTimeLong(conversation.started_at)}</span>
               <span>{conversation.queue}</span>
               <span>{conversation.agent}</span>
               <span>{formatDuration(conversation.duration_s)}</span>

@@ -22,16 +22,16 @@ export function temporaryId(): string {
 
 export const edgeId = (edge: FlowEdge) => `${edge.source}>${edge.target}`
 
-export function defaultConfig(type: NodeType): FlowNode['config'] {
+export function defaultConfig(type: NodeType, defaultModel = 'mock-rapido'): FlowNode['config'] {
   switch (type) {
     case 'sampling': return { query: { root: { op: 'and', conditions: [] } }, method: 'aleatorio', size: 100 }
-    case 'prompt': return { template: '', model: 'mock-rapido', temperature: 0.2, output: { type: 'texto' } }
+    case 'prompt': return { template: '', model: defaultModel, temperature: 0.2, output: { type: 'texto' } }
     case 'output': return { kind: 'tabla', destination: '' }
   }
 }
 
-export function newNode(type: NodeType, position: XYPosition): CanvasNode {
-  return { id: temporaryId(), type, position, data: { config: defaultConfig(type) } }
+export function newNode(type: NodeType, position: XYPosition, defaultModel?: string): CanvasNode {
+  return { id: temporaryId(), type, position, data: { config: defaultConfig(type, defaultModel) } }
 }
 
 export function toCanvasNodes(graph: FlowGraph): CanvasNode[] {

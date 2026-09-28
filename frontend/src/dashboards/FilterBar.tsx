@@ -52,7 +52,7 @@ export function FilterBar({ effectivePeriod }: { effectivePeriod?: Period }) {
         options={(catalog?.agents ?? []).map((a) => ({ value: a.id, label: a.name }))}
         onChange={(agent) => update({ agent })} />
       <MultiSelect label="Main topic" allLabel="Todos" selected={filters.main_topic}
-        options={(catalog?.main_topics ?? []).map((t) => ({ value: t.code, label: t.name }))}
+        options={(catalog?.main_topics ?? []).filter((t) => t.active !== false).map((t) => ({ value: t.code, label: t.name }))}
         onChange={(main_topic) => update({ main_topic })} />
       {activeCount > 0 && (
         <button type="button" onClick={clear} className="flex h-9 items-center gap-1 rounded-md px-2 text-sm text-slate-600 hover:bg-slate-100">

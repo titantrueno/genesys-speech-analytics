@@ -30,6 +30,7 @@ export const CATALOG: FlowCatalog = {
   order_keys: options([['fecha', 'Fecha'], ['duracion', 'Duración'], ['sentimiento', 'Sentimiento'], ['csat', 'CSAT predicho']]),
   orders: options([['desc', 'Descendente'], ['asc', 'Ascendente']]),
   models: options([['mock-rapido', 'Simulado rápido'], ['mock-preciso', 'Simulado preciso']]),
+  default_model: 'mock-rapido',
   variables: options([
     ['transcripcion', 'Transcripción completa, turno a turno'], ['summary', 'Summary de la conversación'],
     ['main_topic', 'Main topic de la conversación'], ['metadatos', 'Canal, cola, fecha, duración, sentimiento y resolución'],

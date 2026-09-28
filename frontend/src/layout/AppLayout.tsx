@@ -1,6 +1,8 @@
 import { AudioLines, LogOut } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/useAuth'
+import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
+import { setDisplayTimeZone } from '../lib/format'
 import { NAV_ITEMS } from './navigation'
 
 const ROLE_LABELS: Record<string, string> = {
@@ -13,6 +15,10 @@ const ROLE_LABELS: Record<string, string> = {
 export function AppLayout() {
   const { user, can, logout } = useAuth()
   const items = NAV_ITEMS.filter((item) => can(item.permission))
+  const { data: settings } = usePublicConfig()
+  // Se fija durante el render para que las páginas de este mismo render ya formateen en la zona de la plataforma;
+  // la `key` del contenido lo vuelve a montar si la zona cambia (FE005).
+  setDisplayTimeZone(settings?.timezone)
 
   return (
     <div className="flex min-h-screen">
@@ -23,7 +29,7 @@ export function AppLayout() {
           </div>
           <div className="leading-tight">
             <p className="text-sm font-semibold">Banco Horizonte</p>
-            <p className="text-xs text-slate-300">Speech &amp; Text Analytics</p>
+            <p className="text-xs text-slate-300">{settings?.platform_name ?? DEFAULT_PLATFORM_NAME}</p>
           </div>
         </div>
         <nav aria-label="Principal" className="flex-1 space-y-1 px-3 py-2">
@@ -56,7 +62,7 @@ export function AppLayout() {
         </div>
       </aside>
       <main className="min-w-0 flex-1 px-8 py-6">
-        <Outlet />
+        <Outlet key={settings?.timezone ?? ''} />
       </main>
     </div>
   )

@@ -7,7 +7,32 @@ const twoDecimals = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, ma
 const signedTwo = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' })
 const signedOne = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: 'exceptZero' })
 const shortDate = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', timeZone: 'UTC' })
-const dateTime = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+
+/**
+ * Zona horaria de la plataforma (Configuración › General). Sin configurar, la del navegador.
+ * La fija `AppLayout` con `GET /api/config/public`; todas las fechas con hora se formatean aquí (FE005).
+ */
+let displayZone: string | undefined
+const formatters = new Map<string, Intl.DateTimeFormat>()
+
+export function setDisplayTimeZone(zone: string | undefined) {
+  displayZone = zone
+}
+
+function dateTimeFormat(kind: 'short' | 'year' | 'long'): Intl.DateTimeFormat {
+  const key = `${kind}|${displayZone ?? ''}`
+  let format = formatters.get(key)
+  if (!format) {
+    const options: Intl.DateTimeFormatOptions = {
+      short: { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' } as const,
+      year: { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' } as const,
+      long: { dateStyle: 'long', timeStyle: 'short' } as const,
+    }[kind]
+    format = new Intl.DateTimeFormat(LOCALE, { ...options, timeZone: displayZone })
+    formatters.set(key, format)
+  }
+  return format
+}
 
 export const EMPTY_VALUE = '—'
 
@@ -68,7 +93,17 @@ export function formatSigned(value: number): string {
   return signedTwo.format(value)
 }
 
-/** Fecha y hora en la zona del navegador («27 sept, 10:30»). */
+/** Fecha y hora en la zona de la plataforma («27 sept, 10:30»). */
 export function formatDateTime(iso: string): string {
-  return dateTime.format(new Date(iso))
+  return dateTimeFormat('short').format(new Date(iso))
+}
+
+/** Con año («27 sept 2026, 10:30»), para resultados que pueden ser de otro año. */
+export function formatDateTimeWithYear(iso: string): string {
+  return dateTimeFormat('year').format(new Date(iso))
+}
+
+/** Larga («27 de septiembre de 2026, 10:30»), para la cabecera del detalle. */
+export function formatDateTimeLong(iso: string): string {
+  return dateTimeFormat('long').format(new Date(iso))
 }

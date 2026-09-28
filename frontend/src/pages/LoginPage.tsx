@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate, type Location } from 'react-router'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/useAuth'
+import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
 
 const DEMO_ACCOUNTS = [
   { role: 'Administrador', email: 'admin@bancohorizonte.demo' },
@@ -18,6 +19,7 @@ function redirectTarget(location: Location): string {
 }
 
 export function LoginPage() {
+  const { data: settings } = usePublicConfig()
   const { status, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -52,7 +54,7 @@ export function LoginPage() {
             <AudioLines className="size-5" aria-hidden />
           </div>
           <div>
-            <h1 className="text-lg font-semibold">Speech &amp; Text Analytics</h1>
+            <h1 className="text-lg font-semibold">{settings?.platform_name ?? DEFAULT_PLATFORM_NAME}</h1>
             <p className="text-sm text-slate-500">Banco Horizonte · Atención al cliente</p>
           </div>
         </div>

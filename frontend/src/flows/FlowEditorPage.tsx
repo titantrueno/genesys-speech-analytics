@@ -7,7 +7,7 @@ import { useAuth } from '../auth/useAuth'
 import { useDebouncedValue } from '../explorer/hooks'
 import { LoadingScreen } from '../layout/LoadingScreen'
 import { useFlow, useFlowCatalog, useSaveGraph, useStartRun, useValidation } from './api'
-import { CatalogContext } from './catalog'
+import { CatalogContext, useCatalog } from './catalog'
 import { FlowCanvas, NODE_DRAG_TYPE } from './FlowCanvas'
 import {
   freePosition, fromCanvas, newNode, remapEdges, remapNodes, sameJson, toCanvasEdges, toCanvasNodes, type CanvasEdge, type CanvasNode,
@@ -111,6 +111,7 @@ function errorMessage(error: unknown, fallback: string): string {
 }
 
 function Editor({ flow }: { flow: Flow }) {
+  const catalog = useCatalog()
   const { can } = useAuth()
   const editable = can('flows:edit')
   const navigate = useNavigate()
@@ -174,7 +175,7 @@ function Editor({ flow }: { flow: Flow }) {
       const origin = screenToFlowPosition({ x: (rect?.left ?? 0) + (rect?.width ?? 0) / 4, y: (rect?.top ?? 0) + (rect?.height ?? 0) / 3 })
       at = freePosition(origin, nodes)
     }
-    const node = { ...newNode(type, at), selected: true }
+    const node = { ...newNode(type, at, catalog.default_model), selected: true }
     setNodes((current) => [...current.map((n) => (n.selected ? { ...n, selected: false } : n)), node])
   }
 

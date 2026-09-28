@@ -69,12 +69,19 @@ def test_supervisor_gets_403_on_every_write_and_nothing_changes(api):
     assert audit(api) == []
 
 
-def test_public_endpoint_only_exposes_the_platform_name(api):
+def test_public_endpoint_only_exposes_name_timezone_and_language(api):
+    """Sin sesión (login) y para todos los roles: la zona horaria y el nombre se aplican a toda la plataforma."""
     api.put("/api/config/general", json=GENERAL)
     api.headers.pop("Authorization")
     response = api.get("/api/config/public")
     assert response.status_code == 200
-    assert response.json() == {"platform_name": "Analítica Horizonte"}
+    assert response.json() == GENERAL
+
+
+def test_new_prompt_nodes_take_the_default_model_from_the_flow_catalog(api):
+    assert api.get("/api/flows/catalog").json()["default_model"] == "mock-rapido"
+    api.put("/api/config/ai", json={"provider": "simulado", "model": "mock-preciso"})
+    assert api.get("/api/flows/catalog").json()["default_model"] == "mock-preciso"
 
 
 # --- General ---

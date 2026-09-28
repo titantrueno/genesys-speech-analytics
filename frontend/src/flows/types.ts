@@ -98,6 +98,8 @@ export interface FlowCatalog {
   order_keys: Option<OrderKey>[]
   orders: Option<'asc' | 'desc'>[]
   models: Option[]
+  /** Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA). */
+  default_model: string
   variables: Option[]
   output_formats: Option<OutputFormatType>[]
   field_types: Option<FieldType>[]

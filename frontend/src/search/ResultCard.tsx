@@ -3,11 +3,11 @@ import { Link } from 'react-router'
 import { SentimentValue } from '../conversations/badges'
 import { CHANNEL_LABELS } from '../conversations/labels'
 import { useRowNavigation } from '../conversations/useRowNavigation'
+import { formatDateTimeWithYear } from '../lib/format'
 import { highlight } from '../lib/highlight'
 import type { ConversationListItem } from '../api/conversations'
 import type { SearchResult } from './api'
 
-const dateTime = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 export function ScoreBar({ score }: { score: number }) {
   const percent = Math.round(score * 100)
@@ -40,7 +40,7 @@ export function ResultCard({ conversation: conv, score, href, turns, highlights 
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600">
           <Link to={href} state={linkState} className="font-medium text-brand-700 hover:underline">
-            {dateTime.format(new Date(conv.started_at))}
+            {formatDateTimeWithYear(conv.started_at)}
           </Link>
           <span className="inline-flex items-center gap-1.5"><ChannelIcon className="size-3.5 text-slate-400" aria-hidden />{CHANNEL_LABELS[conv.channel]}</span>
           <span>{conv.queue}</span>

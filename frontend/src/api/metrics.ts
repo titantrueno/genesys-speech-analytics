@@ -20,6 +20,9 @@ export interface KpiSummary {
   previous: number | null
   delta: number | null
   delta_pct: number | null
+  /** Objetivo y estado según los umbrales de Configuración › KPIs (FE005); `null` si el KPI no tiene umbrales. */
+  target?: number | null
+  status?: 'verde' | 'ambar' | 'rojo' | null
 }
 
 export interface SummaryResponse {
@@ -47,7 +50,8 @@ export interface Catalog {
   channels: Array<{ code: string; label: string }>
   queues: Array<{ id: string; name: string }>
   agents: Array<{ id: string; name: string; queue_id: string; queue: string }>
-  main_topics: Array<{ code: string; name: string }>
+  /** Incluye los desactivados (`active: false`) para poner nombre a sus filtros; los selectores solo ofrecen los activos. */
+  main_topics: Array<{ code: string; name: string; active?: boolean }>
   compliance_checks: Array<{ code: string; label: string }>
   resolutions: Array<{ code: string; label: string }>
   churn_risks: Array<{ code: string; label: string }>
@@ -62,10 +66,10 @@ export interface MetricsFilters {
   main_topic: string[]
 }
 
-export function useSummary(filters: MetricsFilters) {
+export function useSummary(filters: MetricsFilters, dashboard?: string) {
   return useQuery({
-    queryKey: ['metrics', 'summary', filters],
-    queryFn: ({ signal }) => apiRequest<SummaryResponse>('/api/metrics/summary', { query: { ...filters }, signal }),
+    queryKey: ['metrics', 'summary', filters, dashboard],
+    queryFn: ({ signal }) => apiRequest<SummaryResponse>('/api/metrics/summary', { query: { ...filters, dashboard }, signal }),
     placeholderData: keepPreviousData,
   })
 }

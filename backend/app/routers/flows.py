@@ -6,6 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Re
 from pydantic import BaseModel, Field
 
 from app.auth import User, require_permission
+from app.config.store import get_config
 from app.data.store import get_dataset
 from app.flows import catalog
 from app.flows.model import Graph, GraphError, parse_graph
@@ -83,6 +84,8 @@ def flow_catalog() -> dict:
         "order_keys": catalog.as_options(catalog.ORDER_KEYS),
         "orders": catalog.as_options(catalog.ORDERS),
         "models": catalog.as_options(catalog.MODELS),
+        # Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA, FE005).
+        "default_model": get_config().ai.model,
         "variables": catalog.as_options(catalog.VARIABLES),
         "output_formats": catalog.as_options(catalog.OUTPUT_FORMATS),
         "field_types": catalog.as_options(catalog.FIELD_TYPES),

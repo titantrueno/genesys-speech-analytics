@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, apiRequest } from '../api/client'
 import type {
-  AuditEntry, CheckInput, ComplianceCheck, Connector, FieldIssue, PlatformConfig, SectionCode, Taxonomy, Topic, TopicInput, TopicKind,
+  AuditEntry, CheckInput, GeneralConfig, ComplianceCheck, Connector, FieldIssue, PlatformConfig, SectionCode, Taxonomy, Topic, TopicInput, TopicKind,
 } from './types'
 
 export const CONFIG_KEY = ['config']
@@ -15,12 +15,15 @@ export function useConfig(enabled = true) {
   })
 }
 
-/** Nombre de la plataforma sin sesión, para el login. */
+export const DEFAULT_PLATFORM_NAME = 'Speech & Text Analytics'
+
+/** Nombre, zona horaria e idioma: sin sesión (login) y para todos los roles. */
 export function usePublicConfig() {
   return useQuery({
     queryKey: ['config-public'],
-    queryFn: ({ signal }) => apiRequest<{ platform_name: string }>('/api/config/public', { signal }),
+    queryFn: ({ signal }) => apiRequest<GeneralConfig>('/api/config/public', { signal }),
     staleTime: 60_000,
+    retry: false,
   })
 }
 

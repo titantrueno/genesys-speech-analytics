@@ -2,13 +2,12 @@ import type { ReactNode } from 'react'
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, MessageSquareText, Phone } from 'lucide-react'
 import { Link } from 'react-router'
 import type { ConversationListItem, SortKey, SortOrder } from '../api/conversations'
-import { formatDecimal, formatDuration, shortId } from '../lib/format'
+import { formatDateTime, formatDecimal, formatDuration, shortId } from '../lib/format'
 import { CHANNEL_LABELS } from './labels'
 import { ResolutionBadge, SentimentValue } from './badges'
 import type { SortState } from './sorting'
 import { useRowNavigation } from './useRowNavigation'
 
-const dateTime = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 function firstSentence(text: string): string {
   const match = text.match(/^.*?[.!?](?=\s|$)/)
@@ -40,7 +39,7 @@ function Row({ item }: { item: ConversationListItem }) {
     <tr onClick={onClick} onAuxClick={onAuxClick} className="cursor-pointer border-b border-slate-100 align-top hover:bg-brand-50/60">
       <td className="px-2.5 py-2.5 whitespace-nowrap">
         <Link to={href} state={linkState} className="font-medium text-brand-700 hover:underline">
-          {dateTime.format(new Date(item.started_at))}
+          {formatDateTime(item.started_at)}
         </Link>
         <p className="font-mono text-[11px] text-slate-400" title={item.id}>{shortId(item.id)}</p>
       </td>

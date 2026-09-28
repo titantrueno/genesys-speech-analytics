@@ -18,6 +18,7 @@ export function setupEditor(options: {
   run?: () => Reply
   saveStatus?: number
   estimate?: (body: { query: unknown; size?: number }) => Reply
+  catalog?: Partial<typeof CATALOG>
 } = {}) {
   let stored = structuredClone(options.graph ?? CHAINED)
   const puts: FlowGraph[] = []
@@ -34,7 +35,7 @@ export function setupEditor(options: {
     },
     [`GET /api/flows/${FLOW_ID}`]: () => (options.flowStatus ? { status: options.flowStatus, body: { detail: 'Flujo no encontrado' } }
       : { status: 200, body: flowFixture(stored) }),
-    'GET /api/flows/catalog': () => ({ status: 200, body: CATALOG }),
+    'GET /api/flows/catalog': () => ({ status: 200, body: { ...CATALOG, ...options.catalog } }),
     [`PUT /api/flows/${FLOW_ID}/graph`]: (init) => {
       calls.push('PUT')
       const graph = JSON.parse(String(init.body)) as FlowGraph

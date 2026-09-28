@@ -72,8 +72,8 @@ def config_body(config: Config) -> dict:
 
 @router.get("/public")
 def public_config() -> dict:
-    """Solo el nombre de la plataforma, para la pantalla de login."""
-    return {"platform_name": get_config().general.platform_name}
+    """Nombre, zona horaria e idioma: los necesitan el login y todos los roles, tengan o no `config:view`."""
+    return get_config().general.model_dump()
 
 
 @router.get("", dependencies=[Depends(VIEW)])

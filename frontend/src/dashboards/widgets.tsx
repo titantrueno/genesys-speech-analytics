@@ -13,15 +13,20 @@ const CHANNEL_COLORS: Record<string, { label: string; color: string }> = {
   chat: { label: 'Chat', color: 'var(--series-2)' },
 }
 
-export function KpiRow({ codes }: { codes: KpiCode[] }) {
+/**
+ * Tarjetas de un dashboard: las que Configuración › KPIs muestra en él (FE005). `codes` fija el orden de las de
+ * FE001; las añadidas en Configuración van al final.
+ */
+export function KpiRow({ dashboard, codes }: { dashboard: string; codes: KpiCode[] }) {
   const { filters } = useDashboardFilters()
-  const { data, isFetching, isError } = useSummary(filters)
+  const { data, isFetching, isError } = useSummary(filters, dashboard)
   if (isError) return <LoadError />
   if (!data) return <div className="h-28 animate-pulse rounded-xl bg-slate-100" />
   const byCode = new Map(data.kpis.map((k) => [k.code, k]))
   return (
     <div className={`grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6 ${isFetching ? 'opacity-60' : ''}`}>
-      {codes.map((code) => byCode.get(code)).filter((k) => k !== undefined).map((kpi) => (
+      {[...codes.map((code) => byCode.get(code)).filter((k) => k !== undefined),
+        ...data.kpis.filter((k) => !codes.includes(k.code))].map((kpi) => (
         <KpiTile key={kpi.code} kpi={kpi} href={drillDownHref(filters, KPI_DRILL[kpi.code])} />
       ))}
     </div>

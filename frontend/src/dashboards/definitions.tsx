@@ -16,7 +16,7 @@ export const DASHBOARDS: DashboardDefinition[] = [
     description: 'Volumen, resolución y satisfacción de la atención al cliente.',
     render: () => (
       <>
-        <KpiRow codes={['volume', 'aht_s', 'resolution_rate', 'escalation_rate', 'fcr_rate', 'csat_avg']} />
+        <KpiRow dashboard={DEFAULT_DASHBOARD_ID} codes={['volume', 'aht_s', 'resolution_rate', 'escalation_rate', 'fcr_rate', 'csat_avg']} />
         <div className="grid items-start gap-4 lg:grid-cols-2">
           <TimeseriesWidget kpi="volume" title="Volumen de conversaciones" />
           <BreakdownBars title="Distribución por main topic" dimension="main_topic" kpi="volume" subtitle="Conversaciones por motivo principal" />
@@ -36,7 +36,7 @@ export const DASHBOARDS: DashboardDefinition[] = [
     description: 'Checks de cumplimiento, resolución y escalado por cola y agente.',
     render: () => (
       <>
-        <KpiRow codes={['compliance_rate', 'resolution_rate', 'escalation_rate', 'aht_s', 'avg_turns']} />
+        <KpiRow dashboard="calidad-y-cumplimiento" codes={['compliance_rate', 'resolution_rate', 'escalation_rate', 'aht_s', 'avg_turns']} />
         <div className="grid items-start gap-4 lg:grid-cols-2">
           <ComplianceChecks />
           <BreakdownBars title="Cumplimiento por cola" dimension="queue" kpi="compliance_rate" />
@@ -53,7 +53,7 @@ export const DASHBOARDS: DashboardDefinition[] = [
     description: 'Satisfacción, esfuerzo, sentimiento y riesgo de abandono.',
     render: () => (
       <>
-        <KpiRow codes={['csat_avg', 'effort_avg', 'sentiment_avg', 'negative_pct', 'churn_high_pct', 'first_response_s']} />
+        <KpiRow dashboard="experiencia-de-cliente" codes={['csat_avg', 'effort_avg', 'sentiment_avg', 'negative_pct', 'churn_high_pct', 'first_response_s']} />
         <div className="grid items-start gap-4 lg:grid-cols-2">
           <TimeseriesWidget kpi="csat_avg" title="Evolución del CSAT predicho" />
           <BreakdownBars title="CSAT predicho por main topic" dimension="main_topic" kpi="csat_avg" order="asc"
