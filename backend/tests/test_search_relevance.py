@@ -5,7 +5,8 @@ import pytest
 from app.data.store import get_dataset
 from app.query.fields import normalize_text
 from app.search.synonyms import SYNONYMS, expand
-from app.search.tfidf import TfidfEngine, tokenize
+from app.search.text import tokenize
+from app.search.tfidf import TfidfEngine
 from tests.search_relevance import LABELLED_QUERIES, PARAPHRASE_PAIRS
 
 TOP = 5

@@ -1,30 +1,18 @@
 """Motor TF-IDF en Python puro: palabras y n-gramas de caracteres, similitud coseno e índice invertido."""
 import math
-import re
 from array import array
 from collections import Counter, defaultdict
 from collections.abc import Collection, Iterable
 
 from app.models import Conversation
-from app.query.fields import normalize_text
 from app.search.engine import Fragment, Hit, build_fragments
 from app.search.synonyms import expand
+from app.search.text import tokenize
 
-# «no» y «sin» cambian el sentido («no reconozco»), así que no son palabras vacías.
-STOPWORDS = {
-    "a", "al", "algo", "con", "de", "del", "el", "en", "es", "esa", "ese", "eso", "esta", "este", "esto", "ha",
-    "han", "he", "la", "las", "le", "les", "lo", "los", "me", "mi", "mis", "o", "para", "pero", "por", "que",
-    "se", "su", "sus", "te", "tu", "un", "una", "unos", "unas", "y", "ya", "yo",
-}
 NGRAM_SIZES = (3, 4, 5)
 WORD_WEIGHT = 0.5
 # Peso de los términos añadidos por la expansión respecto a los de la consulta.
 EXPANSION_WEIGHT = 0.5
-_WORD_RE = re.compile(r"[a-z0-9]+")
-
-
-def tokenize(text: str) -> list[str]:
-    return [w for w in _WORD_RE.findall(normalize_text(text)) if w not in STOPWORDS]
 
 
 def _tf(counts: Counter) -> dict[str, float]:
