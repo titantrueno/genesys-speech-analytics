@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [ingenieria, identificadores, uuid, convencion]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Registro de identificadores
@@ -36,9 +36,9 @@ updated: 2026-09-27
 | `1TP` | Main topic | Reservado (FE005) |
 | `1CK` | Check de cumplimiento | Reservado (FE005) |
 | `1QY` | Consulta guardada | Activo (FE002) |
-| `1FL` | Flujo de insights | Reservado (FE004) |
-| `1ND` | Nodo de flujo | Reservado (FE004) |
-| `1RN` | Ejecución de flujo | Reservado (FE004) |
+| `1FL` | Flujo de insights | Activo (FE004) |
+| `1ND` | Nodo de flujo | Activo (FE004) |
+| `1RN` | Ejecución de flujo | Activo (FE004) |
 | `1CN` | Conector de datos | Reservado (FE005) |
 | `1AU` | Entrada de auditoría | Reservado (FE005/FE006) |
 
@@ -51,6 +51,8 @@ updated: 2026-09-27
 ## Límites y excepciones
 
 - **No son identificadores de entidad** y se mantienen como códigos legibles: permisos, KPIs, canal, resolución, riesgo, slugs de dashboard y dimensiones.
+- **Conexiones entre nodos** (FE004) no son entidades: se identifican por su nodo de origen y de destino.
+- **Claves temporales de nodo** (FE004): el editor crea los nodos nuevos con `tmp-<uuid>` y el backend les asigna su `1ND` al guardar (`PUT /api/flows/{id}/graph` devuelve el `id_map`). Así ningún identificador de entidad se genera fuera de `app/ids.py`.
 - **Main topics y checks** conservan su código legible hasta que FE005 los haga editables (prefijos `1TP` y `1CK` reservados).
 - **Riesgo de los v5:** dependen del nombre, así que renombrar un agente o una cola cambia su identificador. Se acepta mientras el catálogo sea mock.
 
@@ -59,4 +61,5 @@ updated: 2026-09-27
 - [ADR-004 — Identificadores con prefijo y UUID](../decisiones/adr-004-identificadores-con-prefijo-y-uuid.md)
 - [Spec FE008](../../features/FE008-identificadores-con-prefijo-y-uuid/spec.md)
 - [Implementación](../../backend/app/ids.py)
+- [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562) (sustituye a RFC 4122)

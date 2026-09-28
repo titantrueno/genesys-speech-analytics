@@ -52,17 +52,27 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 | `GET /api/conversations` | `conversations:view` | Listado filtrado, paginado (25) y ordenado. |
 | `GET /api/conversations/{id}` | `conversations:view` | Conversación completa con análisis. |
 | `GET /api/catalog` | `dashboards:view` o `conversations:view` | Valores de los filtros y fecha de referencia. |
-| `GET /api/query/schema` | `explorer:use` | Campos del explorador con tipo, operadores y valores. |
+| `GET /api/query/schema` | `explorer:use` o `flows:view` | Campos del explorador con tipo, operadores y valores. |
 | `POST /api/query/run` | `explorer:use` | Ejecuta una consulta: total, 13 KPIs y página del listado (`page`, `page_size`, `sort`, `order`). |
-| `GET /api/query/suggest?field=` | `explorer:use` | Valores de un campo categórico en el intervalo, con recuento. |
+| `GET /api/query/suggest?field=` | `explorer:use` o `flows:view` | Valores de un campo categórico en el intervalo, con recuento. |
 | `POST /api/query/interpret` | `explorer:use` | Frase en español → consulta editable y palabras no entendidas. |
 | `GET/POST /api/query/saved`, `GET/PATCH/DELETE /api/query/saved/{id}` | `explorer:use` | Consultas guardadas privadas del usuario (`1QY-…`). |
 | `GET /api/search/semantic?q=` | `search:use` | Búsqueda semántica por fragmentos: resultados por puntuación (0–1) con turnos, términos resaltables, metadatos, expansión y `max_score`. Admite `from`, `to`, `channel`, `queue`, `min_score`, `group=conversation\|fragment` y `limit` (1–100, 20 por defecto). |
 | `GET /api/search/similar/{id}` | `search:use` | Las 10 conversaciones más cercanas a una dada, excluida ella misma. |
+| `GET /api/flows`, `GET /api/flows/{id}` | `flows:view` | Flujos de insights (`1FL-…`): listado con autor, fechas, última ejecución y estado (`valido`/`con_errores`), y detalle con el grafo JSON. |
+| `POST /api/flows`, `PATCH/DELETE /api/flows/{id}`, `POST /api/flows/{id}/duplicate` | `flows:edit` | Crear, renombrar, borrar (con su historial) y duplicar («Copia de …», nodos nuevos). |
+| `PUT /api/flows/{id}/graph` | `flows:edit` | Guarda el grafo si es íntegro (`422` con la lista de errores si no); asigna `1ND` a las claves `tmp-…` y devuelve el `id_map`. |
+| `GET /api/flows/catalog` | `flows:view` | Métodos, modelos mock, variables, formatos, tipos de output y límites. |
+| `POST /api/flows/validate` | `flows:view` | Errores de completitud de un grafo sin guardar (código, mensaje y nodo). |
+| `POST /api/flows/sampling/estimate` | `flows:view` | Conversaciones que cumplen una consulta de FE002 y tamaño efectivo de la muestra. |
+| `POST /api/flows/{id}/runs` | `flows:edit` | Ejecuta en segundo plano la versión guardada (`202`); `422` si no es válida, `409` si ya hay una en curso. |
+| `GET /api/flows/{id}/runs`, `GET /api/flows/{id}/runs/{run_id}` | `flows:view` | Historial y detalle de una ejecución (`1RN-…`): estado y procesados por nodo, outputs y grafo ejecutado. |
 
 **Filtros comunes:** `from`, `to` (por defecto, los últimos 30 días), `channel`, `queue` (IDs `1QU-…`), `agent` (IDs `1AG-…`), `main_topic` (códigos). El listado admite además `resolution`, `churn_risk`, `sentiment_lt`, `compliant` y `repeat_contact`, que usa el drill-down desde los KPIs.
 
 **Búsqueda semántica:** el índice se construye al arrancar la API (unos 2,5 s). El motor es sustituible detrás de `SearchEngine`; sus límites y la migración a embeddings están en `vault/decisiones/adr-005-busqueda-vectorial-ligera.md`.
+
+**Flujos de insights:** el prompt es simulado y determinista detrás de `PromptRunner` (`vault/decisiones/adr-006-ejecucion-de-prompts-simulada.md`). `FLOW_RUN_STEP_DELAY_MS` (15 por defecto) marca el ritmo de la ejecución para que el progreso sea visible.
 
 **Identificadores:** formato `PREFIJO-UUID` generado solo con `app/ids.py` (ver el registro en `vault/ingenieria/registro-de-identificadores.md`).
 
@@ -78,6 +88,7 @@ app/
   services/          # filtros y cálculo de KPIs
   query/             # modelo, campos, motor, intérprete y consultas guardadas del explorador
   search/            # búsqueda semántica: interfaz SearchEngine, TF-IDF, diccionario de sinónimos (ADR-005)
-  routers/           # auth, metrics, conversations, query
+  flows/             # flujos de insights: modelo JSON, reglas, sampling, prompt simulado, outputs y ejecuciones (ADR-006)
+  routers/           # auth, metrics, conversations, query, search, flows
 tests/
 ```

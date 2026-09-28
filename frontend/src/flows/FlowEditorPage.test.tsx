@@ -124,7 +124,7 @@ describe('editor de flujos', () => {
     const issues: Issue[] = [
       { code: 'missing_output', message: 'El flujo necesita al menos un nodo Output.', node_id: null },
       { code: 'prompt_without_variables', message: 'El prompt no usa ninguna variable.', node_id: nodeId(3) },
-      { code: 'node_unconfigured', message: 'Prompt sin configurar: falta modelo.', node_id: nodeId(3) },
+      { code: 'node_unconfigured', message: 'Sin configurar: falta modelo.', node_id: nodeId(3) },
     ]
     const { validations, node } = setup({ validate: () => issues })
     const user = userEvent.setup()
@@ -133,8 +133,8 @@ describe('editor de flujos', () => {
     const list = await screen.findByRole('list', { name: 'Errores de validación' })
     expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
       'El flujo necesita al menos un nodo Output.',
-      'Prompt: El prompt no usa ninguna variable.',
-      'Prompt: Prompt sin configurar: falta modelo.',
+      'Prompt 2: El prompt no usa ninguna variable.',
+      'Prompt 2: Sin configurar: falta modelo.',
     ])
     expect(sameJson(validations[0], CHAINED)).toBe(true)
     expect(within(node(nodeId(3))).getByText('2 errores')).toBeInTheDocument()

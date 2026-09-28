@@ -12,7 +12,7 @@ updated: 2026-09-28
 
 ## Situación
 
-Durante FE001, FE007, FE008, FE002 y FE003 aparecieron comportamientos de librerías y fallos de verificación que no eran evidentes a priori y que afectarán a las features siguientes.
+Durante FE001, FE007, FE008, FE002, FE003 y FE004 aparecieron comportamientos de librerías y fallos de verificación que no eran evidentes a priori y que afectarán a las features siguientes.
 
 ## Resultado observado
 
@@ -31,6 +31,13 @@ Durante FE001, FE007, FE008, FE002 y FE003 aparecieron comportamientos de librer
 13. **FE003:** aplicar un peso al ranking para arreglar qué fragmento se muestra hundió la relevancia (pares de 9/9 a 6/9). Separar la puntuación que ordena de la que elige el representante lo resolvió.
 14. **FE003:** una mutación sobre un fichero aún no versionado se perdió porque la copia de seguridad se hizo después de mutar.
 15. **FE003:** probar los cambios de UI en un navegador real reveló el problema de la despedida y del umbral vacío, que los tests con datos simulados no podían ver.
+16. **FE004:** el mock de React Flow de su guía de testing no incluye `contentRect`, que la versión 12.12 lee; sin él, el lienzo lanzaba un error en jsdom. Y user-event no rellena `event.view` en `mousedown`, que d3-drag necesita.
+17. **FE004:** Chrome reveló tres fallos que los tests no veían: `fitView` en un lienzo vacío cambiaba el zoom con el primer nodo soltado (los siguientes quedaban superpuestos), el tipo de nodo `output` heredaba el estilo del nodo integrado de React Flow y los botones «Añadir» apilaban los nodos.
+18. **FE004:** tras guardar y lanzar una ejecución, `navigate` llegaba antes de que React pintara el estado guardado y el aviso de cambios sin guardar bloqueaba la salida.
+19. **FE004:** `TestClient` ejecuta las `BackgroundTasks` antes de devolver la respuesta, así que los tests no ven la ejecución «en curso». El progreso se probó con un gancho por paso y un hilo real, y se comprobó con uvicorn.
+20. **FE004:** una prueba de carrera sin forzar la ventana solo detectaba la mutación a veces; con un `active` lento es determinista.
+21. **FE004:** filtrar la salida del build con `grep` volvió a ocultar un error de tipos (como en la lección 10).
+22. **FE004:** en T7 y T8 el código se escribió antes que los tests. Las mutaciones encontraron dos tests débiles: uno no esperaba al debounce y otro miraba el DOM cuando el defecto solo estaba en el JSON.
 
 ## Causa
 
@@ -53,6 +60,12 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Si una puntuación sirve para dos cosas (ordenar y elegir qué se muestra), sepáralas antes de ajustar pesos.
 - Antes de una prueba de mutación, copia el fichero; con ficheros sin versionar no hay `git checkout` que lo recupere.
 - Verifica con datos reales cualquier umbral o escala que vaya a ver el usuario.
+- Contrasta cada mock de librería con el código instalado, no solo con su guía.
+- En editores visuales, verifica en el navegador el arrastre, las posiciones y el encuadre: jsdom no tiene layout.
+- Si una navegación sigue a una mutación que cambia el estado que la bloquea, márcala como intencionada en lugar de confiar en el orden de los renders.
+- Para probar trabajo en segundo plano, expón un gancho por paso y prueba también con un servidor real.
+- Comprueba el build y el lint por su código de salida, nunca por una salida filtrada.
+- Si el código precede al test, demuestra el rojo con mutaciones y comprueba qué mira el test (DOM o datos).
 
 ## Acción preventiva
 
@@ -60,6 +73,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Patrón de tabla navegable en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 - Revisar esta lista en `/plan` de FE004 a FE006.
 - FE003: test de despedidas en los representantes (< 10 %) y test de pares contra los turnos reales del dataset.
+- FE004: mock de React Flow con `contentRect` en `frontend/src/test/reactFlow.ts`, tests de ida y vuelta, test de arranque concurrente determinista y patrón de lienzo en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 
 ## Fuentes
 
@@ -67,4 +81,5 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Revisión de FE001](../../features/FE001-base-dashboards-y-detalle-conversaciones/REVIEW.md)
 - [Verificación de FE002](../../features/FE002-explorador-de-queries-asistidas/VERIFY.md)
 - [Plan y evidencia de FE003](../../features/FE003-busqueda-semantica-de-conversaciones/plan.md)
+- [Plan y evidencia de FE004](../../features/FE004-disenador-de-flujos-de-insights/plan.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

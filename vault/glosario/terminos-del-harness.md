@@ -40,9 +40,15 @@ updated: 2026-09-28
 - **Fragmento:** ventana de 3 turnos consecutivos de una conversación, sin los turnos de sistema. Se identifica por la conversación y sus turnos de inicio y fin.
 - **Puntuación de similitud:** similitud coseno entre la consulta y un fragmento, de 0 a 1. No es una probabilidad y no se puede comparar entre consultas.
 - **Expansión de consulta:** términos que el diccionario de sinónimos del dominio añade a una consulta (por ejemplo, «visa» → «tarjeta»).
+- **Flujo de insights:** grafo de nodos `Sampling → Prompt → Output` que toma una muestra de conversaciones, les aplica un prompt y produce un resultado. Tiene identificador `1FL` y se guarda como JSON ([arquitectura](../arquitectura/arquitectura-de-la-plataforma.md#flujos-de-insights-fe004)).
+- **Nodo:** caja de un flujo (`1ND`) de tipo Sampling, Prompt u Output, con su posición en el lienzo y su configuración.
+- **Conexión:** arista entre dos nodos de un flujo. Solo se admiten `Sampling → Prompt`, `Prompt → Prompt` y `Prompt → Output`, sin ciclos.
+- **Sampling:** selección de una muestra de conversaciones con los filtros del explorador y un método (aleatorio, estratificado o primeros N).
+- **Ejecución:** ejecución simulada (`1RN`) de la versión guardada de un flujo, con el estado de cada nodo (pendiente, en curso, ok o error), los resultados de cada output y una copia del grafo ejecutado ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
 - **Drill-down:** navegar de un elemento agregado de un dashboard al listado de las conversaciones que lo componen.
 
 ## Fuentes
 
 - [Instrucciones del proyecto](../../AGENTS.md)
 - [Gobierno del vault](../Governance.md)
+- [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)

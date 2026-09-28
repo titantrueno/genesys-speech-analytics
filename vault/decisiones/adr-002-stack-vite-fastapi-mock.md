@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, stack, frontend, backend, mock]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # ADR-002 — Stack Vite + FastAPI con datos mock deterministas
@@ -33,9 +33,15 @@ La plataforma de speech & text analytics para la atención al cliente del banco 
 - Las escrituras de fases posteriores (configuración, usuarios, flujos) se pierden al reiniciar mientras no se decida persistencia.
 - Sustituir los mocks por datos reales exigirá una capa de repositorio que ofrezca el mismo contrato de modelos.
 
+## Ampliaciones
+
+- **FE004 (2026-09-28):** el front añade `@xyflow/react` (React Flow, licencia MIT) para el lienzo del diseñador de flujos. Se carga en diferido con las rutas de flujos, así que no aumenta la carga inicial. El backend no añade dependencias: la ejecución simulada usa `BackgroundTasks` de FastAPI y `threading` ([ADR-006](adr-006-ejecucion-de-prompts-simulada.md)).
+
 ## Fuentes
 
 - [Spec FE001](../../features/FE001-base-dashboards-y-detalle-conversaciones/spec.md)
 - [Plan FE001](../../features/FE001-base-dashboards-y-detalle-conversaciones/plan.md)
 - [Generador de datos](../../backend/app/data/generator.py)
 - [Modelos](../../backend/app/models.py)
+- [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
+- [React Flow · licencia MIT](https://github.com/xyflow/xyflow/blob/main/LICENSE)

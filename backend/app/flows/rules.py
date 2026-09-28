@@ -52,7 +52,7 @@ def _sampling(node: SamplingNode) -> list[Issue]:
         ("criterio de orden", cfg.method != "primeros_n" or cfg.order_by is not None),
         ("sentido del orden", cfg.method != "primeros_n" or cfg.order is not None),
     ])
-    issues = [Issue("node_unconfigured", f"Sampling sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    issues = [Issue("node_unconfigured", f"Sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
     if cfg.query is not None:
         try:
             parse_query(copy.deepcopy(cfg.query))
@@ -87,7 +87,7 @@ def _prompt(node: PromptNode, graph: Graph) -> list[Issue]:
     template = (cfg.template or "").strip()
     missing = _missing([("plantilla", bool(template)), ("modelo", cfg.model is not None),
                         ("temperatura", cfg.temperature is not None), ("formato de salida", cfg.output is not None)])
-    issues = [Issue("node_unconfigured", f"Prompt sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    issues = [Issue("node_unconfigured", f"Sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
     if template:
         used = template_variables(template)
         unknown = sorted({v for v in used if v not in catalog.VARIABLES})
@@ -107,7 +107,7 @@ def _output(node: OutputNode, graph: Graph) -> list[Issue]:
     cfg = node.config
     missing = _missing([("tipo", cfg.kind is not None), ("nombre de destino", bool((cfg.destination or "").strip())),
                         ("agregación", cfg.kind != "metrica" or cfg.aggregation is not None)])
-    issues = [Issue("node_unconfigured", f"Output sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    issues = [Issue("node_unconfigured", f"Sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
     if cfg.kind == "metrica":
         for source in graph.inputs(node.id):
             prompt = graph.node(source)
@@ -125,7 +125,7 @@ def _disconnected(node, graph: Graph) -> Issue | None:
         return None
     needs = {"sampling": "conéctalo a un Prompt", "prompt": "necesita una entrada y al menos una salida",
              "output": "conéctale un Prompt"}[node.type]
-    return Issue("disconnected_node", f"{catalog.NODE_TYPES[node.type]} suelto: {needs}.", node.id)
+    return Issue("disconnected_node", f"Nodo suelto: {needs}.", node.id)
 
 
 def validate(graph: Graph) -> list[Issue]:

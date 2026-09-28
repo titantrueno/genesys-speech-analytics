@@ -31,7 +31,7 @@ function RunCanvas({ run }: { run: Run }) {
   const nodes = useMemo(() => toCanvasNodes(run.graph).map((n) => ({ ...n, data: { ...n.data, state: run.nodes[n.id] } })), [run])
   const edges = useMemo(() => toCanvasEdges(run.graph), [run.graph])
   return (
-    <div className="h-80 overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="h-[26rem] overflow-hidden rounded-xl border border-slate-200 bg-white">
       <ReactFlowProvider>
         <FlowCanvas nodes={nodes} edges={edges} editable={false} label="Grafo ejecutado" />
       </ReactFlowProvider>

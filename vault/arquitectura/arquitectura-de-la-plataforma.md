@@ -3,7 +3,7 @@ title: "Arquitectura de la plataforma"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, frontend, backend, api, mock, busqueda]
+tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos]
 created: 2026-09-27
 updated: 2026-09-28
 ---
@@ -26,7 +26,8 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 | Auth | `backend/app/auth.py` | Usuarios demo, token HMAC y `require_permission` (ver [ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)). |
 | Identificadores | `backend/app/ids.py` | `PREFIJO-UUID` (ver el [registro](../ingenieria/registro-de-identificadores.md)). |
 | Búsqueda semántica | `backend/app/search/` | Índice por fragmentos construido al arrancar, interfaz `SearchEngine`, TF-IDF y diccionario de sinónimos (ver [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md)). |
-| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador y búsqueda semántica. |
+| Flujos de insights | `backend/app/flows/` | Formato JSON del flujo, integridad y reglas de conexión, validación, sampling, prompt simulado detrás de `PromptRunner`, outputs y ejecuciones en segundo plano (ver [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)). |
+| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador, búsqueda semántica y diseñador de flujos. |
 
 ### Flujo de datos
 
@@ -69,10 +70,26 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
   - el umbral muestra la mejor puntuación de la búsqueda y permite ajustarse a ella;
   - cada resultado abre el detalle en `/conversaciones/{id}?turn=N`, que desplaza el chat y resalta el turno.
 
+### Flujos de insights (FE004)
+
+- **Formato JSON (versión 1):** `{version, nodes: [{id, type, position, config}], edges: [{source, target}]}`, igual en `backend/app/flows/model.py` y `frontend/src/flows/types.ts`. Los nodos nuevos llevan una clave `tmp-<uuid>` y el backend les asigna su `1ND` al guardar (ver el [registro](../ingenieria/registro-de-identificadores.md)). Guardar y leer devuelve el mismo JSON (test de ida y vuelta).
+- **Configuración por tipo:**
+  - **Sampling:** consulta de FE002 (intervalo y condiciones), método y tamaño (1–1.000);
+  - **Prompt:** plantilla con `{{transcripcion}}`, `{{summary}}`, `{{main_topic}}`, `{{metadatos}}` y `{{resultado_anterior}}`, modelo mock, temperatura y formato (texto, etiqueta o JSON con esquema);
+  - **Output:** tabla, métrica (recuento o %) o informe, con un nombre de destino.
+- **Dos niveles de validación:**
+  - **integridad** (se exige al guardar): tipos, identificadores, rangos y reglas de conexión (`Sampling → Prompt`, `Prompt → Prompt`, `Prompt → Output`; una entrada por Prompt u Output; sin duplicados ni ciclos);
+  - **completitud** (bloquea la ejecución; `POST /api/flows/validate` con un grafo sin guardar): nodos sin configurar, variables, nodos sueltos, métrica sin etiquetas y destinos repetidos.
+- **Reglas en los dos lados:** las de conexión existen en Python y en TypeScript para responder al instante en el lienzo; `frontend/src/flows/rules.cases.json` se ejecuta en los dos lados. La completitud solo existe en el backend.
+- **Ejecución:** `POST /api/flows/{id}/runs` valida, crea la ejecución (`1RN`, con copia del grafo y semilla) y la ejecuta en segundo plano (`BackgroundTasks`) en orden topológico. Cada nodo informa de estado y procesados; el front consulta el detalle cada 500 ms hasta que termina. El estado se protege con un cerrojo por ejecución y el arranque es atómico (`409` si ya hay una en curso).
+- **Sampling real** sobre el dataset: aleatorio con semilla, estratificado proporcional (restos mayores) o primeros N por un criterio.
+- **Permisos:** lecturas con `flows:view` y escrituras y ejecuciones con `flows:edit`. El esquema y las sugerencias de campos de FE002 aceptan también `flows:view`, porque los usa el nodo Sampling.
+- **Front:** React Flow (`@xyflow/react`) en rutas diferidas: listado, editor (paleta arrastrable o con botón, lienzo, paneles por nodo, validar, guardar y ejecutar), ejecución (lienzo de solo lectura con progreso y pestañas por output) e historial.
+
 ### Rendimiento
 
-- Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
-- En el front, el dashboard se carga en diferido: el bundle principal ocupa unos 437 kB (397 kB antes de FE003) y el chunk de dashboards, con Recharts, unos 366 kB.
+- Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
+- En el front, el dashboard y los flujos se cargan en diferido: la carga inicial ocupa unos 448 kB, Recharts va en un chunk de unos 347 kB y React Flow, en otro de unos 176 kB, compartido por el editor y la vista de ejecución.
 
 ## Límites y excepciones
 
@@ -80,6 +97,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **FCR:** para conversaciones de los últimos 7 días del dataset aún no ha pasado la ventana de recontacto, así que su FCR es optimista. Es un **hecho** del cálculo que hay que tener en cuenta al comparar periodos recientes.
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
 - Las conversaciones de voz muestran DNI e IBAN ficticios sin enmascarar hasta FE005. La búsqueda semántica indexa los números como palabras, así que buscar un DNI encuentra sus conversaciones; FE005 debe enmascararlos también en el índice.
+- Flujos y ejecuciones viven en memoria. Si dos personas guardan el mismo flujo, gana el último guardado. Los resultados del prompt son simulados ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
 - La búsqueda semántica es léxica: sus limitaciones medidas (puntuaciones bajas, dependencia del diccionario, sesgo hacia texto plantillado) están en [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md).
 
 ## Fuentes
@@ -91,3 +109,4 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [README del frontend](../../frontend/README.md)
 - [Spec FE002](../../features/FE002-explorador-de-queries-asistidas/spec.md)
 - [Spec FE003](../../features/FE003-busqueda-semantica-de-conversaciones/spec.md)
+- [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)

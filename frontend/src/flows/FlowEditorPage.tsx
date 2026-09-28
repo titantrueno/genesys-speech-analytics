@@ -13,6 +13,7 @@ import {
   freePosition, fromCanvas, newNode, remapEdges, remapNodes, sameJson, toCanvasEdges, toCanvasNodes, type CanvasEdge, type CanvasNode,
 } from './graph'
 import { NodePanel } from './panels/NodePanel'
+import { useNodeNames } from './panels/nodeNames'
 import { connectionRejection, NODE_LABELS } from './rules'
 import type { Flow, Issue, NodeType } from './types'
 
@@ -48,7 +49,7 @@ function Palette({ onAdd }: { onAdd: (type: NodeType) => void }) {
 function ValidationPanel({ issues, loading, nodes, onSelect, onClose }: {
   issues: Issue[] | undefined; loading: boolean; nodes: CanvasNode[]; onSelect: (id: string) => void; onClose: () => void
 }) {
-  const types = new Map(nodes.map((n) => [n.id, n.type]))
+  const names = useNodeNames(nodes)
   return (
     <section aria-label="Validación" className="rounded-xl border border-slate-200 bg-white p-3">
       <header className="mb-2 flex items-center justify-between">
@@ -66,13 +67,14 @@ function ValidationPanel({ issues, loading, nodes, onSelect, onClose }: {
       {issues && issues.length > 0 && (
         <ul aria-label="Errores de validación" className={`space-y-1 ${loading ? 'opacity-60' : ''}`}>
           {issues.map((issue, i) => {
-            const type = issue.node_id ? types.get(issue.node_id) : undefined
+            // «Prompt 2»: tipo y número, sin el resumen, para distinguir nodos del mismo tipo.
+            const name = issue.node_id ? names.get(issue.node_id)?.split(' · ')[0] : undefined
             return (
               <li key={`${issue.code}-${issue.node_id}-${i}`} className="flex items-start gap-1.5 text-sm text-red-800">
                 <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
-                {type && issue.node_id ? (
+                {name && issue.node_id ? (
                   <button type="button" onClick={() => onSelect(issue.node_id!)} className="text-left hover:underline">
-                    <span className="font-medium">{NODE_LABELS[type]}:</span> {issue.message}
+                    <span className="font-medium">{name}:</span> {issue.message}
                   </button>
                 ) : <span>{issue.message}</span>}
               </li>

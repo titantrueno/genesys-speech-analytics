@@ -18,7 +18,7 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 
 ### Fila de tabla navegable
 
-**Cuándo:** tablas o tarjetas donde cada elemento representa una entidad con página de detalle: conversaciones del listado y del explorador, resultados de la búsqueda semántica y, en el futuro, usuarios de FE006.
+**Cuándo:** tablas o tarjetas donde cada elemento representa una entidad con página de detalle: conversaciones del listado y del explorador, resultados de la búsqueda semántica, flujos de insights y filas de la tabla de resultados de una ejecución (FE004) y, en el futuro, usuarios de FE006.
 
 **Cómo:**
 
@@ -41,9 +41,30 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 - La URL es `/conversaciones/{id}?turn=N`, con `N` el índice del turno en la conversación (incluidos los de sistema).
 - El turno activo se deriva de la URL, sin `setState` en un efecto. Un efecto solo desplaza el contenedor del chat con `container.scrollTo`, no con `scrollIntoView` (ver [lecciones](../aprendizaje/lecciones-construccion-plataforma.md), punto 3).
 - Un `turn` que no es un entero dentro de la conversación se ignora sin error. Elegir otro turno desde el análisis sustituye al de la URL.
-- «Volver» usa `state.from`: `BackLink` reconoce listado, explorador y búsqueda.
+- «Volver» usa `state.from`: `BackLink` reconoce listado, explorador y búsqueda por su ruta exacta, y la ejecución de un flujo por patrón (`/flujos/{id}/ejecuciones/{runId}`, «Volver a la ejecución»).
 
 **Cómo se prueba:** `offsetTop` simulado por turno y `scrollTo` espiado sobre el contenedor; turnos no válidos (`99`, `-1`, `abc`, `2.5`); verificación en Chrome de `scrollTop` y de que la cabecera sigue visible.
+
+### Lienzo de nodos (React Flow)
+
+**Cuándo:** editores visuales de grafos (diseñador de flujos de FE004).
+
+**Cómo:**
+
+- El estado de React Flow (nodos con sus medidas y selección) es la fuente de verdad en el editor y el JSON se deriva con `fromCanvas`. No se regeneran los nodos en cada render: se perderían las medidas.
+- Toda acción de ratón tiene una alternativa accesible: añadir con un botón además de arrastrar, y conectar, desconectar y eliminar desde el panel del nodo.
+- Una conexión rechazada muestra el motivo (`onConnectEnd`), también si se suelta sobre un nodo sin conector de entrada.
+- `fitView` solo al abrir un grafo con nodos. Los nodos añadidos con botón van al primer hueco libre.
+- El tipo de nodo `output` coincide con un nodo integrado de React Flow: su estilo se neutraliza dentro de `.insight-flow`, con foco visible para teclado.
+- En modo lectura: `nodesDraggable`, `nodesConnectable` y `deleteKeyCode` desactivados, y el panel en un `fieldset` deshabilitado.
+
+**Cómo se prueba:** en jsdom con el mock de `frontend/src/test/reactFlow.ts` (clic para seleccionar con `fireEvent`, Supr, `drop` con `dataTransfer` simulado); el arrastre real, las conexiones con el ratón, el zoom y el desplazamiento, en Chrome.
+
+### Pestañas de resultados
+
+**Cuándo:** varias vistas del mismo nivel (outputs de una ejecución).
+
+**Cómo:** patrón de pestañas de WAI-ARIA: `tablist`, `tab` con `aria-selected` y `aria-controls`, un único `tab` con `tabIndex` 0 y flechas izquierda y derecha en ciclo.
 
 ## Límites y excepciones
 
@@ -56,3 +77,6 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 - [Implementación](../../frontend/src/conversations/ConversationsPage.tsx)
 - [Tests](../../frontend/src/conversations/RowNavigation.test.tsx)
 - [Tests de la búsqueda](../../frontend/src/search/SearchNavigation.test.tsx) (FE003)
+- [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
+- [React Flow · Testing](https://reactflow.dev/learn/advanced-use/testing)
+- [WAI-ARIA APG · Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/)
