@@ -2,9 +2,8 @@ from dataclasses import dataclass
 from statistics import mean
 from typing import Callable
 
-from app.data.catalog import COMPLIANCE_CHECKS
+from app.config.compliance import active_checks, check_result, is_compliant
 from app.models import Conversation
-from app.services.filters import is_compliant
 
 
 @dataclass(frozen=True)
@@ -81,10 +80,11 @@ def compute_kpi(code: str, convs: list[Conversation], followups: dict[str, bool]
 
 def compliance_by_check(convs: list[Conversation]) -> list[dict]:
     result = []
-    for code, label in COMPLIANCE_CHECKS.items():
-        applicable = [c for c in convs if c.analysis.compliance.get(code) is not None]
-        result.append({"code": code, "label": label,
-                       "value": round_value(_pct(applicable, lambda c: c.analysis.compliance[code])),
+    for check in active_checks():
+        values = {c.id: check_result(c, check.code) for c in convs}
+        applicable = [c for c in convs if values[c.id] is not None]
+        result.append({"code": check.code, "label": check.name,
+                       "value": round_value(_pct(applicable, lambda c: values[c.id])),
                        "applicable": len(applicable)})
     return result
 

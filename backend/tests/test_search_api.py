@@ -9,7 +9,7 @@ from app import auth
 from app.data.catalog import MAIN_TOPICS, QUEUE_IDS
 from app.data.store import conversation_index, get_dataset, reference_date
 from app.main import app
-from app.query.fields import normalize_text
+from app.text import normalize_text
 from app.routers import search as search_router
 from app.search.engine import Fragment, Hit
 from app.search.synonyms import SYNONYMS

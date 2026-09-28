@@ -13,7 +13,7 @@ from app.config.store import topic_name
 from app.flows.model import PromptConfig
 from app.flows.rules import VARIABLE
 from app.models import Conversation
-from app.query.fields import normalize_text
+from app.text import normalize_text
 
 NEGATIVE_BELOW, POSITIVE_ABOVE = -0.3, 0.3  # mismos umbrales que las etiquetas de sentimiento de la UI
 RESOLUTION_LABELS = {"resuelta": "resuelta", "no_resuelta": "no resuelta", "escalada": "escalada"}

@@ -6,7 +6,7 @@ La coincidencia no distingue mayúsculas ni tildes y respeta los límites de pal
 """
 import re
 
-from app.query.fields import normalize_text
+from app.text import normalize_text
 
 SYNONYMS: list[list[str]] = [
     # Cargos y fraude

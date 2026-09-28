@@ -26,7 +26,7 @@ FIELD_CATALOG = require_permission("explorer:use", "flows:view")
 def schema() -> dict:
     date_from, date_to = default_period()
     return {
-        "fields": [f.schema() for f in get_fields().values()],
+        "fields": [f.schema() for f in get_fields().values() if f.offered],
         "reference_date": reference_date().isoformat(),
         "default_period": {"from": date_from.isoformat(), "to": date_to.isoformat()},
     }

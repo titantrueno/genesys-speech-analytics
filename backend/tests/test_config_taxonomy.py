@@ -228,7 +228,7 @@ def test_no_module_reads_the_fixed_catalog_outside_data_and_config():
     app_dir = pathlib.Path(__file__).parents[1] / "app"
     offenders = [str(path.relative_to(app_dir)) for path in app_dir.rglob("*.py")
                  if path.parent.name not in ("data", "config")
-                 and re.search(r"\b(MAIN_TOPICS|SECONDARY_TOPICS)\b", path.read_text())]
+                 and re.search(r"\b(MAIN_TOPICS|SECONDARY_TOPICS|COMPLIANCE_CHECKS)\b", path.read_text())]
     assert offenders == []
 
 

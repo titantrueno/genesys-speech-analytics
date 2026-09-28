@@ -1,10 +1,10 @@
-import unicodedata
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
 from app import ids
 from app.config.store import Config, get_config
-from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, QUEUE_IDS
+from app.config.compliance import check_result
+from app.data.catalog import AGENT_IDS, QUEUE_IDS
 from app.data.store import followup_index
 from app.models import Conversation
 
@@ -24,11 +24,6 @@ OPERATORS_BY_TYPE = {
 SPEAKERS = ["cliente", "agente", "bot"]
 
 
-def normalize_text(value: str) -> str:
-    decomposed = unicodedata.normalize("NFKD", value)
-    return "".join(c for c in decomposed if not unicodedata.combining(c)).casefold()
-
-
 @dataclass(frozen=True)
 class FieldDef:
     key: str
@@ -43,6 +38,8 @@ class FieldDef:
     speakers: bool = False
     # Valores válidos que ya no se ofrecen (temas desactivados): se aceptan en consultas, pero no salen en el esquema.
     hidden: frozenset[str] = frozenset()
+    # Un campo no ofrecido (check desactivado) sigue siendo válido en consultas guardadas, pero no sale en el esquema.
+    offered: bool = True
 
     @property
     def operators(self) -> list[str]:
@@ -91,8 +88,9 @@ def _field_list(config: Config) -> list[FieldDef]:
         FieldDef("duration", "Duración (s)", "numeric", lambda c: c.duration_s, min=0, max=86400),
         FieldDef("turns", "Nº de turnos", "numeric", lambda c: len(c.turns), min=0, max=1000),
         *[
-            FieldDef(f"check:{code}", label, "check", lambda c, code=code: c.analysis.compliance.get(code))
-            for code, label in COMPLIANCE_CHECKS.items()
+            FieldDef(f"check:{check.code}", check.name, "check", lambda c, code=check.code: check_result(c, code),
+                     offered=check.active)
+            for check in config.checks.values()
         ],
         FieldDef("summary", "Summary", "text", lambda c: c.analysis.summary),
         FieldDef("transcript", "Transcripción", "text", lambda c: c.turns, speakers=True),

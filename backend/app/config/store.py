@@ -11,6 +11,7 @@ from typing import Any, Callable
 
 from app import ids
 from app.auth import User
+from app.config.checks import Check, initial_checks
 from app.config.model import AiConfig, GeneralConfig, PrivacyConfig
 from app.config.taxonomy import Topic, initial_main_topics, initial_secondary_topics
 from app.clock import now
@@ -62,6 +63,7 @@ class Config:
     connectors: dict[str, Connector] = field(default_factory=_default_connectors)
     main_topics: dict[str, Topic] = field(default_factory=initial_main_topics)
     secondary_topics: dict[str, Topic] = field(default_factory=initial_secondary_topics)
+    checks: dict[str, Check] = field(default_factory=initial_checks)
 
     def topic_name(self, code: str) -> str:
         """Nombre vigente de un main topic, esté o no activo."""

@@ -3,7 +3,8 @@ from functools import cache
 from app.data.store import conversation_index
 from app.models import Conversation
 from app.privacy.masking import masked, masking_enabled
-from app.query.fields import get_fields, normalize_text
+from app.query.fields import get_fields
+from app.text import normalize_text
 from app.query.model import Condition, Group, Query
 
 

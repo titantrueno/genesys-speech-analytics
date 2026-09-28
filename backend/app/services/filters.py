@@ -5,6 +5,7 @@ from typing import Literal
 from fastapi import Depends, HTTPException, Query, status
 
 from app import ids
+from app.config.compliance import is_compliant
 from app.data.store import followup_index, reference_date
 from app.models import Conversation
 
@@ -47,10 +48,6 @@ class ConversationFilters:
         length = self.date_to - self.date_from
         prev_to = self.date_from - timedelta(days=1)
         return prev_to - length, prev_to
-
-
-def is_compliant(conv: Conversation) -> bool:
-    return all(v for v in conv.analysis.compliance.values() if v is not None)
 
 
 def conversation_filters(

@@ -3,7 +3,7 @@ import re
 import pytest
 
 from app.data.store import get_dataset
-from app.query.fields import normalize_text
+from app.text import normalize_text
 from app.search.engine import best_per_conversation
 from app.search.synonyms import SYNONYMS, expand
 from app.search.text import tokenize

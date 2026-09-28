@@ -3,9 +3,10 @@ import re
 from datetime import timedelta
 
 from app.config.store import get_config
-from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, QUEUE_IDS
+from app.config.compliance import active_checks
+from app.data.catalog import AGENT_IDS, QUEUE_IDS
 from app.data.store import reference_date
-from app.query.fields import normalize_text
+from app.text import normalize_text
 
 TOPIC_PATTERNS = {
     "bloqueo_tarjeta": r"bloqueos? de (la )?tarjetas?|tarjetas? bloquead\w*|robos? de (la )?tarjetas?",
@@ -98,9 +99,10 @@ def interpret(text: str) -> tuple[dict, list[str]]:
         conditions.append(_cond("duration", "gt" if match.group(1) == "mas" else "lt", seconds))
 
     if m.take(r"(?:que )?incumpl\w*(?: (?:algun|alguno de los|los))?(?: checks?)?|incumplimientos?"):
-        conditions.append({"op": "or", "conditions": [_cond(f"check:{code}", "fails") for code in COMPLIANCE_CHECKS]})
+        conditions.append({"op": "or", "conditions": [_cond(f"check:{c.code}", "fails") for c in active_checks()]})
+    active = {c.code for c in active_checks()}
     for code, pattern in CHECK_PATTERNS.items():
-        if m.take(pattern):
+        if code in active and m.take(pattern):
             conditions.append(_cond(f"check:{code}", "fails"))
 
     if m.take(r"recontact\w*|volvieron a (llamar|contactar)|contactos? repetidos?"):

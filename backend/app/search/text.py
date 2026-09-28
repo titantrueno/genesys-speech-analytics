@@ -2,7 +2,7 @@
 import re
 from collections.abc import Iterable
 
-from app.query.fields import normalize_text
+from app.text import normalize_text
 
 # «no» y «sin» cambian el sentido («no reconozco»), así que no son palabras vacías.
 STOPWORDS = {

@@ -9,11 +9,12 @@ from pydantic import BaseModel, ValidationError
 
 from app import ids
 from app.auth import User, require_permission
+from app.config.checks import Check, CheckIn
 from app.config.model import LANGUAGES, SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, field_errors, timezones
 from app.config.store import Config, Connector, get_config, get_config_store
 from app.config.taxonomy import (MainTopicIn, SecondaryTopicIn, Topic, main_topic_usage,
                                  secondary_topic_usage)
-from app.query.fields import normalize_text
+from app.text import normalize_text
 from app.data.store import get_dataset
 from app.flows.catalog import MODELS, PROVIDERS
 from app.clock import now
@@ -230,4 +231,73 @@ def delete_topic(kind_name: TopicKindParam, topic_id: str, user: User = Depends(
         return removed.audit_value(), None, {kind.field: topics}
 
     get_config_store().apply_change(user, "taxonomia", _element(kind, topic), change)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# --- Cumplimiento ---
+
+def _find_check(check_id: str) -> Check:
+    check = next((c for c in get_config().checks.values() if c.id == ids.normalize(check_id)), None)
+    if check is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Check no encontrado")
+    return check
+
+
+def _check_unique_check_name(checks: dict[str, Check], name: str, code: str) -> None:
+    if any(normalize_text(c.name) == normalize_text(name) and c.code != code for c in checks.values()):
+        raise _unprocessable("name", "Ya existe otro check con ese nombre")
+
+
+def _check_element(check: Check) -> str:
+    return f"Check «{check.name}»"
+
+
+@router.get("/compliance-checks", dependencies=[Depends(VIEW)])
+def list_checks() -> dict:
+    return {"items": [c.to_dict() for c in get_config().checks.values()]}
+
+
+@router.post("/compliance-checks", status_code=status.HTTP_201_CREATED)
+def create_check(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
+    check = Check.from_input(_parse(CheckIn, payload), builtin=False)
+
+    def change(c: Config):
+        if check.code in c.checks:
+            raise _unprocessable("code", "Ya existe un check con ese código")
+        _check_unique_check_name(c.checks, check.name, check.code)
+        return None, check.audit_value(), {"checks": {**c.checks, check.code: check}}
+
+    get_config_store().apply_change(user, "cumplimiento", _check_element(check), change)
+    return check.to_dict()
+
+
+@router.put("/compliance-checks/{check_id}")
+def update_check(check_id: str, payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
+    current = _find_check(check_id)
+    data = _parse(CheckIn, payload)
+    if data.code != current.code:
+        raise _unprocessable("code", "El código no se puede cambiar")
+    check = Check.from_input(data, builtin=current.builtin)
+
+    def change(c: Config):
+        _check_unique_check_name(c.checks, check.name, check.code)
+        return c.checks[check.code].audit_value(), check.audit_value(), {"checks": {**c.checks, check.code: check}}
+
+    get_config_store().apply_change(user, "cumplimiento", _check_element(current), change)
+    return check.to_dict()
+
+
+@router.delete("/compliance-checks/{check_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_check(check_id: str, user: User = Depends(EDIT)) -> Response:
+    check = _find_check(check_id)
+    if check.builtin:
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            detail="Es un check del análisis: no se puede borrar, solo desactivar")
+
+    def change(c: Config):
+        checks = dict(c.checks)
+        removed = checks.pop(check.code)
+        return removed.audit_value(), None, {"checks": checks}
+
+    get_config_store().apply_change(user, "cumplimiento", _check_element(check), change)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
