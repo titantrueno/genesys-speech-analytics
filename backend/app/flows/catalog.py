@@ -30,6 +30,7 @@ OUTPUT_KINDS = {"tabla": "Tabla de insights por conversación", "metrica": "Mét
 AGGREGATIONS = {"recuento": "Recuento por etiqueta", "porcentaje": "% por etiqueta"}
 MAX_DESTINATION = 80
 
+MAX_FLOW_NAME = 80
 MAX_NODES = 50
 MAX_EDGES = 100
 

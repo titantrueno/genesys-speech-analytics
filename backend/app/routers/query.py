@@ -15,10 +15,14 @@ from app.query.model import Query, QueryError, default_period, parse_query
 from app.services.kpis import KPI_DEFS, compute_kpis
 from app.services.listing import PageParams, paginate
 
-router = APIRouter(prefix="/api/query", tags=["query"], dependencies=[Depends(require_permission("explorer:use"))])
+router = APIRouter(prefix="/api/query", tags=["query"])
+
+EXPLORER = require_permission("explorer:use")
+# El nodo Sampling de los flujos (FE004) reutiliza el constructor de condiciones, que necesita el esquema y las sugerencias.
+FIELD_CATALOG = require_permission("explorer:use", "flows:view")
 
 
-@router.get("/schema")
+@router.get("/schema", dependencies=[Depends(FIELD_CATALOG)])
 def schema() -> dict:
     date_from, date_to = default_period()
     return {
@@ -35,7 +39,7 @@ def parsed_query(payload: dict = Body(...)) -> Query:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.errors) from None
 
 
-@router.post("/run")
+@router.post("/run", dependencies=[Depends(EXPLORER)])
 def run(query: Query = Depends(parsed_query), page: PageParams = Depends()) -> dict:
     matched = run_query(query, get_dataset())
     values = compute_kpis(matched, followup_index())
@@ -47,7 +51,7 @@ def run(query: Query = Depends(parsed_query), page: PageParams = Depends()) -> d
     }
 
 
-@router.get("/suggest")
+@router.get("/suggest", dependencies=[Depends(FIELD_CATALOG)])
 def suggest(
     field: str,
     date_from: date | None = QueryParam(None, alias="from"),
@@ -69,9 +73,6 @@ def suggest(
     values = [{"value": v, "label": labels.get(v, v), "count": n} for v, n in counts.items()]
     values.sort(key=lambda item: (-item["count"], item["label"]))
     return {"field": field, "period": {"from": date_from.isoformat(), "to": date_to.isoformat()}, "values": values}
-
-
-EXPLORER = require_permission("explorer:use")
 
 
 class SavedQueryIn(BaseModel):
@@ -143,7 +144,7 @@ class InterpretIn(BaseModel):
     text: str
 
 
-@router.post("/interpret")
+@router.post("/interpret", dependencies=[Depends(EXPLORER)])
 def interpret_text(body: InterpretIn) -> dict:
     problem = validate_text(body.text)
     if problem:
