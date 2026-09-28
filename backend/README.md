@@ -57,8 +57,12 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 | `GET /api/query/suggest?field=` | `explorer:use` | Valores de un campo categórico en el intervalo, con recuento. |
 | `POST /api/query/interpret` | `explorer:use` | Frase en español → consulta editable y palabras no entendidas. |
 | `GET/POST /api/query/saved`, `GET/PATCH/DELETE /api/query/saved/{id}` | `explorer:use` | Consultas guardadas privadas del usuario (`1QY-…`). |
+| `GET /api/search/semantic?q=` | `search:use` | Búsqueda semántica por fragmentos: resultados por puntuación (0–1) con turnos, términos resaltables, metadatos, expansión y `max_score`. Admite `from`, `to`, `channel`, `queue`, `min_score`, `group=conversation\|fragment` y `limit` (1–100, 20 por defecto). |
+| `GET /api/search/similar/{id}` | `search:use` | Las 10 conversaciones más cercanas a una dada, excluida ella misma. |
 
 **Filtros comunes:** `from`, `to` (por defecto, los últimos 30 días), `channel`, `queue` (IDs `1QU-…`), `agent` (IDs `1AG-…`), `main_topic` (códigos). El listado admite además `resolution`, `churn_risk`, `sentiment_lt`, `compliant` y `repeat_contact`, que usa el drill-down desde los KPIs.
+
+**Búsqueda semántica:** el índice se construye al arrancar la API (unos 2,5 s). El motor es sustituible detrás de `SearchEngine`; sus límites y la migración a embeddings están en `vault/decisiones/adr-005-busqueda-vectorial-ligera.md`.
 
 **Identificadores:** formato `PREFIJO-UUID` generado solo con `app/ids.py` (ver el registro en `vault/ingenieria/registro-de-identificadores.md`).
 
@@ -73,6 +77,7 @@ app/
   data/              # catálogo bancario, guiones, generador y store
   services/          # filtros y cálculo de KPIs
   query/             # modelo, campos, motor, intérprete y consultas guardadas del explorador
+  search/            # búsqueda semántica: interfaz SearchEngine, TF-IDF, diccionario de sinónimos (ADR-005)
   routers/           # auth, metrics, conversations, query
 tests/
 ```

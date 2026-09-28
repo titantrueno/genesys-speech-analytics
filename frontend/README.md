@@ -27,10 +27,12 @@ src/
   auth/           # contexto de sesión, guards de ruta, permisos
   layout/         # layout con navegación por permisos
   dashboards/     # dashboards, filtros en URL, drill-down, gráficos
-  conversations/  # listado, detalle tipo chat, panel de análisis
+  conversations/  # listado, detalle tipo chat (abre en ?turn=N), panel de análisis, useRowNavigation
+  explorer/       # explorador de queries asistidas (constructor, lenguaje natural, consultas guardadas)
+  search/         # búsqueda semántica, resultados por fragmento y conversaciones similares
   lib/            # formato y resaltado
   pages/          # login, sin acceso, próximamente
   router.tsx      # rutas (el dashboard se carga en diferido)
 ```
 
-Convenciones: filtros en la URL; drill-down con el filtro del numerador de cada KPI (`dashboards/drilldown.ts`); filas de tabla navegables según `vault/ingenieria/patrones-de-interfaz.md`; paleta de gráficos validada (`--series-*` en `index.css`).
+Convenciones: filtros en la URL; drill-down con el filtro del numerador de cada KPI (`dashboards/drilldown.ts`); filas de tabla y tarjetas de resultado navegables con `useRowNavigation`, según `vault/ingenieria/patrones-de-interfaz.md`; paleta de gráficos validada (`--series-*` en `index.css`).

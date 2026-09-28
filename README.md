@@ -52,4 +52,5 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE007 Fila completa abre el detalle | Entregada en `v0.1.0` |
 | FE008 Identificadores con prefijo y UUID | Entregada en `v0.1.0` |
 | FE002 Explorador de queries asistidas | Entregada en `v0.2.0` |
-| FE003–FE006 Búsqueda semántica, flujos, configuración, usuarios y roles | Especificadas (aparecen como «Próximamente») |
+| FE003 Búsqueda semántica de conversaciones | Implementada; pendiente de `/test`, `/review` y `/ship` |
+| FE004–FE006 Flujos, configuración, usuarios y roles | Especificadas (aparecen como «Próximamente») |

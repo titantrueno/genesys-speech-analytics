@@ -36,6 +36,10 @@ updated: 2026-09-28
 - **Query asistida:** consulta del explorador construida visualmente o a partir de una frase, que se revisa antes de ejecutarse.
 - **Condición:** regla `campo operador valor` de una query (por ejemplo, `Sentimiento < -0,3`).
 - **Grupo:** conjunto de condiciones combinadas con Y (`and`) u O (`or`); puede anidarse un nivel.
+- **Búsqueda semántica:** búsqueda de conversaciones por significado y no solo por palabras exactas, que devuelve el fragmento relevante. En la plataforma actual es una aproximación léxica con sinónimos ([ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md)).
+- **Fragmento:** ventana de 3 turnos consecutivos de una conversación, sin los turnos de sistema. Se identifica por la conversación y sus turnos de inicio y fin.
+- **Puntuación de similitud:** similitud coseno entre la consulta y un fragmento, de 0 a 1. No es una probabilidad y no se puede comparar entre consultas.
+- **Expansión de consulta:** términos que el diccionario de sinónimos del dominio añade a una consulta (por ejemplo, «visa» → «tarjeta»).
 - **Drill-down:** navegar de un elemento agregado de un dashboard al listado de las conversaciones que lo componen.
 
 ## Fuentes

@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [operaciones, runbook, local]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-28
 ---
 
 # Estado operativo inicial
@@ -27,7 +27,7 @@ Para arrancar, comprobar o revertir la plataforma en su estado actual: **demo lo
 
 ## Verificación
 
-- **Salud de la API:** `curl -s localhost:8000/api/health` devuelve `{"status":"ok"}`.
+- **Salud de la API:** `curl -s localhost:8000/api/health` devuelve `{"status":"ok"}`. La API responde tras construir el índice de búsqueda semántica al arrancar (unos 2,5 s).
 - **Humo funcional:** login con un usuario demo, abrir un dashboard y hacer drill-down al listado.
 - **Datos:** con `DATA_SEED` y `DATA_REFERENCE_DATE` fijos, el dataset es reproducible.
 

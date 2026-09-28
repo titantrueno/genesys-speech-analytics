@@ -3,7 +3,7 @@ title: "Arquitectura de la plataforma"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, frontend, backend, api, mock]
+tags: [arquitectura, frontend, backend, api, mock, busqueda]
 created: 2026-09-27
 updated: 2026-09-28
 ---
@@ -25,7 +25,8 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 | Servicios | `backend/app/services/` | Filtros comunes y de drill-down; cálculo de los 13 KPIs. |
 | Auth | `backend/app/auth.py` | Usuarios demo, token HMAC y `require_permission` (ver [ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)). |
 | Identificadores | `backend/app/ids.py` | `PREFIJO-UUID` (ver el [registro](../ingenieria/registro-de-identificadores.md)). |
-| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado y detalle. |
+| Búsqueda semántica | `backend/app/search/` | Índice por fragmentos construido al arrancar, interfaz `SearchEngine`, TF-IDF y diccionario de sinónimos (ver [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md)). |
+| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador y búsqueda semántica. |
 
 ### Flujo de datos
 
@@ -50,9 +51,27 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
   - debounce de 300 ms;
   - las respuestas antiguas no sustituyen a las nuevas, porque TanStack Query guarda cada consulta bajo su propia clave.
 
+### Búsqueda semántica (FE003)
+
+- **Interfaz:** la API (`backend/app/routers/search.py`) solo conoce `SearchEngine` (`search`, `expansions`, `similar`) y la obtiene con `get_search_engine()`, sustituible con `dependency_overrides`. La implementación actual es `TfidfEngine`; la migración a embeddings no cambiaría la API ([ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md)).
+- **Índice:**
+  - **Fragmentos:** ventanas de 3 turnos con paso 2, sin turnos de `sistema`; unos 7.150 fragmentos.
+  - **Vectores:** TF-IDF de palabras y n-gramas de caracteres (3–5), en Python puro, con índice invertido compacto (`array`).
+  - **IDF:** por conversación y sin suavizado, para anular el texto común (saludo, verificación, despedida).
+  - **Construcción:** en el `lifespan` de `create_app`, unos 2,5 s.
+- **Diccionario de sinónimos** (`backend/app/search/synonyms.py`): 33 grupos por concepto del dominio. Los términos añadidos pesan la mitad y la respuesta los devuelve (`expansions`).
+- **Dos puntuaciones:**
+  - `score` (fragmento completo) ordena, filtra y se muestra;
+  - `focus` (80 % los turnos del cliente) elige el fragmento que representa a cada conversación (`best_per_conversation`).
+- **Endpoints:** `GET /api/search/semantic` (filtros de FE001, umbral, agrupación, `max_score` antes del umbral) y `GET /api/search/similar/{id}` (TF-IDF de la conversación completa), con el permiso `search:use`.
+- **Front:**
+  - la búsqueda vive en la URL (`q`, `from`, `to`, `channel`, `queue`, `min_score`, `group` o `similar`) y se lanza al enviar;
+  - el umbral muestra la mejor puntuación de la búsqueda y permite ajustarse a ella;
+  - cada resultado abre el detalle en `/conversaciones/{id}?turn=N`, que desplaza el chat y resalta el turno.
+
 ### Rendimiento
 
-- Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral).
+- Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días, a cambio de unos 2,5 s de arranque y unos 45 MB de índice.
 - En el front, el dashboard se carga en diferido: el bundle principal ocupa unos 397 kB y el chunk de dashboards, con Recharts, unos 369 kB.
 
 ## Límites y excepciones
@@ -61,6 +80,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **FCR:** para conversaciones de los últimos 7 días del dataset aún no ha pasado la ventana de recontacto, así que su FCR es optimista. Es un **hecho** del cálculo que hay que tener en cuenta al comparar periodos recientes.
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
 - Las conversaciones de voz muestran DNI e IBAN ficticios sin enmascarar hasta FE005.
+- La búsqueda semántica es léxica: sus limitaciones medidas (puntuaciones bajas, dependencia del diccionario, sesgo hacia texto plantillado) están en [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md).
 
 ## Fuentes
 
@@ -70,3 +90,4 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [README del backend](../../backend/README.md)
 - [README del frontend](../../frontend/README.md)
 - [Spec FE002](../../features/FE002-explorador-de-queries-asistidas/spec.md)
+- [Spec FE003](../../features/FE003-busqueda-semantica-de-conversaciones/spec.md)
