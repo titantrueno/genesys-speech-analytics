@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { KpiSummary } from '../api/metrics'
 import { ConversationTable, Pagination } from '../conversations/ConversationTable'
-import { nextSort } from '../conversations/sorting'
+import { nextSort, type SortState } from '../conversations/sorting'
 import { LoadError } from '../dashboards/ChartCard'
 import { KpiTile } from '../dashboards/KpiTile'
 import { formatInteger } from '../lib/format'
@@ -102,10 +102,10 @@ const RESULT_KPIS = ['volume', 'aht_s', 'resolution_rate', 'escalation_rate', 'c
 function Results({ run, validation, sort, order, page, onSort, onPage, onRemoveLast }: {
   run: ReturnType<typeof useQueryRun>
   validation: ValidationErrors
-  sort: Parameters<typeof nextSort>[0]['sort']
-  order: Parameters<typeof nextSort>[0]['order']
+  sort: SortState['sort']
+  order: SortState['order']
   page: number
-  onSort: (key: Parameters<typeof nextSort>[1]) => void
+  onSort: (key: SortState['sort']) => void
   onPage: (page: number) => void
   onRemoveLast?: () => void
 }) {

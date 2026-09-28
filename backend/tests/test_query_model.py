@@ -119,3 +119,11 @@ def test_identifiers_in_values_are_normalized_and_validated_with_ids_module():
     value = ids.stable_id(ids.QUEUE, "Tarjetas").lower()
     parsed = parse_query(query(cond("queue", "in", [value])))
     assert parsed.root.conditions[0].value == [QUEUE_IDS["Tarjetas"]]
+
+
+def test_query_size_is_limited():
+    too_many = query(*[cond("channel", "is", "chat") for _ in range(51)])
+    assert any("máximo" in e["message"].lower() and e["path"] == "root" for e in errors_of(too_many))
+    parse_query(query(*[cond("channel", "is", "chat") for _ in range(50)]))
+    long_list = query(cond("main_topic", "in", ["cajeros"] * 201))
+    assert any("200" in e["message"] for e in errors_of(long_list))

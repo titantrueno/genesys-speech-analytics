@@ -8,6 +8,8 @@ from app.data.store import reference_date
 from app.query.fields import FIELDS, SPEAKERS, FieldDef
 
 MAX_DEPTH = 2
+MAX_CONDITIONS = 50
+MAX_LIST_VALUES = 200
 DEFAULT_PERIOD_DAYS = 30
 
 
@@ -93,6 +95,8 @@ def _check_categorical(cond: Condition, fdef: FieldDef) -> str | None:
     if cond.operator in ("in", "not_in"):
         if not isinstance(cond.value, list) or not cond.value:
             return f"'{cond.operator}' espera una lista de valores no vacía"
+        if len(cond.value) > MAX_LIST_VALUES:
+            return f"Una lista admite como máximo {MAX_LIST_VALUES} valores"
         values = [normalize(v) if isinstance(v, str) else v for v in cond.value]
     else:
         if not isinstance(cond.value, str):
@@ -152,6 +156,10 @@ def _walk(group: Group, path: str, depth: int, errors: list[dict]) -> None:
                 errors.append({"path": node_path, "message": message})
 
 
+def _count_conditions(group: Group) -> int:
+    return sum(_count_conditions(n) if isinstance(n, Group) else 1 for n in group.conditions)
+
+
 def parse_query(payload: dict) -> Query:
     try:
         query = Query.model_validate(payload)
@@ -169,7 +177,10 @@ def parse_query(payload: dict) -> Query:
     errors: list[dict] = []
     if query.date_from > query.date_to:
         errors.append({"path": "from", "message": "'from' debe ser anterior o igual a 'to'"})
-    _walk(query.root, "root", 1, errors)
+    if _count_conditions(query.root) > MAX_CONDITIONS:
+        errors.append({"path": "root", "message": f"Una consulta admite como máximo {MAX_CONDITIONS} condiciones"})
+    else:
+        _walk(query.root, "root", 1, errors)
     if errors:
         raise QueryError(errors)
     return query
