@@ -9,8 +9,12 @@ export const ALL_PERMISSIONS: Permission[] = [
   'flows:view', 'flows:edit', 'config:view', 'config:edit', 'users:admin',
 ]
 
-export const USERS: Record<'admin' | 'viewer' | 'analista' | 'lector', User> = {
+export const USERS: Record<'admin' | 'supervisor' | 'viewer' | 'analista' | 'lector', User> = {
   admin: { id: '1US-00000001-0000-5000-8000-000000000001', name: 'Admin Demo', email: 'admin@bancohorizonte.demo', role: 'admin', permissions: ALL_PERMISSIONS },
+  supervisor: {
+    id: '1US-00000005-0000-5000-8000-000000000005', name: 'Supervisora Demo', email: 'supervisor@bancohorizonte.demo', role: 'supervisor',
+    permissions: ALL_PERMISSIONS.filter((p) => p !== 'config:edit' && p !== 'users:admin'),
+  },
   viewer: { id: '1US-00000002-0000-5000-8000-000000000002', name: 'Viewer Demo', email: 'viewer@bancohorizonte.demo', role: 'viewer', permissions: ['dashboards:view', 'conversations:view'] },
   analista: {
     id: '1US-00000003-0000-5000-8000-000000000003', name: 'Analista Demo', email: 'analista@bancohorizonte.demo', role: 'analista',

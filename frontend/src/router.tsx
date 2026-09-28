@@ -35,6 +35,13 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
   '/busqueda': [
     { index: true, element: <SearchPage /> },
   ],
+  '/configuracion': [
+    {
+      index: true,
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./config/ConfigPage')).ConfigPage }),
+    },
+  ],
   '/flujos': [
     { index: true, element: <FlowsPage /> },
     {
