@@ -25,3 +25,26 @@ body {
   --status-good-text: #006300;
   --status-critical: #d03b3b;
 }
+
+/* FE004: el tipo de nodo «output» coincide con el nodo integrado de React Flow, que trae borde, relleno y ancho propios. */
+.insight-flow .react-flow__node-output {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  width: auto;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  text-align: inherit;
+}
+.insight-flow .react-flow__node-output.selectable:hover,
+.insight-flow .react-flow__node-output.selectable.selected,
+.insight-flow .react-flow__node-output.selectable:focus,
+.insight-flow .react-flow__node-output.selectable:focus-visible {
+  box-shadow: none;
+}
+.insight-flow .react-flow__node:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}

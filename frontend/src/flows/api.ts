@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '../api/client'
-import type { Flow, FlowSummary } from './types'
+import type { Flow, FlowCatalog, FlowGraph, FlowSummary, Issue, Run } from './types'
 
 const FLOWS_KEY = ['flows']
 
@@ -39,4 +39,51 @@ export function useFlowMutations() {
       onSuccess: refresh,
     }),
   }
+}
+
+export function useFlow(id: string) {
+  return useQuery({
+    queryKey: flowKey(id),
+    queryFn: ({ signal }) => apiRequest<Flow>(`/api/flows/${id}`, { signal }),
+    staleTime: 0,
+    gcTime: 0,
+  })
+}
+
+export function useFlowCatalog() {
+  return useQuery({
+    queryKey: ['flow-catalog'],
+    queryFn: ({ signal }) => apiRequest<FlowCatalog>('/api/flows/catalog', { signal }),
+    staleTime: Infinity,
+  })
+}
+
+export function useSaveGraph(id: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (graph: FlowGraph) =>
+      apiRequest<Flow & { id_map: Record<string, string> }>(`/api/flows/${id}/graph`, { method: 'PUT', body: graph }),
+    onSuccess: () => client.invalidateQueries({ queryKey: FLOWS_KEY }),
+  })
+}
+
+/** Validación del grafo actual, aunque no esté guardado; cada grafo tiene su propia clave, así que una respuesta antigua no pisa a la nueva. */
+export function useValidation(graph: FlowGraph, enabled: boolean) {
+  return useQuery({
+    queryKey: ['flow-validate', graph],
+    queryFn: ({ signal }) => apiRequest<{ valid: boolean; issues: Issue[] }>('/api/flows/validate', { method: 'POST', body: graph, signal }),
+    enabled,
+    staleTime: Infinity,
+  })
+}
+
+export function useStartRun(id: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => apiRequest<Run>(`/api/flows/${id}/runs`, { method: 'POST' }),
+    onSettled: () => {
+      client.invalidateQueries({ queryKey: FLOWS_KEY })
+      client.invalidateQueries({ queryKey: ['flow-runs', id] })
+    },
+  })
 }

@@ -52,6 +52,9 @@ export type FlowNode =
   | BaseNode<'prompt', PromptConfig>
   | BaseNode<'output', OutputConfig>
 
+/** Tipo y configuración de un nodo, conservando la relación entre ambos. */
+export type NodeContent = { [K in NodeType]: Pick<Extract<FlowNode, { type: K }>, 'type' | 'config'> }[NodeType]
+
 export interface FlowEdge { source: string; target: string }
 
 /** Formato JSON del flujo (versión 1), igual que `backend/app/flows/model.py`. */

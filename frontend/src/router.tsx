@@ -37,6 +37,12 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
   ],
   '/flujos': [
     { index: true, element: <FlowsPage /> },
+    {
+      // React Flow solo se descarga al abrir un flujo.
+      path: ':flowId',
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./flows/FlowEditorPage')).FlowEditorPage }),
+    },
   ],
 }
 

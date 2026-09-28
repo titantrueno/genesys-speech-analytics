@@ -103,7 +103,7 @@ describe('listado de flujos', () => {
     const user = userEvent.setup()
     expect(await screen.findByRole('link', { name: 'Motivos de fraude' })).toHaveAttribute('href', `/flujos/${fakeId('1FL', 1)}`)
     await user.click(within(row('Motivos de fraude')).getByText('Analista Demo'))
-    expect(router.state.location.pathname).toBe(`/flujos/${fakeId('1FL', 1)}`)
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/flujos/${fakeId('1FL', 1)}`))
   })
 
   it('crea un flujo con nombre y abre su editor', async () => {
