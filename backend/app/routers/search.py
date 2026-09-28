@@ -4,6 +4,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app import ids
 from app.auth import require_permission
 from app.data.store import conversation_index, get_dataset
 from app.search.engine import Hit, SearchEngine
@@ -15,6 +16,7 @@ from app.services.listing import list_item
 router = APIRouter(prefix="/api/search", tags=["search"], dependencies=[Depends(require_permission("search:use"))])
 
 MAX_QUERY = 500
+SIMILAR_COUNT = 10
 
 
 @cache
@@ -78,4 +80,16 @@ def semantic(
         "period": {"from": filters.date_from.isoformat(), "to": filters.date_to.isoformat()},
         "total": len(hits),
         "results": [_result(hit, terms) for hit in hits[:limit]],
+    }
+
+
+@router.get("/similar/{conversation_id}")
+def similar(conversation_id: str, engine: SearchEngine = Depends(get_search_engine)) -> dict:
+    conv = conversation_index().get(ids.normalize(conversation_id))
+    if conv is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
+    return {
+        "conversation_id": conv.id,
+        "results": [{"conversation_id": cid, "score": round(score, 4), "conversation": list_item(conversation_index()[cid])}
+                    for cid, score in engine.similar(conv.id, SIMILAR_COUNT)],
     }
