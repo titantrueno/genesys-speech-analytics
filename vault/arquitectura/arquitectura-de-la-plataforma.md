@@ -81,7 +81,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
   - **integridad** (se exige al guardar): tipos, identificadores, rangos y reglas de conexión (`Sampling → Prompt`, `Prompt → Prompt`, `Prompt → Output`; una entrada por Prompt u Output; sin duplicados ni ciclos);
   - **completitud** (bloquea la ejecución; `POST /api/flows/validate` con un grafo sin guardar): nodos sin configurar, variables, nodos sueltos, métrica sin etiquetas y destinos repetidos.
 - **Reglas en los dos lados:** las de conexión existen en Python y en TypeScript para responder al instante en el lienzo; `frontend/src/flows/rules.cases.json` se ejecuta en los dos lados. La completitud solo existe en el backend.
-- **Ejecución:** `POST /api/flows/{id}/runs` valida, crea la ejecución (`1RN`, con copia del grafo y semilla) y la ejecuta en segundo plano (`BackgroundTasks`) en orden topológico. Cada nodo informa de estado y procesados; el front consulta el detalle cada 500 ms hasta que termina. El estado se protege con un cerrojo por ejecución y el arranque es atómico (`409` si ya hay una en curso).
+- **Ejecución:** `POST /api/flows/{id}/runs` valida, crea la ejecución (`1RN`, con copia del grafo y semilla) y la ejecuta en segundo plano (`BackgroundTasks`) en orden topológico. Cada nodo informa de estado y procesados; el front consulta el detalle cada 500 ms hasta que termina. El estado se protege con un cerrojo por ejecución y el arranque es atómico (`409` si ya hay una en curso). Se conservan las 50 ejecuciones más recientes de cada flujo (`MAX_RUNS_PER_FLOW`), sin descartar nunca una en curso.
 - **Sampling real** sobre el dataset: aleatorio con semilla, estratificado proporcional (restos mayores) o primeros N por un criterio.
 - **Permisos:** lecturas con `flows:view` y escrituras y ejecuciones con `flows:edit`. El esquema y las sugerencias de campos de FE002 aceptan también `flows:view`, porque los usa el nodo Sampling.
 - **Front:** React Flow (`@xyflow/react`) en rutas diferidas: listado, editor (paleta arrastrable o con botón, lienzo, paneles por nodo, validar, guardar y ejecutar), ejecución (lienzo de solo lectura con progreso y pestañas por output) e historial.
@@ -89,7 +89,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
-- En el front, el dashboard y los flujos se cargan en diferido: la carga inicial ocupa unos 448 kB, Recharts va en un chunk de unos 347 kB y React Flow, en otro de unos 176 kB, compartido por el editor y la vista de ejecución.
+- En el front, el dashboard y los flujos se cargan en diferido: la carga inicial ocupa unos 448 kB, Recharts va en el chunk de dashboards (unos 353 kB) y React Flow, en otro de unos 176 kB, compartido por el editor y la vista de ejecución. Las barras en HTML (`dashboards/bars.tsx`) no dependen de Recharts, así que la vista de ejecución no lo descarga.
 
 ## Límites y excepciones
 

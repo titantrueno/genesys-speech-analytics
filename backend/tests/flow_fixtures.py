@@ -1,8 +1,17 @@
 """Grafos de ejemplo para los tests de flujos de insights (FE004)."""
 import copy
+from datetime import timedelta
+
+from app.data.store import reference_date
+
+
+def days_ago(days: int) -> str:
+    """Fecha relativa a la de referencia del dataset, para que los tests no dependan de una fecha concreta."""
+    return (reference_date() - timedelta(days=days)).isoformat()
+
 
 SAMPLING = {
-    "query": {"from": "2026-09-01", "to": "2026-09-26", "root": {"op": "and", "conditions": []}},
+    "query": {"from": days_ago(26), "to": days_ago(1), "root": {"op": "and", "conditions": []}},
     "method": "aleatorio",
     "size": 40,
 }

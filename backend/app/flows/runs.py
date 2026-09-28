@@ -26,6 +26,8 @@ from app.models import Conversation
 PENDING, RUNNING, OK, ERROR = "pendiente", "en_curso", "ok", "error"
 ACTIVE = {PENDING, RUNNING}
 DEFAULT_STEP_DELAY_MS = 15
+# Las ejecuciones viven en memoria y una tabla de 1.000 filas ocupa ~1 MB: se conservan las últimas por flujo.
+MAX_RUNS_PER_FLOW = 50
 _rng = random.SystemRandom()
 
 
@@ -117,7 +119,11 @@ class RunStore:
     def _add(self, flow: Flow, user: User, seed: int | None) -> Run:
         run = Run(ids.new_id(ids.RUN, _rng), flow.id, user.id, user.name, flow.graph.model_copy(deep=True),
                   _rng.randrange(2**31) if seed is None else seed)
-        self._by_flow[flow.id].insert(0, run)
+        runs = self._by_flow[flow.id]
+        runs.insert(0, run)
+        finished = [r for r in runs if r.summary()["status"] not in ACTIVE]
+        for old in finished[MAX_RUNS_PER_FLOW - 1:]:  # la nueva también acabará terminada
+            runs.remove(old)
         return run
 
     def create(self, flow: Flow, user: User, seed: int | None = None) -> Run:

@@ -326,3 +326,20 @@ def test_the_step_delay_is_configurable(monkeypatch, configured, expected):
     else:
         monkeypatch.setenv("FLOW_RUN_STEP_DELAY_MS", configured)
     assert step_delay_seconds() == expected
+
+
+def test_history_keeps_the_latest_runs_and_never_drops_an_active_one(api, monkeypatch):
+    """Las ejecuciones viven en memoria: se conservan las últimas `MAX_RUNS_PER_FLOW` (hallazgo de la revisión)."""
+    from app.flows import runs as runs_module
+    monkeypatch.setattr(runs_module, "MAX_RUNS_PER_FLOW", 3)
+    flow = flow_with(api, complete_graph())
+    user = auth.get_store().find_by_email("admin@bancohorizonte.demo")
+    store, target = get_run_store(), get_flow_store().get(flow["id"])
+    active = store.create(target, user, seed=0)  # queda «pendiente»: no se puede descartar
+    finished = []
+    for seed in range(1, 6):
+        created = store.create(target, user, seed=seed)
+        FlowExecutor(MockPromptRunner(), delay_s=0).execute(created)
+        finished.append(created.id)
+    kept = [r.id for r in store.list(flow["id"])]
+    assert kept == finished[::-1][:3] + [active.id]

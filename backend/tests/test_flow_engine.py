@@ -14,8 +14,9 @@ from app.flows.prompting import MockPromptRunner, render_template, sentiment_cla
 from app.flows.sampling import candidates, draw_sample, proportional_quotas
 from app.query.engine import run_query
 from app.query.model import parse_query
+from tests.flow_fixtures import days_ago
 
-PERIOD = {"from": "2026-08-01", "to": "2026-09-26"}
+PERIOD = {"from": days_ago(57), "to": days_ago(1)}
 
 
 def sampling(method: str, size: int, conditions: list | None = None, **extra) -> SamplingConfig:

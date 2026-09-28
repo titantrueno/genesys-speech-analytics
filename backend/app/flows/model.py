@@ -163,7 +163,7 @@ def parse_graph(payload: Any) -> Graph:
         elif raw_id in seen:
             errors.append({"path": f"nodes[{i}].id", "node_id": raw_id, "message": f"Identificador de nodo repetido: {raw_id}"})
         seen.add(raw_id)
-        if raw.get("type") in catalog.NODE_TYPES:
+        if isinstance(raw.get("type"), str) and raw["type"] in catalog.NODE_TYPES:
             types.setdefault(raw_id, raw["type"])
         if parsed is not None:
             nodes.append(parsed)

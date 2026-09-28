@@ -8,7 +8,7 @@ from app import auth, ids
 from app.data.store import get_dataset
 from app.query.engine import run_query
 from app.query.model import parse_query
-from tests.flow_fixtures import SAMPLING, chained_graph, complete_graph, edge, graph, node
+from tests.flow_fixtures import SAMPLING, days_ago, chained_graph, complete_graph, edge, graph, node
 
 EMPTY_GRAPH = {"version": 1, "nodes": [], "edges": []}
 
@@ -223,11 +223,11 @@ def test_validate_rejects_an_impossible_graph_with_422(api):
 
 
 def test_estimate_counts_the_conversations_that_match_the_filters(api):
-    query = {"from": "2026-09-01", "to": "2026-09-26",
+    query = {"from": days_ago(26), "to": days_ago(1),
              "root": {"op": "and", "conditions": [{"field": "channel", "operator": "is", "value": "voz"}]}}
     expected = len(run_query(parse_query(copy.deepcopy(query)), get_dataset()))
     body = api.post("/api/flows/sampling/estimate", json={"query": query, "size": 50}).json()
-    assert body == {"available": expected, "sample_size": min(50, expected), "period": {"from": "2026-09-01", "to": "2026-09-26"}}
+    assert body == {"available": expected, "sample_size": min(50, expected), "period": {"from": days_ago(26), "to": days_ago(1)}}
     assert 50 < expected
     big = api.post("/api/flows/sampling/estimate", json={"query": query, "size": 1000}).json()
     assert big["sample_size"] == expected
@@ -237,7 +237,7 @@ def test_estimate_counts_the_conversations_that_match_the_filters(api):
 
 @pytest.mark.parametrize("body", [
     {"query": {"root": {"op": "and", "conditions": [{"field": "canal", "operator": "is", "value": "voz"}]}}},
-    {"query": {"from": "2026-09-20", "to": "2026-09-01", "root": {"op": "and", "conditions": []}}},
+    {"query": {"from": days_ago(7), "to": days_ago(26), "root": {"op": "and", "conditions": []}}},
     {"query": SAMPLING["query"], "size": 0},
     {"query": SAMPLING["query"], "size": 1001},
     {},

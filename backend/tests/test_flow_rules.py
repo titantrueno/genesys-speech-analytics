@@ -12,7 +12,7 @@ from app import ids
 from app.flows.model import GraphError, parse_graph
 from app.flows.rules import can_connect, validate
 from tests.flow_fixtures import (
-    OUTPUT_METRIC, OUTPUT_REPORT, OUTPUT_TABLE, PROMPT_LABEL, PROMPT_TEXT, SAMPLING, chained_graph, complete_graph, edge,
+    OUTPUT_METRIC, OUTPUT_REPORT, OUTPUT_TABLE, PROMPT_LABEL, PROMPT_TEXT, SAMPLING, chained_graph, complete_graph, days_ago, edge,
     graph, node,
 )
 
@@ -181,7 +181,7 @@ def test_unconfigured_nodes(node_id, config):
 
 @pytest.mark.parametrize("node_id, config", [
     ("tmp-s", {**SAMPLING, "query": {"root": {"op": "and", "conditions": [{"field": "canal", "operator": "is", "value": "fax"}]}}}),
-    ("tmp-s", {**SAMPLING, "query": {"from": "2026-09-20", "to": "2026-09-01", "root": {"op": "and", "conditions": []}}}),
+    ("tmp-s", {**SAMPLING, "query": {"from": days_ago(7), "to": days_ago(26), "root": {"op": "and", "conditions": []}}}),
     ("tmp-p", {**PROMPT_LABEL, "output": {"type": "etiqueta", "labels": ["Solo una"]}}),
     ("tmp-p", {**PROMPT_LABEL, "output": {"type": "etiqueta", "labels": ["Sí", "sí "]}}),
     ("tmp-p", {**PROMPT_LABEL, "output": {"type": "etiqueta", "labels": ["Sí", " "]}}),
@@ -340,3 +340,15 @@ def test_random_graphs_never_crash_and_keep_the_invariants():
                         changed = True
             assert "output" in types.values() and set(types) == reachable
     assert saved_graphs >= 100 and valid_flows >= 40, (saved_graphs, valid_flows)
+
+
+@pytest.mark.parametrize("bad_type", [[], {}, ["sampling"], 3, None])
+def test_non_string_node_types_are_integrity_errors_not_crashes(bad_type):
+    """Regresión de la verificación: un `type` no hashable lanzaba `TypeError` (500 en la API)."""
+    errors = _errors(graph([{"id": "tmp-a", "type": bad_type, "position": {"x": 0, "y": 0}, "config": {}}], []))
+    assert errors[0]["path"].startswith("nodes[0]")
+
+
+def test_non_string_ids_and_edge_endpoints_are_integrity_errors():
+    errors = _errors(graph([{"id": ["x"], "type": "prompt", "position": {"x": 0, "y": 0}}], [{"source": [], "target": {}}]))
+    assert errors
