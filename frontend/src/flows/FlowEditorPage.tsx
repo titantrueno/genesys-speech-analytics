@@ -10,8 +10,9 @@ import { useFlow, useFlowCatalog, useSaveGraph, useStartRun, useValidation } fro
 import { CatalogContext } from './catalog'
 import { FlowCanvas, NODE_DRAG_TYPE } from './FlowCanvas'
 import {
-  fromCanvas, newNode, remapEdges, remapNodes, sameJson, toCanvasEdges, toCanvasNodes, type CanvasEdge, type CanvasNode,
+  freePosition, fromCanvas, newNode, remapEdges, remapNodes, sameJson, toCanvasEdges, toCanvasNodes, type CanvasEdge, type CanvasNode,
 } from './graph'
+import { NodePanel } from './panels/NodePanel'
 import { connectionRejection, NODE_LABELS } from './rules'
 import type { Flow, Issue, NodeType } from './types'
 
@@ -167,11 +168,24 @@ function Editor({ flow }: { flow: Flow }) {
     let at = position
     if (!at) {
       const rect = canvasRef.current?.getBoundingClientRect()
-      const center = screenToFlowPosition({ x: (rect?.left ?? 0) + (rect?.width ?? 0) / 2, y: (rect?.top ?? 0) + (rect?.height ?? 0) / 2 })
-      at = { x: center.x + 20 * (nodes.length % 5), y: center.y + 20 * (nodes.length % 5) }
+      // Desde el cuarto izquierdo del lienzo visible, en el primer hueco libre.
+      const origin = screenToFlowPosition({ x: (rect?.left ?? 0) + (rect?.width ?? 0) / 4, y: (rect?.top ?? 0) + (rect?.height ?? 0) / 3 })
+      at = freePosition(origin, nodes)
     }
     const node = { ...newNode(type, at), selected: true }
     setNodes((current) => [...current.map((n) => (n.selected ? { ...n, selected: false } : n)), node])
+  }
+
+  const selected = nodes.filter((n) => n.selected)
+  const current = selected.length === 1 ? selected[0] : undefined
+
+  function updateConfig(id: string, config: CanvasNode['data']['config']) {
+    setNodes((all) => all.map((n) => (n.id === id ? { ...n, data: { ...n.data, config } } : n)))
+  }
+
+  function deleteNode(id: string) {
+    setNodes((all) => all.filter((n) => n.id !== id))
+    setEdges((all) => all.filter((e) => e.source !== id && e.target !== id))
   }
 
   function selectNode(id: string) {
@@ -258,10 +272,20 @@ function Editor({ flow }: { flow: Flow }) {
             isValidConnection={(source, target) => !connectionRejection(types, graph.edges, source, target)}
             onDropNode={addNode} />
         </div>
-        {validating && (
-          <div className="w-80 shrink-0 space-y-3 overflow-y-auto">
-            <ValidationPanel issues={issues} loading={validation.isFetching} nodes={nodes} onSelect={selectNode}
-              onClose={() => setValidating(false)} />
+        {(validating || current) && (
+          <div className="w-96 shrink-0 space-y-3 overflow-y-auto pb-2">
+            {validating && (
+              <ValidationPanel issues={issues} loading={validation.isFetching} nodes={nodes} onSelect={selectNode}
+                onClose={() => setValidating(false)} />
+            )}
+            {current && (
+              <NodePanel key={current.id} node={current} nodes={nodes} edges={edges} editable={editable}
+                onChange={(config) => updateConfig(current.id, config)}
+                onDelete={() => deleteNode(current.id)}
+                onConnect={connect}
+                onDisconnect={(edgeId) => setEdges((all) => all.filter((e) => e.id !== edgeId))}
+                onClose={() => setNodes((all) => all.map((n) => (n.selected ? { ...n, selected: false } : n)))} />
+            )}
           </div>
         )}
       </div>

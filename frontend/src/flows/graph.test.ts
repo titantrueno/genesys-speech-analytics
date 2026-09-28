@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { edgeId, fromCanvas, isTemporaryId, newNode, remapIds, sameJson, toCanvasEdges, toCanvasNodes } from './graph'
+import { edgeId, freePosition, fromCanvas, isTemporaryId, newNode, remapIds, sameJson, toCanvasEdges, toCanvasNodes } from './graph'
 import { CHAINED, nodeId as N } from '../test/flowFixtures'
 import type { FlowGraph } from './types'
 
@@ -54,5 +54,19 @@ describe('sameJson', () => {
     expect(sameJson({ a: 1 }, { a: 1, b: 2 })).toBe(false)
     expect(sameJson({ a: null }, { a: {} })).toBe(false)
     expect(sameJson([], {})).toBe(false)
+  })
+})
+
+describe('freePosition', () => {
+  it('coloca el nodo nuevo en el primer hueco libre sin tapar a otro', () => {
+    const origin = { x: 0, y: 0 }
+    expect(freePosition(origin, [])).toEqual(origin)
+    const first = { position: origin }
+    const second = { position: freePosition(origin, [first]) }
+    expect(second.position).toEqual({ x: 300, y: 0 })
+    expect(freePosition(origin, [first, second])).toEqual({ x: 0, y: 130 })
+    // Un nodo más alto de lo normal (medido) también ocupa su hueco.
+    const tall = { position: { x: 0, y: 130 }, measured: { width: 240, height: 200 } }
+    expect(freePosition(origin, [first, second, tall])).toEqual({ x: 300, y: 130 })
   })
 })

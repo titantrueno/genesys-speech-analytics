@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiRequest } from '../api/client'
+import type { ExplorerQuery } from '../explorer/queryModel'
 import type { Flow, FlowCatalog, FlowGraph, FlowSummary, Issue, Run } from './types'
 
 const FLOWS_KEY = ['flows']
@@ -85,5 +86,17 @@ export function useStartRun(id: string) {
       client.invalidateQueries({ queryKey: FLOWS_KEY })
       client.invalidateQueries({ queryKey: ['flow-runs', id] })
     },
+  })
+}
+
+export interface Estimate { available: number; sample_size: number | null; period: { from: string; to: string } }
+
+export function useEstimate(query: ExplorerQuery | undefined, size: number | undefined) {
+  return useQuery({
+    queryKey: ['flow-estimate', query, size],
+    queryFn: ({ signal }) => apiRequest<Estimate>('/api/flows/sampling/estimate', { method: 'POST', body: { query, size }, signal }),
+    enabled: query !== undefined,
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
   })
 }

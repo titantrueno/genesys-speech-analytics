@@ -1,79 +1,15 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { fakeId } from '../test/fixtures'
-import { CATALOG, CHAINED, FLOW_ID, flowFixture, nodeId } from '../test/flowFixtures'
+import { drop, loaded, RUN_ID, saveState, setupEditor as setup } from '../test/flowEditor'
+import { CHAINED, FLOW_ID, nodeId } from '../test/flowFixtures'
 import { mockReactFlow } from '../test/reactFlow'
-import { renderApp, signedInAs, USERS } from '../test/utils'
-import type { User } from '../auth/types'
+import { USERS } from '../test/utils'
 import { NODE_DRAG_TYPE } from './FlowCanvas'
 import { sameJson } from './graph'
-import type { FlowGraph, Issue } from './types'
+import type { Issue } from './types'
 
 beforeAll(mockReactFlow)
-
-type Reply = { status: number; body?: unknown }
-const RUN_ID = fakeId('1RN', 1)
-
-function setup(options: {
-  graph?: FlowGraph
-  user?: User
-  flowStatus?: number
-  validate?: (graph: FlowGraph) => Issue[]
-  run?: () => Reply
-  saveStatus?: number
-} = {}) {
-  let stored = structuredClone(options.graph ?? CHAINED)
-  const puts: FlowGraph[] = []
-  const validations: FlowGraph[] = []
-  const calls: string[] = []
-  let minted = 100
-  signedInAs(options.user ?? USERS.analista, {
-    [`GET /api/flows/${FLOW_ID}`]: () => (options.flowStatus ? { status: options.flowStatus, body: { detail: 'Flujo no encontrado' } }
-      : { status: 200, body: flowFixture(stored) }),
-    'GET /api/flows/catalog': () => ({ status: 200, body: CATALOG }),
-    [`PUT /api/flows/${FLOW_ID}/graph`]: (init) => {
-      calls.push('PUT')
-      const graph = JSON.parse(String(init.body)) as FlowGraph
-      puts.push(graph)
-      if (options.saveStatus) return { status: options.saveStatus, body: { detail: [{ path: 'edges[0]', message: 'Conexión no válida' }] } }
-      const idMap: Record<string, string> = {}
-      for (const node of graph.nodes) if (node.id.startsWith('tmp-')) idMap[node.id] = nodeId(minted++)
-      const rename = (id: string) => idMap[id] ?? id
-      stored = {
-        version: 1,
-        // El backend devuelve la configuración con su propio orden de claves: el editor no debe verlo como un cambio.
-        nodes: graph.nodes.map((n) => ({ ...n, id: rename(n.id), config: Object.fromEntries(Object.entries(n.config).reverse()) }) as typeof n),
-        edges: graph.edges.map((e) => ({ source: rename(e.source), target: rename(e.target) })),
-      }
-      return { status: 200, body: { ...flowFixture(stored), id_map: idMap } }
-    },
-    'POST /api/flows/validate': (init) => {
-      const graph = JSON.parse(String(init.body)) as FlowGraph
-      validations.push(graph)
-      const issues = options.validate?.(graph) ?? []
-      return { status: 200, body: { valid: issues.length === 0, issues } }
-    },
-    [`POST /api/flows/${FLOW_ID}/runs`]: () => {
-      calls.push('RUN')
-      return options.run?.() ?? { status: 202, body: { id: RUN_ID, status: 'pendiente' } }
-    },
-  })
-  const result = renderApp(`/flujos/${FLOW_ID}`)
-  const nodes = () => [...result.container.querySelectorAll<HTMLElement>('.react-flow__node')]
-  const node = (id: string) => result.container.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`)!
-  return { ...result, puts, validations, calls, nodes, node, stored: () => stored }
-}
-
-const loaded = () => screen.findByRole('heading', { name: 'Motivos de fraude' })
-const saveState = () => screen.getByText(/^(Guardado|Cambios sin guardar|Guardando…|Solo lectura)$/)
-
-function drop(type: string, target: HTMLElement) {
-  fireEvent.drop(target, {
-    clientX: 200, clientY: 150,
-    dataTransfer: { getData: (format: string) => (format === NODE_DRAG_TYPE ? type : ''), types: [NODE_DRAG_TYPE] },
-  })
-}
 
 describe('editor de flujos', () => {
   it('reconstruye el flujo guardado: nodos, conexiones y resumen de su configuración', async () => {

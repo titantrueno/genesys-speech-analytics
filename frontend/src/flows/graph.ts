@@ -78,3 +78,25 @@ export function sameJson(a: unknown, b: unknown): boolean {
   const right = Object.entries(b).filter(([, v]) => v !== undefined)
   return left.length === right.length && left.every(([key, value]) => sameJson(value, (b as Record<string, unknown>)[key]))
 }
+
+const NODE_SIZE = { width: 240, height: 100 }
+const GAP = { x: 60, y: 30 }
+// Dos columnas: el lienzo se estrecha al abrir el panel de configuración y una fila larga quedaría fuera de la vista.
+const COLUMNS = 2
+
+/** Primer hueco libre de una rejilla que empieza en `origin`, para que un nodo añadido con botón no tape a otro. */
+export function freePosition(origin: XYPosition, nodes: Pick<CanvasNode, 'position' | 'measured'>[]): XYPosition {
+  const stepX = NODE_SIZE.width + GAP.x
+  const stepY = NODE_SIZE.height + GAP.y
+  const overlaps = (at: XYPosition) => nodes.some((n) => {
+    const width = n.measured?.width ?? NODE_SIZE.width
+    const height = n.measured?.height ?? NODE_SIZE.height
+    return at.x < n.position.x + width + GAP.x / 2 && n.position.x < at.x + NODE_SIZE.width + GAP.x / 2
+      && at.y < n.position.y + height + GAP.y / 2 && n.position.y < at.y + NODE_SIZE.height + GAP.y / 2
+  })
+  for (let i = 0; i < 100; i++) {
+    const at = { x: origin.x + (i % COLUMNS) * stepX, y: origin.y + Math.floor(i / COLUMNS) * stepY }
+    if (!overlaps(at)) return at
+  }
+  return origin
+}
