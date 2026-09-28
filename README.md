@@ -51,5 +51,5 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE001 Base, dashboards y detalle de conversaciones | Entregada en `v0.1.0` |
 | FE007 Fila completa abre el detalle | Entregada en `v0.1.0` |
 | FE008 Identificadores con prefijo y UUID | Entregada en `v0.1.0` |
-| FE002 Explorador de queries asistidas | Implementada (pendiente de `/test`, `/review` y `/ship`) |
+| FE002 Explorador de queries asistidas | Entregada en `v0.2.0` |
 | FE003–FE006 Búsqueda semántica, flujos, configuración, usuarios y roles | Especificadas (aparecen como «Próximamente») |

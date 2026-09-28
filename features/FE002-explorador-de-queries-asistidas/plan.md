@@ -156,3 +156,5 @@
 | T9 | Hecha | Vault: motor de consultas en la arquitectura, glosario (query asistida, condición, grupo), `1QY` activo, R9 de FE001 marcado como resuelto por FE002. READMEs con los endpoints nuevos y el estado. `./scripts/ci.sh` con código 0 (224 tests de backend y 108 de front, lint, build, auditorías). Chrome contra la API real, 7/7: frase interpretada con aviso de «arcoíris»; total del explorador = listado FE001 (5 = 5); guardar y recargar conserva la consulta; la consulta guardada persiste y se carga desde un explorador vacío; volver desde el detalle restaura la URL; sin errores de consola. Ajuste visual: ancho fijo del selector de campo. |
 
 **FE002 completada (fase `/build`).** Siguiente fase del ciclo: `/test`, `/review` y `/ship`.
+
+**Ciclo cerrado:** [VERIFY](VERIFY.md) · [REVIEW](REVIEW.md) · [SHIP](SHIP.md). Entregada en `v0.2.0`.

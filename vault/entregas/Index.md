@@ -14,4 +14,5 @@ Mantener la trazabilidad entre cambios enviados, evidencia de verificación y co
 
 ## Estado inicial
 
+- [Plataforma v0.2.0: explorador de queries asistidas](2026-09-28-plataforma-v0-2-0.md) — FE002.
 - [Plataforma v0.1.0: dashboards, drill-down y detalle de conversaciones](2026-09-27-plataforma-v0-1-0.md) — FE001, FE007 y FE008.
