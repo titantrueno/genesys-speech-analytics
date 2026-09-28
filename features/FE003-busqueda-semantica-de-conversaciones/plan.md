@@ -145,7 +145,7 @@
 
 | Id | Estado | Evidencia |
 |---|---|---|
-| T1 | Pendiente | — |
+| T1 | Hecha | `tests/test_search_engine.py`: 18 tests en verde (rojo previo: 4 fallos y 14 errores con stubs); suite de 248. Fragmentos de 3 turnos con paso 2 sin `sistema` (límites, ventana final incompleta, conversación solo de sistema, todos los turnos cubiertos en el dataset); puntuación 1 para un fragmento idéntico, 0–1, vacío sin términos comunes, orden con desempate estable; tildes, mayúsculas y flexión («bloqueada» → «bloquear») con puntuaciones idénticas; candidatos; similares sin la propia conversación. **Texto común:** con IDF suavizado por fragmento, una consulta de saludo + «bizum» devolvía `recibos_domiciliaciones` (rojo); se corrige con IDF **por conversación y sin +1**, y 5 consultas del tema dan su main topic en los 5 primeros. Mutaciones detectadas: sin normalizar (tras reforzar el test, que no la detectaba), ventana final y similares sin excluir; `score >= 0` es equivalente. Dataset: 7.152 fragmentos, 2.148 términos de palabra, 14.517 n-gramas, 1,95 M de postings; construcción de unos 2 s, 43 MB tras pasar los postings a `array` (eran 305 MB con tuplas); peor búsqueda de 4 frases: 14,5 ms, similares: 28 ms. Desviación del plan: los similares usan TF-IDF por conversación completa en lugar del centroide de fragmentos (misma interfaz, más simple). |
 | T2 | Pendiente | — |
 | T3 | Pendiente | — |
 | T4 | Pendiente | — |
