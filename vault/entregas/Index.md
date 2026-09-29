@@ -14,6 +14,7 @@ Mantener la trazabilidad entre cambios enviados, evidencia de verificación y co
 
 ## Estado inicial
 
+- [Plataforma v0.5.0: configuración de la plataforma](2026-09-29-plataforma-v0-5-0.md) — FE005.
 - [Plataforma v0.4.0: diseñador de flujos de insights](2026-09-28-plataforma-v0-4-0.md) — FE004.
 - [Plataforma v0.3.0: búsqueda semántica de conversaciones](2026-09-28-plataforma-v0-3-0.md) — FE003.
 - [Plataforma v0.2.0: explorador de queries asistidas](2026-09-28-plataforma-v0-2-0.md) — FE002.
