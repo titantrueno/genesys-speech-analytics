@@ -4,6 +4,7 @@ import pytest
 
 from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, QUEUE_IDS
 from app.query.model import parse_query
+from tests.dates import day_ago, days_ago, weekday_on_or_before
 
 
 def c(field, operator, value=None, **extra):
@@ -30,7 +31,7 @@ PHRASES = [
     ("quejas sin resolver", {}, [c("main_topic", "is", "reclamacion_queja"), c("resolution", "is", "no_resuelta")]),
     ("clientes insatisfechos con comisiones", {}, [c("csat", "lt", 3), c("main_topic", "is", "comisiones")]),
     ("llamadas sin verificar la identidad", {}, [c("channel", "is", "voz"), c("check:verificacion_identidad", "fails")]),
-    ("casos de fraude en los últimos 7 días", {"from": "2026-09-20", "to": "2026-09-26"}, [
+    ("casos de fraude en los últimos 7 días", {"from": days_ago(7), "to": days_ago(1)}, [
         c("main_topic", "is", "cargo_no_reconocido")]),
     ("bizum y transferencias con recontacto", {}, [
         c("main_topic", "is", "transferencias_bizum"), c("repeat_contact", "is", True)]),
@@ -41,7 +42,8 @@ PHRASES = [
     ("cajeros y comisiones con esfuerzo alto", {}, [c("main_topic", "in", ["cajeros", "comisiones"]), c("effort", "gte", 4)]),
     ('llamadas que mencionen "cancelar el contrato"', {}, [
         c("channel", "is", "voz"), c("transcript", "contains", "cancelar el contrato")]),
-    ("bajas de la cola de empresas esta semana", {"from": "2026-09-21", "to": "2026-09-26"}, [
+    ("bajas de la cola de empresas esta semana",
+     {"from": weekday_on_or_before(day_ago(1), 0).isoformat(), "to": days_ago(1)}, [
         c("main_topic", "is", "baja_cancelacion"), c("queue", "is", QUEUE_IDS["Empresas"])]),
     ("conversaciones que incumplen algún check", {}, [
         {"op": "or", "conditions": [c(f"check:{code}", "fails") for code in COMPLIANCE_CHECKS]}]),
@@ -84,8 +86,8 @@ def test_invalid_input_returns_422(api, payload):
 
 
 @pytest.mark.parametrize("phrase,dates,expected", [
-    ("chats de los últimos 0 días", {"from": "2026-09-26", "to": "2026-09-26"}, [c("channel", "is", "chat")]),
-    ("quejas de los últimos 1000000000 días", {"from": "2016-09-29", "to": "2026-09-26"},
+    ("chats de los últimos 0 días", {"from": days_ago(1), "to": days_ago(1)}, [c("channel", "is", "chat")]),
+    ("quejas de los últimos 1000000000 días", {"from": days_ago(3650), "to": days_ago(1)},  # tope de 10 años
      [c("main_topic", "is", "reclamacion_queja")]),
     ("llamadas de menos de 1000000000 segundos", {}, [c("channel", "is", "voz"), c("duration", "lt", 86400)]),
     ('chats que mencionen "   "', {}, [c("channel", "is", "chat")]),

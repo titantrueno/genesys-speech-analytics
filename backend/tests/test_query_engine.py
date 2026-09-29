@@ -1,18 +1,20 @@
 """Los resultados esperados se calculan aquí de forma independiente al motor (app/query/engine.py)."""
 import time
 import unicodedata
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 
 from app import auth
 from app.data.catalog import AGENT_IDS, QUEUE_IDS
-from app.data.generator import generate_dataset
+from app.data.store import get_dataset
+from tests.dates import day_ago, days_ago, default_period
 
-DATASET = generate_dataset(seed=42, reference_date=date(2026, 9, 27))
-PERIOD = {"from": "2026-07-01", "to": "2026-09-26"}
-IN_PERIOD = [c for c in DATASET if date(2026, 7, 1) <= c.started_at.date() <= date(2026, 9, 26)]
-DEFAULT_PERIOD = [c for c in DATASET if date(2026, 8, 28) <= c.started_at.date() <= date(2026, 9, 26)]
+# El mismo dataset que sirve la API, con fechas relativas a su fecha de referencia (FE009).
+DATASET = get_dataset()
+PERIOD = {"from": days_ago(88), "to": days_ago(1)}
+IN_PERIOD = [c for c in DATASET if day_ago(88) <= c.started_at.date() <= day_ago(1)]
+DEFAULT_PERIOD = [c for c in DATASET if default_period()[0] <= c.started_at.date() <= default_period()[1]]
 SAMPLE_SENTIMENT = IN_PERIOD[5].analysis.sentiment
 
 
@@ -115,23 +117,23 @@ def test_nested_and_or_groups(api):
 def test_empty_query_returns_the_whole_default_period(api):
     response = api.post("/api/query/run", json={"root": {"op": "and", "conditions": []}})
     body = response.json()
-    assert body["period"] == {"from": "2026-08-28", "to": "2026-09-26"}
+    assert body["period"] == {"from": default_period()[0].isoformat(), "to": default_period()[1].isoformat()}
     assert body["total"] == len(DEFAULT_PERIOD)
 
 
 def test_query_equivalent_to_listing_filters_gives_the_same_total_and_kpis(api):
-    listing = {"from": "2026-07-15", "to": "2026-09-20", "channel": "voz", "queue": QUEUE_IDS["Particulares"],
+    listing = {"from": days_ago(74), "to": days_ago(7), "channel": "voz", "queue": QUEUE_IDS["Particulares"],
                "main_topic": ["comisiones", "cajeros"], "resolution": "escalada"}
     root = {"op": "and", "conditions": [
         cond("channel", "is", "voz"), cond("queue", "is", QUEUE_IDS["Particulares"]),
         cond("main_topic", "in", ["comisiones", "cajeros"]), cond("resolution", "is", "escalada"),
     ]}
-    body = api.post("/api/query/run", json={"from": "2026-07-15", "to": "2026-09-20", "root": root}).json()
+    body = api.post("/api/query/run", json={"from": days_ago(74), "to": days_ago(7), "root": root}).json()
     assert body["total"] == api.get("/api/conversations", params=listing).json()["total"]
 
     summary_params = {k: v for k, v in listing.items() if k != "resolution"}
     root_no_resolution = {"op": "and", "conditions": root["conditions"][:3]}
-    run = api.post("/api/query/run", json={"from": "2026-07-15", "to": "2026-09-20", "root": root_no_resolution}).json()
+    run = api.post("/api/query/run", json={"from": days_ago(74), "to": days_ago(7), "root": root_no_resolution}).json()
     summary = api.get("/api/metrics/summary", params=summary_params).json()
     assert {k["code"]: k["value"] for k in run["kpis"]} == {k["code"]: k["value"] for k in summary["kpis"]}
     assert all(k["label"] and k["unit"] for k in run["kpis"])
@@ -179,7 +181,7 @@ def test_run_with_ten_conditions_responds_under_500ms(api):
         {"op": "or", "conditions": [cond("check:saludo", "passes"), cond("check:saludo", "fails")]},
         cond("resolution", "in", ["resuelta", "no_resuelta", "escalada"]),
     ]}
-    payload = {"from": "2026-06-29", "to": "2026-09-26", "root": root}
+    payload = {"from": days_ago(90), "to": days_ago(1), "root": root}
     api.post("/api/query/run", json=payload)
     start = time.perf_counter()
     assert api.post("/api/query/run", json=payload).status_code == 200

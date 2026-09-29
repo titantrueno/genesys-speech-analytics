@@ -1,10 +1,10 @@
-from datetime import date
 
 import pytest
 
 from app import auth, ids
 from app.data.catalog import AGENT_IDS, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS
 from app.query.model import QueryError, parse_query
+from tests.dates import day_ago, days_ago, default_period
 
 EXPECTED_FIELDS = {
     "channel": "categorical", "queue": "categorical", "agent": "categorical", "main_topic": "categorical",
@@ -50,7 +50,7 @@ def test_schema_lists_every_field_with_type_and_valid_operators(api):
     assert fields["sentiment"]["min"] == -1 and fields["sentiment"]["max"] == 1
     assert fields["transcript"]["speakers"] == ["cliente", "agente", "bot"]
     assert "speakers" not in fields["summary"]
-    assert body["default_period"] == {"from": "2026-08-28", "to": "2026-09-26"}
+    assert body["default_period"] == {"from": default_period()[0].isoformat(), "to": default_period()[1].isoformat()}
 
 
 def test_schema_requires_explorer_permission(api):
@@ -72,13 +72,13 @@ def test_valid_nested_query_parses_and_applies_default_period():
         cond("duration", "between", [60, 300]),
         cond("repeat_contact", "is", True),
     ))
-    assert parsed.date_from == date(2026, 8, 28) and parsed.date_to == date(2026, 9, 26)
+    assert (parsed.date_from, parsed.date_to) == default_period()
     assert parsed.root.conditions[1].conditions[2].value == QUEUE_IDS["Tarjetas"]
 
 
 def test_explicit_period_is_kept():
-    parsed = parse_query(query(**{"from": "2026-07-01", "to": "2026-07-31"}))
-    assert (parsed.date_from, parsed.date_to) == (date(2026, 7, 1), date(2026, 7, 31))
+    parsed = parse_query(query(**{"from": days_ago(88), "to": days_ago(58)}))
+    assert (parsed.date_from, parsed.date_to) == (day_ago(88), day_ago(58))
 
 
 @pytest.mark.parametrize("payload,path,fragment", [
@@ -100,7 +100,7 @@ def test_explicit_period_is_kept():
      "root.conditions[1].conditions[0]", "rango"),
     (query({"op": "or", "conditions": [{"op": "and", "conditions": [cond("channel", "is", "chat")]}]}),
      "root.conditions[0].conditions[0]", "anidamiento"),
-    (query(**{"from": "2026-09-10", "to": "2026-09-01"}), "from", "anterior"),
+    (query(**{"from": days_ago(17), "to": days_ago(26)}), "from", "anterior"),
     ({"root": {"op": "xor", "conditions": []}}, "root", "op"),
     ({"root": {"op": "and", "conditions": [{"valor": 1}]}}, "root.conditions[0]", ""),
     ({}, "root", ""),
