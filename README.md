@@ -56,3 +56,4 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE004 Diseñador de flujos de insights | Entregada en `v0.4.0` |
 | FE005 Configuración de la plataforma | Construida (pendiente de `/test`, `/review` y `/ship`) |
 | FE006 Usuarios y roles | Especificada (aparece como «Próximamente») |
+| FE009 Tests independientes del dataset mock | Especificada (pendiente de aprobación) |
