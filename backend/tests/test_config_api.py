@@ -229,3 +229,37 @@ def test_rejected_or_unchanged_writes_create_no_entry(api):
 def test_state_is_reset_between_tests(api):
     assert api.get("/api/config").json()["general"]["platform_name"] == "Speech & Text Analytics"
     assert audit(api) == []
+
+
+def test_concurrent_writes_lose_no_change_and_no_audit_entry(api):
+    """16 hilos crean temas a la vez; la pausa dentro del cambio ensancha la ventana de la carrera (lectura → escritura)."""
+    import threading
+    import time
+
+    from app.config.store import get_config_store
+    from app.config.taxonomy import Topic
+
+    store = get_config_store()
+    admin = auth.get_store().find_by_email("admin@bancohorizonte.demo")
+    barrier = threading.Barrier(16)
+
+    def create(n: int) -> None:
+        topic = Topic(ids.stable_id(ids.TOPIC, f"tema_{n}"), f"tema_{n}", f"Tema {n}", "", (), True)
+
+        def change(config):
+            topics = config.main_topics
+            time.sleep(0.002)
+            return None, topic.audit_value(), {"main_topics": {**topics, topic.code: topic}}
+
+        barrier.wait()
+        store.apply_change(admin, "taxonomia", topic.name, change)
+
+    workers = [threading.Thread(target=create, args=(n,)) for n in range(16)]
+    for worker in workers:
+        worker.start()
+    for worker in workers:
+        worker.join()
+    config = store.get()
+    assert {f"tema_{n}" for n in range(16)} <= set(config.main_topics)
+    assert config.version == 16
+    assert len(store.audit("taxonomia")) == 16

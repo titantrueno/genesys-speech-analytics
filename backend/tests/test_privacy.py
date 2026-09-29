@@ -47,7 +47,7 @@ def leaked(body: str, values: set[str]) -> set[str]:
 @pytest.mark.parametrize("text,expected", [
     ("Sí, es 12345678Z.", "Sí, es [DNI]."),
     ("Mi DNI es 12345678-z", "Mi DNI es [DNI]"),
-    ("NIE X1234567L y Y-7654321K", "NIE [DNI] y [DNI]"),
+    ("NIE X1234567L y Y-7654321G", "NIE [DNI] y [DNI]"),
     ("le leo su cuenta: ES91 9999 1234 5678 9012 3456.", "le leo su cuenta: [IBAN]."),
     ("IBAN ES9199991234567890123456", "IBAN [IBAN]"),
     ("IBAN alemán DE89370400440532013000", "IBAN alemán [IBAN]"),
@@ -76,9 +76,64 @@ def test_each_type_is_masked(text, expected):
     "conversación 1CO-4B2E9A7F-3D1C-4A9B-8E5D-8F0A6C3E71AB",
     "un préstamo de 30000 € a 60 meses",
     "referencia 12345678901234567890123",
+    # Un número de 8 cifras seguido de «y», «a» o «e» (letras de DNI) no es un DNI: separador y letra de control.
+    "expediente 20213570 y el 15/3/2026",
+    "cuenta 66230047 a nombre de la clienta",
+    "el recibo 12345678 e importe",
+    "un DNI con letra que no cuadra: 12345678A",
 ])
 def test_known_false_positives_are_kept(text):
     assert mask(text) == text
+
+
+def test_property_generated_personal_data_is_masked_and_nothing_else(with_pii):
+    """3.000 frases con un dato personal generado (DNI/NIE válidos, IBAN, teléfono, email, tarjeta) y dos textos seguros."""
+    import random
+
+    rng = random.Random(7)
+    letters = "TRWAGMYFPDXBNJZSQVHLCKE"
+
+    def dni():
+        n = rng.randint(0, 99_999_999)
+        value = f"{n:08d}{letters[n % 23]}"
+        return rng.choice([value, f"{value[:8]}-{value[8]}", value.lower()])
+
+    def nie():
+        prefix, n = rng.choice("XYZ"), rng.randint(0, 9_999_999)
+        letter = letters[int(f"{'XYZ'.index(prefix)}{n:07d}") % 23]
+        return rng.choice([f"{prefix}{n:07d}{letter}", f"{prefix}-{n:07d}-{letter}"])
+
+    def iban():
+        compact = "ES" + "".join(str(rng.randint(0, 9)) for _ in range(22))
+        return rng.choice([compact, " ".join(compact[i:i + 4] for i in range(0, 24, 4))])
+
+    def phone():
+        d = rng.choice("6789") + "".join(str(rng.randint(0, 9)) for _ in range(8))
+        return rng.choice([d, f"{d[:3]} {d[3:6]} {d[6:]}", f"{d[:3]} {d[3:5]} {d[5:7]} {d[7:]}", f"+34 {d}",
+                           f"0034 {d[:3]}-{d[3:6]}-{d[6:]}"])
+
+    def email():
+        return f"{rng.choice(['ana', 'j.perez', 'luis+banco'])}{rng.randint(1, 99)}@{rng.choice(['correo.es', 'mail.com'])}"
+
+    def card():
+        d = "".join(str(rng.randint(0, 9)) for _ in range(16))
+        return rng.choice([d, " ".join(d[i:i + 4] for i in range(0, 16, 4)), "-".join(d[i:i + 4] for i in range(0, 16, 4))])
+
+    def safe():
+        return rng.choice([
+            f"{rng.randint(1, 99999):,}".replace(",", ".") + f",{rng.randint(0, 99):02d} €",
+            f"{rng.randint(1, 28)}/{rng.randint(1, 12)}/2026", f"{rng.randint(0, 23):02d}:{rng.randint(0, 59):02d}",
+            f"expediente {rng.randint(2020_0000, 2026_9999)}", f"terminada en {rng.randint(1000, 9999)}",
+            f"REC-2026-{rng.randint(0, 999_999):06d}", f"{rng.randint(1, 120)} meses",
+            f"cuenta {rng.randint(10_000_000, 99_999_999)} a nombre de",
+        ])
+
+    generators = {"[DNI]": [dni, nie], "[IBAN]": [iban], "[TELÉFONO]": [phone], "[EMAIL]": [email], "[TARJETA]": [card]}
+    for _ in range(3000):
+        token, options = rng.choice(list(generators.items()))
+        value, first, second = rng.choice(options)(), safe(), safe()
+        text = f"Le indico {value}, y además {first} y {second} e importe."
+        assert mask(text) == f"Le indico {token}, y además {first} y {second} e importe.", text
 
 
 def test_the_whole_dataset_is_masked_without_false_positives(with_pii):

@@ -42,6 +42,7 @@ Durante FE001, FE007, FE008, FE002, FE003 y FE004 aparecieron comportamientos de
 24. **FE005:** un commit se hizo con el gate en rojo: la cadena `ci.sh; grep … && git commit` comprobaba el `grep`, no el código de salida de `ci.sh` (como en las lecciones 10 y 21, esta vez con el propio gate).
 25. **FE005:** una petición nueva al montar un dashboard dejó a la vista un test de FE001 intermitente (1 de cada 4) que buscaba un enlace de una tabla antes de que llegaran los datos.
 26. **FE005:** la spec daba por hecho un único `GET /api/config`, pero exige `config:view`: la zona horaria y el nombre, que necesitan todos los roles y el login, no llegaban. Hubo que exponerlos en una ruta pública mínima.
+27. **FE005:** el enmascarado pasaba el test del dataset completo, pero tomaba por DNI «20213570 y»: el dataset nunca pone un número de 8 cifras delante de una conjunción. Además, el plan afirmaba que se validaba la letra de control y no era así.
 
 ## Causa
 
@@ -72,6 +73,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Si el código precede al test, demuestra el rojo con mutaciones y comprueba qué mira el test (DOM o datos).
 - Encadena el commit al gate por su código de salida (`if ./scripts/ci.sh; then git commit …; fi`), nunca a un `grep` de su salida.
 - En tests de componentes, busca con `findBy…` todo lo que depende de datos remotos, aunque su contenedor ya esté en pantalla; repite un test sospechoso varias veces antes de darlo por estable.
+- Un test sobre el dataset mock solo cubre lo que el generador produce: para lo que convierte texto libre (enmascarado, parsers) añade una propiedad con datos generados junto a textos seguros, y contrasta cada afirmación del plan con el código.
 - Al diseñar una configuración global, separa lo que necesitan todos los roles (y el login) de lo que solo ve quien la administra.
 - Ejecuta las mutaciones de Python sin caché de bytecode (`python -B` y `PYTHONDONTWRITEBYTECODE=1`); una mutación que sobrevive se confirma a mano antes de tocar el test.
 
