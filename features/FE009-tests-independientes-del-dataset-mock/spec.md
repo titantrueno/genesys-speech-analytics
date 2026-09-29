@@ -1,6 +1,6 @@
 # FE009 — Tests independientes del dataset mock
 
-> Estado: **pendiente de aprobación**. Tarea técnica, sin cambios de producto. Surge de la [verificación de FE005](../FE005-configuracion-de-la-plataforma/VERIFY.md#deuda-encontrada-fuera-de-alcance).
+> Estado: **aprobada** el 2026-09-29. Tarea técnica, sin cambios de producto. Surge de la [verificación de FE005](../FE005-configuracion-de-la-plataforma/VERIFY.md#deuda-encontrada-fuera-de-alcance).
 
 ## Objetivo
 
