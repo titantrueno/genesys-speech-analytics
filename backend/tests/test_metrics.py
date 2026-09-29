@@ -1,35 +1,39 @@
-"""Los valores esperados se calculan aquí de forma independiente a app/services."""
+"""Los valores esperados se calculan aquí de forma independiente a app/services, sobre el mismo dataset que sirve la API
+y con fechas relativas a su fecha de referencia (FE009)."""
 import time
 from collections import defaultdict
 from datetime import date, timedelta
+from functools import cache
 from statistics import mean
 
 import pytest
 
 from app import ids
-
 from app.data.catalog import AGENT_IDS, MAIN_TOPICS, QUEUE_IDS
-from app.data.generator import generate_dataset
+from app.data.store import get_dataset
+from tests.dates import day_ago, days_ago, default_period, weekday_on_or_before
 
-REF = date(2026, 9, 27)
-DATASET = generate_dataset(seed=42, reference_date=REF)
 KPI_CODES = {
     "volume", "aht_s", "sentiment_avg", "negative_pct", "resolution_rate", "escalation_rate", "fcr_rate",
     "csat_avg", "effort_avg", "compliance_rate", "churn_high_pct", "first_response_s", "avg_turns",
 }
 
 
-def _has_followup(conv):
-    limit = conv.started_at + timedelta(days=7)
-    return any(o.customer_id == conv.customer_id and conv.started_at < o.started_at <= limit for o in DATASET)
+@cache
+def followups() -> dict[str, bool]:
+    """Recontacto a 7 días calculado aquí, sin el índice del backend."""
+    dataset = get_dataset()
 
+    def has_followup(conv):
+        limit = conv.started_at + timedelta(days=7)
+        return any(o.customer_id == conv.customer_id and conv.started_at < o.started_at <= limit for o in dataset)
 
-FOLLOWUP = {c.id: _has_followup(c) for c in DATASET}
+    return {c.id: has_followup(c) for c in dataset}
 
 
 def select(date_from, date_to, channel=None, queues=None, agents=None, topics=None):
     return [
-        c for c in DATASET
+        c for c in get_dataset()
         if date_from <= c.started_at.date() <= date_to
         and (channel is None or c.channel == channel)
         and (not queues or c.queue_id in queues)
@@ -56,7 +60,7 @@ def expected_kpis(convs):
         "negative_pct": pct(convs, lambda c: c.analysis.sentiment < -0.3),
         "resolution_rate": pct(convs, lambda c: c.analysis.resolution == "resuelta"),
         "escalation_rate": pct(convs, lambda c: c.analysis.resolution == "escalada"),
-        "fcr_rate": pct(convs, lambda c: not FOLLOWUP[c.id]),
+        "fcr_rate": pct(convs, lambda c: not followups()[c.id]),
         "csat_avg": avg(c.analysis.csat for c in convs),
         "effort_avg": avg(c.analysis.effort for c in convs),
         "compliance_rate": pct(convs, lambda c: all(v for v in c.analysis.compliance.values() if v is not None)),
@@ -81,19 +85,22 @@ def kpi_map(items, field="value"):
 
 def test_summary_default_period_is_last_30_days(api):
     body = api.get("/api/metrics/summary").json()
-    assert body["period"] == {"from": "2026-08-28", "to": "2026-09-26"}
-    assert body["previous_period"] == {"from": "2026-07-29", "to": "2026-08-27"}
+    date_from, date_to = default_period()
+    previous_to = date_from - timedelta(days=1)
+    assert body["period"] == {"from": date_from.isoformat(), "to": date_to.isoformat()}
+    assert body["previous_period"] == {"from": (previous_to - (date_to - date_from)).isoformat(),
+                                       "to": previous_to.isoformat()}
     assert {k["code"] for k in body["kpis"]} == KPI_CODES
     assert all(k["label"] and k["unit"] for k in body["kpis"])
 
 
 @pytest.mark.parametrize("params,filters", [
     ({}, {}),
-    ({"from": "2026-07-01", "to": "2026-08-15", "channel": "chat", "main_topic": "cargo_no_reconocido"},
+    ({"from": days_ago(88), "to": days_ago(43), "channel": "chat", "main_topic": "cargo_no_reconocido"},
      {"channel": "chat", "topics": ["cargo_no_reconocido"]}),
-    ({"from": "2026-09-01", "to": "2026-09-20", "queue": [QUEUE_IDS["Tarjetas"], QUEUE_IDS["Fraude y seguridad"]]},
+    ({"from": days_ago(26), "to": days_ago(7), "queue": [QUEUE_IDS["Tarjetas"], QUEUE_IDS["Fraude y seguridad"]]},
      {"queues": [QUEUE_IDS["Tarjetas"], QUEUE_IDS["Fraude y seguridad"]]}),
-    ({"from": "2026-08-01", "to": "2026-09-26", "agent": AGENT_IDS["Irene Vidal"], "channel": "voz"},
+    ({"from": days_ago(57), "to": days_ago(1), "agent": AGENT_IDS["Irene Vidal"], "channel": "voz"},
      {"agents": [AGENT_IDS["Irene Vidal"]], "channel": "voz"}),
 ])
 def test_summary_matches_independent_calculation(api, params, filters):
@@ -122,8 +129,8 @@ def test_summary_matches_independent_calculation(api, params, filters):
 
 
 def test_summary_compliance_by_check(api):
-    body = api.get("/api/metrics/summary", params={"from": "2026-07-01", "to": "2026-09-26"}).json()
-    convs = select(date(2026, 7, 1), date(2026, 9, 26))
+    body = api.get("/api/metrics/summary", params={"from": days_ago(88), "to": days_ago(1)}).json()
+    convs = select(day_ago(88), day_ago(1))
     by_check = {c["code"]: c for c in body["compliance_by_check"]}
     assert set(by_check) == set(convs[0].analysis.compliance)
     for code, item in by_check.items():
@@ -133,7 +140,7 @@ def test_summary_compliance_by_check(api):
 
 
 def test_timeseries_by_day_covers_every_day_and_matches(api):
-    params = {"kpi": "volume", "granularity": "day", "from": "2026-09-01", "to": "2026-09-26", "channel": "voz"}
+    params = {"kpi": "volume", "granularity": "day", "from": days_ago(26), "to": days_ago(1), "channel": "voz"}
     body = api.get("/api/metrics/timeseries", params=params).json()
     assert len(body["points"]) == 26
     for point in body["points"]:
@@ -145,10 +152,20 @@ def test_timeseries_by_day_covers_every_day_and_matches(api):
 
 
 def test_timeseries_by_week_clips_partial_weeks(api):
-    params = {"kpi": "csat_avg", "granularity": "week", "from": "2026-09-02", "to": "2026-09-26"}
+    # Empieza un miércoles y acaba el día anterior a la referencia: la primera y la última semana son parciales.
+    date_from = weekday_on_or_before(day_ago(25), 2)
+    date_to = day_ago(1)
+    if date_to.weekday() == 6:  # si acaba en domingo, la última semana sería completa: se recorta un día
+        date_to -= timedelta(days=1)
+    mondays = [date_from + timedelta(days=d) for d in range(1, (date_to - date_from).days + 1)
+               if (date_from + timedelta(days=d)).weekday() == 0]
+    starts = [date_from, *mondays]
+    ends = [m - timedelta(days=1) for m in mondays] + [date_to]
+    params = {"kpi": "csat_avg", "granularity": "week", "from": date_from.isoformat(), "to": date_to.isoformat()}
     points = api.get("/api/metrics/timeseries", params=params).json()["points"]
-    assert [p["period_start"] for p in points] == ["2026-09-02", "2026-09-07", "2026-09-14", "2026-09-21"]
-    assert [p["period_end"] for p in points] == ["2026-09-06", "2026-09-13", "2026-09-20", "2026-09-26"]
+    assert [p["period_start"] for p in points] == [d.isoformat() for d in starts]
+    assert [p["period_end"] for p in points] == [d.isoformat() for d in ends]
+    assert starts[0].weekday() == 2 and ends[-1].weekday() != 6
     for point in points:
         convs = select(date.fromisoformat(point["period_start"]), date.fromisoformat(point["period_end"]))
         assert point["value"] == pytest.approx(expected_kpis(convs)["csat_avg"], abs=0.01)
@@ -156,12 +173,12 @@ def test_timeseries_by_week_clips_partial_weeks(api):
 
 @pytest.mark.parametrize("dimension", ["main_topic", "channel", "queue", "agent"])
 def test_breakdown_sums_to_total_and_matches(api, dimension):
-    params = {"from": "2026-07-15", "to": "2026-09-26"}
+    params = {"from": days_ago(74), "to": days_ago(1)}
     body = api.get("/api/metrics/breakdown", params={**params, "dimension": dimension}).json()
     items = body["items"]
     volumes = [i["kpis"]["volume"] for i in items]
     assert volumes == sorted(volumes, reverse=True)
-    convs = select(date(2026, 7, 15), date(2026, 9, 26))
+    convs = select(day_ago(74), day_ago(1))
     assert sum(volumes) == len(convs)
 
     attr = {"main_topic": lambda c: c.analysis.main_topic, "channel": lambda c: c.channel,
@@ -180,7 +197,7 @@ def test_breakdown_sums_to_total_and_matches(api, dimension):
 
 
 def test_filters_by_main_topic_affect_all_metrics(api):
-    params = {"from": "2026-07-01", "to": "2026-09-26", "main_topic": ["comisiones", "cajeros"]}
+    params = {"from": days_ago(88), "to": days_ago(1), "main_topic": ["comisiones", "cajeros"]}
     body = api.get("/api/metrics/breakdown", params={**params, "dimension": "main_topic"}).json()
     assert {i["key"] for i in body["items"]} == {"comisiones", "cajeros"}
 
@@ -189,7 +206,7 @@ def test_filters_by_main_topic_affect_all_metrics(api):
     ("/api/metrics/breakdown", {"dimension": "color"}),
     ("/api/metrics/timeseries", {"kpi": "inventado"}),
     ("/api/metrics/timeseries", {"kpi": "volume", "granularity": "hora"}),
-    ("/api/metrics/summary", {"from": "2026-09-10", "to": "2026-09-01"}),
+    ("/api/metrics/summary", {"from": days_ago(17), "to": days_ago(26)}),
     ("/api/metrics/summary", {"channel": "fax"}),
     ("/api/metrics/summary", {"queue": "Tarjetas"}),
     ("/api/metrics/summary", {"agent": "Irene Vidal"}),
@@ -207,9 +224,9 @@ def test_empty_selection_returns_nulls_not_errors(api):
 
 
 @pytest.mark.parametrize("path,params", [
-    ("/api/metrics/summary", {"from": "2026-06-30", "to": "2026-09-26"}),
-    ("/api/metrics/timeseries", {"kpi": "fcr_rate", "granularity": "day", "from": "2026-06-30", "to": "2026-09-26"}),
-    ("/api/metrics/breakdown", {"dimension": "agent", "from": "2026-06-30", "to": "2026-09-26"}),
+    ("/api/metrics/summary", {"from": days_ago(89), "to": days_ago(1)}),
+    ("/api/metrics/timeseries", {"kpi": "fcr_rate", "granularity": "day", "from": days_ago(89), "to": days_ago(1)}),
+    ("/api/metrics/breakdown", {"dimension": "agent", "from": days_ago(89), "to": days_ago(1)}),
 ])
 def test_metrics_respond_under_500ms(api, path, params):
     api.get(path, params=params)

@@ -60,7 +60,7 @@
 
 | Id | Estado | Evidencia |
 |---|---|---|
-| T1 | Pendiente | |
+| T1 | Hecha | `tests/dates.py` (`day_ago`, `days_ago`, `default_period` calculado sin el backend y `weekday_on_or_before`); `flow_fixtures.py` reexporta `days_ago`. `test_metrics.py` y `test_conversations.py` sin fechas ni semillas fijas: el esperado sale de `get_dataset()` con filtros y recontacto calculados en el test; la semana parcial se construye a partir de un miércoles y se recortan los casos en que acabaría en domingo; la fecha de referencia se compara con `DATA_REFERENCE_DATE` (no con `reference_date()` del backend). **60/60 con las seis combinaciones** (antes fallaban 15–17 de estos dos ficheros). Mutaciones (escalado, periodo anterior, periodo por defecto, semanas, summary recortado, FCR y orden del listado): **7/7 antes y 7/7 después**, con 42/2026-09-27 y con 7/2026-11-10. |
 | T2 | Pendiente | |
 | T3 | Pendiente | |
 | T4 | Pendiente | |

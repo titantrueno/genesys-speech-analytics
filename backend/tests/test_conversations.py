@@ -1,16 +1,19 @@
+import os
 import time
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 
 from app import auth
 from app import ids
 from app.data.catalog import AGENT_IDS, AGENTS_BY_QUEUE, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS, QUEUES
-from app.data.generator import generate_dataset
+from app.data.store import get_dataset
+from tests.dates import days_ago
 
-DATASET = {c.id: c for c in generate_dataset(seed=42, reference_date=date(2026, 9, 27))}
-PERIOD = {"from": "2026-07-01", "to": "2026-09-26"}
-SAMPLE_ID = list(DATASET)[499]
+# El mismo dataset que sirve la API, con fechas relativas a su fecha de referencia (FE009).
+DATASET = {c.id: c for c in get_dataset()}
+PERIOD = {"from": days_ago(88), "to": days_ago(1)}
+SAMPLE_ID = list(DATASET)[len(DATASET) // 2]
 
 
 def kpis(api, **params):
@@ -163,7 +166,7 @@ def test_invalid_list_parameters_return_422(api, params):
 
 
 @pytest.mark.parametrize("path,params", [
-    ("/api/conversations", {"from": "2026-06-30", "to": "2026-09-26", "sort": "sentiment", "page_size": 100}),
+    ("/api/conversations", {"from": days_ago(89), "to": days_ago(1), "sort": "sentiment", "page_size": 100}),
     (f"/api/conversations/{SAMPLE_ID}", {}),
     ("/api/catalog", {}),
 ])
@@ -175,7 +178,8 @@ def test_conversation_endpoints_respond_under_500ms(api, path, params):
 
 
 def test_catalog_exposes_reference_date_used_by_default_periods(api):
+    configured = date.fromisoformat(os.environ["DATA_REFERENCE_DATE"])  # fijada por conftest.py o por el entorno
     body = api.get("/api/catalog").json()
-    assert body["reference_date"] == "2026-09-27"
+    assert body["reference_date"] == configured.isoformat()
     summary = api.get("/api/metrics/summary").json()
-    assert summary["period"]["to"] == "2026-09-26"
+    assert summary["period"]["to"] == (configured - timedelta(days=1)).isoformat()

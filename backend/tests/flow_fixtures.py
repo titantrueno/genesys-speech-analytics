@@ -1,13 +1,7 @@
 """Grafos de ejemplo para los tests de flujos de insights (FE004)."""
 import copy
-from datetime import timedelta
 
-from app.data.store import reference_date
-
-
-def days_ago(days: int) -> str:
-    """Fecha relativa a la de referencia del dataset, para que los tests no dependan de una fecha concreta."""
-    return (reference_date() - timedelta(days=days)).isoformat()
+from tests.dates import days_ago  # noqa: F401  (reexportado: lo usan los tests de FE004 y FE005)
 
 
 SAMPLING = {
