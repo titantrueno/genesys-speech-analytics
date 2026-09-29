@@ -14,5 +14,8 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     // Las fechas con hora se muestran en la zona del navegador; los tests fijan UTC para ser deterministas.
     env: { TZ: 'UTC' },
+    // Con la máquina cargada, los tests con debounce del explorador pasan de 5 s (el valor por defecto) sin estar
+    // colgados: el límite solo corta tests bloqueados, no alarga los que pasan.
+    testTimeout: 15_000,
   },
 })
