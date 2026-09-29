@@ -1,6 +1,10 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
+
+// Con la suite completa en paralelo, un debounce de 300 ms más el render pueden pasar de 1 s (el valor por defecto):
+// `findBy…` y `waitFor` esperan el mismo estado, solo con más margen.
+configure({ asyncUtilTimeout: 3000 })
 
 afterEach(() => {
   cleanup()

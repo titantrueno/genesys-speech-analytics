@@ -241,3 +241,19 @@ def test_the_interpreter_does_not_propose_a_deactivated_topic(api):
     item = topic(api, "cargo_no_reconocido")
     assert api.put(f"{MAIN}/{item['id']}", json={**editable(item), "active": False}).status_code == 200
     assert topics_for("cargos no reconocidos") == []
+
+
+@pytest.mark.parametrize("method", ["put", "delete"])
+def test_a_topic_deleted_by_someone_else_meanwhile_gives_404_not_500(api, monkeypatch, method):
+    """Otro administrador borra el tema entre la búsqueda y la escritura (bajo el cerrojo)."""
+    from dataclasses import replace
+
+    import app.routers.config as config_router
+
+    created = create(api)
+    ghost = replace(config_router._find_topic(config_router.TOPIC_KINDS["main-topics"], created["id"]),
+                    code="borrado_mientras_tanto")
+    monkeypatch.setattr(config_router, "_find_topic", lambda kind, topic_id: ghost)
+    body = {**editable(created), "code": "borrado_mientras_tanto"}
+    response = api.put(f"{MAIN}/{created['id']}", json=body) if method == "put" else api.delete(f"{MAIN}/{created['id']}")
+    assert response.status_code == 404

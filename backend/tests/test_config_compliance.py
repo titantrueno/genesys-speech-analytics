@@ -235,3 +235,17 @@ def test_summary_with_two_phrase_checks_stays_under_500_ms(api):
     summary(api)
     second = time.perf_counter() - start
     assert first < 0.5 and second < 0.5
+
+
+@pytest.mark.parametrize("method", ["put", "delete"])
+def test_a_check_deleted_by_someone_else_meanwhile_gives_404_not_500(api, monkeypatch, method):
+    from dataclasses import replace
+
+    import app.routers.config as config_router
+
+    created = create(api)
+    ghost = replace(config_router._find_check(created["id"]), code="borrado_mientras_tanto")
+    monkeypatch.setattr(config_router, "_find_check", lambda check_id: ghost)
+    body = {**editable(created), "code": "borrado_mientras_tanto"}
+    response = api.put(f"{CHECKS}/{created['id']}", json=body) if method == "put" else api.delete(f"{CHECKS}/{created['id']}")
+    assert response.status_code == 404

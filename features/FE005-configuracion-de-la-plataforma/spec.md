@@ -89,6 +89,7 @@ Centralizar la configuración funcional de la plataforma, de modo que sus cambio
 
 - **Asunción:** la configuración es global a la plataforma, no por usuario.
 - **Riesgo:** propagar cambios a otras secciones crea dependencias. Se mitiga con un único `GET /api/config` cacheado en el front e invalidado tras cada cambio, y con servicios del backend que leen la configuración vigente en cada petición.
+  - **Desviación aceptada en `/build` (T8):** `GET /api/config` exige `config:view`, pero la zona horaria y el nombre de la plataforma los necesitan todos los roles y el login. Se exponen en `GET /api/config/public` (sin sesión, solo nombre, zona horaria e idioma), y el modelo por defecto en `GET /api/flows/catalog`. Ver [ADR-007](../../vault/decisiones/adr-007-configuracion-global-y-enmascarado.md).
 - **Riesgo:** evaluar los checks nuevos por frases en cada petición puede superar los 500 ms. Se mitiga con una caché por check invalidada al editarlo; se verifica con los tests de rendimiento.
 - **Riesgo:** los patrones de PII pueden enmascarar de más (importes, referencias) o de menos. El test de ejemplos incluye falsos positivos conocidos.
 - **Riesgo:** construir el índice sobre texto enmascarado reduce ligeramente la recuperación de términos numéricos. Se acepta por privacidad.

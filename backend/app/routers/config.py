@@ -176,6 +176,11 @@ def _check_unique_name(kind: TopicKind, topics: dict[str, Topic], name: str, cod
         raise _unprocessable("name", "Ya existe otro con ese nombre")
 
 
+def _gone(label: str) -> HTTPException:
+    """El elemento existía al buscarlo, pero otro administrador lo ha borrado antes de escribir."""
+    return HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{label} no encontrado")
+
+
 def _element(kind: TopicKind, topic: Topic) -> str:
     return f"{kind.label} «{topic.name}»"
 
@@ -215,6 +220,8 @@ def update_topic(kind_name: TopicKindParam, topic_id: str, payload: Any = Body(.
 
     def change(c: Config):
         topics = getattr(c, kind.field)
+        if topic.code not in topics:
+            raise _gone(kind.label)
         _check_unique_name(kind, topics, topic.name, topic.code)
         return topics[topic.code].audit_value(), topic.audit_value(), {kind.field: {**topics, topic.code: topic}}
 
@@ -232,6 +239,8 @@ def delete_topic(kind_name: TopicKindParam, topic_id: str, user: User = Depends(
 
     def change(c: Config):
         topics = dict(getattr(c, kind.field))
+        if topic.code not in topics:
+            raise _gone(kind.label)
         removed = topics.pop(topic.code)
         return removed.audit_value(), None, {kind.field: topics}
 
@@ -285,6 +294,8 @@ def update_check(check_id: str, payload: Any = Body(...), user: User = Depends(E
     check = Check.from_input(data, builtin=current.builtin)
 
     def change(c: Config):
+        if check.code not in c.checks:
+            raise _gone("Check")
         _check_unique_check_name(c.checks, check.name, check.code)
         return c.checks[check.code].audit_value(), check.audit_value(), {"checks": {**c.checks, check.code: check}}
 
@@ -301,6 +312,8 @@ def delete_check(check_id: str, user: User = Depends(EDIT)) -> Response:
 
     def change(c: Config):
         checks = dict(c.checks)
+        if check.code not in checks:
+            raise _gone("Check")
         removed = checks.pop(check.code)
         return removed.audit_value(), None, {"checks": checks}
 
