@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, busqueda, tf-idf, embeddings, fe003]
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
 # ADR-005 — Búsqueda vectorial ligera sustituible por embeddings
@@ -25,6 +25,7 @@ FE003 pide encontrar conversaciones por significado y llegar al fragmento releva
   - `score` (fragmento completo) ordena, filtra y se muestra;
   - `focus` (80 % lo que dice el cliente, 20 % el fragmento completo) elige el fragmento que representa a cada conversación.
 - **Similares:** TF-IDF de la conversación completa.
+- **Texto indexado siempre enmascarado** (desde FE005): el índice se construye sobre la copia enmascarada de cada conversación, esté o no activado el interruptor de Privacidad, así que buscar un DNI o un IBAN no encuentra nada ([ADR-007](adr-007-configuracion-global-y-enmascarado.md)). Enmascarar el dataset añade unos 0,11 s al arranque.
 
 ## Alternativas
 
@@ -59,6 +60,7 @@ La migración no cambia la API: basta con otra implementación de `SearchEngine`
 
 ## Fuentes
 
+- [ADR-007](adr-007-configuracion-global-y-enmascarado.md)
 - [Spec FE003](../../features/FE003-busqueda-semantica-de-conversaciones/spec.md) (criterios 1, 3, 8, 18, 19 y 20)
 - [Plan y evidencia de FE003](../../features/FE003-busqueda-semantica-de-conversaciones/plan.md)
 - [Motor](../../backend/app/search/tfidf.py) y [diccionario](../../backend/app/search/synonyms.py)

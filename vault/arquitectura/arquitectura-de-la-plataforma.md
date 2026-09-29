@@ -3,9 +3,9 @@ title: "Arquitectura de la plataforma"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos]
+tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad]
 created: 2026-09-27
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
 # Arquitectura de la plataforma
@@ -27,7 +27,9 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 | Identificadores | `backend/app/ids.py` | `PREFIJO-UUID` (ver el [registro](../ingenieria/registro-de-identificadores.md)). |
 | Búsqueda semántica | `backend/app/search/` | Índice por fragmentos construido al arrancar, interfaz `SearchEngine`, TF-IDF y diccionario de sinónimos (ver [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md)). |
 | Flujos de insights | `backend/app/flows/` | Formato JSON del flujo, integridad y reglas de conexión, validación, sampling, prompt simulado detrás de `PromptRunner`, outputs y ejecuciones en segundo plano (ver [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)). |
-| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador, búsqueda semántica y diseñador de flujos. |
+| Configuración | `backend/app/config/` | Instantánea global versionada con auditoría (`store.py`), secciones Pydantic (`model.py`), taxonomía, checks y cumplimiento efectivo, y KPIs (ver [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). |
+| Privacidad | `backend/app/privacy/masking.py` | Enmascarado de PII por patrones sobre una copia de cada conversación. |
+| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador, búsqueda semántica, diseñador de flujos y configuración. |
 
 ### Flujo de datos
 
@@ -86,6 +88,20 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Permisos:** lecturas con `flows:view` y escrituras y ejecuciones con `flows:edit`. El esquema y las sugerencias de campos de FE002 aceptan también `flows:view`, porque los usa el nodo Sampling.
 - **Front:** React Flow (`@xyflow/react`) en rutas diferidas: listado, editor (paleta arrastrable o con botón, lienzo, paneles por nodo, validar, guardar y ejecutar), ejecución (lienzo de solo lectura con progreso y pestañas por output) e historial.
 
+### Configuración (FE005)
+
+- **Modelo:** una instantánea inmutable (`Config`) con versión: General, conectores, taxonomía, checks, KPIs, privacidad e IA. Es global, vive en memoria y se pierde al reiniciar. Toda escritura pasa por `apply_change`, que guarda y audita (`1AU`) bajo el mismo cerrojo ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
+- **Lectura en caliente:** ningún módulo fuera de `app/data/` y `app/config/` importa el catálogo fijo de FE001 (hay un test estructural). Los nombres de los topics salen de `topic_name()`, los campos del explorador de `get_fields()` y el cumplimiento de `effective_compliance()`, cacheados por identidad de instantánea.
+- **Propagación:**
+  - **taxonomía:** `/api/catalog` (con `active`), esquema del explorador (que también usa el Sampling de FE004), etiquetas del listado, detalle, desgloses e informes;
+  - **checks:** detalle, KPI y desglose de cumplimiento, filtro `compliant` del drill-down, campos `check:*` e intérprete; los desactivados siguen siendo válidos en consultas guardadas;
+  - **KPIs:** `GET /api/metrics/summary` añade `target` y `status`, y con `dashboard` devuelve solo los que se muestran en él;
+  - **zona horaria:** días de filtros, series, explorador e informes en la zona configurada; `started_at` lleva la zona del banco (`Europe/Madrid`);
+  - **modelo por defecto:** `default_model` en `/api/flows/catalog`.
+- **Rutas:** `GET /api/config` y el resto de lecturas con `config:view`; escrituras con `config:edit`; `GET /api/config/public` (nombre, zona horaria e idioma) sin sesión, porque el login y todos los roles lo necesitan.
+- **Privacidad:** enmascarado activado por defecto al serializar detalle, listado, explorador y búsqueda. El índice de búsqueda y los prompts de los flujos usan **siempre** texto enmascarado. Lo justifica la regla del [gobierno del vault](../Governance.md) de no reproducir datos personales innecesarios.
+- **Front:** `/configuracion` en diferido con siete pestañas (la activa en `?tab=`); al guardar se invalidan todas las consultas en caché. `AppLayout` lee la configuración pública y fija la zona horaria de `lib/format.ts`, el único módulo que formatea fechas.
+
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
@@ -96,7 +112,8 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - Sin persistencia: todo cambio de estado se pierde al reiniciar la API.
 - **FCR:** para conversaciones de los últimos 7 días del dataset aún no ha pasado la ventana de recontacto, así que su FCR es optimista. Es un **hecho** del cálculo que hay que tener en cuenta al comparar periodos recientes.
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
-- Las conversaciones de voz muestran DNI e IBAN ficticios sin enmascarar hasta FE005. La búsqueda semántica indexa los números como palabras, así que buscar un DNI encuentra sus conversaciones; FE005 debe enmascararlos también en el índice.
+- Desde FE005, los DNI e IBAN ficticios de las conversaciones de voz se enmascaran por defecto y nunca llegan al índice de búsqueda ni a los prompts. Los patrones son españoles más email y tarjeta completa; con datos reales podrían escaparse formatos no previstos (hipótesis, [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
+- La configuración es global y en memoria: se pierde al reiniciar, y si dos administradores la editan a la vez gana la última escritura.
 - Flujos y ejecuciones viven en memoria. Si dos personas guardan el mismo flujo, gana el último guardado. Los resultados del prompt son simulados ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
 - La búsqueda semántica es léxica: sus limitaciones medidas (puntuaciones bajas, dependencia del diccionario, sesgo hacia texto plantillado) están en [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md).
 
@@ -110,3 +127,5 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE002](../../features/FE002-explorador-de-queries-asistidas/spec.md)
 - [Spec FE003](../../features/FE003-busqueda-semantica-de-conversaciones/spec.md)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
+- [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
+- [Gobierno del vault](../Governance.md)

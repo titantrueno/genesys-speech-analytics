@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [glosario, harness]
 created: 2026-09-27
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
 # Términos del harness
@@ -45,6 +45,12 @@ updated: 2026-09-28
 - **Conexión:** arista entre dos nodos de un flujo. Solo se admiten `Sampling → Prompt`, `Prompt → Prompt` y `Prompt → Output`, sin ciclos.
 - **Sampling:** selección de una muestra de conversaciones con los filtros del explorador y un método (aleatorio, estratificado o primeros N).
 - **Ejecución:** ejecución simulada (`1RN`) de la versión guardada de un flujo, con el estado de cada nodo (pendiente, en curso, ok o error), los resultados de cada output y una copia del grafo ejecutado ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
+- **Configuración:** ajustes globales de la plataforma (no por usuario) que se aplican en caliente al resto de secciones: taxonomía, checks, KPIs, zona horaria, privacidad y modelo por defecto ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
+- **Taxonomía:** catálogo editable de main topics (`1TP`) y temas secundarios (`1TS`). Un tema en uso no se borra: se **desactiva**, deja de ofrecerse en los filtros y sus conversaciones lo conservan.
+- **Check por frases:** check de cumplimiento creado en Configuración que se cumple si el agente dice alguna de sus frases. Los seis checks de FE001 son **checks del análisis**: su resultado viene del análisis de cada conversación.
+- **Umbral (verde / ámbar):** valores de un KPI que colorean su tarjeta. Si más es mejor, verde a partir del umbral verde, ámbar a partir del ámbar y rojo por debajo; si más es peor, al revés. Un valor igual al umbral toma el color mejor.
+- **Enmascarado de PII:** sustitución de teléfonos, emails, DNI/NIE, IBAN y tarjetas completas por `[TELÉFONO]`, `[EMAIL]`, `[DNI]`, `[IBAN]` y `[TARJETA]`. Activado por defecto; el índice de búsqueda y los prompts lo aplican siempre.
+- **Registro de auditoría:** entrada `1AU` por cada cambio de configuración aceptado, con quién, cuándo, sección, elemento, valor anterior y nuevo.
 - **Drill-down:** navegar de un elemento agregado de un dashboard al listado de las conversaciones que lo componen.
 
 ## Fuentes
@@ -52,3 +58,4 @@ updated: 2026-09-28
 - [Instrucciones del proyecto](../../AGENTS.md)
 - [Gobierno del vault](../Governance.md)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
+- [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)

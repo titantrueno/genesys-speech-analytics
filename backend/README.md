@@ -46,12 +46,12 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 |---|---|---|
 | `POST /api/auth/login` | público | Devuelve token Bearer y usuario. |
 | `GET /api/auth/me` | autenticado | Usuario actual y permisos. |
-| `GET /api/metrics/summary` | `dashboards:view` | 13 KPIs con periodo anterior y variación; cumplimiento por check. |
+| `GET /api/metrics/summary` | `dashboards:view` | 13 KPIs con periodo anterior, variación, objetivo y estado (`verde`/`ambar`/`rojo`); cumplimiento por check activo. Con `dashboard`, solo los KPIs que se muestran en él. |
 | `GET /api/metrics/timeseries?kpi=&granularity=day\|week` | `dashboards:view` | Serie temporal de un KPI. |
 | `GET /api/metrics/breakdown?dimension=main_topic\|channel\|queue\|agent` | `dashboards:view` | KPIs por grupo. |
 | `GET /api/conversations` | `conversations:view` | Listado filtrado, paginado (25) y ordenado. |
 | `GET /api/conversations/{id}` | `conversations:view` | Conversación completa con análisis. |
-| `GET /api/catalog` | `dashboards:view` o `conversations:view` | Valores de los filtros y fecha de referencia. |
+| `GET /api/catalog` | `dashboards:view` o `conversations:view` | Valores de los filtros (main topics con `active`, checks activos) y fecha de referencia. |
 | `GET /api/query/schema` | `explorer:use` o `flows:view` | Campos del explorador con tipo, operadores y valores. |
 | `POST /api/query/run` | `explorer:use` | Ejecuta una consulta: total, 13 KPIs y página del listado (`page`, `page_size`, `sort`, `order`). |
 | `GET /api/query/suggest?field=` | `explorer:use` o `flows:view` | Valores de un campo categórico en el intervalo, con recuento. |
@@ -62,17 +62,26 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 | `GET /api/flows`, `GET /api/flows/{id}` | `flows:view` | Flujos de insights (`1FL-…`): listado con autor, fechas, última ejecución y estado (`valido`/`con_errores`), y detalle con el grafo JSON. |
 | `POST /api/flows`, `PATCH/DELETE /api/flows/{id}`, `POST /api/flows/{id}/duplicate` | `flows:edit` | Crear, renombrar, borrar (con su historial) y duplicar («Copia de …», nodos nuevos). |
 | `PUT /api/flows/{id}/graph` | `flows:edit` | Guarda el grafo si es íntegro (`422` con la lista de errores si no); asigna `1ND` a las claves `tmp-…` y devuelve el `id_map`. |
-| `GET /api/flows/catalog` | `flows:view` | Métodos, modelos mock, variables, formatos, tipos de output y límites. |
+| `GET /api/flows/catalog` | `flows:view` | Métodos, modelos mock y modelo por defecto, variables, formatos, tipos de output y límites. |
 | `POST /api/flows/validate` | `flows:view` | Errores de completitud de un grafo sin guardar (código, mensaje y nodo). |
 | `POST /api/flows/sampling/estimate` | `flows:view` | Conversaciones que cumplen una consulta de FE002 y tamaño efectivo de la muestra. |
 | `POST /api/flows/{id}/runs` | `flows:edit` | Ejecuta en segundo plano la versión guardada (`202`); `422` si no es válida, `409` si ya hay una en curso. |
 | `GET /api/flows/{id}/runs`, `GET /api/flows/{id}/runs/{run_id}` | `flows:view` | Historial y detalle de una ejecución (`1RN-…`): estado y procesados por nodo, outputs y grafo ejecutado. |
+| `GET /api/config/public` | público | Nombre de la plataforma, zona horaria e idioma (login y todos los roles). |
+| `GET /api/config` | `config:view` | Configuración completa (General, Privacidad, Modelos de IA, KPIs), versión y opciones. |
+| `PUT /api/config/general`, `/privacy`, `/ai`, `/kpis/{code}` | `config:edit` | Guarda una sección; `422` con un error por campo (`loc`, `msg`). |
+| `GET /api/config/connectors`, `POST /api/config/connectors/{id}/sync` | `config:view` / `config:edit` | Conectores mock (`1CN-…`) y sincronización simulada. |
+| `GET /api/config/taxonomy`, `POST/PUT/DELETE /api/config/taxonomy/{main-topics,secondary-topics}[/{id}]` | `config:view` / `config:edit` | Taxonomía (`1TP-…`, `1TS-…`); el código no cambia y uno en uso no se borra (`409`). |
+| `GET/POST /api/config/compliance-checks`, `PUT/DELETE /api/config/compliance-checks/{id}` | `config:view` / `config:edit` | Checks de cumplimiento (`1CK-…`); los de FE001 no se borran (`409`). |
+| `GET /api/config/audit?section=` | `config:view` | Registro de cambios (`1AU-…`), el más reciente primero. |
 
 **Filtros comunes:** `from`, `to` (por defecto, los últimos 30 días), `channel`, `queue` (IDs `1QU-…`), `agent` (IDs `1AG-…`), `main_topic` (códigos). El listado admite además `resolution`, `churn_risk`, `sentiment_lt`, `compliant` y `repeat_contact`, que usa el drill-down desde los KPIs.
 
 **Búsqueda semántica:** el índice se construye al arrancar la API (unos 2,5 s). El motor es sustituible detrás de `SearchEngine`; sus límites y la migración a embeddings están en `vault/decisiones/adr-005-busqueda-vectorial-ligera.md`.
 
 **Flujos de insights:** el prompt es simulado y determinista detrás de `PromptRunner` (`vault/decisiones/adr-006-ejecucion-de-prompts-simulada.md`). `FLOW_RUN_STEP_DELAY_MS` (15 por defecto) marca el ritmo de la ejecución para que el progreso sea visible.
+
+**Configuración y privacidad:** la configuración es global, en memoria y leída en cada petición; los datos personales se enmascaran por defecto, y el índice de búsqueda y los prompts usan siempre el texto enmascarado (`vault/decisiones/adr-007-configuracion-global-y-enmascarado.md`). Los días de los filtros se calculan en la zona horaria configurada.
 
 **Identificadores:** formato `PREFIJO-UUID` generado solo con `app/ids.py` (ver el registro en `vault/ingenieria/registro-de-identificadores.md`).
 
@@ -89,6 +98,8 @@ app/
   query/             # modelo, campos, motor, intérprete y consultas guardadas del explorador
   search/            # búsqueda semántica: interfaz SearchEngine, TF-IDF, diccionario de sinónimos (ADR-005)
   flows/             # flujos de insights: modelo JSON, reglas, sampling, prompt simulado, outputs y ejecuciones (ADR-006)
-  routers/           # auth, metrics, conversations, query, search, flows
+  config/            # configuración global: store con auditoría, taxonomía, checks y cumplimiento efectivo, KPIs (ADR-007)
+  privacy/           # enmascarado de datos personales
+  routers/           # auth, metrics, conversations, query, search, flows, config
 tests/
 ```

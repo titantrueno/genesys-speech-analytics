@@ -20,3 +20,4 @@ Registrar decisiones relevantes, el contexto que las motivó y sus consecuencias
 - [ADR-004 — Identificadores con prefijo y UUID](adr-004-identificadores-con-prefijo-y-uuid.md)
 - [ADR-005 — Búsqueda vectorial ligera sustituible por embeddings](adr-005-busqueda-vectorial-ligera.md)
 - [ADR-006 — Ejecución de prompts simulada con punto de extensión para un LLM real](adr-006-ejecucion-de-prompts-simulada.md)
+- [ADR-007 — Configuración global en memoria, leída en caliente, y enmascarado de PII por defecto](adr-007-configuracion-global-y-enmascarado.md)

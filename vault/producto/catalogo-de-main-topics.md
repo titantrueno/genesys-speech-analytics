@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [producto, main-topic, banca, taxonomia]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-09-29
 ---
 
 # Catálogo de main topics bancarios
@@ -34,7 +34,8 @@ El **main topic** es el motivo principal de una conversación de atención al cl
 | `alta_cliente` | Alta de cliente | Particulares, Banca digital |
 | `reclamacion_queja` | Reclamación o queja general | Particulares, Empresas |
 
-- **Hecho:** la fuente ejecutable del catálogo (pesos, colas, palabras clave y sentimiento de partida) es `backend/app/data/catalog.py`, y los diálogos por topic están en `backend/app/data/scenarios.py`.
+- **Hecho:** esta tabla es el **catálogo inicial**. Desde FE005 los main topics se editan en Configuración › Taxonomía (crear, renombrar, desactivar y borrar si no tienen conversaciones); el código no cambia nunca porque es la clave en filtros, consultas y flujos ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
+- **Hecho:** la fuente ejecutable del catálogo inicial (pesos, colas, palabras clave y sentimiento de partida) es `backend/app/data/catalog.py`, y los diálogos por topic están en `backend/app/data/scenarios.py`.
 - **Hecho:** el generador mock produce un pico de `cargo_no_reconocido` entre 18 y 24 días antes de la fecha de referencia, para simular una campaña de fraude.
 - **Hipótesis:** la distribución de pesos refleja un contact center bancario típico; debe contrastarse con datos reales cuando existan.
 

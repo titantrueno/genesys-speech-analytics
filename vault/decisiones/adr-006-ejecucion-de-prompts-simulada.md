@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, flujos, llm, prompts, fe004]
 created: 2026-09-28
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
 # ADR-006 — Ejecución de prompts simulada con punto de extensión para un LLM real
@@ -40,7 +40,7 @@ FE004 permite diseñar flujos `Sampling → Prompt → Output` y ejecutarlos. El
   3. inyectarlo en `get_prompt_runner()`.
 
   La API, el formato JSON del flujo y el front no cambian.
-- **Pendiente con un LLM real** (hipótesis, sin validar): concurrencia y límites de tasa del proveedor, reintentos, coste por ejecución, cancelación, enmascarado de datos personales antes de enviar transcripciones (FE005) y ejecutar fuera del proceso de la API.
+- **Pendiente con un LLM real** (hipótesis, sin validar): concurrencia y límites de tasa del proveedor, reintentos, coste por ejecución, cancelación, y ejecutar fuera del proceso de la API. El enmascarado de datos personales antes de enviar transcripciones ya está resuelto: desde FE005, el Sampling entrega a prompts y outputs conversaciones siempre enmascaradas ([ADR-007](adr-007-configuracion-global-y-enmascarado.md)).
 - Las ejecuciones viven en memoria y se pierden al reiniciar, como el resto de escrituras.
 
 ## Fuentes
@@ -49,5 +49,6 @@ FE004 permite diseñar flujos `Sampling → Prompt → Output` y ejecutarlos. El
 - [Plan y evidencia de FE004](../../features/FE004-disenador-de-flujos-de-insights/plan.md)
 - [Implementación del prompt](../../backend/app/flows/prompting.py)
 - [Ejecutor](../../backend/app/flows/runs.py)
+- [ADR-007](adr-007-configuracion-global-y-enmascarado.md)
 - [FastAPI · Background Tasks](https://fastapi.tiangolo.com/tutorial/background-tasks/)
 - [FastAPI · Testing dependencies with overrides](https://fastapi.tiangolo.com/advanced/testing-dependencies/)

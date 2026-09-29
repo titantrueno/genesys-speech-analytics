@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [aprendizaje, testing, fastapi, react, recharts]
 created: 2026-09-27
-updated: 2026-09-28
+updated: 2026-09-29
 ---
 
 # Lecciones de la construcción de la plataforma
@@ -39,6 +39,9 @@ Durante FE001, FE007, FE008, FE002, FE003 y FE004 aparecieron comportamientos de
 21. **FE004:** filtrar la salida del build con `grep` volvió a ocultar un error de tipos (como en la lección 10).
 22. **FE004:** en T7 y T8 el código se escribió antes que los tests. Las mutaciones encontraron dos tests débiles: uno no esperaba al debounce y otro miraba el DOM cuando el defecto solo estaba en el JSON.
 23. **FE005:** una mutación de Python de la misma longitud que el original (`old` → `new`) «sobrevivía»: el `.pyc` en caché se valida por tamaño y marca de tiempo en segundos, así que el test ejecutaba el código sin mutar.
+24. **FE005:** un commit se hizo con el gate en rojo: la cadena `ci.sh; grep … && git commit` comprobaba el `grep`, no el código de salida de `ci.sh` (como en las lecciones 10 y 21, esta vez con el propio gate).
+25. **FE005:** una petición nueva al montar un dashboard dejó a la vista un test de FE001 intermitente (1 de cada 4) que buscaba un enlace de una tabla antes de que llegaran los datos.
+26. **FE005:** la spec daba por hecho un único `GET /api/config`, pero exige `config:view`: la zona horaria y el nombre, que necesitan todos los roles y el login, no llegaban. Hubo que exponerlos en una ruta pública mínima.
 
 ## Causa
 
@@ -67,6 +70,9 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Para probar trabajo en segundo plano, expón un gancho por paso y prueba también con un servidor real.
 - Comprueba el build y el lint por su código de salida, nunca por una salida filtrada.
 - Si el código precede al test, demuestra el rojo con mutaciones y comprueba qué mira el test (DOM o datos).
+- Encadena el commit al gate por su código de salida (`if ./scripts/ci.sh; then git commit …; fi`), nunca a un `grep` de su salida.
+- En tests de componentes, busca con `findBy…` todo lo que depende de datos remotos, aunque su contenedor ya esté en pantalla; repite un test sospechoso varias veces antes de darlo por estable.
+- Al diseñar una configuración global, separa lo que necesitan todos los roles (y el login) de lo que solo ve quien la administra.
 - Ejecuta las mutaciones de Python sin caché de bytecode (`python -B` y `PYTHONDONTWRITEBYTECODE=1`); una mutación que sobrevive se confirma a mano antes de tocar el test.
 
 ## Acción preventiva
@@ -74,6 +80,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Tests de regresión añadidos para los puntos 5, 6, 7 y 9 (propiedad de 500 frases).
 - Patrón de tabla navegable en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 - Revisar esta lista en `/plan` de FE004 a FE006.
+- FE005: tests estructurales (ningún módulo importa el catálogo fijo fuera de `app/data/` y `app/config/`; ningún componente formatea fechas fuera de `lib/format.ts`) y test de enmascarado sobre el dataset completo.
 - FE003: test de despedidas en los representantes (< 10 %) y test de pares contra los turnos reales del dataset.
 - FE004: mock de React Flow con `contentRect` en `frontend/src/test/reactFlow.ts`, tests de ida y vuelta, test de arranque concurrente determinista y patrón de lienzo en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 

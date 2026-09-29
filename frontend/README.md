@@ -31,9 +31,10 @@ src/
   explorer/       # explorador de queries asistidas (constructor, lenguaje natural, consultas guardadas)
   search/         # búsqueda semántica, resultados por fragmento y conversaciones similares
   flows/          # flujos de insights: listado, editor con React Flow, paneles por nodo, ejecución e historial
-  lib/            # formato y resaltado
+  config/         # configuración: siete pestañas, errores por campo, confirmación en fila y registro de cambios
+  lib/            # formato (todas las fechas, en la zona horaria de la plataforma) y resaltado
   pages/          # login, sin acceso, próximamente
-  router.tsx      # rutas (dashboard y flujos se cargan en diferido)
+  router.tsx      # rutas (dashboard, flujos y configuración se cargan en diferido)
 ```
 
 Convenciones: filtros en la URL; drill-down con el filtro del numerador de cada KPI (`dashboards/drilldown.ts`); filas de tabla y tarjetas de resultado navegables con `useRowNavigation`, según `vault/ingenieria/patrones-de-interfaz.md`; paleta de gráficos validada (`--series-*` en `index.css`).
