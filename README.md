@@ -36,7 +36,7 @@ Entra con cualquiera de los usuarios demo que aparecen en la pantalla de login (
 
 ## Verificación
 
-`./scripts/ci.sh` ejecuta todos los gates (vault, tests, lint, build y auditoría de dependencias) y termina con código distinto de 0 si alguno falla. La misma pipeline está en `.github/workflows/ci.yml`. Por separado:
+`./scripts/ci.sh` ejecuta todos los gates (vault, tests del backend con dos datasets mock distintos, tests del front, lint, build y auditoría de dependencias) y termina con código distinto de 0 si alguno falla. La misma pipeline está en `.github/workflows/ci.yml`. Por separado:
 
 ```bash
 cd backend && .venv/bin/pytest          # tests de la API
@@ -56,4 +56,4 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE004 Diseñador de flujos de insights | Entregada en `v0.4.0` |
 | FE005 Configuración de la plataforma | Entregada en `v0.5.0` |
 | FE006 Usuarios y roles | Especificada (aparece como «Próximamente») |
-| FE009 Tests independientes del dataset mock | Planificada |
+| FE009 Tests independientes del dataset mock | Construida (pendiente de `/test`, `/review` y `/ship`) |

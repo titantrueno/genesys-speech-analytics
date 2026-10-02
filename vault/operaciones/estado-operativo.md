@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [operaciones, runbook, local]
 created: 2026-09-27
-updated: 2026-09-29
+updated: 2026-10-02
 ---
 
 # Estado operativo inicial
@@ -29,7 +29,8 @@ Para arrancar, comprobar o revertir la plataforma en su estado actual: **demo lo
 
 - **Salud de la API:** `curl -s localhost:8000/api/health` devuelve `{"status":"ok"}`. La API responde tras construir el índice de búsqueda semántica al arrancar (unos 2,5 s).
 - **Humo funcional:** login con un usuario demo, abrir un dashboard y hacer drill-down al listado.
-- **Datos:** con `DATA_SEED` y `DATA_REFERENCE_DATE` fijos, el dataset es reproducible.
+- **Datos:** con `DATA_SEED` y `DATA_REFERENCE_DATE` fijos, el dataset es reproducible. La suite del backend pasa con cualquier combinación (FE009); `./scripts/ci.sh` la ejecuta con la del `conftest.py` y con semilla 7 y referencia 2026-11-10.
+- **Ejecutar el gate en un portátil:** con batería, el reposo del sistema congela los procesos y hace fallar tests por tiempo; usa la corriente y `caffeinate -i ./scripts/ci.sh`.
 - **Configuración (FE005):** la sección Configuración cambia taxonomía, checks, umbrales, zona horaria, enmascarado y modelo por defecto en caliente; todo se pierde al reiniciar la API. Los conectores de «Fuentes de datos» son **mock**: «Sincronizar» solo actualiza la fecha. `curl -s localhost:8000/api/config/public` devuelve nombre, zona horaria e idioma sin sesión.
 - **Flujos de insights (FE004):** crear un flujo, ejecutarlo y ver cómo avanzan los nodos. El ritmo de la ejecución simulada se ajusta con `FLOW_RUN_STEP_DELAY_MS` (15 ms por elemento por defecto; 0 en los tests). Flujos y ejecuciones viven en memoria y se pierden al reiniciar la API.
 

@@ -27,6 +27,11 @@ jobs:
           python-version: "3.14"
       - run: python -m venv .venv && .venv/bin/pip install -r requirements.txt
       - run: .venv/bin/pytest -q
+      - name: Tests con otro dataset (FE009)
+        run: .venv/bin/pytest -q
+        env:
+          DATA_SEED: "7"
+          DATA_REFERENCE_DATE: "2026-11-10"
       - run: .venv/bin/pip install pip-audit && .venv/bin/pip-audit
 
   frontend:

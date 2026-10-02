@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, busqueda, tf-idf, embeddings, fe003]
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-10-02
 ---
 
 # ADR-005 — Búsqueda vectorial ligera sustituible por embeddings
@@ -38,7 +38,7 @@ FE003 pide encontrar conversaciones por significado y llegar al fragmento releva
 
 ### Resultados medidos
 
-- Relevancia en el top 5: **83 % sin diccionario y 96 % con él** (24 consultas etiquetadas).
+- Relevancia en el top 5: **83 % sin diccionario y 96 % con él** (24 consultas etiquetadas). Las consultas y los pares se midieron contra el dataset con semilla 42 y fecha 2026-09-27; desde FE009, `tests/test_search_relevance.py` construye su motor con ese dataset de forma explícita, independiente del entorno.
 - Los 9 pares de paráfrasis sin palabras en común con su main topic solo se encuentran gracias al diccionario.
 - Latencia por la API, sobre 90 días: mediana de 12 ms y peor caso de 40 ms.
 

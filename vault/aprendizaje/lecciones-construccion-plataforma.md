@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [aprendizaje, testing, fastapi, react, recharts]
 created: 2026-09-27
-updated: 2026-09-29
+updated: 2026-10-02
 ---
 
 # Lecciones de la construcción de la plataforma
@@ -43,6 +43,7 @@ Durante FE001, FE007, FE008, FE002, FE003 y FE004 aparecieron comportamientos de
 25. **FE005:** una petición nueva al montar un dashboard dejó a la vista un test de FE001 intermitente (1 de cada 4) que buscaba un enlace de una tabla antes de que llegaran los datos.
 26. **FE005:** la spec daba por hecho un único `GET /api/config`, pero exige `config:view`: la zona horaria y el nombre, que necesitan todos los roles y el login, no llegaban. Hubo que exponerlos en una ruta pública mínima.
 27. **FE005:** el enmascarado pasaba el test del dataset completo, pero tomaba por DNI «20213570 y»: el dataset nunca pone un número de 8 cifras delante de una conjunción. Además, el plan afirmaba que se validaba la letra de control y no era así.
+28. **FE009:** 53–64 tests de FE001–FE003 solo pasaban con la semilla 42 y la fecha 2026-09-27: fechas absolutas, datasets propios con semilla fija para calcular el esperado y hechos de una semilla. Nadie lo veía porque el gate solo ejecutaba una combinación.
 
 ## Causa
 
@@ -55,6 +56,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Para desplazar un contenedor, usa `container.scrollTo`, no `scrollIntoView`.
 - Aísla los generadores aleatorios por propósito (datos e identificadores) y fija una huella del contenido en un test.
 - Para evitar coincidencias con «hoy», en los tests fija fechas de referencia distintas de la actual, y expón desde la API la fecha que usa el backend.
+- Ningún test fija fechas ni hechos de una semilla: fechas con `tests/dates.py`, esperados sobre `get_dataset()` y conversaciones buscadas por su propiedad. Solo la calibración de relevancia fija su dataset, de forma explícita. El gate ejecuta el backend con una segunda combinación (semilla 7, 2026-11-10) para que la deuda no vuelva.
 - Todo componente con datos remotos maneja tres estados: cargando, error y vacío.
 - Compara secretos como `bytes` (`.encode()`) y prueba entradas no ASCII en todo lo que parsea cabeceras.
 - Comprueba la semántica ARIA en la especificación antes de escribir tests por rol.
@@ -94,4 +96,5 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Plan y evidencia de FE003](../../features/FE003-busqueda-semantica-de-conversaciones/plan.md)
 - [Plan y evidencia de FE004](../../features/FE004-disenador-de-flujos-de-insights/plan.md)
 - [Plan y evidencia de FE005](../../features/FE005-configuracion-de-la-plataforma/plan.md)
+- [Plan y evidencia de FE009](../../features/FE009-tests-independientes-del-dataset-mock/plan.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

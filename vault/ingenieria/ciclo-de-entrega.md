@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [ingenieria, tdd, entrega]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-10-02
 ---
 
 # Ciclo de entrega del harness
@@ -41,6 +41,8 @@ updated: 2026-09-27
 | Arrancar la API | `cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000` |
 | Arrancar la web | `cd frontend && npm run dev` |
 | Tests del backend | `cd backend && .venv/bin/pytest` |
+| Tests del backend con otro dataset | `cd backend && DATA_SEED=7 DATA_REFERENCE_DATE=2026-11-10 .venv/bin/pytest` |
+| Gate completo | `./scripts/ci.sh` (vault, backend con dos datasets, front, lint, build y auditorías) |
 | Tests del front | `cd frontend && npm test` |
 | Lint y build del front | `cd frontend && npm run lint && npm run build` |
 | Auditoría del vault | `python3 scripts/audit_vault.py` |
@@ -53,6 +55,7 @@ No se avanza cuando falta evidencia para superar el gate de la fase. Una tarea d
 
 ## Fuentes
 
+- [Spec FE009](../../features/FE009-tests-independientes-del-dataset-mock/spec.md)
 - [Instrucciones del proyecto](../../AGENTS.md)
 - [README del proyecto](../../README.md)
 - [Skill spec](../../.devin/skills/spec/SKILL.md)
