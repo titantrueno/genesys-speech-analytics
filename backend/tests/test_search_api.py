@@ -1,4 +1,5 @@
 import random
+import re
 import time
 from datetime import date, timedelta
 
@@ -71,10 +72,14 @@ def test_highlights_exist_literally_in_the_fragment(api):
 
 
 def test_highlights_include_expansion_terms_and_inflections(api):
-    body = search(api, "he extraviado la visa, inutilízala", **FULL)
+    # Con 100 resultados aparecen fragmentos de bloqueo con cualquier semilla del dataset (FE009).
+    body = search(api, "he extraviado la visa, inutilízala", limit=100, **FULL)
     words = {normalize_text(t) for r in body["results"] for t in r["highlights"]}
     assert "tarjeta" in words  # por la expansión de «visa»
     assert words & {"bloquear", "bloqueo", "bloqueada", "bloquearla"}
+    for result in body["results"]:  # toda forma de «bloquear» de los turnos devueltos se resalta
+        said = {w for t in result["turns"] for w in re.findall(r"\bbloque\w*", normalize_text(t["text"]))}
+        assert said <= {normalize_text(h) for h in result["highlights"]}, result["conversation_id"]
 
 
 def test_results_are_sorted_and_rounded(api):

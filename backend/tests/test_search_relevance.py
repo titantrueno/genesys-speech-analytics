@@ -1,8 +1,16 @@
+"""Calibración de la relevancia de FE003.
+
+Las consultas etiquetadas y los pares de paráfrasis se redactaron y midieron contra el dataset con semilla 42 y fecha
+de referencia 2026-09-27 (resultados en ADR-005). Por eso estos tests construyen su propio motor con ese dataset de
+forma explícita, sin leer `DATA_SEED` ni `DATA_REFERENCE_DATE`: miden el motor, no la semilla del entorno (FE009).
+"""
 import re
+from datetime import date
+from functools import cache
 
 import pytest
 
-from app.data.store import get_dataset
+from app.data.generator import generate_dataset
 from app.text import normalize_text
 from app.search.engine import best_per_conversation
 from app.search.synonyms import SYNONYMS, expand
@@ -11,23 +19,30 @@ from app.search.tfidf import TfidfEngine
 from tests.search_relevance import LABELLED_QUERIES, PARAPHRASE_PAIRS
 
 TOP = 5
+CALIBRATION_SEED = 42
+CALIBRATION_DATE = date(2026, 9, 27)
 # «no» y «sin» aparecen en los guiones de todos los main topics: no cuentan como palabras con contenido.
 NON_CONTENT = {"no", "sin"}
 
 
+@cache
+def calibration_dataset():
+    return generate_dataset(seed=CALIBRATION_SEED, reference_date=CALIBRATION_DATE)
+
+
 @pytest.fixture(scope="module")
 def topics():
-    return {c.id: c.analysis.main_topic for c in get_dataset()}
+    return {c.id: c.analysis.main_topic for c in calibration_dataset()}
 
 
 @pytest.fixture(scope="module")
 def engine():
-    return TfidfEngine(get_dataset())
+    return TfidfEngine(calibration_dataset())
 
 
 @pytest.fixture(scope="module")
 def plain_engine():
-    return TfidfEngine(get_dataset(), synonyms=())
+    return TfidfEngine(calibration_dataset(), synonyms=())
 
 
 def top_hits(engine, text):
@@ -41,7 +56,7 @@ def top_topics(engine, topics, text) -> list[str]:
 
 def topic_words(topic: str) -> set[str]:
     """Palabras de los turnos reales del main topic: incluye los valores con que se rellenan los guiones."""
-    return {w for c in get_dataset() if c.analysis.main_topic == topic for t in c.turns for w in tokenize(t.text)}
+    return {w for c in calibration_dataset() if c.analysis.main_topic == topic for t in c.turns for w in tokenize(t.text)}
 
 
 def test_there_are_enough_pairs_and_labelled_queries():
@@ -82,7 +97,7 @@ def test_expansion_is_exposed_by_the_engine(engine, plain_engine):
 
 
 def test_every_dictionary_group_reaches_the_corpus():
-    corpus = normalize_text(" ".join(t.text for c in get_dataset() for t in c.turns))
+    corpus = normalize_text(" ".join(t.text for c in calibration_dataset() for t in c.turns))
     for group in SYNONYMS:
         assert len(group) >= 2, group
         patterns = [re.compile(r"\b" + normalize_text(e).replace("*", r"\w*") + r"\b") for e in group]
