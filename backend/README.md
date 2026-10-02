@@ -44,6 +44,8 @@ Es el estado inicial: desde Usuarios y roles (FE006) se crean usuarios, que comp
 
 ## Endpoints
 
+Resumen. El contrato completo (parámetros, cuerpos, respuestas, formatos de error y qué módulo del front usa cada ruta) está en `vault/arquitectura/contrato-api-front-back.md`. Con la API arrancada, `/docs` muestra el OpenAPI (sin esquemas de respuesta).
+
 | Método y ruta | Permiso | Descripción |
 |---|---|---|
 | `POST /api/auth/login` | público | Devuelve token Bearer y usuario. |

@@ -34,7 +34,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 
 ### Flujo de datos
 
-1. El front autentica con `POST /api/auth/login` y envía `Authorization: Bearer` en cada petición. En desarrollo, el proxy de Vite reenvía `/api` al puerto 8000.
+1. El front autentica con `POST /api/auth/login` y envía `Authorization: Bearer` en cada petición. El contrato completo de cada endpoint está en [Contrato de la API entre front y back](contrato-api-front-back.md). En desarrollo, el proxy de Vite reenvía `/api` al puerto 8000.
 2. Los filtros de los dashboards viven en la URL (`from`, `to`, `channel`, `queue`, `agent`, `main_topic`) y se pasan tal cual a métricas y listado.
 3. **Contrato de drill-down:** cada elemento de un dashboard navega a `/conversaciones` con los filtros del dashboard más un filtro que selecciona el **numerador** de su KPI (`frontend/src/dashboards/drilldown.ts`). Los tests del backend garantizan que el total del listado coincide con el valor mostrado.
 4. El detalle carga `GET /api/conversations/{id}` y el catálogo para las etiquetas de los checks.
@@ -139,4 +139,5 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
 - [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)
+- [Contrato de la API entre front y back](contrato-api-front-back.md)
 - [Gobierno del vault](../Governance.md)
