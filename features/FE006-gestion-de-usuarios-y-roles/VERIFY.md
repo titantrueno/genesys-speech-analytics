@@ -13,8 +13,8 @@
 
 | Comando o prueba | Resultado |
 |---|---|
-| `cd backend && .venv/bin/pytest` | **721 passed** (55 de FE006 en `test_users_store.py` y `test_users_api.py`, más los de FE001–FE005 adaptados a `Role`) |
-| Segunda combinación de dataset (`DATA_SEED=7`, `DATA_REFERENCE_DATE=2026-11-10`) | 721 passed (lo ejecuta `ci.sh`) |
+| `cd backend && .venv/bin/pytest` | **723 passed** (57 de FE006 en `test_users_store.py` y `test_users_api.py`, más los de FE001–FE005 adaptados a `Role`) |
+| Segunda combinación de dataset (`DATA_SEED=7`, `DATA_REFERENCE_DATE=2026-11-10`) | 723 passed (lo ejecuta `ci.sh`) |
 | `cd frontend && npm test` | **289 passed** (26 ficheros; 22 de FE006 en `UsersPage.test.tsx`, `RolesTab.test.tsx` y `PermissionRefresh.test.tsx`) |
 | `npm run lint` / `npm run build` | Código 0 / código 0. Carga inicial de 314 kB, sin cambios; `UsersPage` en un chunk diferido de 12,8 kB |
 | `python3 scripts/audit_vault.py` | **Código 0**: 44 archivos, 0 errores |

@@ -14,6 +14,7 @@ Mantener la trazabilidad entre cambios enviados, evidencia de verificación y co
 
 ## Estado inicial
 
+- [Plataforma v0.6.0: gestión de usuarios y roles](2026-10-02-plataforma-v0-6-0.md) — FE006.
 - [Plataforma v0.5.1: tests independientes del dataset mock](2026-10-02-plataforma-v0-5-1.md) — FE009.
 - [Plataforma v0.5.0: configuración de la plataforma](2026-09-29-plataforma-v0-5-0.md) — FE005.
 - [Plataforma v0.4.0: diseñador de flujos de insights](2026-09-28-plataforma-v0-4-0.md) — FE004.

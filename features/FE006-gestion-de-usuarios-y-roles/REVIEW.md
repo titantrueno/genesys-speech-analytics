@@ -12,7 +12,7 @@
 
 ## Tamaño del cambio
 
-El diff de código desde `v0.5.1` ocupa unos 35 ficheros y unas 1.350 líneas, por encima de las ~100 recomendadas. Se entregó en commits atómicos: plan, T1–T6, el arreglo encontrado en Chrome, la verificación y esta revisión. Cada uno tiene su evidencia de rojo a verde y sus mutaciones en el [plan](plan.md#progreso). `VERIFY.md` incluye la auditoría del vault en verde.
+El diff de código y tests desde `v0.5.1` ocupa 41 ficheros y unas 1.850 líneas añadidas, por encima de las ~100 recomendadas. Se entregó en commits atómicos: plan, T1–T6, el arreglo encontrado en Chrome, la verificación y esta revisión. Cada uno tiene su evidencia de rojo a verde y sus mutaciones en el [plan](plan.md#progreso). `VERIFY.md` incluye la auditoría del vault en verde.
 
 ## Hallazgos
 
