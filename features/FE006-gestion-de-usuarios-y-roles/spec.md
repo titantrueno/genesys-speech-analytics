@@ -1,6 +1,6 @@
 # FE006 — Gestión de usuarios y roles
 
-> Estado: **pendiente de aprobación**. Depende de FE001, que ya incluye el login mock y los cuatro roles base.
+> Estado: **aprobada** el 2026-10-02. Depende de FE001, que ya incluye el login mock y los cuatro roles base.
 
 ## Objetivo
 
