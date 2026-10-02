@@ -1,9 +1,10 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import auth
 from app.routers import auth as auth_router
 from app.routers import config as config_router
 from app.routers import conversations as conversations_router
@@ -11,6 +12,10 @@ from app.routers import flows as flows_router
 from app.routers import metrics as metrics_router
 from app.routers import query as query_router
 from app.routers import search as search_router
+from app.routers import users as users_router
+
+
+AUTH_VERSION_HEADER = "X-Auth-Version"
 
 
 @asynccontextmanager
@@ -28,7 +33,15 @@ def create_app() -> FastAPI:
         allow_origins=[o.strip() for o in origins.split(",") if o.strip()],
         allow_methods=["*"],
         allow_headers=["Authorization", "Content-Type"],
+        expose_headers=[AUTH_VERSION_HEADER],
     )
+
+    @app.middleware("http")
+    async def auth_version(request: Request, call_next):
+        """Versión de usuarios y roles: si cambia, el front vuelve a pedir `/api/auth/me` (FE006)."""
+        response = await call_next(request)
+        response.headers[AUTH_VERSION_HEADER] = str(auth.get_store().version)
+        return response
 
     @app.get("/api/health")
     def health() -> dict:
@@ -41,6 +54,7 @@ def create_app() -> FastAPI:
     app.include_router(search_router.router)
     app.include_router(flows_router.router)
     app.include_router(config_router.router)
+    app.include_router(users_router.router)
     return app
 
 

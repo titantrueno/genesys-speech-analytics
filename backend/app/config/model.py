@@ -1,8 +1,9 @@
 """Modelos de cada sección de la configuración (FE005). Todas rechazan campos desconocidos."""
 from functools import cache
-from typing import Annotated
+from typing import Annotated, Any, TypeVar
 from zoneinfo import available_timezones
 
+from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError, field_validator, model_validator
 
 from app.flows.catalog import MODELS, PROVIDERS
@@ -117,3 +118,14 @@ def _message(err: dict) -> str:
 def field_errors(exc: ValidationError) -> list[dict]:
     """Errores en el formato de FastAPI (`loc`, `msg`, `type`) con mensajes en español para la UI."""
     return [{"loc": ["body", *err["loc"]], "msg": _message(err), "type": err["type"]} for err in exc.errors()]
+
+
+Model = TypeVar("Model", bound=BaseModel)
+
+
+def parse_body(model: type[Model], payload: Any) -> Model:
+    """Valida el cuerpo con `model` y responde `422` con errores por campo en español."""
+    try:
+        return model.model_validate(payload)
+    except ValidationError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=field_errors(exc)) from None

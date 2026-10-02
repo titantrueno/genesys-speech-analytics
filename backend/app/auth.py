@@ -18,6 +18,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app import ids
 from app.audit import get_audit_log
+from app.clock import now
 
 DEMO_PASSWORD = "demo"
 TOKEN_TTL_SECONDS = int(os.environ.get("AUTH_TOKEN_TTL_SECONDS", 8 * 3600))
@@ -156,7 +157,7 @@ class UserStore:
 
     def touch_login(self, user: User) -> None:
         with self._lock:
-            user.last_login = datetime.now().astimezone()
+            user.last_login = now()
 
 
 def _new_store() -> UserStore:

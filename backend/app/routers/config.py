@@ -2,16 +2,17 @@
 from collections import Counter
 from dataclasses import dataclass, replace
 from functools import cache
-from typing import Any, Callable, Literal, TypeVar
+from typing import Any, Callable, Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from app import ids
 from app.auth import User, require_permission
 from app.config.checks import Check, CheckIn
 from app.config.kpis import DASHBOARDS, KpiTarget, KpiTargetIn
-from app.config.model import LANGUAGES, SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, field_errors, timezones
+from app.config.model import (LANGUAGES, SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, field_errors, parse_body,
+                              timezones)
 from app.config.store import Config, Connector, get_config, get_config_store
 from app.config.taxonomy import (MainTopicIn, SecondaryTopicIn, Topic, main_topic_usage,
                                  secondary_topic_usage)
@@ -23,17 +24,8 @@ from app.clock import now
 
 router = APIRouter(prefix="/api/config", tags=["config"])
 
-Model = TypeVar("Model", bound=BaseModel)
-
 VIEW = require_permission("config:view")
 EDIT = require_permission("config:edit")
-
-
-def _parse(model: type[Model], payload: Any) -> Model:
-    try:
-        return model.model_validate(payload)
-    except ValidationError as exc:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=field_errors(exc)) from None
 
 
 @cache
@@ -83,7 +75,7 @@ def read_config() -> dict:
 
 @router.put("/general")
 def update_general(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
-    general = _parse(GeneralConfig, payload)
+    general = parse_body(GeneralConfig, payload)
     config = get_config_store().apply_change(user, "general", SECTIONS["general"], lambda c: (
         c.general.model_dump(), general.model_dump(), {"general": general}))
     return config_body(config)
@@ -91,7 +83,7 @@ def update_general(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict
 
 @router.put("/privacy")
 def update_privacy(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
-    privacy = _parse(PrivacyConfig, payload)
+    privacy = parse_body(PrivacyConfig, payload)
     config = get_config_store().apply_change(user, "privacidad", "Enmascarado de PII", lambda c: (
         c.privacy.model_dump(), privacy.model_dump(), {"privacy": privacy}))
     return config_body(config)
@@ -99,7 +91,7 @@ def update_privacy(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict
 
 @router.put("/ai")
 def update_ai(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
-    ai = _parse(AiConfig, payload)
+    ai = parse_body(AiConfig, payload)
     config = get_config_store().apply_change(user, "modelos", "Modelo por defecto", lambda c: (
         c.ai.model_dump(), ai.model_dump(), {"ai": ai}))
     return config_body(config)
@@ -195,7 +187,7 @@ def read_taxonomy() -> dict:
 @router.post("/taxonomy/{kind_name}", status_code=status.HTTP_201_CREATED)
 def create_topic(kind_name: TopicKindParam, payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
     kind = TOPIC_KINDS[kind_name]
-    topic = Topic.from_input(kind.prefix, _parse(kind.model, payload))
+    topic = Topic.from_input(kind.prefix, parse_body(kind.model, payload))
 
     def change(c: Config):
         topics = getattr(c, kind.field)
@@ -213,7 +205,7 @@ def update_topic(kind_name: TopicKindParam, topic_id: str, payload: Any = Body(.
                  user: User = Depends(EDIT)) -> dict:
     kind = TOPIC_KINDS[kind_name]
     current = _find_topic(kind, topic_id)
-    data = _parse(kind.model, payload)
+    data = parse_body(kind.model, payload)
     if data.code != current.code:
         raise _unprocessable("code", "El código no se puede cambiar")
     topic = Topic.from_input(kind.prefix, data)
@@ -273,7 +265,7 @@ def list_checks() -> dict:
 
 @router.post("/compliance-checks", status_code=status.HTTP_201_CREATED)
 def create_check(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
-    check = Check.from_input(_parse(CheckIn, payload), builtin=False)
+    check = Check.from_input(parse_body(CheckIn, payload), builtin=False)
 
     def change(c: Config):
         if check.code in c.checks:
@@ -288,7 +280,7 @@ def create_check(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
 @router.put("/compliance-checks/{check_id}")
 def update_check(check_id: str, payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
     current = _find_check(check_id)
-    data = _parse(CheckIn, payload)
+    data = parse_body(CheckIn, payload)
     if data.code != current.code:
         raise _unprocessable("code", "El código no se puede cambiar")
     check = Check.from_input(data, builtin=current.builtin)
@@ -328,7 +320,7 @@ def update_kpi(code: str, payload: Any = Body(...), user: User = Depends(EDIT)) 
     kpi = next((k for k in KPI_DEFS if k.code == code), None)
     if kpi is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="KPI no encontrado")
-    data = _parse(KpiTargetIn, payload)
+    data = parse_body(KpiTargetIn, payload)
     try:
         data.validate_for(kpi)
     except ValidationError as exc:
