@@ -14,6 +14,10 @@ echo "== Backend: tests"
 echo "== Backend: tests con otro dataset (semilla 7, referencia 2026-11-10)"
 (cd backend && DATA_SEED=7 DATA_REFERENCE_DATE=2026-11-10 .venv/bin/pytest -q)
 
+echo "== OpenAPI: al día y válido"
+backend/.venv/bin/python scripts/export_openapi.py --check
+uvx --from openapi-spec-validator openapi-spec-validator backend/openapi.yaml
+
 echo "== Frontend: tests, lint y build"
 (cd frontend && npm test --silent && npm run lint --silent && npm run build --silent)
 

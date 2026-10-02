@@ -1,0 +1,6870 @@
+# Generado por scripts/export_openapi.py a partir de la app FastAPI. No editar a mano.
+openapi: 3.1.0
+info:
+  title: Speech & Text Analytics API
+  description: 'API de la plataforma de Speech & Text Analytics de Banco Horizonte (datos mock). La consume el front React.
+
+
+    **Autenticación.** `POST /api/auth/login` devuelve un token que se envía como `Authorization: Bearer <token>`. El
+
+    usuario y los permisos de su rol se releen en cada petición. Sin token o con un token no válido: `401`. Sin el
+
+    permiso de la operación: `403`. Cada operación indica su permiso en la descripción.
+
+
+    **`X-Auth-Version`.** Toda respuesta a una petición con sesión lleva esta cabecera: un entero que sube con cada cambio
+
+    de usuarios o roles. Si cambia, el front vuelve a pedir `/api/auth/me`.
+
+
+    **Identificadores.** `PREFIJO-UUID` en mayúsculas (`1CO` conversación, `1QU` cola, `1AG` agente, `1US` usuario,
+
+    `1RO` rol, `1FL` flujo, `1ND` nodo, `1RN` ejecución, `1QY` consulta guardada, `1TP`/`1TS` temas, `1CK` check, `1CN`
+
+    conector, `1AU` auditoría). En las rutas se aceptan en minúsculas.
+
+
+    **Fechas.** Instantes en ISO 8601 con desfase. `from` y `to` son días (`YYYY-MM-DD`, incluidos) en la zona horaria
+
+    configurada; por defecto, los 30 días que acaban el día anterior a la fecha de referencia del dataset.
+
+
+    **Errores.** Siempre con `detail`, en seis formas según la operación: texto (`ErrorText`), validación nativa de FastAPI
+
+    (`HTTPValidationError`, en inglés), errores por campo (`FieldErrors`), errores de consulta (`QueryErrors`), errores de
+
+    grafo (`GraphErrors`) e incidencias de flujo (`FlowIssues`).
+
+
+    **Persistencia.** Todo lo que se escribe vive en memoria y se pierde al reiniciar la API.
+
+
+    Referencia ampliada: `vault/arquitectura/contrato-api-front-back.md`.'
+  version: 0.6.0
+  x-permissions:
+  - value: dashboards:view
+    label: Ver dashboards
+  - value: conversations:view
+    label: Ver conversaciones
+  - value: explorer:use
+    label: Usar el explorador
+  - value: search:use
+    label: Usar la búsqueda semántica
+  - value: flows:view
+    label: Ver flujos
+  - value: flows:edit
+    label: Editar y ejecutar flujos
+  - value: config:view
+    label: Ver configuración
+  - value: config:edit
+    label: Editar configuración
+  - value: users:admin
+    label: Administrar usuarios y roles
+paths:
+  /api/health:
+    get:
+      summary: Sonda de salud
+      operationId: health_api_health_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+      description: Público. Responde cuando la API ha terminado de arrancar (índice de búsqueda construido).
+      security: []
+  /api/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Iniciar sesión
+      operationId: login_api_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: analista@bancohorizonte.demo
+              password: demo
+        required: true
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenciales incorrectas, usuario inexistente o desactivado (misma respuesta).
+          content:
+            application/json:
+              schema: &id001
+                $ref: '#/components/schemas/ErrorText'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      description: Público. Devuelve el token Bearer (caduca a las 8 h) y el usuario con sus permisos. Anota el último acceso.
+        El email no distingue mayúsculas.
+      security: []
+  /api/auth/me:
+    get:
+      tags:
+      - auth
+      summary: Usuario actual
+      operationId: me_api_auth_me_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: Requiere sesión. Usuario de la sesión, nombre de su rol y permisos vigentes.
+  /api/metrics/summary:
+    get:
+      tags:
+      - metrics
+      summary: Resumen de KPIs
+      description: 'Permiso: `dashboards:view`. Los 13 KPIs del periodo con el periodo anterior (misma longitud), variación,
+        objetivo y estado según los umbrales de Configuración. Con `dashboard`, solo los KPIs configurados para ese dashboard.
+        Incluye el cumplimiento por check activo.'
+      operationId: summary_api_metrics_summary_get
+      parameters:
+      - name: dashboard
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - vision-general
+            - calidad-y-cumplimiento
+            - experiencia-de-cliente
+            type: string
+          - type: 'null'
+          title: Dashboard
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: To
+      - name: channel
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - voz
+            - chat
+            type: string
+          - type: 'null'
+          title: Channel
+      - name: queue
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Queue
+      - name: agent
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Agent
+      - name: main_topic
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Main Topic
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Summary'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `dashboards:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
+            o de tipo devuelven el error nativo de FastAPI.'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+  /api/metrics/timeseries:
+    get:
+      tags:
+      - metrics
+      summary: Serie temporal de un KPI
+      operationId: timeseries_api_metrics_timeseries_get
+      parameters:
+      - name: kpi
+        in: query
+        required: true
+        schema:
+          enum:
+          - volume
+          - aht_s
+          - sentiment_avg
+          - negative_pct
+          - resolution_rate
+          - escalation_rate
+          - fcr_rate
+          - csat_avg
+          - effort_avg
+          - compliance_rate
+          - churn_high_pct
+          - first_response_s
+          - avg_turns
+          type: string
+          title: Kpi
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          enum:
+          - day
+          - week
+          type: string
+          default: day
+          title: Granularity
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: To
+      - name: channel
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - voz
+            - chat
+            type: string
+          - type: 'null'
+          title: Channel
+      - name: queue
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Queue
+      - name: agent
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Agent
+      - name: main_topic
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Main Topic
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timeseries'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `dashboards:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
+            o de tipo devuelven el error nativo de FastAPI.'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `dashboards:view`. Un punto por día o por semana (lunes a domingo, recortada al periodo), en
+        la zona horaria configurada.'
+  /api/metrics/breakdown:
+    get:
+      tags:
+      - metrics
+      summary: KPIs por dimensión
+      operationId: breakdown_api_metrics_breakdown_get
+      parameters:
+      - name: dimension
+        in: query
+        required: true
+        schema:
+          enum:
+          - main_topic
+          - channel
+          - queue
+          - agent
+          type: string
+          title: Dimension
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: To
+      - name: channel
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - voz
+            - chat
+            type: string
+          - type: 'null'
+          title: Channel
+      - name: queue
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Queue
+      - name: agent
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Agent
+      - name: main_topic
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Main Topic
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Breakdown'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `dashboards:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
+            o de tipo devuelven el error nativo de FastAPI.'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `dashboards:view`. Los 13 KPIs por main topic, canal, cola o agente, ordenados por volumen.'
+  /api/conversations:
+    get:
+      tags:
+      - conversations
+      summary: Listado de conversaciones
+      operationId: list_conversations_api_conversations_get
+      parameters:
+      - name: resolution
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            enum:
+            - resuelta
+            - no_resuelta
+            - escalada
+            type: string
+          title: Resolution
+      - name: churn_risk
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            enum:
+            - bajo
+            - medio
+            - alto
+            type: string
+          title: Churn Risk
+      - name: sentiment_lt
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+            maximum: 1
+            minimum: -1
+          - type: 'null'
+          title: Sentiment Lt
+      - name: compliant
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Compliant
+      - name: repeat_contact
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Repeat Contact
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: To
+      - name: channel
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - voz
+            - chat
+            type: string
+          - type: 'null'
+          title: Channel
+      - name: queue
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Queue
+      - name: agent
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Agent
+      - name: main_topic
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Main Topic
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 25
+          title: Page Size
+      - name: sort
+        in: query
+        required: false
+        schema:
+          enum:
+          - date
+          - duration
+          - sentiment
+          type: string
+          default: date
+          title: Sort
+      - name: order
+        in: query
+        required: false
+        schema:
+          enum:
+          - asc
+          - desc
+          type: string
+          default: desc
+          title: Order
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationPage'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `conversations:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
+            o de tipo devuelven el error nativo de FastAPI.'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `conversations:view`. Listado filtrado, paginado y ordenado. Los filtros `resolution`, `churn_risk`,
+        `sentiment_lt`, `compliant` y `repeat_contact` son los del drill-down: seleccionan el numerador de cada KPI.'
+  /api/conversations/{conversation_id}:
+    get:
+      tags:
+      - conversations
+      summary: Detalle de una conversación
+      operationId: get_conversation_api_conversations__conversation_id__get
+      parameters:
+      - name: conversation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Conversation Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationDetail'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `conversations:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `conversations:view`. Turnos y análisis completo. Texto enmascarado si el enmascarado de PII
+        está activado.'
+  /api/catalog:
+    get:
+      tags:
+      - conversations
+      summary: Catálogo de filtros
+      operationId: catalog_api_catalog_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalog'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `dashboards:view` o `conversations:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `dashboards:view` o `conversations:view`. Canales, colas, agentes, main topics (también desactivados),
+        checks activos, resoluciones, riesgos y fecha de referencia.'
+  /api/query/schema:
+    get:
+      tags:
+      - query
+      summary: Campos del explorador
+      operationId: schema_api_query_schema_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuerySchema'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use` o `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use` o `flows:view`. Campos con su tipo, operadores, valores y rangos, más la fecha
+        de referencia y el periodo por defecto.'
+  /api/query/run:
+    post:
+      tags:
+      - query
+      summary: Ejecutar una consulta
+      operationId: run_api_query_run_post
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 25
+          title: Page Size
+      - name: sort
+        in: query
+        required: false
+        schema:
+          enum:
+          - date
+          - duration
+          - sentiment
+          type: string
+          default: date
+          title: Sort
+      - name: order
+        in: query
+        required: false
+        schema:
+          enum:
+          - asc
+          - desc
+          type: string
+          default: desc
+          title: Order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Query'
+            example:
+              from: '2026-08-28'
+              to: '2026-09-26'
+              root:
+                op: and
+                conditions:
+                - field: channel
+                  operator: is
+                  value: chat
+                - field: sentiment
+                  operator: lt
+                  value: -0.3
+                - op: or
+                  conditions:
+                  - field: check:saludo
+                    operator: fails
+                  - field: transcript
+                    operator: contains
+                    value: PIN
+                    speaker: agente
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Consulta no válida (por condición) o parámetros fuera de rango. Los parámetros fuera de rango o de
+            tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - &id002
+                  $ref: '#/components/schemas/QueryErrors'
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use`. Ejecuta una consulta (`Query`) y devuelve el total, los 13 KPIs del resultado
+        y una página del listado. Máximo 50 condiciones, 2 niveles de grupos y 200 valores por lista.'
+  /api/query/suggest:
+    get:
+      tags:
+      - query
+      summary: Valores de un campo
+      operationId: suggest_api_query_suggest_get
+      parameters:
+      - name: field
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Field
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: To
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Suggestions'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use` o `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Campo no categórico o `from` posterior a `to`. Los parámetros fuera de rango o de tipo devuelven el
+            error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use` o `flows:view`. Valores de un campo categórico en el intervalo, con su recuento.'
+  /api/query/saved:
+    get:
+      tags:
+      - query
+      summary: Consultas guardadas
+      operationId: list_saved_api_query_saved_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedQueries'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use`. Consultas privadas del usuario, de la más reciente a la más antigua.'
+    post:
+      tags:
+      - query
+      summary: Guardar una consulta
+      operationId: create_saved_api_query_saved_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedQueryIn'
+        required: true
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id003
+                $ref: '#/components/schemas/SavedQuery'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Nombre vacío o consulta no válida. Los parámetros fuera de rango o de tipo devuelven el error nativo
+            de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - *id002
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use`. Guarda la consulta en forma canónica. Sin `from`/`to`, sigue siendo relativa
+        al periodo por defecto.'
+  /api/query/saved/{query_id}:
+    get:
+      tags:
+      - query
+      summary: Consulta guardada
+      operationId: get_saved_api_query_saved__query_id__get
+      parameters:
+      - name: query_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Query Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id003
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe o es de otro usuario.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use`.'
+    patch:
+      tags:
+      - query
+      summary: Renombrar o cambiar una consulta guardada
+      operationId: update_saved_api_query_saved__query_id__patch
+      parameters:
+      - name: query_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Query Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedQueryPatch'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id003
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe o es de otro usuario.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Nombre vacío o consulta no válida. Los parámetros fuera de rango o de tipo devuelven el error nativo
+            de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - *id002
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use`.'
+    delete:
+      tags:
+      - query
+      summary: Borrar una consulta guardada
+      operationId: delete_saved_api_query_saved__query_id__delete
+      parameters:
+      - name: query_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Query Id
+      responses:
+        '204':
+          description: Hecho, sin cuerpo.
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe o es de otro usuario.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use`.'
+  /api/query/interpret:
+    post:
+      tags:
+      - query
+      summary: Interpretar una frase
+      operationId: interpret_text_api_query_interpret_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterpretIn'
+        required: true
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interpretation'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `explorer:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Frase vacía o demasiado larga. Los parámetros fuera de rango o de tipo devuelven el error nativo de
+            FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `explorer:use`. Convierte una frase en español (1–500 caracteres) en una consulta editable. No
+        la ejecuta.'
+  /api/search/semantic:
+    get:
+      tags:
+      - search
+      summary: Búsqueda semántica
+      operationId: semantic_api_search_semantic_get
+      parameters:
+      - name: q
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 500
+          title: Q
+      - name: min_score
+        in: query
+        required: false
+        schema:
+          type: number
+          maximum: 1
+          minimum: 0
+          default: 0
+          title: Min Score
+      - name: group
+        in: query
+        required: false
+        schema:
+          enum:
+          - conversation
+          - fragment
+          type: string
+          default: conversation
+          title: Group
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+          title: To
+      - name: channel
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - voz
+            - chat
+            type: string
+          - type: 'null'
+          title: Channel
+      - name: queue
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          title: Queue
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanticSearch'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `search:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Consulta vacía o parámetros fuera de rango. Los parámetros fuera de rango o de tipo devuelven el error
+            nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `search:use`. Busca fragmentos de 3 turnos por significado (TF-IDF con sinónimos, ADR-005). Con
+        `group=conversation`, el mejor fragmento por conversación.'
+  /api/search/similar/{conversation_id}:
+    get:
+      tags:
+      - search
+      summary: Conversaciones similares
+      operationId: similar_api_search_similar__conversation_id__get
+      parameters:
+      - name: conversation_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Conversation Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimilarConversations'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `search:use`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `search:use`. Las 10 conversaciones más parecidas.'
+  /api/flows:
+    get:
+      tags:
+      - flows
+      summary: Flujos
+      operationId: list_flows_api_flows_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowList'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Flujos con su estado y su última ejecución, del modificado más recientemente al
+        más antiguo.'
+    post:
+      tags:
+      - flows
+      summary: Crear un flujo
+      operationId: create_flow_api_flows_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowName'
+        required: true
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id004
+                $ref: '#/components/schemas/Flow'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Nombre vacío. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Crea un flujo con el grafo vacío.'
+  /api/flows/catalog:
+    get:
+      tags:
+      - flows
+      summary: Opciones de los nodos
+      operationId: flow_catalog_api_flows_catalog_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowCatalog'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Opciones de configuración de cada tipo de nodo, modelo por defecto y límites.'
+  /api/flows/validate:
+    post:
+      tags:
+      - flows
+      summary: Validar un grafo
+      operationId: validate_graph_api_flows_validate_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: &id005
+              $ref: '#/components/schemas/Graph'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validation'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Grafo sin integridad. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - &id006
+                  $ref: '#/components/schemas/GraphErrors'
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Comprueba la completitud de un grafo sin guardarlo. Un grafo sin integridad responde
+        `422`.'
+  /api/flows/sampling/estimate:
+    post:
+      tags:
+      - flows
+      summary: Estimar una muestra
+      operationId: estimate_api_flows_sampling_estimate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstimateIn'
+        required: true
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SampleEstimate'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Consulta no válida. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id002
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Cuántas conversaciones cumplen los filtros de un Sampling y cuántas tendría la
+        muestra.'
+  /api/flows/{flow_id}:
+    get:
+      tags:
+      - flows
+      summary: Flujo
+      operationId: get_flow_api_flows__flow_id__get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id004
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`.'
+    patch:
+      tags:
+      - flows
+      summary: Renombrar un flujo
+      operationId: rename_flow_api_flows__flow_id__patch
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlowName'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id004
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Nombre vacío. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id001
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`.'
+    delete:
+      tags:
+      - flows
+      summary: Borrar un flujo
+      operationId: delete_flow_api_flows__flow_id__delete
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '204':
+          description: Hecho, sin cuerpo.
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Borra también sus ejecuciones.'
+  /api/flows/{flow_id}/graph:
+    put:
+      tags:
+      - flows
+      summary: Guardar el grafo
+      operationId: save_graph_api_flows__flow_id__graph_put
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *id005
+            example:
+              version: 1
+              nodes:
+              - id: tmp-s
+                type: sampling
+                position:
+                  x: 0
+                  y: 0
+                config:
+                  query:
+                    root:
+                      op: and
+                      conditions: []
+                  method: aleatorio
+                  size: 20
+              - id: tmp-p
+                type: prompt
+                position:
+                  x: 300
+                  y: 0
+                config:
+                  template: 'Clasifica el motivo: {{transcripcion}}'
+                  model: mock-rapido
+                  temperature: 0.2
+                  output:
+                    type: etiqueta
+                    labels:
+                    - queja
+                    - consulta
+              - id: tmp-o
+                type: output
+                position:
+                  x: 600
+                  y: 0
+                config:
+                  kind: metrica
+                  aggregation: porcentaje
+                  destination: Motivos
+              edges:
+              - source: tmp-s
+                target: tmp-p
+              - source: tmp-p
+                target: tmp-o
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedFlow'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Grafo sin integridad. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id006
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Reemplaza el grafo. Asigna un identificador `1ND` a cada nodo temporal (`tmp-…`)
+        y devuelve la correspondencia en `id_map`. Exige integridad, no completitud.'
+  /api/flows/{flow_id}/duplicate:
+    post:
+      tags:
+      - flows
+      summary: Duplicar un flujo
+      operationId: duplicate_flow_api_flows__flow_id__duplicate_post
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id004
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Crea «Copia de …» con nodos nuevos.'
+  /api/flows/{flow_id}/runs:
+    post:
+      tags:
+      - flows
+      summary: Ejecutar un flujo
+      operationId: start_run_api_flows__flow_id__runs_post
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '202':
+          description: 'Ejecución aceptada (`status: pendiente`).'
+          content:
+            application/json:
+              schema: &id007
+                $ref: '#/components/schemas/Run'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: Ya hay una ejecución en curso de este flujo.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: El flujo no es válido. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/FlowIssues'
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Acepta la ejecución y la procesa en segundo plano. El progreso se consulta con
+        `GET /api/flows/{flow_id}/runs/{run_id}` (el front lo hace cada 500 ms mientras está activa).'
+    get:
+      tags:
+      - flows
+      summary: Ejecuciones de un flujo
+      operationId: list_runs_api_flows__flow_id__runs_get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunList'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Las 50 últimas, de la más reciente a la más antigua.'
+  /api/flows/{flow_id}/runs/{run_id}:
+    get:
+      tags:
+      - flows
+      summary: Ejecución
+      operationId: get_run_api_flows__flow_id__runs__run_id__get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id007
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Instantánea con el estado de cada nodo y los resultados de cada Output.'
+  /api/config/public:
+    get:
+      tags:
+      - config
+      summary: Configuración pública
+      description: 'Público. Nombre, zona horaria e idioma: los necesitan el login y todos los roles.'
+      operationId: public_config_api_config_public_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicConfig'
+      security: []
+  /api/config:
+    get:
+      tags:
+      - config
+      summary: Configuración
+      operationId: read_config_api_config_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id008
+                $ref: '#/components/schemas/PlatformConfig'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:view`. Configuración completa, versión y opciones de los selectores.'
+  /api/config/general:
+    put:
+      tags:
+      - config
+      summary: Guardar General
+      operationId: update_general_api_config_general_put
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeneralConfig'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id008
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - &id009
+                  $ref: '#/components/schemas/FieldErrors'
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`.'
+  /api/config/privacy:
+    put:
+      tags:
+      - config
+      summary: Guardar Privacidad
+      operationId: update_privacy_api_config_privacy_put
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacyConfig'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id008
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`.'
+  /api/config/ai:
+    put:
+      tags:
+      - config
+      summary: Guardar Modelos de IA
+      operationId: update_ai_api_config_ai_put
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiConfig'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id008
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Proveedor o modelo desconocidos. Los parámetros fuera de rango o de tipo devuelven el error nativo
+            de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`.'
+  /api/config/connectors:
+    get:
+      tags:
+      - config
+      summary: Conectores
+      operationId: list_connectors_api_config_connectors_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connectors'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:view`. Conectores mock de Genesys con su volumen de conversaciones.'
+  /api/config/connectors/{connector_id}/sync:
+    post:
+      tags:
+      - config
+      summary: Sincronizar un conector
+      description: 'Permiso: `config:edit`. Simulado: actualiza la fecha de sincronización y no cambia el dataset.'
+      operationId: sync_connector_api_config_connectors__connector_id__sync_post
+      parameters:
+      - name: connector_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Connector Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connector'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+  /api/config/audit:
+    get:
+      tags:
+      - config
+      summary: Registro de cambios de la configuración
+      operationId: list_audit_api_config_audit_get
+      parameters:
+      - name: section
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - enum:
+            - general
+            - fuentes
+            - taxonomia
+            - kpis
+            - cumplimiento
+            - privacidad
+            - modelos
+            type: string
+          - type: 'null'
+          title: Section
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id017
+                $ref: '#/components/schemas/AuditLog'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:view`. Entradas de las secciones de configuración, de la más reciente a la más antigua.'
+  /api/config/taxonomy:
+    get:
+      tags:
+      - config
+      summary: Taxonomía
+      operationId: read_taxonomy_api_config_taxonomy_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taxonomy'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:view`. Main topics y temas secundarios con su número de conversaciones.'
+  /api/config/taxonomy/{kind_name}:
+    post:
+      tags:
+      - config
+      summary: Crear un tema
+      operationId: create_topic_api_config_taxonomy__kind_name__post
+      parameters:
+      - name: kind_name
+        in: path
+        required: true
+        schema:
+          enum:
+          - main-topics
+          - secondary-topics
+          type: string
+          title: Kind Name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - &id010
+                $ref: '#/components/schemas/MainTopicIn'
+              - &id011
+                $ref: '#/components/schemas/SecondaryTopicIn'
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id012
+                $ref: '#/components/schemas/TaxonomyTopic'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo (incluido código o nombre duplicado). Los parámetros fuera de rango o de tipo devuelven
+            el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`. `MainTopicIn` para `main-topics`; `SecondaryTopicIn` para `secondary-topics`.'
+  /api/config/taxonomy/{kind_name}/{topic_id}:
+    put:
+      tags:
+      - config
+      summary: Editar un tema
+      operationId: update_topic_api_config_taxonomy__kind_name___topic_id__put
+      parameters:
+      - name: kind_name
+        in: path
+        required: true
+        schema:
+          enum:
+          - main-topics
+          - secondary-topics
+          type: string
+          title: Kind Name
+      - name: topic_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Topic Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - *id010
+              - *id011
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id012
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`. El código no se puede cambiar.'
+    delete:
+      tags:
+      - config
+      summary: Borrar un tema
+      operationId: delete_topic_api_config_taxonomy__kind_name___topic_id__delete
+      parameters:
+      - name: kind_name
+        in: path
+        required: true
+        schema:
+          enum:
+          - main-topics
+          - secondary-topics
+          type: string
+          title: Kind Name
+      - name: topic_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Topic Id
+      responses:
+        '204':
+          description: Hecho, sin cuerpo.
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: 'Está asignado a conversaciones: no se puede borrar, solo desactivar.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`.'
+  /api/config/compliance-checks:
+    get:
+      tags:
+      - config
+      summary: Checks de cumplimiento
+      operationId: list_checks_api_config_compliance_checks_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceChecks'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:view`.'
+    post:
+      tags:
+      - config
+      summary: Crear un check
+      operationId: create_check_api_config_compliance_checks_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: &id013
+              $ref: '#/components/schemas/CheckIn'
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id014
+                $ref: '#/components/schemas/ComplianceCheck'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo (incluido código o nombre duplicado). Los parámetros fuera de rango o de tipo devuelven
+            el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`. Se evalúa por frases dichas por el agente.'
+  /api/config/compliance-checks/{check_id}:
+    put:
+      tags:
+      - config
+      summary: Editar un check
+      operationId: update_check_api_config_compliance_checks__check_id__put
+      parameters:
+      - name: check_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Check Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *id013
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id014
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`. El código no se puede cambiar.'
+    delete:
+      tags:
+      - config
+      summary: Borrar un check
+      operationId: delete_check_api_config_compliance_checks__check_id__delete
+      parameters:
+      - name: check_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Check Id
+      responses:
+        '204':
+          description: Hecho, sin cuerpo.
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: 'Es un check del análisis: solo se puede desactivar.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`.'
+  /api/config/kpis/{code}:
+    put:
+      tags:
+      - config
+      summary: Objetivo y umbrales de un KPI
+      operationId: update_kpi_api_config_kpis__code__put
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KpiTargetIn'
+            example:
+              target: 4
+              green: 4
+              amber: 3.5
+              dashboards:
+              - vision-general
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id008
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: KPI desconocido.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`. Umbrales verde y ámbar (los dos o ninguno), coherentes con el sentido del KPI
+        y dentro del rango de su unidad.'
+  /api/users:
+    get:
+      tags:
+      - users
+      summary: Usuarios
+      operationId: list_users_api_users_get
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+          default: ''
+          title: Q
+      - name: role
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Role
+      - name: active
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Active
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManagedUsers'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`. Búsqueda por nombre o email (sin tildes ni mayúsculas) y filtros por rol y estado.'
+    post:
+      tags:
+      - users
+      summary: Crear un usuario
+      operationId: create_user_api_users_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: &id015
+              $ref: '#/components/schemas/UserIn'
+            example:
+              name: Lucía Pérez
+              email: lucia.perez@bancohorizonte.demo
+              role: analista
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id016
+                $ref: '#/components/schemas/ManagedUser'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: Email duplicado (en el campo `email`).
+          content:
+            application/json:
+              schema: *id009
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo (rol desconocido incluido). Los parámetros fuera de rango o de tipo devuelven el
+            error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`. Email normalizado (sin espacios, en minúsculas) y único. El usuario entra con
+        la contraseña demo.'
+  /api/users/{user_id}:
+    put:
+      tags:
+      - users
+      summary: Editar, desactivar o reactivar un usuario
+      operationId: update_user_api_users__user_id__put
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *id015
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id016
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: 'Email duplicado (`FieldErrors`) o protección de administración (`ErrorText`): quitarse a uno mismo
+            `users:admin` o dejar sin ningún `admin` activo.'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`. Cuerpo completo; `active: false` desactiva al usuario e invalida su sesión en
+        la siguiente petición.'
+  /api/users/audit:
+    get:
+      tags:
+      - users
+      summary: Registro de cambios de usuarios y roles
+      operationId: list_audit_api_users_audit_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id017
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`.'
+  /api/roles:
+    get:
+      tags:
+      - users
+      summary: Roles y catálogo de permisos
+      operationId: list_roles_api_roles_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roles'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`. Roles con su número de usuarios y el catálogo de permisos para la matriz.'
+    post:
+      tags:
+      - users
+      summary: Crear un rol personalizado
+      operationId: create_role_api_roles_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRoleIn'
+            example:
+              code: lector_flujos
+              name: Lector de flujos
+              permissions:
+              - flows:view
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id018
+                $ref: '#/components/schemas/RoleItem'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: Código o nombre duplicados (por campo).
+          content:
+            application/json:
+              schema: *id009
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo (permiso desconocido incluido). Los parámetros fuera de rango o de tipo devuelven
+            el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`.'
+  /api/roles/{role_id}:
+    put:
+      tags:
+      - users
+      summary: Cambiar nombre y permisos de un rol
+      operationId: update_role_api_roles__role_id__put
+      parameters:
+      - name: role_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Role Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleIn'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id018
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: 'Protección de administración: quitarse a uno mismo `users:admin`, dejar sin ningún `admin` activo
+            o quitar `users:admin` al rol `admin`.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id009
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`. Lista completa de permisos. Los roles base no se renombran.'
+    delete:
+      tags:
+      - users
+      summary: Borrar un rol personalizado
+      operationId: delete_role_api_roles__role_id__delete
+      parameters:
+      - name: role_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Role Id
+      responses:
+        '204':
+          description: Hecho, sin cuerpo.
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `users:admin`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: Rol base o con usuarios asignados.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `users:admin`.'
+components:
+  schemas:
+    EstimateIn:
+      properties:
+        query:
+          additionalProperties: true
+          type: object
+          title: Query
+        size:
+          anyOf:
+          - type: integer
+            maximum: 1000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Size
+      type: object
+      required:
+      - query
+      title: EstimateIn
+    FlowName:
+      properties:
+        name:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Name
+      type: object
+      required:
+      - name
+      title: FlowName
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    InterpretIn:
+      properties:
+        text:
+          type: string
+          title: Text
+      type: object
+      required:
+      - text
+      title: InterpretIn
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          title: Email
+        password:
+          type: string
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    LoginResponse:
+      properties:
+        access_token:
+          type: string
+          title: Access Token
+        token_type:
+          type: string
+          title: Token Type
+          default: bearer
+        user:
+          $ref: '#/components/schemas/UserOut'
+      type: object
+      required:
+      - access_token
+      - user
+      title: LoginResponse
+    SavedQueryIn:
+      properties:
+        name:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Name
+        query:
+          additionalProperties: true
+          type: object
+          title: Query
+      type: object
+      required:
+      - name
+      - query
+      title: SavedQueryIn
+    SavedQueryPatch:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 80
+            minLength: 1
+          - type: 'null'
+          title: Name
+        query:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Query
+      type: object
+      title: SavedQueryPatch
+    UserOut:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        email:
+          type: string
+          title: Email
+        role:
+          type: string
+          title: Role
+        role_name:
+          type: string
+          title: Role Name
+        permissions:
+          items:
+            type: string
+          type: array
+          title: Permissions
+      type: object
+      required:
+      - id
+      - name
+      - email
+      - role
+      - role_name
+      - permissions
+      title: UserOut
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    AiConfig:
+      additionalProperties: false
+      properties:
+        provider:
+          title: Provider
+          type: string
+        model:
+          title: Model
+          type: string
+      required:
+      - provider
+      - model
+      title: AiConfig
+      type: object
+    AiSettings:
+      additionalProperties: false
+      properties:
+        provider:
+          title: Provider
+          type: string
+        model:
+          title: Model
+          type: string
+        simulated:
+          title: Simulated
+          type: boolean
+      required:
+      - provider
+      - model
+      - simulated
+      title: AiSettings
+      type: object
+    Analysis:
+      properties:
+        summary:
+          title: Summary
+          type: string
+        main_topic:
+          title: Main Topic
+          type: string
+        secondary_topics:
+          items:
+            type: string
+          title: Secondary Topics
+          type: array
+        sentiment:
+          title: Sentiment
+          type: number
+        sentiment_timeline:
+          items:
+            type: number
+          title: Sentiment Timeline
+          type: array
+        resolution:
+          enum:
+          - resuelta
+          - no_resuelta
+          - escalada
+          title: Resolution
+          type: string
+        csat:
+          title: Csat
+          type: number
+        effort:
+          title: Effort
+          type: number
+        churn_risk:
+          enum:
+          - bajo
+          - medio
+          - alto
+          title: Churn Risk
+          type: string
+        compliance:
+          additionalProperties:
+            anyOf:
+            - type: boolean
+            - type: 'null'
+          title: Compliance
+          type: object
+        entities:
+          items:
+            $ref: '#/components/schemas/Entity'
+          title: Entities
+          type: array
+        keywords:
+          items:
+            type: string
+          title: Keywords
+          type: array
+      required:
+      - summary
+      - main_topic
+      - secondary_topics
+      - sentiment
+      - sentiment_timeline
+      - resolution
+      - csat
+      - effort
+      - churn_risk
+      - compliance
+      - entities
+      - keywords
+      title: Analysis
+      type: object
+    AuditEntry:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1AU-…`.
+          title: Id
+          type: string
+        user:
+          $ref: '#/components/schemas/Person'
+        at:
+          format: date-time
+          title: At
+          type: string
+        section:
+          description: Sección de configuración o `usuarios`.
+          title: Section
+          type: string
+        element:
+          title: Element
+          type: string
+        before:
+          description: '`null` en altas.'
+          title: Before
+        after:
+          description: '`null` en bajas.'
+          title: After
+      required:
+      - id
+      - user
+      - at
+      - section
+      - element
+      - before
+      - after
+      title: AuditEntry
+      type: object
+    AuditLog:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AuditEntry'
+          title: Items
+          type: array
+      required:
+      - items
+      title: AuditLog
+      type: object
+    Breakdown:
+      additionalProperties: false
+      properties:
+        dimension:
+          enum:
+          - main_topic
+          - channel
+          - queue
+          - agent
+          title: Dimension
+          type: string
+        period:
+          $ref: '#/components/schemas/Period'
+        items:
+          items:
+            $ref: '#/components/schemas/BreakdownItem'
+          title: Items
+          type: array
+      required:
+      - dimension
+      - period
+      - items
+      title: Breakdown
+      type: object
+    BreakdownItem:
+      additionalProperties: false
+      properties:
+        key:
+          description: Código o identificador del grupo.
+          title: Key
+          type: string
+        label:
+          title: Label
+          type: string
+        kpis:
+          $ref: '#/components/schemas/KpiValues'
+      required:
+      - key
+      - label
+      - kpis
+      title: BreakdownItem
+      type: object
+    Catalog:
+      additionalProperties: false
+      properties:
+        reference_date:
+          description: Fecha de referencia del dataset; el periodo por defecto acaba el día anterior.
+          format: date
+          title: Reference Date
+          type: string
+        channels:
+          items:
+            $ref: '#/components/schemas/CodeLabel'
+          title: Channels
+          type: array
+        queues:
+          items:
+            $ref: '#/components/schemas/CatalogQueue'
+          title: Queues
+          type: array
+        agents:
+          items:
+            $ref: '#/components/schemas/CatalogAgent'
+          title: Agents
+          type: array
+        main_topics:
+          items:
+            $ref: '#/components/schemas/CatalogTopic'
+          title: Main Topics
+          type: array
+        compliance_checks:
+          description: Solo checks activos.
+          items:
+            $ref: '#/components/schemas/CodeLabel'
+          title: Compliance Checks
+          type: array
+        resolutions:
+          items:
+            $ref: '#/components/schemas/CodeLabel'
+          title: Resolutions
+          type: array
+        churn_risks:
+          items:
+            $ref: '#/components/schemas/CodeLabel'
+          title: Churn Risks
+          type: array
+      required:
+      - reference_date
+      - channels
+      - queues
+      - agents
+      - main_topics
+      - compliance_checks
+      - resolutions
+      - churn_risks
+      title: Catalog
+      type: object
+    CatalogAgent:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1AG-…`.
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        queue_id:
+          title: Queue Id
+          type: string
+        queue:
+          title: Queue
+          type: string
+      required:
+      - id
+      - name
+      - queue_id
+      - queue
+      title: CatalogAgent
+      type: object
+    CatalogQueue:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1QU-…`.
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+      required:
+      - id
+      - name
+      title: CatalogQueue
+      type: object
+    CatalogTopic:
+      additionalProperties: false
+      properties:
+        code:
+          title: Code
+          type: string
+        name:
+          title: Name
+          type: string
+        active:
+          description: Los desactivados se incluyen para poner nombre a filtros antiguos.
+          title: Active
+          type: boolean
+      required:
+      - code
+      - name
+      - active
+      title: CatalogTopic
+      type: object
+    CheckIn:
+      additionalProperties: false
+      properties:
+        code:
+          pattern: ^[a-z][a-z0-9_]{1,39}$
+          title: Code
+          type: string
+        name:
+          maxLength: 80
+          minLength: 1
+          title: Name
+          type: string
+        description:
+          default: ''
+          maxLength: 300
+          title: Description
+          type: string
+        phrases:
+          items:
+            maxLength: 120
+            minLength: 1
+            type: string
+          maxItems: 20
+          minItems: 1
+          title: Phrases
+          type: array
+        channel:
+          default: ambos
+          enum:
+          - voz
+          - chat
+          - ambos
+          title: Channel
+          type: string
+        active:
+          default: true
+          title: Active
+          type: boolean
+      required:
+      - code
+      - name
+      - phrases
+      title: CheckIn
+      type: object
+    CheckRate:
+      additionalProperties: false
+      properties:
+        code:
+          title: Code
+          type: string
+        label:
+          title: Label
+          type: string
+        value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: '% de conversaciones aplicables que cumplen.'
+          title: Value
+        applicable:
+          title: Applicable
+          type: integer
+      required:
+      - code
+      - label
+      - value
+      - applicable
+      title: CheckRate
+      type: object
+    CodeLabel:
+      additionalProperties: false
+      properties:
+        code:
+          title: Code
+          type: string
+        label:
+          title: Label
+          type: string
+      required:
+      - code
+      - label
+      title: CodeLabel
+      type: object
+    ComplianceCheck:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1CK-…`.
+          title: Id
+          type: string
+        code:
+          title: Code
+          type: string
+        name:
+          title: Name
+          type: string
+        description:
+          title: Description
+          type: string
+        phrases:
+          items:
+            type: string
+          title: Phrases
+          type: array
+        channel:
+          enum:
+          - voz
+          - chat
+          - ambos
+          title: Channel
+          type: string
+        active:
+          title: Active
+          type: boolean
+        evaluation:
+          enum:
+          - analisis
+          - frases
+          title: Evaluation
+          type: string
+        builtin:
+          title: Builtin
+          type: boolean
+      required:
+      - id
+      - code
+      - name
+      - description
+      - phrases
+      - channel
+      - active
+      - evaluation
+      - builtin
+      title: ComplianceCheck
+      type: object
+    ComplianceChecks:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ComplianceCheck'
+          title: Items
+          type: array
+      required:
+      - items
+      title: ComplianceChecks
+      type: object
+    Condition:
+      additionalProperties: false
+      properties:
+        field:
+          title: Field
+          type: string
+        operator:
+          title: Operator
+          type: string
+        value:
+          default: null
+          title: Value
+        speaker:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Speaker
+      required:
+      - field
+      - operator
+      title: Condition
+      type: object
+    ConfigOptions:
+      additionalProperties: false
+      properties:
+        languages:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Languages
+          type: array
+        timezones:
+          items:
+            type: string
+          title: Timezones
+          type: array
+        providers:
+          items:
+            $ref: '#/components/schemas/ProviderOption'
+          title: Providers
+          type: array
+        sections:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Sections
+          type: array
+        dashboards:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Dashboards
+          type: array
+      required:
+      - languages
+      - timezones
+      - providers
+      - sections
+      - dashboards
+      title: ConfigOptions
+      type: object
+    Connector:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1CN-…`.
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        channel:
+          enum:
+          - voz
+          - chat
+          title: Channel
+          type: string
+        status:
+          title: Status
+          type: string
+        last_sync:
+          format: date-time
+          title: Last Sync
+          type: string
+        conversations:
+          title: Conversations
+          type: integer
+      required:
+      - id
+      - name
+      - channel
+      - status
+      - last_sync
+      - conversations
+      title: Connector
+      type: object
+    Connectors:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Connector'
+          title: Items
+          type: array
+      required:
+      - items
+      title: Connectors
+      type: object
+    ConversationDetail:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        channel:
+          enum:
+          - voz
+          - chat
+          title: Channel
+          type: string
+        started_at:
+          format: date-time
+          title: Started At
+          type: string
+        duration_s:
+          title: Duration S
+          type: integer
+        queue_id:
+          title: Queue Id
+          type: string
+        queue:
+          title: Queue
+          type: string
+        agent_id:
+          title: Agent Id
+          type: string
+        agent:
+          title: Agent
+          type: string
+        customer_id:
+          title: Customer Id
+          type: string
+        turns:
+          items:
+            $ref: '#/components/schemas/Turn'
+          title: Turns
+          type: array
+        analysis:
+          $ref: '#/components/schemas/Analysis'
+          description: '`compliance` es el cumplimiento efectivo con los checks activos (`true`, `false` o `null` si no aplica).'
+        main_topic_label:
+          title: Main Topic Label
+          type: string
+      required:
+      - id
+      - channel
+      - started_at
+      - duration_s
+      - queue_id
+      - queue
+      - agent_id
+      - agent
+      - customer_id
+      - turns
+      - analysis
+      - main_topic_label
+      title: ConversationDetail
+      type: object
+    ConversationItem:
+      additionalProperties: false
+      description: Elemento de listado, compartido por conversaciones, explorador, búsqueda y outputs de flujos.
+      properties:
+        id:
+          title: Id
+          type: string
+        started_at:
+          format: date-time
+          title: Started At
+          type: string
+        channel:
+          enum:
+          - voz
+          - chat
+          title: Channel
+          type: string
+        queue_id:
+          title: Queue Id
+          type: string
+        queue:
+          title: Queue
+          type: string
+        agent_id:
+          title: Agent Id
+          type: string
+        agent:
+          title: Agent
+          type: string
+        main_topic:
+          title: Main Topic
+          type: string
+        main_topic_label:
+          title: Main Topic Label
+          type: string
+        summary:
+          description: Enmascarado si `privacy.pii_masking` está activado.
+          title: Summary
+          type: string
+        sentiment:
+          title: Sentiment
+          type: number
+        resolution:
+          enum:
+          - resuelta
+          - no_resuelta
+          - escalada
+          title: Resolution
+          type: string
+        csat:
+          title: Csat
+          type: number
+        duration_s:
+          title: Duration S
+          type: integer
+      required:
+      - id
+      - started_at
+      - channel
+      - queue_id
+      - queue
+      - agent_id
+      - agent
+      - main_topic
+      - main_topic_label
+      - summary
+      - sentiment
+      - resolution
+      - csat
+      - duration_s
+      title: ConversationItem
+      type: object
+    ConversationPage:
+      additionalProperties: false
+      properties:
+        total:
+          title: Total
+          type: integer
+        page:
+          title: Page
+          type: integer
+        page_size:
+          title: Page Size
+          type: integer
+        pages:
+          title: Pages
+          type: integer
+        items:
+          items:
+            $ref: '#/components/schemas/ConversationItem'
+          title: Items
+          type: array
+      required:
+      - total
+      - page
+      - page_size
+      - pages
+      - items
+      title: ConversationPage
+      type: object
+    Edge:
+      additionalProperties: false
+      properties:
+        source:
+          title: Source
+          type: string
+        target:
+          title: Target
+          type: string
+      required:
+      - source
+      - target
+      title: Edge
+      type: object
+    Entity:
+      properties:
+        type:
+          enum:
+          - importe
+          - producto
+          - fecha
+          - comercio
+          title: Type
+          type: string
+        value:
+          title: Value
+          type: string
+      required:
+      - type
+      - value
+      title: Entity
+      type: object
+    ErrorText:
+      additionalProperties: false
+      description: 'E1: motivo en texto (401, 403, 404, 409 y reglas de negocio sueltas en 422).'
+      properties:
+        detail:
+          examples:
+          - Conversación no encontrada
+          title: Detail
+          type: string
+      required:
+      - detail
+      title: ErrorText
+      type: object
+    FieldErrors:
+      additionalProperties: false
+      description: 'E3: errores por campo de los cuerpos de configuración (422) y de usuarios y roles (422 y 409 por duplicado).'
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/FieldIssue'
+          title: Detail
+          type: array
+      required:
+      - detail
+      title: FieldErrors
+      type: object
+    FieldIssue:
+      additionalProperties: false
+      properties:
+        loc:
+          description: Ruta del campo; empieza por `body`.
+          examples:
+          - - body
+            - email
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Loc
+          type: array
+        msg:
+          description: Mensaje en español para mostrar junto al campo.
+          title: Msg
+          type: string
+        type:
+          title: Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: FieldIssue
+      type: object
+    Flow:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        author:
+          $ref: '#/components/schemas/Person'
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        updated_at:
+          format: date-time
+          title: Updated At
+          type: string
+        status:
+          enum:
+          - valido
+          - con_errores
+          title: Status
+          type: string
+        graph:
+          $ref: '#/components/schemas/Graph'
+      required:
+      - id
+      - name
+      - author
+      - created_at
+      - updated_at
+      - status
+      - graph
+      title: Flow
+      type: object
+    FlowCatalog:
+      additionalProperties: false
+      properties:
+        node_types:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Node Types
+          type: array
+        sampling_methods:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Sampling Methods
+          type: array
+        strata:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Strata
+          type: array
+        order_keys:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Order Keys
+          type: array
+        orders:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Orders
+          type: array
+        models:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Models
+          type: array
+        default_model:
+          description: Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA).
+          title: Default Model
+          type: string
+        variables:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Variables
+          type: array
+        output_formats:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Output Formats
+          type: array
+        field_types:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Field Types
+          type: array
+        output_kinds:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Output Kinds
+          type: array
+        aggregations:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Aggregations
+          type: array
+        limits:
+          $ref: '#/components/schemas/FlowLimits'
+      required:
+      - node_types
+      - sampling_methods
+      - strata
+      - order_keys
+      - orders
+      - models
+      - default_model
+      - variables
+      - output_formats
+      - field_types
+      - output_kinds
+      - aggregations
+      - limits
+      title: FlowCatalog
+      type: object
+    FlowIssue:
+      additionalProperties: false
+      properties:
+        code:
+          enum:
+          - missing_sampling
+          - missing_output
+          - node_unconfigured
+          - invalid_config
+          - disconnected_node
+          - prompt_without_variables
+          - unknown_variable
+          - previous_result_without_chain
+          - metric_requires_labels
+          - duplicate_destination
+          title: Code
+          type: string
+        message:
+          title: Message
+          type: string
+        node_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Node Id
+      required:
+      - code
+      - message
+      title: FlowIssue
+      type: object
+    FlowIssues:
+      additionalProperties: false
+      description: 'E6: incidencias de completitud que impiden ejecutar un flujo.'
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/FlowIssue'
+          title: Detail
+          type: array
+      required:
+      - detail
+      title: FlowIssues
+      type: object
+    FlowLimits:
+      additionalProperties: false
+      properties:
+        max_sample_size:
+          title: Max Sample Size
+          type: integer
+        max_template:
+          title: Max Template
+          type: integer
+        max_labels:
+          title: Max Labels
+          type: integer
+        max_label:
+          title: Max Label
+          type: integer
+        max_fields:
+          title: Max Fields
+          type: integer
+        max_field_name:
+          title: Max Field Name
+          type: integer
+        max_destination:
+          title: Max Destination
+          type: integer
+        max_flow_name:
+          title: Max Flow Name
+          type: integer
+        max_nodes:
+          title: Max Nodes
+          type: integer
+        max_edges:
+          title: Max Edges
+          type: integer
+      required:
+      - max_sample_size
+      - max_template
+      - max_labels
+      - max_label
+      - max_fields
+      - max_field_name
+      - max_destination
+      - max_flow_name
+      - max_nodes
+      - max_edges
+      title: FlowLimits
+      type: object
+    FlowList:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/FlowListItem'
+          title: Items
+          type: array
+      required:
+      - items
+      title: FlowList
+      type: object
+    FlowListItem:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1FL-…`.
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        author:
+          $ref: '#/components/schemas/Person'
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        updated_at:
+          format: date-time
+          title: Updated At
+          type: string
+        status:
+          enum:
+          - valido
+          - con_errores
+          title: Status
+          type: string
+        last_run:
+          anyOf:
+          - $ref: '#/components/schemas/LastRun'
+          - type: 'null'
+      required:
+      - id
+      - name
+      - author
+      - created_at
+      - updated_at
+      - status
+      - last_run
+      title: FlowListItem
+      type: object
+    GeneralConfig:
+      additionalProperties: false
+      properties:
+        platform_name:
+          maxLength: 60
+          minLength: 1
+          title: Platform Name
+          type: string
+        timezone:
+          title: Timezone
+          type: string
+        language:
+          title: Language
+          type: string
+      required:
+      - platform_name
+      - timezone
+      - language
+      title: GeneralConfig
+      type: object
+    Graph:
+      additionalProperties: false
+      properties:
+        version:
+          const: 1
+          default: 1
+          title: Version
+          type: integer
+        nodes:
+          default: []
+          items:
+            discriminator:
+              mapping:
+                output: '#/components/schemas/OutputNode'
+                prompt: '#/components/schemas/PromptNode'
+                sampling: '#/components/schemas/SamplingNode'
+              propertyName: type
+            oneOf:
+            - $ref: '#/components/schemas/SamplingNode'
+            - $ref: '#/components/schemas/PromptNode'
+            - $ref: '#/components/schemas/OutputNode'
+          title: Nodes
+          type: array
+        edges:
+          default: []
+          items:
+            $ref: '#/components/schemas/Edge'
+          title: Edges
+          type: array
+      title: Graph
+      type: object
+    GraphErrors:
+      additionalProperties: false
+      description: 'E5: errores de integridad de un grafo de flujo.'
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/GraphIssue'
+          title: Detail
+          type: array
+      required:
+      - detail
+      title: GraphErrors
+      type: object
+    GraphIssue:
+      additionalProperties: false
+      properties:
+        path:
+          examples:
+          - nodes[0].config.size
+          title: Path
+          type: string
+        node_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Node Id
+        message:
+          title: Message
+          type: string
+      required:
+      - path
+      - node_id
+      - message
+      title: GraphIssue
+      type: object
+    Group:
+      additionalProperties: false
+      properties:
+        op:
+          enum:
+          - and
+          - or
+          title: Op
+          type: string
+        conditions:
+          default: []
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/Condition'
+            - $ref: '#/components/schemas/Group'
+          title: Conditions
+          type: array
+      required:
+      - op
+      title: Group
+      type: object
+    Health:
+      additionalProperties: false
+      properties:
+        status:
+          const: ok
+          title: Status
+          type: string
+      required:
+      - status
+      title: Health
+      type: object
+    Interpretation:
+      additionalProperties: false
+      properties:
+        query:
+          additionalProperties: true
+          description: Consulta editable (formato `Query`), sin ejecutar.
+          title: Query
+          type: object
+        unrecognized:
+          description: Palabras que el intérprete no ha entendido.
+          items:
+            type: string
+          title: Unrecognized
+          type: array
+      required:
+      - query
+      - unrecognized
+      title: Interpretation
+      type: object
+    KpiSettings:
+      additionalProperties: false
+      properties:
+        code:
+          enum:
+          - volume
+          - aht_s
+          - sentiment_avg
+          - negative_pct
+          - resolution_rate
+          - escalation_rate
+          - fcr_rate
+          - csat_avg
+          - effort_avg
+          - compliance_rate
+          - churn_high_pct
+          - first_response_s
+          - avg_turns
+          title: Code
+          type: string
+        label:
+          title: Label
+          type: string
+        unit:
+          enum:
+          - conversaciones
+          - s
+          - índice
+          - '%'
+          - 1-5
+          - turnos
+          title: Unit
+          type: string
+        higher_is_better:
+          title: Higher Is Better
+          type: boolean
+        target:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Target
+        green:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Green
+        amber:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Amber
+        dashboards:
+          items:
+            type: string
+          title: Dashboards
+          type: array
+      required:
+      - code
+      - label
+      - unit
+      - higher_is_better
+      - target
+      - green
+      - amber
+      - dashboards
+      title: KpiSettings
+      type: object
+    KpiTargetIn:
+      additionalProperties: false
+      properties:
+        target:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Target
+        green:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Green
+        amber:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Amber
+        dashboards:
+          items:
+            enum:
+            - vision-general
+            - calidad-y-cumplimiento
+            - experiencia-de-cliente
+            type: string
+          title: Dashboards
+          type: array
+      title: KpiTargetIn
+      type: object
+    KpiValue:
+      additionalProperties: false
+      properties:
+        code:
+          enum:
+          - volume
+          - aht_s
+          - sentiment_avg
+          - negative_pct
+          - resolution_rate
+          - escalation_rate
+          - fcr_rate
+          - csat_avg
+          - effort_avg
+          - compliance_rate
+          - churn_high_pct
+          - first_response_s
+          - avg_turns
+          title: Code
+          type: string
+        label:
+          title: Label
+          type: string
+        unit:
+          enum:
+          - conversaciones
+          - s
+          - índice
+          - '%'
+          - 1-5
+          - turnos
+          title: Unit
+          type: string
+        higher_is_better:
+          title: Higher Is Better
+          type: boolean
+        value:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Value
+      required:
+      - code
+      - label
+      - unit
+      - higher_is_better
+      - value
+      title: KpiValue
+      type: object
+    KpiValues:
+      additionalProperties: false
+      properties:
+        volume:
+          title: Volume
+          type: integer
+        aht_s:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Aht S
+        sentiment_avg:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Sentiment Avg
+        negative_pct:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Negative Pct
+        resolution_rate:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Resolution Rate
+        escalation_rate:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Escalation Rate
+        fcr_rate:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Fcr Rate
+        csat_avg:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Csat Avg
+        effort_avg:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Effort Avg
+        compliance_rate:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Compliance Rate
+        churn_high_pct:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Churn High Pct
+        first_response_s:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: First Response S
+        avg_turns:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Avg Turns
+      required:
+      - volume
+      - aht_s
+      - sentiment_avg
+      - negative_pct
+      - resolution_rate
+      - escalation_rate
+      - fcr_rate
+      - csat_avg
+      - effort_avg
+      - compliance_rate
+      - churn_high_pct
+      - first_response_s
+      - avg_turns
+      title: KpiValues
+      type: object
+    LastRun:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - ok
+          - error
+          title: Status
+          type: string
+      required:
+      - id
+      - created_at
+      - status
+      title: LastRun
+      type: object
+    MainTopicIn:
+      additionalProperties: false
+      properties:
+        code:
+          pattern: ^[a-z][a-z0-9_]{1,39}$
+          title: Code
+          type: string
+        name:
+          maxLength: 80
+          minLength: 1
+          title: Name
+          type: string
+        description:
+          default: ''
+          maxLength: 300
+          title: Description
+          type: string
+        keywords:
+          items:
+            maxLength: 60
+            minLength: 1
+            type: string
+          maxItems: 30
+          title: Keywords
+          type: array
+        active:
+          default: true
+          title: Active
+          type: boolean
+      required:
+      - code
+      - name
+      title: MainTopicIn
+      type: object
+    ManagedUser:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1US-…`.
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        email:
+          title: Email
+          type: string
+        role:
+          description: Código del rol.
+          title: Role
+          type: string
+        role_name:
+          title: Role Name
+          type: string
+        active:
+          title: Active
+          type: boolean
+        last_login:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Last Login
+      required:
+      - id
+      - name
+      - email
+      - role
+      - role_name
+      - active
+      - last_login
+      title: ManagedUser
+      type: object
+    ManagedUsers:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ManagedUser'
+          title: Items
+          type: array
+      required:
+      - items
+      title: ManagedUsers
+      type: object
+    MetricItem:
+      additionalProperties: false
+      properties:
+        label:
+          title: Label
+          type: string
+        count:
+          title: Count
+          type: integer
+        percent:
+          description: Un decimal; los porcentajes suman exactamente 100.
+          title: Percent
+          type: number
+      required:
+      - label
+      - count
+      - percent
+      title: MetricItem
+      type: object
+    MetricResult:
+      additionalProperties: false
+      properties:
+        aggregation:
+          enum:
+          - recuento
+          - porcentaje
+          title: Aggregation
+          type: string
+        total:
+          title: Total
+          type: integer
+        items:
+          items:
+            $ref: '#/components/schemas/MetricItem'
+          title: Items
+          type: array
+      required:
+      - aggregation
+      - total
+      - items
+      title: MetricResult
+      type: object
+    NewRoleIn:
+      additionalProperties: false
+      properties:
+        name:
+          maxLength: 40
+          minLength: 1
+          title: Name
+          type: string
+        permissions:
+          items:
+            type: string
+          title: Permissions
+          type: array
+        code:
+          pattern: ^[a-z][a-z0-9_]{1,39}$
+          title: Code
+          type: string
+      required:
+      - name
+      - permissions
+      - code
+      title: NewRoleIn
+      type: object
+    NodeState:
+      additionalProperties: false
+      properties:
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - ok
+          - error
+          title: Status
+          type: string
+        processed:
+          title: Processed
+          type: integer
+        total:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Total
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+      required:
+      - status
+      - processed
+      - total
+      - message
+      title: NodeState
+      type: object
+    Operator:
+      additionalProperties: false
+      properties:
+        key:
+          title: Key
+          type: string
+        label:
+          title: Label
+          type: string
+      required:
+      - key
+      - label
+      title: Operator
+      type: object
+    OutputConfig:
+      additionalProperties: false
+      properties:
+        kind:
+          anyOf:
+          - enum:
+            - tabla
+            - metrica
+            - informe
+            type: string
+          - type: 'null'
+          default: null
+          title: Kind
+        aggregation:
+          anyOf:
+          - enum:
+            - recuento
+            - porcentaje
+            type: string
+          - type: 'null'
+          default: null
+          title: Aggregation
+        destination:
+          anyOf:
+          - maxLength: 80
+            type: string
+          - type: 'null'
+          default: null
+          title: Destination
+      title: OutputConfig
+      type: object
+    OutputFormat:
+      additionalProperties: false
+      properties:
+        type:
+          enum:
+          - texto
+          - etiqueta
+          - json
+          title: Type
+          type: string
+        labels:
+          anyOf:
+          - items:
+              maxLength: 60
+              type: string
+            maxItems: 20
+            type: array
+          - type: 'null'
+          default: null
+          title: Labels
+        fields:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/SchemaField'
+            maxItems: 20
+            type: array
+          - type: 'null'
+          default: null
+          title: Fields
+      required:
+      - type
+      title: OutputFormat
+      type: object
+    OutputNode:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        type:
+          const: output
+          title: Type
+          type: string
+        config:
+          $ref: '#/components/schemas/OutputConfig'
+          default:
+            kind: null
+            aggregation: null
+            destination: null
+      required:
+      - id
+      - position
+      - type
+      title: OutputNode
+      type: object
+    Period:
+      additionalProperties: false
+      properties:
+        from:
+          format: date
+          title: From
+          type: string
+        to:
+          format: date
+          title: To
+          type: string
+      required:
+      - from
+      - to
+      title: Period
+      type: object
+    Person:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+      required:
+      - id
+      - name
+      title: Person
+      type: object
+    PlatformConfig:
+      additionalProperties: false
+      properties:
+        version:
+          description: Sube con cada cambio aceptado.
+          title: Version
+          type: integer
+        general:
+          $ref: '#/components/schemas/PublicConfig'
+        privacy:
+          $ref: '#/components/schemas/Privacy'
+        ai:
+          $ref: '#/components/schemas/AiSettings'
+        kpis:
+          items:
+            $ref: '#/components/schemas/KpiSettings'
+          title: Kpis
+          type: array
+        options:
+          $ref: '#/components/schemas/ConfigOptions'
+      required:
+      - version
+      - general
+      - privacy
+      - ai
+      - kpis
+      - options
+      title: PlatformConfig
+      type: object
+    Position:
+      additionalProperties: false
+      properties:
+        x:
+          title: X
+          type: number
+        y:
+          title: Y
+          type: number
+      required:
+      - x
+      - y
+      title: Position
+      type: object
+    Privacy:
+      additionalProperties: false
+      properties:
+        pii_masking:
+          title: Pii Masking
+          type: boolean
+      required:
+      - pii_masking
+      title: Privacy
+      type: object
+    PrivacyConfig:
+      additionalProperties: false
+      properties:
+        pii_masking:
+          title: Pii Masking
+          type: boolean
+      required:
+      - pii_masking
+      title: PrivacyConfig
+      type: object
+    PromptConfig:
+      additionalProperties: false
+      properties:
+        template:
+          anyOf:
+          - maxLength: 4000
+            type: string
+          - type: 'null'
+          default: null
+          title: Template
+        model:
+          anyOf:
+          - enum:
+            - mock-rapido
+            - mock-preciso
+            type: string
+          - type: 'null'
+          default: null
+          title: Model
+        temperature:
+          anyOf:
+          - maximum: 1
+            minimum: 0
+            type: number
+          - type: 'null'
+          default: null
+          title: Temperature
+        output:
+          anyOf:
+          - $ref: '#/components/schemas/OutputFormat'
+          - type: 'null'
+          default: null
+      title: PromptConfig
+      type: object
+    PromptNode:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        type:
+          const: prompt
+          title: Type
+          type: string
+        config:
+          $ref: '#/components/schemas/PromptConfig'
+          default:
+            template: null
+            model: null
+            temperature: null
+            output: null
+      required:
+      - id
+      - position
+      - type
+      title: PromptNode
+      type: object
+    ProviderOption:
+      additionalProperties: false
+      properties:
+        value:
+          title: Value
+          type: string
+        label:
+          title: Label
+          type: string
+        models:
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Models
+          type: array
+      required:
+      - value
+      - label
+      - models
+      title: ProviderOption
+      type: object
+    PublicConfig:
+      additionalProperties: false
+      properties:
+        platform_name:
+          title: Platform Name
+          type: string
+        timezone:
+          examples:
+          - Europe/Madrid
+          title: Timezone
+          type: string
+        language:
+          examples:
+          - es-ES
+          title: Language
+          type: string
+      required:
+      - platform_name
+      - timezone
+      - language
+      title: PublicConfig
+      type: object
+    Query:
+      additionalProperties: false
+      properties:
+        from:
+          anyOf:
+          - format: date
+            type: string
+          - type: 'null'
+          default: null
+          title: From
+        to:
+          anyOf:
+          - format: date
+            type: string
+          - type: 'null'
+          default: null
+          title: To
+        root:
+          $ref: '#/components/schemas/Group'
+      required:
+      - root
+      title: Query
+      type: object
+    QueryErrors:
+      additionalProperties: false
+      description: 'E4: errores de una consulta del explorador.'
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/QueryIssue'
+          title: Detail
+          type: array
+      required:
+      - detail
+      title: QueryErrors
+      type: object
+    QueryField:
+      additionalProperties: false
+      properties:
+        key:
+          examples:
+          - sentiment
+          - check:saludo
+          title: Key
+          type: string
+        label:
+          title: Label
+          type: string
+        type:
+          enum:
+          - categorical
+          - numeric
+          - check
+          - text
+          - boolean
+          title: Type
+          type: string
+        operators:
+          items:
+            $ref: '#/components/schemas/Operator'
+          title: Operators
+          type: array
+        values:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/ValueLabel'
+            type: array
+          - type: 'null'
+          default: null
+          title: Values
+        min:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Min
+        max:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Max
+        speakers:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          default: null
+          title: Speakers
+      required:
+      - key
+      - label
+      - type
+      - operators
+      title: QueryField
+      type: object
+    QueryIssue:
+      additionalProperties: false
+      properties:
+        path:
+          description: Ruta del nodo de la consulta.
+          examples:
+          - root.conditions[0]
+          title: Path
+          type: string
+        message:
+          title: Message
+          type: string
+      required:
+      - path
+      - message
+      title: QueryIssue
+      type: object
+    QueryResult:
+      additionalProperties: false
+      properties:
+        total:
+          title: Total
+          type: integer
+        page:
+          title: Page
+          type: integer
+        page_size:
+          title: Page Size
+          type: integer
+        pages:
+          title: Pages
+          type: integer
+        items:
+          items:
+            $ref: '#/components/schemas/ConversationItem'
+          title: Items
+          type: array
+        period:
+          $ref: '#/components/schemas/Period'
+        kpis:
+          items:
+            $ref: '#/components/schemas/KpiValue'
+          title: Kpis
+          type: array
+      required:
+      - total
+      - page
+      - page_size
+      - pages
+      - items
+      - period
+      - kpis
+      title: QueryResult
+      type: object
+    QuerySchema:
+      additionalProperties: false
+      properties:
+        fields:
+          items:
+            $ref: '#/components/schemas/QueryField'
+          title: Fields
+          type: array
+        reference_date:
+          format: date
+          title: Reference Date
+          type: string
+        default_period:
+          $ref: '#/components/schemas/Period'
+      required:
+      - fields
+      - reference_date
+      - default_period
+      title: QuerySchema
+      type: object
+    ReportResult:
+      additionalProperties: false
+      properties:
+        text:
+          title: Text
+          type: string
+      required:
+      - text
+      title: ReportResult
+      type: object
+    RoleIn:
+      additionalProperties: false
+      properties:
+        name:
+          maxLength: 40
+          minLength: 1
+          title: Name
+          type: string
+        permissions:
+          items:
+            type: string
+          title: Permissions
+          type: array
+      required:
+      - name
+      - permissions
+      title: RoleIn
+      type: object
+    RoleItem:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1RO-…`, derivado del código.
+          title: Id
+          type: string
+        code:
+          title: Code
+          type: string
+        name:
+          title: Name
+          type: string
+        builtin:
+          title: Builtin
+          type: boolean
+        permissions:
+          description: En el orden del catálogo de permisos.
+          items:
+            type: string
+          title: Permissions
+          type: array
+        users:
+          title: Users
+          type: integer
+      required:
+      - id
+      - code
+      - name
+      - builtin
+      - permissions
+      - users
+      title: RoleItem
+      type: object
+    Roles:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RoleItem'
+          title: Items
+          type: array
+        permissions:
+          description: Catálogo de los 9 permisos con su etiqueta.
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Permissions
+          type: array
+      required:
+      - items
+      - permissions
+      title: Roles
+      type: object
+    Run:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1RN-…`.
+          title: Id
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        started_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Finished At
+        duration_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration Ms
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - ok
+          - error
+          title: Status
+          type: string
+        sample_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Sample Size
+        user:
+          $ref: '#/components/schemas/Person'
+        flow_id:
+          title: Flow Id
+          type: string
+        seed:
+          title: Seed
+          type: integer
+        graph:
+          $ref: '#/components/schemas/Graph'
+          description: Copia del grafo ejecutado.
+        nodes:
+          additionalProperties:
+            $ref: '#/components/schemas/NodeState'
+          description: Estado por identificador de nodo.
+          title: Nodes
+          type: object
+        outputs:
+          additionalProperties:
+            $ref: '#/components/schemas/RunOutput'
+          description: Resultado por identificador de nodo Output.
+          title: Outputs
+          type: object
+      required:
+      - id
+      - created_at
+      - started_at
+      - finished_at
+      - duration_ms
+      - status
+      - sample_size
+      - user
+      - flow_id
+      - seed
+      - graph
+      - nodes
+      - outputs
+      title: Run
+      type: object
+    RunList:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/RunSummary'
+          title: Items
+          type: array
+      required:
+      - items
+      title: RunList
+      type: object
+    RunOutput:
+      additionalProperties: false
+      properties:
+        node_id:
+          title: Node Id
+          type: string
+        kind:
+          enum:
+          - tabla
+          - metrica
+          - informe
+          title: Kind
+          type: string
+        destination:
+          title: Destination
+          type: string
+        result:
+          anyOf:
+          - $ref: '#/components/schemas/TableResult'
+          - $ref: '#/components/schemas/MetricResult'
+          - $ref: '#/components/schemas/ReportResult'
+          title: Result
+      required:
+      - node_id
+      - kind
+      - destination
+      - result
+      title: RunOutput
+      type: object
+    RunSummary:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1RN-…`.
+          title: Id
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        started_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Finished At
+        duration_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Duration Ms
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - ok
+          - error
+          title: Status
+          type: string
+        sample_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Sample Size
+        user:
+          $ref: '#/components/schemas/Person'
+      required:
+      - id
+      - created_at
+      - started_at
+      - finished_at
+      - duration_ms
+      - status
+      - sample_size
+      - user
+      title: RunSummary
+      type: object
+    SampleEstimate:
+      additionalProperties: false
+      properties:
+        available:
+          title: Available
+          type: integer
+        sample_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Sample Size
+        period:
+          $ref: '#/components/schemas/Period'
+      required:
+      - available
+      - sample_size
+      - period
+      title: SampleEstimate
+      type: object
+    SamplingConfig:
+      additionalProperties: false
+      properties:
+        query:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          default: null
+          title: Query
+        method:
+          anyOf:
+          - enum:
+            - aleatorio
+            - estratificado
+            - primeros_n
+            type: string
+          - type: 'null'
+          default: null
+          title: Method
+        stratify_by:
+          anyOf:
+          - enum:
+            - canal
+            - cola
+            - main_topic
+            type: string
+          - type: 'null'
+          default: null
+          title: Stratify By
+        order_by:
+          anyOf:
+          - enum:
+            - fecha
+            - duracion
+            - sentimiento
+            - csat
+            type: string
+          - type: 'null'
+          default: null
+          title: Order By
+        order:
+          anyOf:
+          - enum:
+            - desc
+            - asc
+            type: string
+          - type: 'null'
+          default: null
+          title: Order
+        size:
+          anyOf:
+          - maximum: 1000
+            minimum: 1
+            type: integer
+          - type: 'null'
+          default: null
+          title: Size
+      title: SamplingConfig
+      type: object
+    SamplingNode:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        type:
+          const: sampling
+          title: Type
+          type: string
+        config:
+          $ref: '#/components/schemas/SamplingConfig'
+          default:
+            query: null
+            method: null
+            stratify_by: null
+            order_by: null
+            order: null
+            size: null
+      required:
+      - id
+      - position
+      - type
+      title: SamplingNode
+      type: object
+    SavedFlow:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        author:
+          $ref: '#/components/schemas/Person'
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        updated_at:
+          format: date-time
+          title: Updated At
+          type: string
+        status:
+          enum:
+          - valido
+          - con_errores
+          title: Status
+          type: string
+        graph:
+          $ref: '#/components/schemas/Graph'
+        id_map:
+          additionalProperties:
+            type: string
+          description: Clave temporal (`tmp-…`) → identificador `1ND-…` asignado.
+          title: Id Map
+          type: object
+      required:
+      - id
+      - name
+      - author
+      - created_at
+      - updated_at
+      - status
+      - graph
+      - id_map
+      title: SavedFlow
+      type: object
+    SavedQueries:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/SavedQuery'
+          title: Items
+          type: array
+      required:
+      - items
+      title: SavedQueries
+      type: object
+    SavedQuery:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1QY-…`.
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        query:
+          additionalProperties: true
+          description: Consulta canónica (formato `Query`).
+          title: Query
+          type: object
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        updated_at:
+          format: date-time
+          title: Updated At
+          type: string
+      required:
+      - id
+      - name
+      - query
+      - created_at
+      - updated_at
+      title: SavedQuery
+      type: object
+    SchemaField:
+      additionalProperties: false
+      properties:
+        name:
+          maxLength: 40
+          title: Name
+          type: string
+        type:
+          enum:
+          - texto
+          - numero
+          - booleano
+          title: Type
+          type: string
+      required:
+      - name
+      - type
+      title: SchemaField
+      type: object
+    SearchResult:
+      additionalProperties: false
+      properties:
+        conversation_id:
+          title: Conversation Id
+          type: string
+        start_turn:
+          title: Start Turn
+          type: integer
+        end_turn:
+          title: End Turn
+          type: integer
+        score:
+          description: Similitud coseno con 4 decimales; no es una probabilidad.
+          maximum: 1
+          minimum: 0
+          title: Score
+          type: number
+        turns:
+          items:
+            $ref: '#/components/schemas/SearchTurn'
+          title: Turns
+          type: array
+        highlights:
+          items:
+            type: string
+          title: Highlights
+          type: array
+        conversation:
+          $ref: '#/components/schemas/ConversationItem'
+      required:
+      - conversation_id
+      - start_turn
+      - end_turn
+      - score
+      - turns
+      - highlights
+      - conversation
+      title: SearchResult
+      type: object
+    SearchTurn:
+      additionalProperties: false
+      properties:
+        index:
+          title: Index
+          type: integer
+        speaker:
+          enum:
+          - cliente
+          - agente
+          - bot
+          - sistema
+          title: Speaker
+          type: string
+        text:
+          title: Text
+          type: string
+      required:
+      - index
+      - speaker
+      - text
+      title: SearchTurn
+      type: object
+    SecondaryTopicIn:
+      additionalProperties: false
+      properties:
+        code:
+          pattern: ^[a-záéíóúüñ0-9][a-záéíóúüñ0-9 _-]{0,59}$
+          title: Code
+          type: string
+        name:
+          maxLength: 80
+          minLength: 1
+          title: Name
+          type: string
+        description:
+          default: ''
+          maxLength: 300
+          title: Description
+          type: string
+        keywords:
+          items:
+            maxLength: 60
+            minLength: 1
+            type: string
+          maxItems: 30
+          title: Keywords
+          type: array
+        active:
+          default: true
+          title: Active
+          type: boolean
+      required:
+      - code
+      - name
+      title: SecondaryTopicIn
+      type: object
+    SemanticSearch:
+      additionalProperties: false
+      properties:
+        query:
+          title: Query
+          type: string
+        expansions:
+          items:
+            type: string
+          title: Expansions
+          type: array
+        period:
+          $ref: '#/components/schemas/Period'
+        total:
+          description: Resultados tras el umbral y la agrupación, antes de `limit`.
+          title: Total
+          type: integer
+        max_score:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: Mejor puntuación antes del umbral.
+          title: Max Score
+        results:
+          items:
+            $ref: '#/components/schemas/SearchResult'
+          title: Results
+          type: array
+      required:
+      - query
+      - expansions
+      - period
+      - total
+      - max_score
+      - results
+      title: SemanticSearch
+      type: object
+    SimilarConversations:
+      additionalProperties: false
+      properties:
+        conversation_id:
+          title: Conversation Id
+          type: string
+        results:
+          items:
+            $ref: '#/components/schemas/SimilarItem'
+          title: Results
+          type: array
+      required:
+      - conversation_id
+      - results
+      title: SimilarConversations
+      type: object
+    SimilarItem:
+      additionalProperties: false
+      properties:
+        conversation_id:
+          title: Conversation Id
+          type: string
+        score:
+          title: Score
+          type: number
+        conversation:
+          $ref: '#/components/schemas/ConversationItem'
+      required:
+      - conversation_id
+      - score
+      - conversation
+      title: SimilarItem
+      type: object
+    Suggestion:
+      additionalProperties: false
+      properties:
+        value:
+          title: Value
+          type: string
+        label:
+          title: Label
+          type: string
+        count:
+          title: Count
+          type: integer
+      required:
+      - value
+      - label
+      - count
+      title: Suggestion
+      type: object
+    Suggestions:
+      additionalProperties: false
+      properties:
+        field:
+          title: Field
+          type: string
+        period:
+          $ref: '#/components/schemas/Period'
+        values:
+          items:
+            $ref: '#/components/schemas/Suggestion'
+          title: Values
+          type: array
+      required:
+      - field
+      - period
+      - values
+      title: Suggestions
+      type: object
+    Summary:
+      additionalProperties: false
+      properties:
+        period:
+          $ref: '#/components/schemas/Period'
+        previous_period:
+          $ref: '#/components/schemas/Period'
+        kpis:
+          items:
+            $ref: '#/components/schemas/SummaryKpi'
+          title: Kpis
+          type: array
+        compliance_by_check:
+          items:
+            $ref: '#/components/schemas/CheckRate'
+          title: Compliance By Check
+          type: array
+      required:
+      - period
+      - previous_period
+      - kpis
+      - compliance_by_check
+      title: Summary
+      type: object
+    SummaryKpi:
+      additionalProperties: false
+      properties:
+        code:
+          enum:
+          - volume
+          - aht_s
+          - sentiment_avg
+          - negative_pct
+          - resolution_rate
+          - escalation_rate
+          - fcr_rate
+          - csat_avg
+          - effort_avg
+          - compliance_rate
+          - churn_high_pct
+          - first_response_s
+          - avg_turns
+          title: Code
+          type: string
+        label:
+          title: Label
+          type: string
+        unit:
+          enum:
+          - conversaciones
+          - s
+          - índice
+          - '%'
+          - 1-5
+          - turnos
+          title: Unit
+          type: string
+        higher_is_better:
+          title: Higher Is Better
+          type: boolean
+        value:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          description: '`null` si no hay conversaciones aplicables.'
+          title: Value
+        previous:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Previous
+        delta:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Delta
+        delta_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          description: '`null` si el anterior es 0 o nulo, o si la unidad es `índice`.'
+          title: Delta Pct
+        target:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Target
+        status:
+          anyOf:
+          - enum:
+            - verde
+            - ambar
+            - rojo
+            type: string
+          - type: 'null'
+          description: Según los umbrales; `null` sin umbrales.
+          title: Status
+      required:
+      - code
+      - label
+      - unit
+      - higher_is_better
+      - value
+      - previous
+      - delta
+      - delta_pct
+      - target
+      - status
+      title: SummaryKpi
+      type: object
+    TableResult:
+      additionalProperties: false
+      properties:
+        rows:
+          items:
+            $ref: '#/components/schemas/TableRow'
+          title: Rows
+          type: array
+      required:
+      - rows
+      title: TableResult
+      type: object
+    TableRow:
+      additionalProperties: false
+      properties:
+        conversation:
+          $ref: '#/components/schemas/ConversationItem'
+        result:
+          description: Texto, etiqueta u objeto JSON según el formato del prompt.
+          title: Result
+      required:
+      - conversation
+      - result
+      title: TableRow
+      type: object
+    Taxonomy:
+      additionalProperties: false
+      properties:
+        main_topics:
+          items:
+            $ref: '#/components/schemas/TaxonomyTopic'
+          title: Main Topics
+          type: array
+        secondary_topics:
+          items:
+            $ref: '#/components/schemas/TaxonomyTopic'
+          title: Secondary Topics
+          type: array
+      required:
+      - main_topics
+      - secondary_topics
+      title: Taxonomy
+      type: object
+    TaxonomyTopic:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1TP-…` (main topic) o `1TS-…` (tema secundario).
+          title: Id
+          type: string
+        code:
+          title: Code
+          type: string
+        name:
+          title: Name
+          type: string
+        description:
+          title: Description
+          type: string
+        keywords:
+          items:
+            type: string
+          title: Keywords
+          type: array
+        active:
+          title: Active
+          type: boolean
+        conversations:
+          title: Conversations
+          type: integer
+      required:
+      - id
+      - code
+      - name
+      - description
+      - keywords
+      - active
+      - conversations
+      title: TaxonomyTopic
+      type: object
+    TimePoint:
+      additionalProperties: false
+      properties:
+        period_start:
+          format: date
+          title: Period Start
+          type: string
+        period_end:
+          format: date
+          title: Period End
+          type: string
+        value:
+          anyOf:
+          - type: number
+          - type: integer
+          - type: 'null'
+          title: Value
+      required:
+      - period_start
+      - period_end
+      - value
+      title: TimePoint
+      type: object
+    Timeseries:
+      additionalProperties: false
+      properties:
+        kpi:
+          enum:
+          - volume
+          - aht_s
+          - sentiment_avg
+          - negative_pct
+          - resolution_rate
+          - escalation_rate
+          - fcr_rate
+          - csat_avg
+          - effort_avg
+          - compliance_rate
+          - churn_high_pct
+          - first_response_s
+          - avg_turns
+          title: Kpi
+          type: string
+        granularity:
+          enum:
+          - day
+          - week
+          title: Granularity
+          type: string
+        period:
+          $ref: '#/components/schemas/Period'
+        points:
+          items:
+            $ref: '#/components/schemas/TimePoint'
+          title: Points
+          type: array
+      required:
+      - kpi
+      - granularity
+      - period
+      - points
+      title: Timeseries
+      type: object
+    Turn:
+      properties:
+        speaker:
+          enum:
+          - cliente
+          - agente
+          - bot
+          - sistema
+          title: Speaker
+          type: string
+        text:
+          title: Text
+          type: string
+        offset_s:
+          title: Offset S
+          type: integer
+        sentiment:
+          title: Sentiment
+          type: number
+      required:
+      - speaker
+      - text
+      - offset_s
+      - sentiment
+      title: Turn
+      type: object
+    UserIn:
+      additionalProperties: false
+      properties:
+        name:
+          maxLength: 80
+          minLength: 1
+          title: Name
+          type: string
+        email:
+          maxLength: 254
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+          type: string
+        role:
+          title: Role
+          type: string
+        active:
+          default: true
+          title: Active
+          type: boolean
+      required:
+      - name
+      - email
+      - role
+      title: UserIn
+      type: object
+    Validation:
+      additionalProperties: false
+      properties:
+        valid:
+          title: Valid
+          type: boolean
+        issues:
+          items:
+            $ref: '#/components/schemas/FlowIssue'
+          title: Issues
+          type: array
+      required:
+      - valid
+      - issues
+      title: Validation
+      type: object
+    ValueLabel:
+      additionalProperties: false
+      properties:
+        value:
+          title: Value
+          type: string
+        label:
+          title: Label
+          type: string
+      required:
+      - value
+      - label
+      title: ValueLabel
+      type: object
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token de `POST /api/auth/login`. Caduca a las 8 h (`AUTH_TOKEN_TTL_SECONDS`).
+  headers:
+    XAuthVersion:
+      description: Versión de usuarios y roles; si cambia, hay que volver a pedir `/api/auth/me` (FE006).
+      schema:
+        type: integer
+        minimum: 0
+tags:
+- name: health
+  description: Sonda de salud.
+- name: auth
+  description: Inicio de sesión y usuario actual.
+- name: metrics
+  description: KPIs de los dashboards (FE001, FE005).
+- name: conversations
+  description: Listado, detalle y catálogo de filtros (FE001).
+- name: query
+  description: Explorador de consultas asistidas y consultas guardadas (FE002).
+- name: search
+  description: Búsqueda semántica y conversaciones similares (FE003).
+- name: flows
+  description: Flujos de insights y sus ejecuciones simuladas (FE004).
+- name: config
+  description: Configuración global de la plataforma (FE005).
+- name: users
+  description: Usuarios, roles y matriz de permisos (FE006).
+security:
+- bearerAuth: []

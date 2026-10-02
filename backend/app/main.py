@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import auth
+from app.openapi.spec import API_VERSION, build_openapi
 from app.routers import auth as auth_router
 from app.routers import config as config_router
 from app.routers import conversations as conversations_router
@@ -26,7 +27,7 @@ async def lifespan(_: FastAPI):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Speech & Text Analytics API", lifespan=lifespan)
+    app = FastAPI(title="Speech & Text Analytics API", version=API_VERSION, lifespan=lifespan)
     origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
     app.add_middleware(
         CORSMiddleware,
@@ -59,6 +60,14 @@ def create_app() -> FastAPI:
     app.include_router(flows_router.router)
     app.include_router(config_router.router)
     app.include_router(users_router.router)
+
+    def openapi() -> dict:
+        # Esquema completo (respuestas, errores, seguridad); se construye una vez y lo sirven /openapi.json y /docs.
+        if app.openapi_schema is None:
+            app.openapi_schema = build_openapi(app)
+        return app.openapi_schema
+
+    app.openapi = openapi
     return app
 
 

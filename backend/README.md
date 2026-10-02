@@ -10,7 +10,7 @@ python3 -m venv .venv
 .venv/bin/uvicorn app.main:app --reload --port 8000
 ```
 
-- Documentación interactiva: http://localhost:8000/docs
+- Documentación interactiva: http://localhost:8000/docs (OpenAPI 3.1 completo; exportado en `openapi.yaml`)
 - Salud: `GET /api/health`
 
 ## Tests
@@ -44,7 +44,7 @@ Es el estado inicial: desde Usuarios y roles (FE006) se crean usuarios, que comp
 
 ## Endpoints
 
-Resumen. El contrato completo (parámetros, cuerpos, respuestas, formatos de error y qué módulo del front usa cada ruta) está en `vault/arquitectura/contrato-api-front-back.md`. Con la API arrancada, `/docs` muestra el OpenAPI (sin esquemas de respuesta).
+Resumen. El contrato completo (parámetros, cuerpos, respuestas, formatos de error y qué módulo del front usa cada ruta) está en `vault/arquitectura/contrato-api-front-back.md`. La especificación formal es [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1: respuestas, errores y seguridad de cada operación), que también sirven `/openapi.json` y `/docs`. Al cambiar una ruta, documéntala en `app/openapi/spec.py` y regenera con `python ../scripts/export_openapi.py`; `tests/test_openapi.py` valida las respuestas reales contra ella.
 
 | Método y ruta | Permiso | Descripción |
 |---|---|---|
@@ -111,5 +111,6 @@ app/
   config/            # configuración global: store, taxonomía, checks y cumplimiento efectivo, KPIs (ADR-007)
   privacy/           # enmascarado de datos personales
   routers/           # auth, metrics, conversations, query, search, flows, config, users
+  openapi/           # OpenAPI completo: modelos de respuesta (documentales) y descripción de cada operación
 tests/
 ```

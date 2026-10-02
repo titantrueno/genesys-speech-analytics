@@ -32,6 +32,10 @@ jobs:
         env:
           DATA_SEED: "7"
           DATA_REFERENCE_DATE: "2026-11-10"
+      - name: OpenAPI al día y válido
+        run: |
+          .venv/bin/python ../scripts/export_openapi.py --check
+          .venv/bin/pip install openapi-spec-validator && .venv/bin/openapi-spec-validator openapi.yaml
       - run: .venv/bin/pip install pip-audit && .venv/bin/pip-audit
 
   frontend:

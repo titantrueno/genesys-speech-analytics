@@ -19,7 +19,11 @@ Es la fuente canónica del contrato. La tabla de endpoints de [backend/README.md
 ## Contexto
 
 - **Cómo se obtuvo** (hecho): el inventario de rutas sale del esquema OpenAPI de la app (`app.openapi()`). Las formas de respuesta se capturaron el 2026-10-02 llamando a cada endpoint con `TestClient`, con `DATA_SEED=42` y `DATA_REFERENCE_DATE=2026-09-27`, y el consumo del front, de buscar `/api/` en `frontend/src/`. Los ejemplos están recortados («…»).
-- **OpenAPI en vivo:** con la API arrancada, `/docs` (Swagger), `/redoc` y `/openapi.json` responden sin sesión. Ojo: casi ninguna ruta declara `response_model`, así que el esquema describe bien parámetros y cuerpos, pero **no las respuestas**. Este documento lo complementa.
+- **OpenAPI (especificación formal):** [backend/openapi.yaml](../../backend/openapi.yaml) (OpenAPI 3.1) describe cada operación con su permiso, sus parámetros, el cuerpo tipado, la respuesta correcta, cada código de error con su forma, la seguridad Bearer y la cabecera `X-Auth-Version`. Con la API arrancada, lo mismo se sirve en `/openapi.json`, `/docs` (Swagger) y `/redoc`, sin sesión.
+  - **Generación:** lo construye `backend/app/openapi/spec.py` sobre el de FastAPI. Los modelos de respuesta (`app/openapi/schemas.py`) son solo documentación: las rutas siguen devolviendo `dict`.
+  - **Exportación:** `python scripts/export_openapi.py`.
+  - **Garantías:** `tests/test_openapi.py` falla si una ruta no está documentada, si el YAML no está al día o si una respuesta real no cumple su esquema en modo estricto (un campo añadido, quitado, renombrado o de otro tipo). `./scripts/ci.sh` lo valida además con `openapi-spec-validator`.
+  - **Reparto:** este documento explica el contrato y su uso desde el front; el YAML es la referencia formal para herramientas (clientes generados, *mocks*, pruebas).
 - **Sin versionado de API:** no hay prefijo `/v1` ni negociación. Front y back se despliegan juntos desde el mismo commit ([ADR-002](../decisiones/adr-002-stack-vite-fastapi-mock.md)).
 
 ## Conocimiento confirmado
@@ -510,15 +514,15 @@ Cada cambio aceptado sube `X-Auth-Version` y audita en la sección `usuarios`.
 - **Mensajes en inglés:** los errores nativos de FastAPI (E2) y algunos de integridad del grafo (E5, como `"Field required"`) salen en inglés; el resto, en español.
 - **Duplicados con códigos distintos:** en Configuración, un código o nombre duplicado responde `422`; en Usuarios y roles, `409`. La UI muestra los dos junto al campo.
 - **Sin uso desde el front:** `GET /api/health` y `GET /api/query/saved/{id}`.
-- **`/docs` sin esquemas de respuesta:** las rutas devuelven `dict`, sin `response_model`, así que el OpenAPI no describe las respuestas. Este documento es la referencia hasta que se tipen.
+- **Modelos de respuesta solo documentales:** las rutas devuelven `dict` y FastAPI no valida la salida contra `app/openapi/schemas.py`. La coherencia la garantiza el test de contrato, que recorre las 58 operaciones con respuestas reales, no el tipado de las rutas.
 - **Hipótesis no verificada:** el contrato no se ha probado con clientes que no sean el front (por ejemplo, integraciones de terceros). Varias respuestas exponen detalles pensados para la UI (`label`, `max_score`, `options`).
-- **Mantenimiento:** al añadir o cambiar una ruta, actualiza este documento en el mismo cambio. Los tests de recorrido del OpenAPI comprueban la protección, pero no la documentación.
+- **Mantenimiento:** al añadir o cambiar una ruta, documéntala en `app/openapi/spec.py` (si no, la API no arranca su `/openapi.json` y la suite falla), regenera `backend/openapi.yaml` y actualiza este documento en el mismo cambio.
 
 ## Fuentes
 
 - [Routers del backend](../../backend/app/routers/): `auth.py`, `metrics.py`, `conversations.py`, `query.py`, `search.py`, `flows.py`, `config.py` y `users.py`
 - [Aplicación, CORS y middleware](../../backend/app/main.py) · [Autenticación](../../backend/app/auth.py) · [Filtros](../../backend/app/services/filters.py) · [Paginación](../../backend/app/services/listing.py) · [Modelo de consulta](../../backend/app/query/model.py) · [Modelo de grafo](../../backend/app/flows/model.py)
 - [Cliente HTTP del front](../../frontend/src/api/client.ts) · [Sesión](../../frontend/src/auth/AuthContext.tsx)
-- [Tests de recorrido de rutas](../../backend/tests/test_auth.py)
+- [Tests de recorrido de rutas](../../backend/tests/test_auth.py) · [OpenAPI exportado](../../backend/openapi.yaml) · [Construcción del OpenAPI](../../backend/app/openapi/spec.py) · [Tests de contrato](../../backend/tests/test_openapi.py)
 - [Arquitectura de la plataforma](arquitectura-de-la-plataforma.md) · [ADR-003](../decisiones/adr-003-auth-mock-por-roles.md) · [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md) · [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md) · [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md) · [Registro de identificadores](../ingenieria/registro-de-identificadores.md)
 - [FastAPI — Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/) (formato E2) · [FastAPI — CORS](https://fastapi.tiangolo.com/tutorial/cors/)
