@@ -7,14 +7,14 @@ import { renderApp, signedInAs, USERS } from '../test/utils'
 type Call = { method: string; path: string; body?: unknown }
 type Reply = { status: number; body?: unknown }
 
-function setup(reply: Record<string, (body: unknown) => Reply> = {}, roles = ROLES) {
+function setup(reply: Record<string, (body: unknown) => Reply | Promise<Reply>> = {}, roles = ROLES) {
   const calls: Call[] = []
-  const record = (method: string, path: string, fallback: (body: unknown) => Reply) => (init: RequestInit) => {
+  const record = (method: string, path: string, fallback: (body: unknown) => Reply) => (init: RequestInit): Reply | Promise<Reply> => {
     const body = init.body ? JSON.parse(String(init.body)) : undefined
     calls.push({ method, path, body })
     return (reply[`${method} ${path}`] ?? fallback)(body)
   }
-  const routes: Record<string, (init: RequestInit) => Reply> = {
+  const routes: Record<string, (init: RequestInit) => Reply | Promise<Reply>> = {
     'GET /api/roles': () => ({ status: 200, body: { items: roles, permissions: PERMISSION_OPTIONS } }),
     'GET /api/users/audit': () => ({ status: 200, body: { items: [] } }),
     'POST /api/roles': record('POST', 'roles', (body) => ({ status: 201, body })),
@@ -101,6 +101,18 @@ describe('Usuarios y roles: pestaña Roles', () => {
         'dashboards:view', 'conversations:view', 'explorer:use', 'flows:view', 'flows:edit'] } },
       { method: 'PUT', path: 'auditor', body: { name: 'Auditor', permissions: ['dashboards:view', 'config:view'] } },
     ]))
+  })
+
+  it('la casilla refleja el clic mientras se guarda, sin esperar a la respuesta', async () => {
+    let release: (reply: Reply) => void = () => {}
+    setup({ 'PUT analista': () => new Promise<Reply>((resolve) => { release = resolve }) })
+    const box = within(await matrix()).getByRole('checkbox', { name: 'Usar la búsqueda semántica · Analista' })
+    await userEvent.click(box)
+    expect(box).not.toBeChecked()
+    expect(box).toBeDisabled()
+    release({ status: 409, body: { detail: 'Rechazado' } })
+    await waitFor(() => expect(box).toBeChecked())
+    expect(box).toBeEnabled()
   })
 
   it('muestra el motivo cuando una protección rechaza el cambio de permisos', async () => {

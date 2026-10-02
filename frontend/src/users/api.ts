@@ -27,7 +27,8 @@ export function useUsersAudit() {
 
 /**
  * Escritura de usuarios o roles. Puede cambiar los permisos de quien la hace (y por tanto su menú y lo que puede
- * consultar), así que al guardar se invalidan todas las consultas en caché.
+ * consultar), así que al guardar se invalidan todas las consultas en caché. La mutación sigue pendiente hasta que
+ * termina esa recarga (`onSuccess` devuelve su promesa).
  */
 export function useUsersMutation<TBody, TResult = unknown>(request: (body: TBody) => Promise<TResult>) {
   const client = useQueryClient()

@@ -35,11 +35,13 @@ function RoleForm({ onDone }: { onDone: () => void }) {
 
 function PermissionMatrix({ roles, permissions }: { roles: RoleItem[]; permissions: PermissionOption[] }) {
   const update = useUsersMutation(userRequests.updateRole)
-  const pendingRole = update.isPending ? update.variables?.id : undefined
+  // Mientras se guarda un rol (hasta que termina la recarga), su columna muestra lo pulsado, no lo que había.
+  const pending = update.isPending ? update.variables : undefined
+  const shown = (role: RoleItem): string[] => (pending?.id === role.id ? pending.body.permissions : role.permissions)
 
   function toggle(role: RoleItem, permission: PermissionOption, granted: boolean) {
     const next = permissions.map((p) => p.value)
-      .filter((p) => (p === permission.value ? granted : role.permissions.includes(p)))
+      .filter((p) => (p === permission.value ? granted : shown(role).includes(p)))
     update.mutate({ id: role.id, body: { name: role.name, permissions: next } })
   }
 
@@ -63,7 +65,7 @@ function PermissionMatrix({ roles, permissions }: { roles: RoleItem[]; permissio
                   <td key={role.id} className="px-2 py-1.5 text-center">
                     <input type="checkbox" className="size-4 accent-brand-600"
                       aria-label={`${permission.label} · ${role.name}`}
-                      checked={role.permissions.includes(permission.value)} disabled={pendingRole === role.id}
+                      checked={shown(role).includes(permission.value)} disabled={pending?.id === role.id}
                       onChange={(e) => toggle(role, permission, e.target.checked)} />
                   </td>
                 ))}
