@@ -46,7 +46,8 @@ export interface AuditEntry {
   id: string
   user: { id: string; name: string }
   at: string
-  section: SectionCode
+  /** Sección de la configuración o `usuarios` (FE006). */
+  section: SectionCode | 'usuarios'
   element: string
   before: unknown
   after: unknown

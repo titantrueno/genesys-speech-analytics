@@ -2,6 +2,8 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { mockApi, renderApp, signedInAs, USERS } from './test/utils'
+import { NAV_ITEMS } from './layout/navigation'
+import { routes } from './router'
 
 const SECTIONS = ['Dashboards', 'Conversaciones', 'Explorador', 'Búsqueda semántica', 'Flujos de insights', 'Configuración', 'Usuarios y roles']
 
@@ -100,11 +102,10 @@ describe('navegación por permisos', () => {
     expect(await screen.findByRole('heading', { name: /sin acceso/i })).toBeInTheDocument()
   })
 
-  it('una sección aún no implementada muestra "Próximamente"', async () => {
-    signedInAs(USERS.admin)
-    renderApp('/usuarios')
-    expect(await screen.findByRole('heading', { name: 'Usuarios y roles' })).toBeInTheDocument()
-    expect(screen.getByText(/próximamente/i)).toBeInTheDocument()
+  it('cada sección del menú tiene sus rutas', () => {
+    const sections = routes.find((r) => r.path === '/')?.children?.filter((r) => r.path && r.path !== '*') ?? []
+    expect(sections.map((r) => `/${r.path}`)).toEqual(NAV_ITEMS.map((item) => item.path))
+    for (const section of sections) expect(section.children?.length, section.path).toBeGreaterThan(0)
   })
 
   it('la raíz lleva a la primera sección permitida', async () => {

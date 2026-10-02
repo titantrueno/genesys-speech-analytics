@@ -1,10 +1,11 @@
+import type { UseQueryResult } from '@tanstack/react-query'
 import { formatDateTime } from '../lib/format'
-import { useAudit } from './api'
 import { formatAuditValue } from './format'
-import type { SectionCode } from './types'
+import type { AuditEntry } from './types'
 
-export function AuditLog({ section }: { section: SectionCode }) {
-  const { data, isError, isPending } = useAudit(section)
+/** Registro de auditoría compartido (FE005 y FE006): cada sección pasa su consulta. */
+export function AuditLog({ query }: { query: UseQueryResult<{ items: AuditEntry[] }> }) {
+  const { data, isError, isPending } = query
   return (
     <section aria-label="Registro de cambios" className="space-y-2 rounded-xl border border-slate-200 bg-white p-5">
       <h2 className="text-sm font-semibold text-slate-900">Registro de cambios</h2>

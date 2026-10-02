@@ -78,7 +78,7 @@
 |---|---|---|
 | T1 | Hecha | `tests/test_users_store.py`: 10 tests (rojo previo: sin `app.audit`). `Role` con `1RO` v5 por código y roles base con nombre; `UserStore.apply` bajo cerrojo con protecciones sobre el estado resultante, versión y auditoría; registro compartido en `app/audit.py` (`/api/config/audit` solo ve secciones de configuración). Tres tests de FE001–FE004 que creaban roles como `set` usan `tests/roles.py`. Mutaciones detectadas: 6 de 6. Suite: 676. |
 | T2 | Hecha | `tests/test_users_api.py`: 44 tests (rojo previo: 42 fallos). `app/routers/users.py` (`/api/users`, `/api/roles`, `/api/users/audit`), `parse_body` compartido con la configuración, `role_name` y último acceso en el login, middleware `X-Auth-Version` expuesto por CORS. Mutaciones: 9 de 10 detectadas; la superviviente (`email.lower()` en el duplicado) es equivalente porque el email se guarda normalizado. Suite: 720. |
-| T3 | Pendiente | — |
+| T3 | Hecha | `users/UsersPage.test.tsx`: 11 tests. `components/Tabs.tsx` y `useTabParam` extraídos de `ConfigPage`; `AuditLog` recibe la consulta (configuración y usuarios); `fieldErrors` acepta también `409` con lista por campo. `/usuarios` con pestañas Usuarios y Roles en la URL; Usuarios con búsqueda (diferida), filtros por rol y estado, alta, edición, desactivar con confirmación, reactivar y motivo de las protecciones. `ComingSoonPage` eliminada: su test pasa a exigir rutas para cada sección del menú. Mutaciones: 5 de 5 detectadas. Front: 278 tests, lint y build limpios. |
 | T4 | Pendiente | — |
 | T5 | Pendiente | — |
 | T6 | Pendiente | — |

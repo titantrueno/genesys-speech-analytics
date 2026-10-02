@@ -34,10 +34,11 @@ export function useConnectors() {
   })
 }
 
-export function useAudit(section: SectionCode) {
+export function useAudit(section: SectionCode, enabled = true) {
   return useQuery({
     queryKey: ['config-audit', section],
     queryFn: ({ signal }) => apiRequest<{ items: AuditEntry[] }>('/api/config/audit', { query: { section }, signal }),
+    enabled,
   })
 }
 
@@ -88,9 +89,12 @@ export function errorFor(errors: Record<string, string>, field: string): string 
   return errors[field] ?? Object.entries(errors).find(([key]) => key.startsWith(`${field}.`))?.[1]
 }
 
-/** Errores por campo de una respuesta `422` (clave: último elemento de la ruta, o `campo.índice` en listas). */
+/**
+ * Errores por campo de una respuesta `422` o `409` (duplicados, FE006) con la lista de FastAPI. Clave: la ruta del
+ * campo sin `body`, con `campo.índice` en listas.
+ */
 export function fieldErrors(error: unknown): Record<string, string> {
-  if (!(error instanceof ApiError) || error.status !== 422 || !Array.isArray(error.detail)) return {}
+  if (!(error instanceof ApiError) || ![409, 422].includes(error.status) || !Array.isArray(error.detail)) return {}
   const result: Record<string, string> = {}
   for (const issue of error.detail as FieldIssue[]) {
     const path = issue.loc.filter((part) => part !== 'body')

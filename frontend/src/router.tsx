@@ -2,7 +2,6 @@ import { createBrowserRouter, createMemoryRouter, Outlet, type RouteObject } fro
 import { RequireAuth, RequirePermission } from './auth/guards'
 import { AppLayout } from './layout/AppLayout'
 import { NAV_ITEMS, type NavItem } from './layout/navigation'
-import { ComingSoonPage } from './pages/ComingSoonPage'
 import { HomeRedirect } from './pages/HomeRedirect'
 import { LoginPage } from './pages/LoginPage'
 import { NotFoundPage } from './pages/NotFoundPage'
@@ -42,6 +41,13 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
       lazy: async () => ({ Component: (await import('./config/ConfigPage')).ConfigPage }),
     },
   ],
+  '/usuarios': [
+    {
+      index: true,
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./users/UsersPage')).UsersPage }),
+    },
+  ],
   '/flujos': [
     { index: true, element: <FlowsPage /> },
     {
@@ -68,7 +74,7 @@ function sectionRoute(item: NavItem): RouteObject {
     path: item.path.slice(1),
     element: (
       <RequirePermission permission={item.permission}>
-        {SECTION_ROUTES[item.path] ? <Outlet /> : <ComingSoonPage item={item} />}
+        <Outlet />
       </RequirePermission>
     ),
     children: SECTION_ROUTES[item.path],
