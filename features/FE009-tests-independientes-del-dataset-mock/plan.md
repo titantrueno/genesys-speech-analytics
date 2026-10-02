@@ -76,4 +76,6 @@
 | 123 / 2026-04-15 | 64 fallos | 666 passed |
 | 2026 / 2025-12-31 | 62 fallos | 666 passed |
 
-**FE009 completada (fase `/build`).** Siguiente fase del ciclo: `/test`, `/review` y `/ship`.
+**FE009 completada (fase `/build`).**
+
+**Ciclo cerrado:** [VERIFY](VERIFY.md) · [REVIEW](REVIEW.md) · [SHIP](SHIP.md). Entregada en `v0.5.1`.
