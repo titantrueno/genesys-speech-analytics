@@ -40,12 +40,14 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 | `analista@bancohorizonte.demo` | analista | Dashboards, conversaciones, explorador, búsqueda y flujos |
 | `viewer@bancohorizonte.demo` | viewer | Dashboards y conversaciones |
 
+Es el estado inicial: desde Usuarios y roles (FE006) se crean usuarios, que comparten la misma contraseña demo, y roles personalizados, y se cambian los permisos de cualquier rol.
+
 ## Endpoints
 
 | Método y ruta | Permiso | Descripción |
 |---|---|---|
 | `POST /api/auth/login` | público | Devuelve token Bearer y usuario. |
-| `GET /api/auth/me` | autenticado | Usuario actual y permisos. |
+| `GET /api/auth/me` | autenticado | Usuario actual, nombre de su rol (`role_name`) y permisos. |
 | `GET /api/metrics/summary` | `dashboards:view` | 13 KPIs con periodo anterior, variación, objetivo y estado (`verde`/`ambar`/`rojo`); cumplimiento por check activo. Con `dashboard`, solo los KPIs que se muestran en él. |
 | `GET /api/metrics/timeseries?kpi=&granularity=day\|week` | `dashboards:view` | Serie temporal de un KPI. |
 | `GET /api/metrics/breakdown?dimension=main_topic\|channel\|queue\|agent` | `dashboards:view` | KPIs por grupo. |
@@ -73,7 +75,10 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 | `GET /api/config/connectors`, `POST /api/config/connectors/{id}/sync` | `config:view` / `config:edit` | Conectores mock (`1CN-…`) y sincronización simulada. |
 | `GET /api/config/taxonomy`, `POST/PUT/DELETE /api/config/taxonomy/{main-topics,secondary-topics}[/{id}]` | `config:view` / `config:edit` | Taxonomía (`1TP-…`, `1TS-…`); el código no cambia y uno en uso no se borra (`409`). |
 | `GET/POST /api/config/compliance-checks`, `PUT/DELETE /api/config/compliance-checks/{id}` | `config:view` / `config:edit` | Checks de cumplimiento (`1CK-…`); los de FE001 no se borran (`409`). |
-| `GET /api/config/audit?section=` | `config:view` | Registro de cambios (`1AU-…`), el más reciente primero. |
+| `GET /api/config/audit?section=` | `config:view` | Registro de cambios de la configuración (`1AU-…`), el más reciente primero. |
+| `GET /api/users?q=&role=&active=`, `POST /api/users`, `PUT /api/users/{id}` | `users:admin` | Usuarios (`1US-…`) con rol, estado y último acceso; búsqueda por nombre o email sin tildes. Email duplicado: `409` en el campo `email`. Desactivar invalida su sesión. |
+| `GET/POST /api/roles`, `PUT/DELETE /api/roles/{id}` | `users:admin` | Roles (`1RO-…`) con nº de usuarios y catálogo de permisos con etiqueta. Los base no se borran ni se renombran; uno en uso no se borra (`409`). |
+| `GET /api/users/audit` | `users:admin` | Registro de cambios de usuarios y roles, el más reciente primero. |
 
 **Filtros comunes:** `from`, `to` (por defecto, los últimos 30 días), `channel`, `queue` (IDs `1QU-…`), `agent` (IDs `1AG-…`), `main_topic` (códigos). El listado admite además `resolution`, `churn_risk`, `sentiment_lt`, `compliant` y `repeat_contact`, que usa el drill-down desde los KPIs.
 
@@ -83,6 +88,8 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 
 **Configuración y privacidad:** la configuración es global, en memoria y leída en cada petición; los datos personales se enmascaran por defecto, y el índice de búsqueda y los prompts usan siempre el texto enmascarado (`vault/decisiones/adr-007-configuracion-global-y-enmascarado.md`). Los días de los filtros se calculan en la zona horaria configurada.
 
+**Usuarios y roles:** toda escritura pasa por `UserStore.apply`, que rechaza con `409` lo que dejaría la plataforma sin administración: quitarse a uno mismo `users:admin`, dejar sin ningún `admin` activo o quitar `users:admin` al rol `admin`. Cada respuesta lleva `X-Auth-Version` (expuesta por CORS); el front recarga `/api/auth/me` cuando cambia (`vault/decisiones/adr-003-auth-mock-por-roles.md`).
+
 **Identificadores:** formato `PREFIJO-UUID` generado solo con `app/ids.py` (ver el registro en `vault/ingenieria/registro-de-identificadores.md`).
 
 ## Estructura
@@ -90,7 +97,8 @@ Contraseña de todos: `demo` (mock, solo para demo; ver ADR-003 en el vault).
 ```text
 app/
   main.py            # app FastAPI, CORS, routers
-  auth.py            # usuarios demo, token HMAC, require_permission
+  auth.py            # usuarios y roles en memoria, protecciones, token HMAC, require_permission
+  audit.py           # registro de auditoría compartido (configuración y usuarios)
   ids.py             # identificadores PREFIJO-UUID
   models.py          # modelos Pydantic
   data/              # catálogo bancario, guiones, generador y store
@@ -98,8 +106,8 @@ app/
   query/             # modelo, campos, motor, intérprete y consultas guardadas del explorador
   search/            # búsqueda semántica: interfaz SearchEngine, TF-IDF, diccionario de sinónimos (ADR-005)
   flows/             # flujos de insights: modelo JSON, reglas, sampling, prompt simulado, outputs y ejecuciones (ADR-006)
-  config/            # configuración global: store con auditoría, taxonomía, checks y cumplimiento efectivo, KPIs (ADR-007)
+  config/            # configuración global: store, taxonomía, checks y cumplimiento efectivo, KPIs (ADR-007)
   privacy/           # enmascarado de datos personales
-  routers/           # auth, metrics, conversations, query, search, flows, config
+  routers/           # auth, metrics, conversations, query, search, flows, config, users
 tests/
 ```

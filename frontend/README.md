@@ -24,7 +24,7 @@ En desarrollo, Vite reenvía `/api` a `http://localhost:8000` (configurable con 
 ```text
 src/
   api/            # cliente HTTP, hooks de TanStack Query
-  auth/           # contexto de sesión, guards de ruta, permisos
+  auth/           # contexto de sesión, guards de ruta, permisos (se recargan si cambia X-Auth-Version)
   layout/         # layout con navegación por permisos
   dashboards/     # dashboards, filtros en URL, drill-down, gráficos
   conversations/  # listado, detalle tipo chat (abre en ?turn=N), panel de análisis, useRowNavigation
@@ -32,9 +32,11 @@ src/
   search/         # búsqueda semántica, resultados por fragmento y conversaciones similares
   flows/          # flujos de insights: listado, editor con React Flow, paneles por nodo, ejecución e historial
   config/         # configuración: siete pestañas, errores por campo, confirmación en fila y registro de cambios
+  users/          # usuarios y roles: listado con filtros, alta y edición, roles y matriz de permisos
+  components/     # piezas compartidas (pestañas en la URL, selector múltiple)
   lib/            # formato (todas las fechas, en la zona horaria de la plataforma) y resaltado
-  pages/          # login, sin acceso, próximamente
-  router.tsx      # rutas (dashboard, flujos y configuración se cargan en diferido)
+  pages/          # login, sin acceso, no encontrado
+  router.tsx      # rutas (dashboard, flujos, configuración y usuarios se cargan en diferido)
 ```
 
 Convenciones: filtros en la URL; drill-down con el filtro del numerador de cada KPI (`dashboards/drilldown.ts`); filas de tabla y tarjetas de resultado navegables con `useRowNavigation`, según `vault/ingenieria/patrones-de-interfaz.md`; paleta de gráficos validada (`--series-*` en `index.css`).

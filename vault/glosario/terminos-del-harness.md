@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [glosario, harness]
 created: 2026-09-27
-updated: 2026-09-29
+updated: 2026-10-02
 ---
 
 # Términos del harness
@@ -50,7 +50,10 @@ updated: 2026-09-29
 - **Check por frases:** check de cumplimiento creado en Configuración que se cumple si el agente dice alguna de sus frases. Los seis checks de FE001 son **checks del análisis**: su resultado viene del análisis de cada conversación.
 - **Umbral (verde / ámbar):** valores de un KPI que colorean su tarjeta. Si más es mejor, verde a partir del umbral verde, ámbar a partir del ámbar y rojo por debajo; si más es peor, al revés. Un valor igual al umbral toma el color mejor.
 - **Enmascarado de PII:** sustitución de teléfonos, emails, DNI/NIE, IBAN y tarjetas completas por `[TELÉFONO]`, `[EMAIL]`, `[DNI]`, `[IBAN]` y `[TARJETA]`. Activado por defecto; el índice de búsqueda y los prompts lo aplican siempre.
-- **Registro de auditoría:** entrada `1AU` por cada cambio de configuración aceptado, con quién, cuándo, sección, elemento, valor anterior y nuevo.
+- **Registro de auditoría:** entrada `1AU` por cada cambio aceptado de configuración (FE005) o de usuarios y roles (FE006), con quién, cuándo, sección, elemento, valor anterior y nuevo. El registro es compartido; cada sección muestra solo sus entradas.
+- **Rol:** conjunto de permisos con código (clave en los usuarios, no cambia), nombre e identificador `1RO`. Los roles **base** (`admin`, `supervisor`, `analista` y `viewer`) no se pueden borrar; los **personalizados** se crean desde Usuarios y roles ([ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)).
+- **Permiso:** acción o sección que un rol habilita. La lista es fija: `dashboards:view` (ver dashboards), `conversations:view` (ver conversaciones), `explorer:use` (usar el explorador), `search:use` (usar la búsqueda semántica), `flows:view` (ver flujos), `flows:edit` (editar y ejecutar flujos), `config:view` (ver configuración), `config:edit` (editar configuración) y `users:admin` (administrar usuarios y roles).
+- **Matriz de permisos:** tabla de la pestaña Roles con los permisos en filas y los roles en columnas; cada casilla se guarda al cambiarla y se aplica en la siguiente petición de los usuarios del rol.
 - **Drill-down:** navegar de un elemento agregado de un dashboard al listado de las conversaciones que lo componen.
 
 ## Fuentes
@@ -59,3 +62,4 @@ updated: 2026-09-29
 - [Gobierno del vault](../Governance.md)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
+- [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)

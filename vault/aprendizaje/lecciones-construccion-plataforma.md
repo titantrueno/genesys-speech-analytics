@@ -3,7 +3,7 @@ title: "Lecciones de la construcción de la plataforma"
 type: lesson
 status: active
 owners: [equipo-del-proyecto]
-tags: [aprendizaje, testing, fastapi, react, recharts]
+tags: [aprendizaje, testing, fastapi, react, recharts, usuarios]
 created: 2026-09-27
 updated: 2026-10-02
 ---
@@ -12,7 +12,7 @@ updated: 2026-10-02
 
 ## Situación
 
-Durante FE001, FE007, FE008, FE002, FE003 y FE004 aparecieron comportamientos de librerías y fallos de verificación que no eran evidentes a priori y que afectarán a las features siguientes.
+Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009 y FE006 aparecieron comportamientos de librerías y fallos de verificación que no eran evidentes a priori y que afectarán a las features siguientes.
 
 ## Resultado observado
 
@@ -44,6 +44,9 @@ Durante FE001, FE007, FE008, FE002, FE003 y FE004 aparecieron comportamientos de
 26. **FE005:** la spec daba por hecho un único `GET /api/config`, pero exige `config:view`: la zona horaria y el nombre, que necesitan todos los roles y el login, no llegaban. Hubo que exponerlos en una ruta pública mínima.
 27. **FE005:** el enmascarado pasaba el test del dataset completo, pero tomaba por DNI «20213570 y»: el dataset nunca pone un número de 8 cifras delante de una conjunción. Además, el plan afirmaba que se validaba la letra de control y no era así.
 28. **FE009:** 53–64 tests de FE001–FE003 solo pasaban con la semilla 42 y la fecha 2026-09-27: fechas absolutas, datasets propios con semilla fija para calcular el esperado y hechos de una semilla. Nadie lo veía porque el gate solo ejecutaba una combinación.
+29. **FE006:** Chrome mostró que una casilla de la matriz de permisos no cambiaba al pulsarla hasta que terminaban el guardado y la recarga: el control es controlado y su valor venía del servidor. En jsdom pasaba, porque user-event espera a la respuesta simulada.
+30. **FE006:** la versión de usuarios y roles vista por el front vivía en el módulo del cliente HTTP y sobrevivía a una sesión nueva, así que la primera respuesta de otra sesión forzaba una recarga de `/me` de más. Lo detectó el test «sin cambio de versión no vuelve a pedir el usuario».
+31. **FE006:** cuatro tests de FE001–FE004 creaban roles escribiendo un `set` directamente en el store; al convertir los roles en entidades fallaron por la estructura interna y no por el comportamiento.
 
 ## Causa
 
@@ -77,6 +80,9 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - En tests de componentes, busca con `findBy…` todo lo que depende de datos remotos, aunque su contenedor ya esté en pantalla; repite un test sospechoso varias veces antes de darlo por estable.
 - Un test sobre el dataset mock solo cubre lo que el generador produce: para lo que convierte texto libre (enmascarado, parsers) añade una propiedad con datos generados junto a textos seguros, y contrasta cada afirmación del plan con el código.
 - Al diseñar una configuración global, separa lo que necesitan todos los roles (y el login) de lo que solo ve quien la administra.
+- Un control que guarda al cambiar muestra el valor pendiente hasta que la recarga termina; compruébalo en el navegador, porque los tests con respuestas inmediatas no lo ven.
+- El estado de módulo del front ligado a una sesión (versiones vistas, cachés) se reinicia al cargar, iniciar y cerrar la sesión.
+- Los tests crean entidades de dominio con un helper (`tests/roles.py`) o por la API, no escribiendo en estructuras internas del store.
 - Ejecuta las mutaciones de Python sin caché de bytecode (`python -B` y `PYTHONDONTWRITEBYTECODE=1`); una mutación que sobrevive se confirma a mano antes de tocar el test.
 
 ## Acción preventiva
@@ -86,6 +92,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - Revisar esta lista en `/plan` de FE004 a FE006.
 - FE005: tests estructurales (ningún módulo importa el catálogo fijo fuera de `app/data/` y `app/config/`; ningún componente formatea fechas fuera de `lib/format.ts`) y test de enmascarado sobre el dataset completo.
 - FE003: test de despedidas en los representantes (< 10 %) y test de pares contra los turnos reales del dataset.
+- FE006: test de la casilla con un guardado lento, test de recarga de `/me` solo con cambio de versión y `tests/roles.py`.
 - FE004: mock de React Flow con `contentRect` en `frontend/src/test/reactFlow.ts`, tests de ida y vuelta, test de arranque concurrente determinista y patrón de lienzo en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 
 ## Fuentes
@@ -97,4 +104,5 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Plan y evidencia de FE004](../../features/FE004-disenador-de-flujos-de-insights/plan.md)
 - [Plan y evidencia de FE005](../../features/FE005-configuracion-de-la-plataforma/plan.md)
 - [Plan y evidencia de FE009](../../features/FE009-tests-independientes-del-dataset-mock/plan.md)
+- [Plan y evidencia de FE006](../../features/FE006-gestion-de-usuarios-y-roles/plan.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

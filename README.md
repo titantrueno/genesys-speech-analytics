@@ -55,5 +55,5 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE003 Búsqueda semántica de conversaciones | Entregada en `v0.3.0` |
 | FE004 Diseñador de flujos de insights | Entregada en `v0.4.0` |
 | FE005 Configuración de la plataforma | Entregada en `v0.5.0` |
-| FE006 Usuarios y roles | Especificada (aparece como «Próximamente») |
+| FE006 Usuarios y roles | Entregada en `v0.6.0` |
 | FE009 Tests independientes del dataset mock | Entregada en `v0.5.1` |

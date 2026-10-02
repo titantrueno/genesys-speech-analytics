@@ -3,9 +3,9 @@ title: "Arquitectura de la plataforma"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad]
+tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad, usuarios, roles]
 created: 2026-09-27
-updated: 2026-09-29
+updated: 2026-10-02
 ---
 
 # Arquitectura de la plataforma
@@ -23,13 +23,14 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 | Generador de datos | `backend/app/data/` | 1.000 conversaciones de 90 días a partir de semilla y fecha de referencia; catálogo bancario, guiones por main topic, análisis correlacionado. |
 | Store | `backend/app/data/store.py` | Dataset cacheado, índice por identificador e índice de recontacto a 7 días (FCR). |
 | Servicios | `backend/app/services/` | Filtros comunes y de drill-down; cálculo de los 13 KPIs. |
-| Auth | `backend/app/auth.py` | Usuarios demo, token HMAC y `require_permission` (ver [ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)). |
+| Auth | `backend/app/auth.py` | Usuarios y roles (`1RO`) en memoria con escritura única y protecciones, token HMAC y `require_permission` (ver [ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)). |
+| Auditoría | `backend/app/audit.py` | Registro `1AU` compartido por la configuración (FE005) y por usuarios y roles (FE006). |
 | Identificadores | `backend/app/ids.py` | `PREFIJO-UUID` (ver el [registro](../ingenieria/registro-de-identificadores.md)). |
 | Búsqueda semántica | `backend/app/search/` | Índice por fragmentos construido al arrancar, interfaz `SearchEngine`, TF-IDF y diccionario de sinónimos (ver [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md)). |
 | Flujos de insights | `backend/app/flows/` | Formato JSON del flujo, integridad y reglas de conexión, validación, sampling, prompt simulado detrás de `PromptRunner`, outputs y ejecuciones en segundo plano (ver [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)). |
-| Configuración | `backend/app/config/` | Instantánea global versionada con auditoría (`store.py`), secciones Pydantic (`model.py`), taxonomía, checks y cumplimiento efectivo, y KPIs (ver [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). |
+| Configuración | `backend/app/config/` | Instantánea global versionada (`store.py`, audita en `app/audit.py`), secciones Pydantic (`model.py`), taxonomía, checks y cumplimiento efectivo, y KPIs (ver [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). |
 | Privacidad | `backend/app/privacy/masking.py` | Enmascarado de PII por patrones sobre una copia de cada conversación. |
-| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador, búsqueda semántica, diseñador de flujos y configuración. |
+| Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador, búsqueda semántica, diseñador de flujos, configuración y usuarios y roles. |
 
 ### Flujo de datos
 
@@ -102,6 +103,14 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Privacidad:** enmascarado activado por defecto al serializar detalle, listado, explorador y búsqueda. El índice de búsqueda y los prompts de los flujos usan **siempre** texto enmascarado. Lo justifica la regla del [gobierno del vault](../Governance.md) de no reproducir datos personales innecesarios.
 - **Front:** `/configuracion` en diferido con siete pestañas (la activa en `?tab=`); al guardar se invalidan todas las consultas en caché. `AppLayout` lee la configuración pública y fija la zona horaria de `lib/format.ts`, el único módulo que formatea fechas.
 
+### Usuarios y roles (FE006)
+
+- **Modelo:** usuarios (`1US`, con estado y último acceso) y roles (`1RO`, v5 derivado del código, que no cambia). Los cuatro roles base no se borran ni se renombran, pero sus permisos sí se editan; los personalizados se crean, renombran y borran si no tienen usuarios.
+- **Escritura única:** `UserStore.apply` calcula el estado resultante sobre copias, comprueba las protecciones, lo confirma, sube la versión y audita (sección `usuarios`) bajo un cerrojo. Las protecciones (`409`): quien cambia algo conserva `users:admin`; queda al menos un usuario activo con el rol `admin`; el rol `admin` conserva `users:admin` ([ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)).
+- **Rutas:** `/api/users`, `/api/roles` y `/api/users/audit`, todas con `users:admin`. `/api/config/audit` solo devuelve secciones de configuración, aunque el registro sea compartido.
+- **Refresco de permisos:** el backend relee usuario y rol en cada petición. Un middleware añade `X-Auth-Version` (versión de usuarios y roles) a toda respuesta y CORS la expone; `api/client.ts` avisa cuando cambia y `AuthProvider` recarga `/api/auth/me`, así que menú y guardas cambian en la siguiente petición sin recargar.
+- **Front:** `/usuarios` en diferido con pestañas Usuarios y Roles (en `?tab=`), matriz de permisos que guarda al cambiar cada casilla y el registro de cambios. Las pestañas (`components/Tabs.tsx`) y el registro (`config/AuditLog.tsx`) se comparten con la configuración.
+
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
@@ -114,6 +123,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
 - Desde FE005, los DNI e IBAN ficticios de las conversaciones de voz se enmascaran por defecto y nunca llegan al índice de búsqueda ni a los prompts. Los patrones son españoles más email y tarjeta completa; con datos reales podrían escaparse formatos no previstos (hipótesis, [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
 - La configuración es global y en memoria: se pierde al reiniciar, y si dos administradores la editan a la vez gana la última escritura.
+- Usuarios y roles creados desde la UI se pierden al reiniciar (fuera de alcance de FE006). La contraseña demo es la misma para todos, también para los usuarios nuevos ([ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)).
 - Flujos y ejecuciones viven en memoria. Si dos personas guardan el mismo flujo, gana el último guardado. Los resultados del prompt son simulados ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
 - La búsqueda semántica es léxica: sus limitaciones medidas (puntuaciones bajas, dependencia del diccionario, sesgo hacia texto plantillado) están en [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md).
 
@@ -128,4 +138,5 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE003](../../features/FE003-busqueda-semantica-de-conversaciones/spec.md)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
+- [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)
 - [Gobierno del vault](../Governance.md)

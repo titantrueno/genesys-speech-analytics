@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [ingenieria, frontend, ux, accesibilidad]
 created: 2026-09-27
-updated: 2026-09-29
+updated: 2026-10-02
 ---
 
 # Patrones de interfaz
@@ -64,19 +64,25 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 
 **Cuándo:** varias vistas del mismo nivel (outputs de una ejecución).
 
-**Cómo:** patrón de pestañas de WAI-ARIA: `tablist`, `tab` con `aria-selected` y `aria-controls`, un único `tab` con `tabIndex` 0 y flechas izquierda y derecha en ciclo. En Configuración (FE005) la pestaña activa vive en la URL (`?tab=`).
+**Cómo:** patrón de pestañas de WAI-ARIA: `tablist`, `tab` con `aria-selected` y `aria-controls`, un único `tab` con `tabIndex` 0 y flechas izquierda y derecha en ciclo. En Configuración (FE005) y en Usuarios y roles (FE006) la pestaña activa vive en la URL (`?tab=`): `components/Tabs.tsx` y `components/useTabParam.ts`.
 
 ### Formulario con errores del backend
 
-**Cuándo:** formularios que valida el backend (Configuración, FE005).
+**Cuándo:** formularios que valida el backend (Configuración, FE005; Usuarios y roles, FE006).
 
-**Cómo:** `ConfigField` (`frontend/src/config/controls.tsx`) muestra el mensaje del `422` bajo su campo, lo enlaza con `aria-describedby` y marca el control con `aria-invalid`; lo escrito se conserva. `fieldErrors` convierte `loc` en claves (`platform_name`, `keywords.0`). Guardar solo se habilita con cambios y confirma «Cambios guardados» con `role="status"`. Sin permiso de edición, un `fieldset` deshabilitado y sin botones.
+**Cómo:** `ConfigField` (`frontend/src/config/controls.tsx`) muestra el mensaje del `422` bajo su campo, lo enlaza con `aria-describedby` y marca el control con `aria-invalid`; lo escrito se conserva. `fieldErrors` convierte `loc` en claves (`platform_name`, `keywords.0`), tanto de un `422` como de un `409` por duplicado (email, código). Un `409` con texto (una protección, un rol en uso) se muestra como alerta con el motivo. Guardar solo se habilita con cambios y confirma «Cambios guardados» con `role="status"`. Sin permiso de edición, un `fieldset` deshabilitado y sin botones.
 
 ### Confirmación en la fila
 
 **Cuándo:** acciones destructivas o que ocultan algo (borrar, desactivar) en una tabla.
 
 **Cómo:** `ConfirmAction`: el primer clic sustituye el botón por la pregunta y «Confirmar» / «No» en la propia fila; no hay diálogos modales. Una acción imposible (borrar un tema en uso, borrar un check del análisis) no se ofrece.
+
+### Matriz que guarda al cambiar
+
+**Cuándo:** casillas que se guardan una a una sin botón Guardar (matriz de permisos, FE006).
+
+**Cómo:** mientras se guarda, la columna afectada muestra lo pulsado (variables de la mutación) y se deshabilita; la mutación sigue pendiente hasta que termina la recarga de datos, así que no hay parpadeo. Si el backend lo rechaza, vuelve al valor guardado y se muestra el motivo. Cada casilla tiene nombre accesible «permiso · rol».
 
 ### Fechas
 
@@ -93,6 +99,7 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 - [Implementación](../../frontend/src/conversations/ConversationsPage.tsx)
 - [Tests](../../frontend/src/conversations/RowNavigation.test.tsx)
 - [Tests de la búsqueda](../../frontend/src/search/SearchNavigation.test.tsx) (FE003)
+- [Tests de la matriz de permisos](../../frontend/src/users/RolesTab.test.tsx) (FE006)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
 - [React Flow · Testing](https://reactflow.dev/learn/advanced-use/testing)
