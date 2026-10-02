@@ -88,7 +88,7 @@ Es el estado inicial: desde Usuarios y roles (FE006) se crean usuarios, que comp
 
 **Configuración y privacidad:** la configuración es global, en memoria y leída en cada petición; los datos personales se enmascaran por defecto, y el índice de búsqueda y los prompts usan siempre el texto enmascarado (`vault/decisiones/adr-007-configuracion-global-y-enmascarado.md`). Los días de los filtros se calculan en la zona horaria configurada.
 
-**Usuarios y roles:** toda escritura pasa por `UserStore.apply`, que rechaza con `409` lo que dejaría la plataforma sin administración: quitarse a uno mismo `users:admin`, dejar sin ningún `admin` activo o quitar `users:admin` al rol `admin`. Cada respuesta lleva `X-Auth-Version` (expuesta por CORS); el front recarga `/api/auth/me` cuando cambia (`vault/decisiones/adr-003-auth-mock-por-roles.md`).
+**Usuarios y roles:** toda escritura pasa por `UserStore.apply`, que rechaza con `409` lo que dejaría la plataforma sin administración: quitarse a uno mismo `users:admin`, dejar sin ningún `admin` activo o quitar `users:admin` al rol `admin`. Cada respuesta a una petición con sesión lleva `X-Auth-Version` (expuesta por CORS); el front recarga `/api/auth/me` cuando cambia (`vault/decisiones/adr-003-auth-mock-por-roles.md`).
 
 **Identificadores:** formato `PREFIJO-UUID` generado solo con `app/ids.py` (ver el registro en `vault/ingenieria/registro-de-identificadores.md`).
 

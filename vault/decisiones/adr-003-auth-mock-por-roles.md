@@ -40,7 +40,7 @@ La plataforma necesita que el acceso a cada sección dependa del rol del usuario
   - debe quedar al menos un usuario activo con el rol `admin`;
   - el rol `admin` conserva `users:admin`.
 - **Errores por campo:** `422` de validación y `409` por email (sin distinguir mayúsculas), código o nombre de rol duplicados, con el formato `loc`/`msg` de FastAPI para que la UI los muestre junto al campo.
-- **Refresco en el front:** cabecera `X-Auth-Version` en cada respuesta (expuesta por CORS). Si cambia, el front recarga `/api/auth/me`; menú y guardas cambian en la siguiente petición. Desactivar a un usuario invalida su token en su siguiente petición (`401`).
+- **Refresco en el front:** cabecera `X-Auth-Version` en cada respuesta a una petición con sesión (expuesta por CORS; sin sesión no se envía, para no revelar la actividad de la gestión). Si cambia, el front recarga `/api/auth/me`; menú y guardas cambian en la siguiente petición. Desactivar a un usuario invalida su token en su siguiente petición (`401`).
 - **Último acceso:** se guarda al iniciar sesión; se pierde al reiniciar, como el resto del estado.
 
 ## Alternativas

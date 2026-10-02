@@ -156,8 +156,11 @@ class UserStore:
             get_audit_log().record(actor, AUDIT_SECTION, element, before, after)
 
     def touch_login(self, user: User) -> None:
+        """Anota el acceso en el usuario vigente: el objeto recibido puede haber sido sustituido por `apply`."""
         with self._lock:
-            user.last_login = now()
+            current = self.users.get(user.id)
+            if current is not None:
+                current.last_login = now()
 
 
 def _new_store() -> UserStore:

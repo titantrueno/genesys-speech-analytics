@@ -38,9 +38,13 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def auth_version(request: Request, call_next):
-        """Versión de usuarios y roles: si cambia, el front vuelve a pedir `/api/auth/me` (FE006)."""
+        """Versión de usuarios y roles: si cambia, el front vuelve a pedir `/api/auth/me` (FE006).
+
+        Solo en peticiones con sesión: sin ella no hay permisos que refrescar y no se revela la actividad de la gestión.
+        """
         response = await call_next(request)
-        response.headers[AUTH_VERSION_HEADER] = str(auth.get_store().version)
+        if "authorization" in request.headers:
+            response.headers[AUTH_VERSION_HEADER] = str(auth.get_store().version)
         return response
 
     @app.get("/api/health")

@@ -364,3 +364,19 @@ def test_concurrent_creations_with_the_same_email_create_only_one_user(api, monk
         t.join()
     assert sorted(statuses) == [201, 409, 409, 409]
     assert [u["email"] for u in users(api, q=NEW_USER["email"])] == [NEW_USER["email"]]
+
+
+def test_auth_version_is_only_sent_to_requests_with_a_session():
+    anonymous = TestClient(app)
+    assert "x-auth-version" not in anonymous.get("/api/health").headers
+    assert "x-auth-version" not in login(ANALISTA).headers
+
+
+def test_last_access_is_recorded_on_the_current_user_even_if_it_was_replaced_meanwhile(api):
+    """`authenticate` devuelve un objeto que otra escritura puede sustituir antes de anotar el acceso."""
+    store = auth.get_store()
+    stale = store.find_by_email(ANALISTA)
+    analista = get_user(api, ANALISTA)
+    api.put(f"/api/users/{analista['id']}", json=body_of(analista, name="Ana Lista"))
+    store.touch_login(stale)
+    assert get_user(api, ANALISTA)["last_login"] is not None
