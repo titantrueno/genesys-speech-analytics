@@ -339,3 +339,28 @@ def test_rejected_or_empty_changes_are_not_audited(api):
 def test_user_changes_stay_out_of_the_config_audit(api):
     api.post("/api/users", json=NEW_USER)
     assert api.get("/api/config/audit").json()["items"] == []
+
+
+def test_concurrent_creations_with_the_same_email_create_only_one_user(api, monkeypatch):
+    """La comprobación del email y el alta van bajo el mismo cerrojo: una ventana lenta no deja pasar dos altas."""
+    import threading
+    import time
+
+    from app.routers import users as users_router
+
+    original = users_router._validated_user
+
+    def slow(*args):
+        original(*args)
+        time.sleep(0.05)
+
+    monkeypatch.setattr(users_router, "_validated_user", slow)
+    statuses = []
+    threads = [threading.Thread(target=lambda: statuses.append(api.post("/api/users", json=NEW_USER).status_code))
+               for _ in range(4)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert sorted(statuses) == [201, 409, 409, 409]
+    assert [u["email"] for u in users(api, q=NEW_USER["email"])] == [NEW_USER["email"]]
