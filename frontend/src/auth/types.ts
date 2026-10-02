@@ -7,5 +7,7 @@ export interface User {
   name: string
   email: string
   role: string
+  /** Nombre legible del rol, también de los personalizados (FE006). */
+  role_name: string
   permissions: Permission[]
 }

@@ -10,24 +10,24 @@ export const ALL_PERMISSIONS: Permission[] = [
 ]
 
 export const USERS: Record<'admin' | 'supervisor' | 'viewer' | 'analista' | 'lector', User> = {
-  admin: { id: '1US-00000001-0000-5000-8000-000000000001', name: 'Admin Demo', email: 'admin@bancohorizonte.demo', role: 'admin', permissions: ALL_PERMISSIONS },
+  admin: { id: '1US-00000001-0000-5000-8000-000000000001', name: 'Admin Demo', email: 'admin@bancohorizonte.demo', role: 'admin', role_name: 'Administrador', permissions: ALL_PERMISSIONS },
   supervisor: {
-    id: '1US-00000005-0000-5000-8000-000000000005', name: 'Supervisora Demo', email: 'supervisor@bancohorizonte.demo', role: 'supervisor',
+    id: '1US-00000005-0000-5000-8000-000000000005', name: 'Supervisora Demo', email: 'supervisor@bancohorizonte.demo', role: 'supervisor', role_name: 'Supervisor',
     permissions: ALL_PERMISSIONS.filter((p) => p !== 'config:edit' && p !== 'users:admin'),
   },
-  viewer: { id: '1US-00000002-0000-5000-8000-000000000002', name: 'Viewer Demo', email: 'viewer@bancohorizonte.demo', role: 'viewer', permissions: ['dashboards:view', 'conversations:view'] },
+  viewer: { id: '1US-00000002-0000-5000-8000-000000000002', name: 'Viewer Demo', email: 'viewer@bancohorizonte.demo', role: 'viewer', role_name: 'Consulta', permissions: ['dashboards:view', 'conversations:view'] },
   analista: {
-    id: '1US-00000003-0000-5000-8000-000000000003', name: 'Analista Demo', email: 'analista@bancohorizonte.demo', role: 'analista',
+    id: '1US-00000003-0000-5000-8000-000000000003', name: 'Analista Demo', email: 'analista@bancohorizonte.demo', role: 'analista', role_name: 'Analista',
     permissions: ['dashboards:view', 'conversations:view', 'explorer:use', 'search:use', 'flows:view', 'flows:edit'],
   },
   // Rol que solo puede ver flujos (FE004); con los roles por defecto no existe, FE006 permitirá crearlo.
   lector: {
-    id: '1US-00000004-0000-5000-8000-000000000004', name: 'Lectora Demo', email: 'lectora@bancohorizonte.demo', role: 'lector_flujos',
+    id: '1US-00000004-0000-5000-8000-000000000004', name: 'Lectora Demo', email: 'lectora@bancohorizonte.demo', role: 'lector_flujos', role_name: 'Lector de flujos',
     permissions: ['flows:view'],
   },
 }
 
-type Reply = { status: number; body?: unknown }
+type Reply = { status: number; body?: unknown; headers?: Record<string, string> }
 type Handler = (init: RequestInit & { url: string }) => Reply | Promise<Reply>
 
 export function mockApi(routes: Record<string, Handler>) {
@@ -36,9 +36,9 @@ export function mockApi(routes: Record<string, Handler>) {
     const key = `${init.method ?? 'GET'} ${new URL(url, 'http://localhost').pathname}`
     const handler = routes[key]
     if (!handler) return new Response(JSON.stringify({ detail: `sin mock: ${key}` }), { status: 404 })
-    const { status, body } = await handler({ ...init, url })
+    const { status, body, headers } = await handler({ ...init, url })
     return new Response(body === undefined ? null : JSON.stringify(body), {
-      status, headers: { 'Content-Type': 'application/json' },
+      status, headers: { 'Content-Type': 'application/json', ...headers },
     })
   })
   vi.stubGlobal('fetch', fetchMock)

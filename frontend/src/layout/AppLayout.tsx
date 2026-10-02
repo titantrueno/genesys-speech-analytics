@@ -5,13 +5,6 @@ import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
 import { setDisplayTimeZone } from '../lib/format'
 import { NAV_ITEMS } from './navigation'
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrador',
-  supervisor: 'Supervisor',
-  analista: 'Analista',
-  viewer: 'Consulta',
-}
-
 export function AppLayout() {
   const { user, can, logout } = useAuth()
   const items = NAV_ITEMS.filter((item) => can(item.permission))
@@ -50,7 +43,7 @@ export function AppLayout() {
         </nav>
         <div className="border-t border-white/10 p-4">
           <p className="truncate text-sm font-medium">{user?.name}</p>
-          <p className="truncate text-xs text-slate-300">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</p>
+          <p className="truncate text-xs text-slate-300">{user?.role_name}</p>
           <button
             type="button"
             onClick={logout}

@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { apiRequest, onUnauthorized, tokenStorage } from '../api/client'
+import { apiRequest, onAuthVersionChange, onUnauthorized, resetAuthVersion, tokenStorage } from '../api/client'
 import { AuthContext, type AuthContextValue, type AuthState, type LoginResponse } from './context'
 import type { User } from './types'
 
@@ -19,9 +19,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => onUnauthorized(logout), [logout])
 
+  // Si cambian usuarios o roles, se vuelve a pedir el usuario: menú y acciones siguen a sus permisos sin recargar
+  // ni mostrar la pantalla de carga (FE006). Un `401` ya cierra la sesión por `onUnauthorized`.
+  useEffect(() => onAuthVersionChange(() => {
+    apiRequest<User>('/api/auth/me')
+      .then((user) => setState((current) => (current.status === 'authenticated' ? { status: 'authenticated', user } : current)))
+      .catch(() => undefined)
+  }), [])
+
   useEffect(() => {
     if (state.status !== 'loading') return
     const controller = new AbortController()
+    resetAuthVersion()
     apiRequest<User>('/api/auth/me', { signal: controller.signal })
       .then((user) => setState({ status: 'authenticated', user }))
       .catch((error: unknown) => {

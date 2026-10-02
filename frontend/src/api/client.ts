@@ -2,10 +2,18 @@ const TOKEN_KEY = 'sta.token'
 
 export const API_URL: string = import.meta.env.VITE_API_URL ?? ''
 
+const AUTH_VERSION_HEADER = 'X-Auth-Version'
+let authVersion: string | null = null
+
+/** Olvida la versión vista: la siguiente respuesta fija la referencia de una sesión nueva. */
+export function resetAuthVersion() {
+  authVersion = null
+}
+
 export const tokenStorage = {
   get: () => sessionStorage.getItem(TOKEN_KEY),
-  set: (token: string) => sessionStorage.setItem(TOKEN_KEY, token),
-  clear: () => sessionStorage.removeItem(TOKEN_KEY),
+  set: (token: string) => { resetAuthVersion(); sessionStorage.setItem(TOKEN_KEY, token) },
+  clear: () => { resetAuthVersion(); sessionStorage.removeItem(TOKEN_KEY) },
 }
 
 export class ApiError extends Error {
@@ -24,6 +32,22 @@ const unauthorizedListeners = new Set<() => void>()
 export function onUnauthorized(listener: () => void): () => void {
   unauthorizedListeners.add(listener)
   return () => unauthorizedListeners.delete(listener)
+}
+
+const authVersionListeners = new Set<() => void>()
+
+/** Avisa cuando cambian usuarios o roles en el backend (cabecera `X-Auth-Version`, FE006). */
+export function onAuthVersionChange(listener: () => void): () => void {
+  authVersionListeners.add(listener)
+  return () => authVersionListeners.delete(listener)
+}
+
+function trackAuthVersion(response: Response) {
+  const version = response.headers.get(AUTH_VERSION_HEADER)
+  if (version === null) return
+  const changed = authVersion !== null && version !== authVersion
+  authVersion = version
+  if (changed) authVersionListeners.forEach((listener) => listener())
 }
 
 type Query = Record<string, string | number | boolean | Array<string> | null | undefined>
@@ -54,6 +78,7 @@ export async function apiRequest<T>(
     signal: options.signal,
   })
 
+  trackAuthVersion(response)
   if (!response.ok) {
     const detail = await response.json().then((b) => b?.detail, () => undefined)
     if (response.status === 401 && token) unauthorizedListeners.forEach((listener) => listener())
