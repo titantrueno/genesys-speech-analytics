@@ -1,9 +1,8 @@
-"""Configuración global en memoria (FE005): estado vigente, versión y registro de auditoría.
+"""Configuración global en memoria (FE005): estado vigente y versión.
 
-Toda escritura pasa por `apply_change`, que guarda y audita bajo el mismo cerrojo: ningún cambio aceptado queda sin
-entrada y ninguno rechazado la crea. Se pierde al reiniciar la API, como el resto de escrituras (ADR-002).
+Toda escritura pasa por `apply_change`, que guarda y audita (en el registro compartido de `app/audit.py`) bajo el
+mismo cerrojo: ningún cambio aceptado queda sin entrada y ninguno rechazado la crea. Se pierde al reiniciar la API, como el resto de escrituras (ADR-002).
 """
-import random
 import threading
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, tzinfo
@@ -12,14 +11,13 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo
 
 from app import ids
+from app.audit import AuditEntry, get_audit_log
 from app.auth import User
 from app.config.checks import Check, initial_checks
 from app.config.kpis import KpiTarget, initial_kpis
-from app.config.model import AiConfig, GeneralConfig, PrivacyConfig
+from app.config.model import SECTIONS, AiConfig, GeneralConfig, PrivacyConfig
 from app.config.taxonomy import Topic, initial_main_topics, initial_secondary_topics
 from app.clock import now
-
-_rng = random.SystemRandom()
 
 DEFAULT_GENERAL = GeneralConfig(platform_name="Speech & Text Analytics", timezone="Europe/Madrid", language="es-ES")
 
@@ -38,22 +36,6 @@ def _default_connectors() -> dict[str, Connector]:
     connectors = [Connector(ids.stable_id(ids.CONNECTOR, f"genesys-{channel}"), name, channel, "conectado", started)
                   for channel, name in [("voz", "Genesys Cloud · voz transcrita"), ("chat", "Genesys Cloud · chat")]]
     return {c.id: c for c in connectors}
-
-
-@dataclass(frozen=True)
-class AuditEntry:
-    id: str
-    user_id: str
-    user_name: str
-    at: datetime
-    section: str
-    element: str
-    before: Any
-    after: Any
-
-    def to_dict(self) -> dict:
-        return {"id": self.id, "user": {"id": self.user_id, "name": self.user_name}, "at": self.at.isoformat(),
-                "section": self.section, "element": self.element, "before": self.before, "after": self.after}
 
 
 @dataclass(frozen=True)
@@ -82,7 +64,6 @@ class ConfigStore:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._config = Config()
-        self._audit: list[AuditEntry] = []
 
     def get(self) -> Config:
         with self._lock:
@@ -99,13 +80,12 @@ class ConfigStore:
             if before == after:
                 return self._config
             self._config = replace(self._config, version=self._config.version + 1, **fields)
-            self._audit.append(AuditEntry(ids.new_id(ids.AUDIT, _rng), user.id, user.name, now(), section, element,
-                                          before, after))
+            get_audit_log().record(user, section, element, before, after)
             return self._config
 
     def audit(self, section: str | None = None) -> list[AuditEntry]:
-        with self._lock:
-            return [e for e in reversed(self._audit) if section is None or e.section == section]
+        """Entradas de la configuración: el registro es compartido, pero aquí no se ven las de usuarios (FE006)."""
+        return get_audit_log().entries([section] if section else SECTIONS)
 
 
 _store = ConfigStore()

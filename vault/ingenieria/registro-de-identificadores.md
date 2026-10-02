@@ -32,7 +32,7 @@ updated: 2026-09-29
 | `1US` | Usuario | Activo (FE008) |
 | `1AG` | Agente | Activo (FE008) |
 | `1QU` | Cola | Activo (FE008) |
-| `1RO` | Rol | Reservado (FE006) |
+| `1RO` | Rol | Activo (FE006) |
 | `1TP` | Main topic | Activo (FE005) |
 | `1TS` | Tema secundario | Activo (FE005) |
 | `1CK` | Check de cumplimiento | Activo (FE005) |
@@ -41,7 +41,7 @@ updated: 2026-09-29
 | `1ND` | Nodo de flujo | Activo (FE004) |
 | `1RN` | Ejecución de flujo | Activo (FE004) |
 | `1CN` | Conector de datos | Activo (FE005) |
-| `1AU` | Entrada de auditoría | Activo (FE005; FE006 lo reutilizará) |
+| `1AU` | Entrada de auditoría | Activo (FE005; compartido con FE006) |
 
 ## Cómo añadir un prefijo
 

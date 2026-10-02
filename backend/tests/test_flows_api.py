@@ -8,6 +8,7 @@ from app import auth, ids
 from app.data.store import get_dataset
 from app.query.engine import run_query
 from app.query.model import parse_query
+from tests.roles import add_role
 from tests.flow_fixtures import SAMPLING, days_ago, chained_graph, complete_graph, edge, graph, node
 
 EMPTY_GRAPH = {"version": 1, "nodes": [], "edges": []}
@@ -252,7 +253,7 @@ def test_estimate_rejects_invalid_filters_or_sizes(api, body):
 def reader(api):
     """Cliente con un rol que solo tiene `flows:view` (FE006 permitirá crearlo desde la UI)."""
     store = auth.get_store()
-    store.roles["lector_flujos"] = {"flows:view"}
+    add_role("lector_flujos", {"flows:view"})
     user = auth.User(ids.stable_id(ids.USER, "lector@bancohorizonte.demo"), "Lector", "lector@bancohorizonte.demo", "lector_flujos")
     store.users[user.id] = user
     return {"Authorization": f"Bearer {auth.create_token(user)}"}

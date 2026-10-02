@@ -8,6 +8,7 @@ CUSTOMER = "1CU"
 USER = "1US"
 AGENT = "1AG"
 QUEUE = "1QU"
+ROLE = "1RO"
 SAVED_QUERY = "1QY"
 FLOW = "1FL"
 NODE = "1ND"
@@ -24,7 +25,7 @@ PREFIXES = {
     USER: "Usuario",
     AGENT: "Agente",
     QUEUE: "Cola",
-    "1RO": "Rol",
+    ROLE: "Rol",
     TOPIC: "Main topic",
     SECONDARY_TOPIC: "Tema secundario",
     CHECK: "Check de cumplimiento",

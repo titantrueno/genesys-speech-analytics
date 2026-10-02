@@ -8,6 +8,7 @@ from app import auth
 from app import ids
 from app.data.catalog import AGENT_IDS, AGENTS_BY_QUEUE, COMPLIANCE_CHECKS, MAIN_TOPICS, QUEUE_IDS, QUEUES
 from app.data.store import get_dataset
+from tests.roles import add_role
 from tests.dates import days_ago
 
 # El mismo dataset que sirve la API, con fechas relativas a su fecha de referencia (FE009).
@@ -148,7 +149,7 @@ def test_catalog_lists_filter_values(api):
 
 def test_catalog_available_to_dashboards_only_role_but_list_is_not(api):
     store = auth.get_store()
-    store.roles["solo_dashboards"] = {"dashboards:view"}
+    add_role("solo_dashboards", {"dashboards:view"})
     store.users["u-dash"] = auth.User("u-dash", "Solo dashboards", "dash@bancohorizonte.demo", "solo_dashboards")
     headers = {"Authorization": f"Bearer {auth.create_token(store.users['u-dash'])}"}
     assert api.get("/api/catalog", headers=headers).status_code == 200

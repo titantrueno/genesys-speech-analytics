@@ -12,6 +12,7 @@ from app.flows.runs import FlowExecutor, get_run_store, step_delay_seconds
 from app.flows.store import get_flow_store
 from app.routers.flows import get_prompt_runner
 from app.main import app
+from tests.roles import add_role
 from tests.flow_fixtures import chained_graph, complete_graph
 
 STATUS_ORDER = {"pendiente": 0, "en_curso": 1, "ok": 2, "error": 2}
@@ -309,7 +310,7 @@ def test_running_requires_flows_edit_and_reading_runs_flows_view(api):
     flow = flow_with(api, complete_graph())
     past = run(api, flow)
     store = auth.get_store()
-    store.roles["lector_flujos"] = {"flows:view"}
+    add_role("lector_flujos", {"flows:view"})
     reader = auth.User(ids.stable_id(ids.USER, "lector@bancohorizonte.demo"), "Lector", "lector@bancohorizonte.demo", "lector_flujos")
     store.users[reader.id] = reader
     headers = {"Authorization": f"Bearer {auth.create_token(reader)}"}

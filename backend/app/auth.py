@@ -7,13 +7,17 @@ import hashlib
 import hmac
 import json
 import os
+import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Callable
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app import ids
+from app.audit import get_audit_log
 
 DEMO_PASSWORD = "demo"
 TOKEN_TTL_SECONDS = int(os.environ.get("AUTH_TOKEN_TTL_SECONDS", 8 * 3600))
@@ -31,12 +35,30 @@ ALL_PERMISSIONS = [
     "users:admin",
 ]
 
+PERMISSION_LABELS = {
+    "dashboards:view": "Ver dashboards",
+    "conversations:view": "Ver conversaciones",
+    "explorer:use": "Usar el explorador",
+    "search:use": "Usar la búsqueda semántica",
+    "flows:view": "Ver flujos",
+    "flows:edit": "Editar y ejecutar flujos",
+    "config:view": "Ver configuración",
+    "config:edit": "Editar configuración",
+    "users:admin": "Administrar usuarios y roles",
+}
+
+ADMIN_PERMISSION = "users:admin"
+ADMIN_ROLE = "admin"
+AUDIT_SECTION = "usuarios"
+
 DEFAULT_ROLES = {
     "admin": set(ALL_PERMISSIONS),
     "supervisor": set(ALL_PERMISSIONS) - {"config:edit", "users:admin"},
     "analista": {"dashboards:view", "conversations:view", "explorer:use", "search:use", "flows:view", "flows:edit"},
     "viewer": {"dashboards:view", "conversations:view"},
 }
+
+ROLE_NAMES = {"admin": "Administrador", "supervisor": "Supervisor", "analista": "Analista", "viewer": "Consulta"}
 
 DEMO_USERS = [
     ("Admin Demo", "admin@bancohorizonte.demo", "admin"),
@@ -46,6 +68,23 @@ DEMO_USERS = [
 ]
 
 
+def sorted_permissions(permissions: set[str] | frozenset[str]) -> list[str]:
+    return [p for p in ALL_PERMISSIONS if p in permissions]
+
+
+@dataclass(frozen=True)
+class Role:
+    """Rol: el código es la clave en los usuarios y no cambia; el identificador `1RO` se deriva de él."""
+    id: str
+    code: str
+    name: str
+    permissions: frozenset[str]
+    builtin: bool = False
+
+    def audit_value(self) -> dict:
+        return {"name": self.name, "permissions": sorted_permissions(self.permissions)}
+
+
 @dataclass
 class User:
     id: str
@@ -53,12 +92,41 @@ class User:
     email: str
     role: str
     active: bool = True
+    last_login: datetime | None = None
+
+    def audit_value(self) -> dict:
+        return {"name": self.name, "email": self.email, "role": self.role, "active": self.active}
 
 
-@dataclass
+class ProtectionError(Exception):
+    """El cambio dejaría la plataforma sin administración (FE006, criterio 7)."""
+
+
+Users = dict[str, User]
+Roles = dict[str, Role]
+UserChange = Callable[[Users, Roles], tuple[object, object, Users, Roles]]
+
+
+def _check_protections(actor: User, users: Users, roles: Roles) -> None:
+    def can_admin(user: User | None) -> bool:
+        return bool(user and user.active and user.role in roles and ADMIN_PERMISSION in roles[user.role].permissions)
+
+    if not can_admin(users.get(actor.id)):
+        raise ProtectionError("No puedes quitarte a ti mismo el permiso de administrar usuarios y roles")
+    if ADMIN_PERMISSION not in roles[ADMIN_ROLE].permissions:
+        raise ProtectionError("El rol de administrador no puede perder el permiso de administrar usuarios y roles")
+    if not any(u.active and u.role == ADMIN_ROLE for u in users.values()):
+        raise ProtectionError("No se puede desactivar ni cambiar de rol al último administrador activo")
+
+
 class UserStore:
-    users: dict[str, User] = field(default_factory=dict)
-    roles: dict[str, set[str]] = field(default_factory=dict)
+    """Usuarios y roles en memoria. Toda escritura de la gestión pasa por `apply` (ver su docstring)."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self.users: Users = {}
+        self.roles: Roles = {}
+        self.version = 0
 
     def find_by_email(self, email: str) -> User | None:
         return next((u for u in self.users.values() if u.email.lower() == email.lower()), None)
@@ -67,11 +135,34 @@ class UserStore:
         return self.users.get(user_id)
 
     def permissions_for(self, role: str) -> set[str]:
-        return set(self.roles.get(role, set()))
+        found = self.roles.get(role)
+        return set(found.permissions) if found else set()
+
+    def apply(self, actor: User, element: str, change: UserChange) -> None:
+        """Aplica `change` y lo audita bajo el cerrojo.
+
+        `change` recibe copias de usuarios y roles y devuelve el valor anterior y el nuevo (para la auditoría) y los
+        usuarios y roles resultantes. Antes de confirmar se comprueban las protecciones sobre el estado resultante: un
+        cambio rechazado no deja estado, versión ni entrada. Si el valor no cambia, no se guarda ni se audita.
+        """
+        with self._lock:
+            before, after, users, roles = change(dict(self.users), dict(self.roles))
+            if before == after:
+                return
+            _check_protections(actor, users, roles)
+            self.users, self.roles = users, roles
+            self.version += 1
+            get_audit_log().record(actor, AUDIT_SECTION, element, before, after)
+
+    def touch_login(self, user: User) -> None:
+        with self._lock:
+            user.last_login = datetime.now().astimezone()
 
 
 def _new_store() -> UserStore:
-    store = UserStore(roles={role: set(perms) for role, perms in DEFAULT_ROLES.items()})
+    store = UserStore()
+    store.roles = {code: Role(ids.stable_id(ids.ROLE, code), code, ROLE_NAMES[code], frozenset(perms), builtin=True)
+                   for code, perms in DEFAULT_ROLES.items()}
     for name, email, role in DEMO_USERS:
         user_id = ids.stable_id(ids.USER, email)
         store.users[user_id] = User(user_id, name, email, role)

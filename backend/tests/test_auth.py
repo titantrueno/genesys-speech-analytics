@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from app import auth, ids
 from app.main import app
+from tests.roles import add_role
 
 PUBLIC_ROUTES = {"/api/health", "/api/auth/login", "/api/config/public"}
 AUTH_ONLY_ROUTES = {"/api/auth/me"}
@@ -143,7 +144,7 @@ def test_every_non_public_api_route_requires_auth(client):
 
 def test_every_data_route_requires_a_permission(client):
     store = auth.get_store()
-    store.roles["sin_permisos"] = set()
+    add_role("sin_permisos", set())
     store.users["u-sin-permisos"] = auth.User("u-sin-permisos", "Sin permisos", "sin@bancohorizonte.demo", "sin_permisos")
     token = auth.create_token(store.users["u-sin-permisos"])
     for method, path, url in _api_operations():
