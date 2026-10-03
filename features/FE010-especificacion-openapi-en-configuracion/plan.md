@@ -109,3 +109,22 @@
   - desplegar una operación no cambia la URL.
 - **Hallazgo:** la sección «Schemas» de Swagger (componente `models`) provoca en React 19 el aviso «React has detected a change in the order of Hooks». Con `defaultModelsExpandDepth: -1` (sección oculta) desaparece, y la consola queda limpia.
   - **Decisión para T5:** ocultar esa sección. Los modelos referenciados siguen viéndose en la pestaña «Schema» de cada cuerpo y respuesta (criterio 7), y una sección propia de esquemas ya estaba fuera de alcance.
+
+### T2 — hecha (2026-10-03)
+
+- `src/config/openapi/spec.ts`: `listOperations`, `countOperations`, `filterSpec`, `withServer` y `authInterceptor`. `src/config/openapi/api.ts`: `useOpenApiSpec` (sin token, `staleTime: Infinity`; sus estados se prueban en T3).
+- **Precisión sobre el criterio 8:** la búsqueda incluye también el dominio (nombre y descripción del `tag`). Con la especificación real:
+  - `usuarios` devuelve exactamente las 8 operaciones del dominio `users` (`/api/users*` y `/api/roles*`), porque varios resúmenes dicen «usuario» en singular;
+  - `delete` devuelve los 5 `DELETE`;
+  - `config:edit` devuelve sus 11 operaciones.
+- **Tests:** 17 en `spec.test.ts`; 13 fallaban con el esqueleto sin lógica. Mutaciones detectadas (10 de 10):
+  - quitar la normalización de tildes;
+  - ignorar el dominio;
+  - no buscar en el dominio;
+  - no podar rutas vacías;
+  - no podar dominios;
+  - contar `parameters` como operación;
+  - no quitar la barra final del servidor;
+  - declarar siempre el servidor;
+  - pisar la cabecera puesta con «Authorize»;
+  - inventar un token sin sesión.
