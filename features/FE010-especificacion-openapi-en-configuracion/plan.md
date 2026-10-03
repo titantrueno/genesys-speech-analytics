@@ -96,3 +96,16 @@
 - **Tamaño del build (T5):** el chunk de Swagger superará el aviso de 500 kB de Vite. Se acepta por ir diferido. Si el aviso rompe `npm run build`, se ajusta `chunkSizeWarningLimit` solo para ese chunk, de forma justificada.
 
 ## Progreso
+
+### T1 — hecha (2026-10-03)
+
+- `swagger-ui-react@5.33.1` y `@types/swagger-ui-react@5.18.0` instalados; `npm ci` limpio termina sin `--legacy-peer-deps` ni `--force` (criterio 16).
+- **Desviación:** el «hecho cuando» pedía cero avisos de peer deps, y `npm ci` emite dos `ERESOLVE overriding peer dependency`. Vienen de dependencias transitivas de Swagger UI que declaran React ≤18: `react-debounce-input@3.3.0` y `react-inspector@6.0.2`. npm las resuelve con React 19 sin flags y Swagger funciona (ver abajo). Se aceptan y no se fuerzan con `overrides`.
+- Los scripts de instalación de las dependencias nuevas (entre ellos `@scarf/scarf`, telemetría de Swagger) no se ejecutan: los bloquea `allowScripts`. No hacen falta para el render.
+- Proxy: `curl localhost:5173/openapi.json` → OpenAPI `3.1.0`, versión `0.6.0`, 58 operaciones.
+- **CSS:** `swagger-ui.css` solo tiene un selector fuera de `.swagger-ui`, `html.dark-mode`, que no aplica porque la app no pone esa clase. No hay reglas globales que neutralizar en T5; queda por comprobar el efecto inverso (el preflight de Tailwind sobre Swagger).
+- **Chrome** (página provisional, ya retirada, con `playwright-core` en el scratchpad):
+  - Swagger pinta las 58 operaciones, el título, `0.6.0` y «OAS 3.1»;
+  - desplegar una operación no cambia la URL.
+- **Hallazgo:** la sección «Schemas» de Swagger (componente `models`) provoca en React 19 el aviso «React has detected a change in the order of Hooks». Con `defaultModelsExpandDepth: -1` (sección oculta) desaparece, y la consola queda limpia.
+  - **Decisión para T5:** ocultar esa sección. Los modelos referenciados siguen viéndose en la pestaña «Schema» de cada cuerpo y respuesta (criterio 7), y una sección propia de esquemas ya estaba fuera de alcance.

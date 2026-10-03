@@ -5,8 +5,10 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    // `vite preview` hereda este proxy. `/openapi.json` alimenta la pestaña «API» de Configuración (FE010).
     proxy: {
       '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
+      '/openapi.json': process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
     },
   },
   test: {

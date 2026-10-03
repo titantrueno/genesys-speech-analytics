@@ -9,7 +9,7 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-En desarrollo, Vite reenvía `/api` a `http://localhost:8000` (configurable con `API_PROXY_TARGET`). Para apuntar a otra API sin proxy, define `VITE_API_URL` (ver `.env.example`) y añade el origen del front a `CORS_ORIGINS` en el backend.
+En desarrollo (y con `vite preview`), Vite reenvía `/api` y `/openapi.json` (pestaña «API» de Configuración) a `http://localhost:8000` (configurable con `API_PROXY_TARGET`). Para apuntar a otra API sin proxy, define `VITE_API_URL` (ver `.env.example`) y añade el origen del front a `CORS_ORIGINS` en el backend.
 
 ## Scripts
 
