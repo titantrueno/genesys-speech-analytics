@@ -39,6 +39,7 @@ La plataforma de speech & text analytics para la atención al cliente del banco 
   - `npm ci` avisa de que dos dependencias transitivas (`react-debounce-input` y `react-inspector`) declaran React ≤18, aunque funciona con React 19 sin flags;
   - la sección «Schemas» de Swagger UI rompe el orden de hooks en React 19, así que se oculta (`defaultModelsExpandDepth: -1`);
   - Vite avisa del tamaño del chunk.
+  - entre sus dependencias está `@scarf/scarf`, cuyo `postinstall` envía telemetría de instalación. Hoy `allowScripts` de npm lo bloquea; no hay que aprobarlo, porque Swagger UI no lo necesita;
   - la versión queda fijada (`5.33.1`, sin `^`): el filtro depende de que Swagger UI recargue la prop `spec`, algo que su README no garantiza ([lección 32](../aprendizaje/lecciones-construccion-plataforma.md)).
 
   Se descartaron un visor propio y un iframe a `/docs` ([spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)).

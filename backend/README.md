@@ -10,7 +10,7 @@ python3 -m venv .venv
 .venv/bin/uvicorn app.main:app --reload --port 8000
 ```
 
-- Documentación interactiva: http://localhost:8000/docs (OpenAPI 3.1 completo; exportado en `openapi.yaml`)
+- Documentación interactiva: http://localhost:8000/docs (OpenAPI 3.1 completo; exportado en `openapi.yaml`). Desde la web, en Configuración → «API» (`config:view`), con búsqueda y «Try it out» con la sesión (FE010).
 - Salud: `GET /api/health`
 
 ## Tests

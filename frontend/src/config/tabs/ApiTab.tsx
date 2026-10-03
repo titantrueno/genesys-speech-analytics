@@ -5,7 +5,10 @@ import { API_URL } from '../../api/client'
 import { ConfigField, input } from '../controls'
 import { useOpenApiSpec } from '../openapi/api'
 import { SpecLoading } from '../openapi/SpecLoading'
-import { authInterceptor, countOperations, filterSpec, withServer, type OpenApiDoc } from '../openapi/spec'
+import { authInterceptor, countOperations, filterSpec, withServer, type OpenApiDoc, type SwaggerRequest } from '../openapi/spec'
+
+/** Swagger UI lee el interceptor una sola vez, al montar: una función estable que lee la sesión en cada llamada. */
+const requestInterceptor = (request: SwaggerRequest) => authInterceptor(request, API_URL)
 
 /** Especificación OpenAPI de la API en marcha, con Swagger UI (FE010). */
 export function ApiTab() {
@@ -58,7 +61,7 @@ function SpecViewer({ spec }: { spec: OpenApiDoc }) {
         : (
           // Token de la sesión en cada llamada, sin guardarlo; sin deep linking (no toca la URL de la app) y sin la
           // sección «Schemas», que en React 19 rompe el orden de hooks (los modelos siguen en cada operación).
-          <SwaggerUI spec={filtered} requestInterceptor={authInterceptor} persistAuthorization={false} deepLinking={false}
+          <SwaggerUI spec={filtered} requestInterceptor={requestInterceptor} persistAuthorization={false} deepLinking={false}
             tryItOutEnabled={false} defaultModelsExpandDepth={-1} />
         )}
     </section>

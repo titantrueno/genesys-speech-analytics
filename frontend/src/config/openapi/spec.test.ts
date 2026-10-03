@@ -127,6 +127,22 @@ describe('authInterceptor', () => {
     expect(authInterceptor({ url: '/api/config', headers: { Authorization: 'Bearer otro' } }).headers?.Authorization).toBe('Bearer otro')
   })
 
+  it('solo envía el token a la API de la app, nunca a otro origen', () => {
+    tokenStorage.set('token-de-prueba')
+    const to = (url: string, apiUrl = '') => authInterceptor({ url, headers: {} }, apiUrl).headers?.Authorization
+    expect(to(`${window.location.origin}/api/config`)).toBe('Bearer token-de-prueba')
+    expect(to('https://evil.example/api/config')).toBeUndefined()
+    expect(to('https://evil.example/schemas.json')).toBeUndefined()
+    expect(to('http://api.local:8000/api/config', 'http://api.local:8000')).toBe('Bearer token-de-prueba')
+    expect(to(`${window.location.origin}/api/config`, 'http://api.local:8000')).toBeUndefined()
+  })
+
+  it('respeta la cabecera puesta con «Authorize» aunque cambie de mayúsculas', () => {
+    tokenStorage.set('token-de-prueba')
+    const request = authInterceptor({ url: '/api/config', headers: { authorization: 'Bearer otro' } })
+    expect(request.headers).toEqual({ authorization: 'Bearer otro' })
+  })
+
   it('crea las cabeceras si la petición no trae', () => {
     tokenStorage.set('token-de-prueba')
     expect(authInterceptor({ url: '/api/config' }).headers?.Authorization).toBe('Bearer token-de-prueba')

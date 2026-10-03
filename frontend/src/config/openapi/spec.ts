@@ -76,11 +76,21 @@ export function withServer(spec: OpenApiDoc, apiUrl: string): OpenApiDoc {
   return apiUrl ? { ...spec, servers: [{ url: apiUrl.replace(/\/+$/, '') }] } : spec
 }
 
-/** Añade el token de la sesión vigente, leído en cada petición; respeta uno puesto a mano con «Authorize». */
-export function authInterceptor(request: SwaggerRequest): SwaggerRequest {
+/** Origen de la API de la app: el de `VITE_API_URL` o, sin ella, el de la página (proxy). */
+function apiOrigin(apiUrl: string): string {
+  return new URL(apiUrl || window.location.origin, window.location.origin).origin
+}
+
+/**
+ * Añade el token de la sesión vigente, leído en cada petición, solo si va a la API de la app: Swagger también pasa por
+ * aquí las referencias remotas y OAuth, y el token no debe salir a otro origen. Respeta uno puesto con «Authorize».
+ */
+export function authInterceptor(request: SwaggerRequest, apiUrl = ''): SwaggerRequest {
   const headers = request.headers ?? {}
   request.headers = headers
   const token = tokenStorage.get()
-  if (token && !headers.Authorization) headers.Authorization = `Bearer ${token}`
+  const target = new URL(String(request.url ?? ''), window.location.origin).origin
+  const hasAuthorization = Object.keys(headers).some((name) => name.toLowerCase() === 'authorization')
+  if (token && !hasAuthorization && target === apiOrigin(apiUrl)) headers.Authorization = `Bearer ${token}`
   return request
 }
