@@ -160,3 +160,25 @@
   | al limpiar | 58 |
 
 - **Riesgo del plan que no se materializa:** Swagger UI se repinta al cambiar la prop `spec` y no hace falta forzar el remontaje con `key`.
+
+### T5 — hecha (2026-10-03)
+
+- **Props de Swagger UI:**
+  - `requestInterceptor={authInterceptor}`;
+  - `persistAuthorization={false}`, `deepLinking={false}` y `tryItOutEnabled={false}`;
+  - `defaultModelsExpandDepth={-1}`, que oculta «Schemas» y con ello el aviso de hooks de T1;
+  - `spec` pasa por `withServer(…, API_URL)`.
+
+  Aviso visible (`role="note"`) de que «Try it out» hace llamadas reales.
+- **Tests:** 4 nuevos. 3 fallaban antes de implementar; el de «sin servidor» es una salvaguarda que ya se cumplía. Mutaciones detectadas (3 de 3): quitar el interceptor, persistir la autorización y fijar el servidor. Suite del front: 323 tests en verde.
+- **Build:** Swagger UI va en `ApiTab-*.js` (1.309 kB; 363 kB gzip) y `ApiTab-*.css` (184 kB), y ni el chunk de entrada ni las precargas de `index.html` lo contienen.
+  - **Comparado con la build de `c05d1af`** (antes de FE010): la carga inicial pesa lo mismo (475,9 → 474,9 kB; 141,8 → 141,1 kB gzip). El chunk de entrada crece de 314 a 415 kB, pero solo porque Rollup mueve `react-router` desde un chunk compartido (el análisis con sourcemaps muestra que no hay código de Swagger). Aparece un chunk `react-redux` que comparten Recharts y Swagger.
+  - **Aviso de Vite** «chunks larger than 500 kB»: lo provoca el chunk diferido de Swagger. Se acepta, como preveía el plan; no rompe la build y no se toca `chunkSizeWarningLimit`.
+- **Chrome** (`admin`):
+  - recorrer dashboards y Configuración no pide nada de Swagger (0 peticiones), y abrir «API» sí;
+  - desplegar una operación no cambia la URL;
+  - `GET /api/config` con «Try it out» → `200`, con `Authorization: Bearer …` y vía el proxy (`localhost:5173`);
+  - `localStorage` sigue vacío;
+  - la consola queda limpia, ya sin el aviso de hooks.
+- **Estilos:** las capturas de Conversaciones antes y después de abrir «API» son idénticas. En General difieren 2 píxeles de los iconos del menú, pero la misma diferencia aparece sin abrir «API» (4 de 4 pares, carga completa frente a navegación en la app). Es ruido de hover y navegación, no una fuga de estilos.
+- **Observación:** los candados de Swagger se ven abiertos porque no se usa «Authorize», aunque el token se envía. El aviso dice «con tu sesión»; no se cambia.

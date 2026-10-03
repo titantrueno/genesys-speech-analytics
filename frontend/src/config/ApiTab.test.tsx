@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest'
 import type { User } from '../auth/types'
 import { platformConfig } from '../test/configFixtures'
 import { openApiDoc } from '../test/openapiFixtures'
+import { swaggerProps } from '../test/swaggerStub'
 import { renderApp, signedInAs, USERS } from '../test/utils'
+import { tokenStorage } from '../api/client'
 
 function setup(options: { user?: User; path?: string; specStatus?: number; specGate?: Promise<void> } = {}) {
   const fetchMock = signedInAs(options.user ?? USERS.admin, {
@@ -129,3 +131,43 @@ describe('Configuración: búsqueda y filtro de la especificación', () => {
     expect(await rows()).toHaveLength(9)
   })
 })
+
+describe('Configuración: «Probar» desde la pestaña «API»', () => {
+  async function props() {
+    await screen.findByRole('list', { name: 'Visor OpenAPI' })
+    const current = swaggerProps.current
+    if (!current) throw new Error('Swagger UI no se ha pintado')
+    return current
+  }
+
+  it('configura Swagger UI sin persistir la autorización, sin deep linking y sin la sección de esquemas', async () => {
+    setup()
+    expect(await props()).toMatchObject({
+      persistAuthorization: false, deepLinking: false, tryItOutEnabled: false, defaultModelsExpandDepth: -1,
+    })
+  })
+
+  it('las llamadas llevan el token de la sesión vigente y dejan de llevarlo al cerrar sesión', async () => {
+    setup()
+    const { requestInterceptor } = await props()
+    expect(requestInterceptor).toBeDefined()
+    const request = await requestInterceptor!({ url: '/api/config', headers: {} })
+    expect(request.headers.Authorization).toBe(`Bearer token-${USERS.admin.id}`)
+    tokenStorage.clear()
+    expect((await requestInterceptor!({ url: '/api/config', headers: {} })).headers.Authorization).toBeUndefined()
+  })
+
+  it('sin VITE_API_URL no declara servidor: «Probar» usa el origen de la app', async () => {
+    setup()
+    expect(((await props()).spec as { servers?: unknown }).servers).toBeUndefined()
+  })
+
+  it('avisa de que «Probar» hace llamadas reales que cambian el estado', async () => {
+    setup()
+    await props()
+    expect(screen.getByRole('note')).toHaveTextContent(
+      '«Try it out» hace llamadas reales a la API en marcha con tu sesión: las escrituras cambian su estado y quedan en la auditoría.',
+    )
+  })
+})
+
