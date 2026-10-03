@@ -56,12 +56,12 @@ async function openTab(name: RegExp | string) {
 }
 
 describe('Configuración: estructura y pestañas', () => {
-  it('muestra las siete pestañas y abre General por defecto', async () => {
+  it('muestra las ocho pestañas y abre General por defecto', async () => {
     setup()
     expect(await screen.findByRole('heading', { name: 'Configuración' })).toBeInTheDocument()
     const tabs = within(await screen.findByRole('tablist', { name: /secciones/i })).getAllByRole('tab')
     expect(tabs.map((t) => t.textContent)).toEqual([
-      'General', 'Fuentes de datos', 'Taxonomía', 'KPIs y objetivos', 'Cumplimiento', 'Privacidad', 'Modelos de IA',
+      'General', 'Fuentes de datos', 'Taxonomía', 'KPIs y objetivos', 'Cumplimiento', 'Privacidad', 'Modelos de IA', 'API',
     ])
     expect(screen.getByRole('tab', { name: 'General' })).toHaveAttribute('aria-selected', 'true')
     expect(within(screen.getByRole('tabpanel')).getByLabelText('Nombre de la plataforma')).toHaveValue('Speech & Text Analytics')
@@ -80,8 +80,8 @@ describe('Configuración: estructura y pestañas', () => {
     expect(screen.getAllByRole('tab').filter((t) => t.tabIndex === 0)).toEqual([general])
     general.focus()
     await userEvent.keyboard('{ArrowLeft}')
-    expect(screen.getByRole('tab', { name: 'Modelos de IA' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Modelos de IA' })).toHaveFocus()
+    expect(screen.getByRole('tab', { name: 'API' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: 'API' })).toHaveFocus()
     await userEvent.keyboard('{ArrowRight}')
     expect(screen.getByRole('tab', { name: 'General' })).toHaveAttribute('aria-selected', 'true')
   })

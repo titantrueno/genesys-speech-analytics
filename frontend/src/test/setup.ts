@@ -6,6 +6,9 @@ import { afterEach, vi } from 'vitest'
 // `findBy…` y `waitFor` esperan el mismo estado, solo con más margen.
 configure({ asyncUtilTimeout: 3000 })
 
+// Swagger UI (pestaña «API», FE010) no se carga en jsdom: todos los tests usan el doble.
+vi.mock('swagger-ui-react', () => import('./swaggerStub'))
+
 afterEach(() => {
   cleanup()
   sessionStorage.clear()

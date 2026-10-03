@@ -34,11 +34,12 @@ export function useConnectors() {
   })
 }
 
-export function useAudit(section: SectionCode, enabled = true) {
+/** Registro de una sección; con `null` (pestaña sin auditoría) no se pide. */
+export function useAudit(section: SectionCode | null, enabled = true) {
   return useQuery({
     queryKey: ['config-audit', section],
     queryFn: ({ signal }) => apiRequest<{ items: AuditEntry[] }>('/api/config/audit', { query: { section }, signal }),
-    enabled,
+    enabled: enabled && section !== null,
   })
 }
 

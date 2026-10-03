@@ -1,6 +1,9 @@
 import type { KpiCode } from '../api/metrics'
 
 export type SectionCode = 'general' | 'fuentes' | 'taxonomia' | 'kpis' | 'cumplimiento' | 'privacidad' | 'modelos'
+
+/** Pestañas de Configuración: las secciones editables y la especificación de la API (FE010), que no tiene auditoría. */
+export type ConfigTabCode = SectionCode | 'api'
 export type Option<T extends string = string> = { value: T; label: string }
 
 export interface GeneralConfig { platform_name: string; timezone: string; language: string }

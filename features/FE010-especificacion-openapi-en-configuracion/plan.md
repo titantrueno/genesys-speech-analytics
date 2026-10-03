@@ -128,3 +128,17 @@
   - declarar siempre el servidor;
   - pisar la cabecera puesta con «Authorize»;
   - inventar un token sin sesión.
+
+### T3 — hecha (2026-10-03)
+
+- **Pestaña:** `config/tabs/ApiTab.tsx` (`lazy` + `Suspense`, con `SpecLoading` en `config/openapi/`). Muestra la línea «título · versión · N operaciones» y Swagger UI.
+- **Sin auditoría:** `ConfigTabCode = SectionCode | 'api'`. `useAudit(null)` no pide nada, y la pestaña «API» no pinta `AuditLog`.
+- **Simplificación sobre el plan:** basta `current.code === 'api' ? null : current.code` (TypeScript estrecha el tipo); no hace falta una marca por pestaña.
+- **Doble de Swagger UI:** global en `test/setup.ts` (`test/swaggerStub.ts`), para que ningún test cargue Swagger en jsdom. Al recorrer las pestañas con las flechas se llega a «API» y, sin el doble, se cargaría.
+- **Tests:** 10 en `ApiTab.test.tsx`; 8 fallaban antes de implementar. Los 2 que ya pasaban, de `analista` y `viewer`, cubrían un comportamiento existente. `ConfigPage.test.tsx` pasa de siete a ocho pestañas.
+- **Mutaciones detectadas (4 de 4):**
+  - auditoría visible en «API»;
+  - auditoría pedida con `null`;
+  - sin estado de error;
+  - especificación recortada.
+- **Chrome** (`admin`, `/configuracion?tab=api`): 58 operaciones, resumen «Speech & Text Analytics API · versión 0.6.0 · 58 operaciones», ninguna petición a `/api/config/audit`, y Swagger encaja con el preflight de Tailwind. El aviso de hooks de la sección «Schemas» sigue apareciendo; se quita en T5.
