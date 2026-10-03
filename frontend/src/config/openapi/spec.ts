@@ -40,18 +40,20 @@ export function countOperations(spec: OpenApiDoc): number {
 }
 
 /**
- * Poda la especificación a las operaciones del dominio (`tag`) que contienen el texto en su ruta, método, resumen,
- * descripción (donde está el permiso) o dominio, sin distinguir mayúsculas ni tildes. Quita rutas y dominios vacíos.
+ * Poda la especificación a las operaciones del dominio (`tag`) que contienen todas las palabras del texto en su ruta,
+ * método, resumen, descripción (donde está el permiso) o dominio, sin distinguir mayúsculas ni tildes; así funcionan
+ * «GET /api/users», tal como lo pinta Swagger, o «borrar roles». Quita rutas y dominios vacíos.
  */
 export function filterSpec(spec: OpenApiDoc, { text, tag }: SpecFilter): OpenApiDoc {
-  const needle = normalize(text.trim())
+  const words = normalize(text).split(/\s+/).filter(Boolean)
   const tagText = new Map((spec.tags ?? []).map((t) => [t.name, `${t.name} ${t.description ?? ''}`]))
   const matches = ({ method, path, operation }: OperationRef) => {
     const tags = operation.tags ?? []
     if (tag && !tags.includes(tag)) return false
-    if (!needle) return true
+    if (words.length === 0) return true
     const haystack = [path, method, operation.summary ?? '', operation.description ?? '', ...tags.map((t) => tagText.get(t) ?? t)]
-    return normalize(haystack.join(' ')).includes(needle)
+    const normalized = normalize(haystack.join(' '))
+    return words.every((word) => normalized.includes(word))
   }
 
   const paths: OpenApiDoc['paths'] = {}

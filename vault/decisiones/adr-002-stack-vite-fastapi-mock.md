@@ -39,6 +39,7 @@ La plataforma de speech & text analytics para la atención al cliente del banco 
   - `npm ci` avisa de que dos dependencias transitivas (`react-debounce-input` y `react-inspector`) declaran React ≤18, aunque funciona con React 19 sin flags;
   - la sección «Schemas» de Swagger UI rompe el orden de hooks en React 19, así que se oculta (`defaultModelsExpandDepth: -1`);
   - Vite avisa del tamaño del chunk.
+  - la versión queda fijada (`5.33.1`, sin `^`): el filtro depende de que Swagger UI recargue la prop `spec`, algo que su README no garantiza ([lección 32](../aprendizaje/lecciones-construccion-plataforma.md)).
 
   Se descartaron un visor propio y un iframe a `/docs` ([spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)).
 - **FE004 (2026-09-28):** el front añade `@xyflow/react` (React Flow, licencia MIT) para el lienzo del diseñador de flujos. Se carga en diferido con las rutas de flujos, así que no aumenta la carga inicial. El backend no añade dependencias: la ejecución simulada usa `BackgroundTasks` de FastAPI y `threading` ([ADR-006](adr-006-ejecucion-de-prompts-simulada.md)).

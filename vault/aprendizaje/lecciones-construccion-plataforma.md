@@ -3,9 +3,9 @@ title: "Lecciones de la construcción de la plataforma"
 type: lesson
 status: active
 owners: [equipo-del-proyecto]
-tags: [aprendizaje, testing, fastapi, react, recharts, usuarios]
+tags: [aprendizaje, testing, fastapi, react, recharts, usuarios, openapi, swagger]
 created: 2026-09-27
-updated: 2026-10-02
+updated: 2026-10-03
 ---
 
 # Lecciones de la construcción de la plataforma
@@ -47,6 +47,8 @@ Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009 y FE006 aparecier
 29. **FE006:** Chrome mostró que una casilla de la matriz de permisos no cambiaba al pulsarla hasta que terminaban el guardado y la recarga: el control es controlado y su valor venía del servidor. En jsdom pasaba, porque user-event espera a la respuesta simulada.
 30. **FE006:** la versión de usuarios y roles vista por el front vivía en el módulo del cliente HTTP y sobrevivía a una sesión nueva, así que la primera respuesta de otra sesión forzaba una recarga de `/me` de más. Lo detectó el test «sin cambio de versión no vuelve a pedir el usuario».
 31. **FE006:** cuatro tests de FE001–FE004 creaban roles escribiendo un `set` directamente en el store; al convertir los roles en entidades fallaron por la estructura interna y no por el comportamiento.
+32. **FE010:** el README de `swagger-ui-react` dice que `spec` solo se aplica al montar, pero el código de la 5.33.1 la vuelve a cargar cuando cambia. Ocurre lo contrario con `requestInterceptor`, que el README da por dinámico y el código lee solo al montar. El filtro de la pestaña «API» depende de la recarga de `spec`.
+33. **FE010:** la búsqueda de operaciones comparaba el texto entero con «ruta método…», así que no encontraba `GET /api/users`, justo lo que Swagger muestra. Los ejemplos del plan eran de una sola palabra y no lo destapaban.
 
 ## Causa
 
@@ -84,6 +86,8 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - El estado de módulo del front ligado a una sesión (versiones vistas, cachés) se reinicia al cargar, iniciar y cerrar la sesión.
 - Los tests crean entidades de dominio con un helper (`tests/roles.py`) o por la API, no escribiendo en estructuras internas del store.
 - Ejecuta las mutaciones de Python sin caché de bytecode (`python -B` y `PYTHONDONTWRITEBYTECODE=1`); una mutación que sobrevive se confirma a mano antes de tocar el test.
+- Cuando un componente envuelve una librería, lee en el código instalado qué props aplica al montar y cuáles después; si dependes de algo que la documentación no garantiza, fija la versión exacta y anótalo.
+- Prueba los buscadores con lo que el usuario copia de la pantalla (por ejemplo, «método ruta») y con varias palabras, no solo con términos sueltos.
 
 ## Acción preventiva
 
@@ -93,6 +97,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - FE005: tests estructurales (ningún módulo importa el catálogo fijo fuera de `app/data/` y `app/config/`; ningún componente formatea fechas fuera de `lib/format.ts`) y test de enmascarado sobre el dataset completo.
 - FE003: test de despedidas en los representantes (< 10 %) y test de pares contra los turnos reales del dataset.
 - FE006: test de la casilla con un guardado lento, test de recarga de `/me` solo con cambio de versión y `tests/roles.py`.
+- FE010: `swagger-ui-react` fijado a `5.33.1`, con tests de búsqueda por «método ruta» y por varias palabras.
 - FE004: mock de React Flow con `contentRect` en `frontend/src/test/reactFlow.ts`, tests de ida y vuelta, test de arranque concurrente determinista y patrón de lienzo en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 
 ## Fuentes
@@ -105,4 +110,6 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Plan y evidencia de FE005](../../features/FE005-configuracion-de-la-plataforma/plan.md)
 - [Plan y evidencia de FE009](../../features/FE009-tests-independientes-del-dataset-mock/plan.md)
 - [Plan y evidencia de FE006](../../features/FE006-gestion-de-usuarios-y-roles/plan.md)
+- [Verificación de FE010](../../features/FE010-especificacion-openapi-en-configuracion/VERIFY.md)
+- [swagger-ui-react · README](https://github.com/swagger-api/swagger-ui/blob/master/flavors/swagger-ui-react/README.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

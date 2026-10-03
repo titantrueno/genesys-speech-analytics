@@ -40,6 +40,29 @@ describe('filterSpec', () => {
     expect(keys(filterSpec(openApiDoc(), { text: 'crear un', tag: '' }))).toEqual(['POST /api/users'])
   })
 
+  it('encuentra una operación escrita como la muestra Swagger («método ruta»)', () => {
+    expect(keys(filterSpec(openApiDoc(), { text: 'GET /api/users', tag: '' }))).toEqual(['GET /api/users'])
+    expect(keys(filterSpec(openApiDoc(), { text: 'delete /api/roles', tag: '' }))).toEqual(['DELETE /api/roles/{role_id}'])
+  })
+
+  it('con varias palabras exige todas, aunque estén en campos distintos', () => {
+    expect(keys(filterSpec(openApiDoc(), { text: 'borrar roles', tag: '' }))).toEqual(['DELETE /api/roles/{role_id}'])
+    expect(keys(filterSpec(openApiDoc(), { text: '  put   config:edit  ', tag: '' }))).toEqual([
+      'PUT /api/config/general', 'PUT /api/config/compliance-checks/{check_id}',
+    ])
+  })
+
+  it('trata los caracteres especiales como texto', () => {
+    expect(keys(filterSpec(openApiDoc(), { text: '{check_id}', tag: '' }))).toHaveLength(2)
+    expect(countOperations(filterSpec(openApiDoc(), { text: '.*', tag: '' }))).toBe(0)
+  })
+
+  it('funciona con una especificación sin dominios declarados', () => {
+    const doc = { ...openApiDoc(), tags: undefined }
+    expect(countOperations(filterSpec(doc, { text: 'usuario', tag: '' }))).toBe(2)
+    expect(filterSpec(doc, { text: '', tag: '' }).tags).toBeUndefined()
+  })
+
   it('no distingue mayúsculas ni tildes, en la búsqueda ni en el texto', () => {
     expect(keys(filterSpec(openApiDoc(), { text: 'BUSQUEDA SEMANTICA', tag: '' }))).toEqual(['POST /api/search'])
     expect(keys(filterSpec(openApiDoc(), { text: 'está en uso', tag: '' }))).toEqual(['DELETE /api/config/compliance-checks/{check_id}'])
