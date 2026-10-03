@@ -12,7 +12,7 @@ updated: 2026-10-03
 
 ## Resumen
 
-Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.6.0`: **58 operaciones** sobre 45 rutas, en 8 dominios (más la sonda de salud). Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
+Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.7.0` (sin cambios de rutas desde `v0.6.0`): **58 operaciones** sobre 45 rutas, en 8 dominios (más la sonda de salud). Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
 
 Es la fuente canónica del contrato. La tabla de endpoints de [backend/README.md](../../backend/README.md) es un resumen. Las decisiones que explican el contrato están en sus ADR (enlazados en cada sección).
 

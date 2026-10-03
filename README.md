@@ -57,3 +57,4 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE005 Configuración de la plataforma | Entregada en `v0.5.0` |
 | FE006 Usuarios y roles | Entregada en `v0.6.0` |
 | FE009 Tests independientes del dataset mock | Entregada en `v0.5.1` |
+| FE010 Especificación OpenAPI en Configuración | Entregada en `v0.7.0` |
