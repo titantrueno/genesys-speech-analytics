@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad, usuarios, roles]
 created: 2026-09-27
-updated: 2026-10-02
+updated: 2026-10-03
 ---
 
 # Arquitectura de la plataforma
@@ -101,7 +101,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
   - **modelo por defecto:** `default_model` en `/api/flows/catalog`.
 - **Rutas:** `GET /api/config` y el resto de lecturas con `config:view`; escrituras con `config:edit`; `GET /api/config/public` (nombre, zona horaria e idioma) sin sesión, porque el login y todos los roles lo necesitan.
 - **Privacidad:** enmascarado activado por defecto al serializar detalle, listado, explorador y búsqueda. El índice de búsqueda y los prompts de los flujos usan **siempre** texto enmascarado. Lo justifica la regla del [gobierno del vault](../Governance.md) de no reproducir datos personales innecesarios.
-- **Front:** `/configuracion` en diferido con siete pestañas (la activa en `?tab=`); al guardar se invalidan todas las consultas en caché. `AppLayout` lee la configuración pública y fija la zona horaria de `lib/format.ts`, el único módulo que formatea fechas.
+- **Front:** `/configuracion` en diferido con ocho pestañas (la activa en `?tab=`); al guardar se invalidan todas las consultas en caché. La octava, «API» (FE010), muestra la especificación OpenAPI con Swagger UI en un chunk propio, con búsqueda, filtro por dominio y «Try it out» con la sesión; no tiene registro de cambios ([contrato de la API](contrato-api-front-back.md)). `AppLayout` lee la configuración pública y fija la zona horaria de `lib/format.ts`, el único módulo que formatea fechas.
 
 ### Usuarios y roles (FE006)
 
@@ -139,5 +139,6 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
 - [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)
+- [Spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)
 - [Contrato de la API entre front y back](contrato-api-front-back.md)
 - [Gobierno del vault](../Governance.md)

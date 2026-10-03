@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, stack, frontend, backend, mock]
 created: 2026-09-27
-updated: 2026-09-28
+updated: 2026-10-03
 ---
 
 # ADR-002 — Stack Vite + FastAPI con datos mock deterministas
@@ -35,6 +35,12 @@ La plataforma de speech & text analytics para la atención al cliente del banco 
 
 ## Ampliaciones
 
+- **FE010 (2026-10-03):** el front añade `swagger-ui-react` (Apache-2.0) para la pestaña «API» de Configuración. Va en un chunk diferido (unos 1,3 MB, 363 kB gzip, más 184 kB de CSS) que solo se descarga al abrir la pestaña; la carga inicial no cambia. Consecuencias aceptadas:
+  - `npm ci` avisa de que dos dependencias transitivas (`react-debounce-input` y `react-inspector`) declaran React ≤18, aunque funciona con React 19 sin flags;
+  - la sección «Schemas» de Swagger UI rompe el orden de hooks en React 19, así que se oculta (`defaultModelsExpandDepth: -1`);
+  - Vite avisa del tamaño del chunk.
+
+  Se descartaron un visor propio y un iframe a `/docs` ([spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)).
 - **FE004 (2026-09-28):** el front añade `@xyflow/react` (React Flow, licencia MIT) para el lienzo del diseñador de flujos. Se carga en diferido con las rutas de flujos, así que no aumenta la carga inicial. El backend no añade dependencias: la ejecución simulada usa `BackgroundTasks` de FastAPI y `threading` ([ADR-006](adr-006-ejecucion-de-prompts-simulada.md)).
 
 ## Fuentes
@@ -45,3 +51,5 @@ La plataforma de speech & text analytics para la atención al cliente del banco 
 - [Modelos](../../backend/app/models.py)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [React Flow · licencia MIT](https://github.com/xyflow/xyflow/blob/main/LICENSE)
+- [Swagger UI · licencia Apache-2.0](https://github.com/swagger-api/swagger-ui/blob/master/LICENSE)
+- [Plan FE010](../../features/FE010-especificacion-openapi-en-configuracion/plan.md)

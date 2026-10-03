@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [arquitectura, api, contrato, frontend, backend, http, auth, errores]
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-03
 ---
 
 # Contrato de la API entre front y back
@@ -20,6 +20,7 @@ Es la fuente canónica del contrato. La tabla de endpoints de [backend/README.md
 
 - **Cómo se obtuvo** (hecho): el inventario de rutas sale del esquema OpenAPI de la app (`app.openapi()`). Las formas de respuesta se capturaron el 2026-10-02 llamando a cada endpoint con `TestClient`, con `DATA_SEED=42` y `DATA_REFERENCE_DATE=2026-09-27`, y el consumo del front, de buscar `/api/` en `frontend/src/`. Los ejemplos están recortados («…»).
 - **OpenAPI (especificación formal):** [backend/openapi.yaml](../../backend/openapi.yaml) (OpenAPI 3.1) describe cada operación con su permiso, sus parámetros, el cuerpo tipado, la respuesta correcta, cada código de error con su forma, la seguridad Bearer y la cabecera `X-Auth-Version`. Con la API arrancada, lo mismo se sirve en `/openapi.json`, `/docs` (Swagger) y `/redoc`, sin sesión.
+  - **Consumo desde el front (FE010):** la pestaña «API» de Configuración (`config:view`) descarga `/openapi.json` sin token (`frontend/src/config/openapi/api.ts`; el proxy de Vite la reenvía como `/api`) y la muestra con Swagger UI. Su «Try it out» llama a la misma API con el token de la sesión (`authInterceptor`), así que pasa por `require_permission` como cualquier otra petición; no hay rutas nuevas.
   - **Generación:** lo construye `backend/app/openapi/spec.py` sobre el de FastAPI. Los modelos de respuesta (`app/openapi/schemas.py`) son solo documentación: las rutas siguen devolviendo `dict`.
   - **Exportación:** `python scripts/export_openapi.py`.
   - **Garantías:** `tests/test_openapi.py` falla si una ruta no está documentada, si el YAML no está al día o si una respuesta real no cumple su esquema en modo estricto (un campo añadido, quitado, renombrado o de otro tipo). `./scripts/ci.sh` lo valida además con `openapi-spec-validator`.
@@ -522,7 +523,7 @@ Cada cambio aceptado sube `X-Auth-Version` y audita en la sección `usuarios`.
 
 - [Routers del backend](../../backend/app/routers/): `auth.py`, `metrics.py`, `conversations.py`, `query.py`, `search.py`, `flows.py`, `config.py` y `users.py`
 - [Aplicación, CORS y middleware](../../backend/app/main.py) · [Autenticación](../../backend/app/auth.py) · [Filtros](../../backend/app/services/filters.py) · [Paginación](../../backend/app/services/listing.py) · [Modelo de consulta](../../backend/app/query/model.py) · [Modelo de grafo](../../backend/app/flows/model.py)
-- [Cliente HTTP del front](../../frontend/src/api/client.ts) · [Sesión](../../frontend/src/auth/AuthContext.tsx)
+- [Cliente HTTP del front](../../frontend/src/api/client.ts) · [Sesión](../../frontend/src/auth/AuthContext.tsx) · [Pestaña «API»](../../frontend/src/config/tabs/ApiTab.tsx) · [Spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)
 - [Tests de recorrido de rutas](../../backend/tests/test_auth.py) · [OpenAPI exportado](../../backend/openapi.yaml) · [Construcción del OpenAPI](../../backend/app/openapi/spec.py) · [Tests de contrato](../../backend/tests/test_openapi.py)
 - [Arquitectura de la plataforma](arquitectura-de-la-plataforma.md) · [ADR-003](../decisiones/adr-003-auth-mock-por-roles.md) · [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md) · [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md) · [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md) · [Registro de identificadores](../ingenieria/registro-de-identificadores.md)
 - [FastAPI — Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/) (formato E2) · [FastAPI — CORS](https://fastapi.tiangolo.com/tutorial/cors/)

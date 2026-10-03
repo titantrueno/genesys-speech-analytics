@@ -1,6 +1,8 @@
 # FE005 — Configuración de la plataforma
 
 > Estado: **aprobada** el 2026-09-28 (revisada tras la entrega de `v0.4.0`). Depende de FE001 y propaga sus cambios a FE002, FE003 y FE004. Aplica FE007 y FE008.
+>
+> **Ampliada por [FE010](../FE010-especificacion-openapi-en-configuracion/spec.md)** (2026-10-03): una octava pestaña, «API», con la especificación OpenAPI. No es una sección de la configuración ni tiene auditoría.
 
 ## Objetivo
 

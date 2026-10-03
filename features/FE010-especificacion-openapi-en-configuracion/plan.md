@@ -182,3 +182,32 @@
   - la consola queda limpia, ya sin el aviso de hooks.
 - **Estilos:** las capturas de Conversaciones antes y después de abrir «API» son idénticas. En General difieren 2 píxeles de los iconos del menú, pero la misma diferencia aparece sin abrir «API» (4 de 4 pares, carga completa frente a navegación en la app). Es ruido de hover y navegación, no una fuga de estilos.
 - **Observación:** los candados de Swagger se ven abiertos porque no se usa «Authorize», aunque el token se envía. El aviso dice «con tu sesión»; no se cambia.
+
+### T6 — hecha (2026-10-03)
+
+- **Conocimiento** (todas las entradas con `updated: 2026-10-03`):
+  - [contrato de la API](../../vault/arquitectura/contrato-api-front-back.md): consumo desde la pestaña «API», sin rutas nuevas;
+  - [arquitectura](../../vault/arquitectura/arquitectura-de-la-plataforma.md): ocho pestañas;
+  - [ADR-002](../../vault/decisiones/adr-002-stack-vite-fastapi-mock.md): ampliación FE010 con licencia, tamaño, avisos aceptados y alternativas descartadas.
+
+  Además, la nota de ampliación en la [spec FE005](../FE005-configuracion-de-la-plataforma/spec.md) y el README del front. [ADR-003](../../vault/decisiones/adr-003-auth-mock-por-roles.md) no cambia: no hay permisos nuevos. La entrega `v0.5.0` del vault dice «siete pestañas»; es histórica y no se toca.
+- `python scripts/audit_vault.py` → 46 archivos, 0 errores (código 0). `./scripts/ci.sh` → «CI local: OK» (código 0).
+- **Desviación del plan:** el recorrido se anota aquí y no en `VERIFY.md`, porque ese fichero lo genera `/test`, que lo incorporará.
+- **Bundle sin la especificación:** el `grep "openapi: 3.1"` del plan da un falso positivo; es el texto de ayuda del propio Swagger UI («`openapi: 3.0.x`, or `openapi: 3.1.x`»). Los marcadores propios de la especificación (`Referencia ampliada`, `Sonda de salud`, `bancohorizonte`, `X-Auth-Version`, `/api/config/compliance-checks`) aparecen 0 veces en `dist/`.
+- **Recorrido del criterio 17** (Chrome con Playwright, API real), primero en desarrollo y luego en producción (`vite preview`, que hereda el proxy):
+
+  | Rol | Paso | Resultado |
+  |---|---|---|
+  | `admin` | Abrir «API» desde la lista de pestañas | 58 operaciones |
+  | `admin` | Buscar `connectors` + dominio `config` | 2 operaciones |
+  | `admin` | «Try it out» `GET /api/config` | `200`, con `Authorization` |
+  | `admin` | «Try it out» `POST /api/config/connectors/{id}/sync` | `200`; la auditoría de `fuentes` suma una entrada `1AU` de «Admin Demo» sobre «Genesys Cloud · chat» |
+  | `supervisor` | `?tab=api` | 58 operaciones |
+  | `supervisor` | «Try it out» `GET /api/config` | `200` |
+  | `supervisor` | «Try it out» `PUT /api/config/general` | `403`, que Swagger muestra |
+  | `analista` | Menú | Sin «Configuración» |
+  | `analista` | `/configuracion?tab=api` | «Sin acceso», sin pedir `/openapi.json` |
+
+- **Consola:**
+  - en producción, limpia con los tres roles (salvo el `403` de red esperado);
+  - en desarrollo, «Try it out» provoca el aviso de React «Using UNSAFE_componentWillReceiveProps in strict mode», que viene de componentes de clase de Swagger UI. Solo existe en desarrollo con `StrictMode`, no es de código propio y no se corrige.
