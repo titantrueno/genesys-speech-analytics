@@ -94,3 +94,38 @@ describe('Configuración: pestaña «API»', () => {
     expect(await screen.findByLabelText('Nombre de la plataforma')).toHaveValue('Speech & Text Analytics')
   })
 })
+
+describe('Configuración: búsqueda y filtro de la especificación', () => {
+  const rows = async () => within(await screen.findByRole('list', { name: 'Visor OpenAPI' })).getAllByRole('listitem').map((li) => li.textContent)
+
+  it('la búsqueda filtra las operaciones e indica cuántas quedan', async () => {
+    setup()
+    await screen.findByRole('list', { name: 'Visor OpenAPI' })
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar operaciones' }), 'delete')
+    expect(await rows()).toEqual(['DELETE /api/config/compliance-checks/{check_id}', 'DELETE /api/roles/{role_id}'])
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('2 de 9 operaciones')
+  })
+
+  it('el selector de dominio lista los dominios y se combina con la búsqueda', async () => {
+    setup()
+    await screen.findByRole('list', { name: 'Visor OpenAPI' })
+    const domain = screen.getByRole('combobox', { name: 'Dominio' })
+    expect(within(domain).getAllByRole('option').map((o) => o.getAttribute('value'))).toEqual(['', 'health', 'search', 'config', 'users'])
+    await userEvent.selectOptions(domain, 'config')
+    expect(await rows()).toHaveLength(4)
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar operaciones' }), 'Delete')
+    expect(await rows()).toEqual(['DELETE /api/config/compliance-checks/{check_id}'])
+    await userEvent.selectOptions(domain, '')
+    expect(await rows()).toHaveLength(2)
+  })
+
+  it('sin coincidencias muestra un aviso en lugar del visor', async () => {
+    setup()
+    await screen.findByRole('list', { name: 'Visor OpenAPI' })
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar operaciones' }), 'no-existe')
+    expect(await screen.findByText('Ninguna operación coincide con la búsqueda.')).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'Visor OpenAPI' })).not.toBeInTheDocument()
+    await userEvent.clear(screen.getByRole('searchbox', { name: 'Buscar operaciones' }))
+    expect(await rows()).toHaveLength(9)
+  })
+})

@@ -142,3 +142,21 @@
   - sin estado de error;
   - especificación recortada.
 - **Chrome** (`admin`, `/configuracion?tab=api`): 58 operaciones, resumen «Speech & Text Analytics API · versión 0.6.0 · 58 operaciones», ninguna petición a `/api/config/audit`, y Swagger encaja con el preflight de Tailwind. El aviso de hooks de la sección «Schemas» sigue apareciendo; se quita en T5.
+
+### T4 — hecha (2026-10-03)
+
+- **Controles:** «Buscar operaciones» (`type="search"`, con `useDeferredValue`, como en Usuarios) y «Dominio» (`nombre · descripción`). La línea de resumen pasa a «N de 58 operaciones» al filtrar, y sin coincidencias aparece un aviso en lugar del visor.
+- **Tests:** 3 nuevos en `ApiTab.test.tsx`, que fallaban antes de implementar. Mutaciones detectadas (3 de 3): ignorar el dominio, quitar el aviso de vacío y quitar el recuento filtrado.
+- **Chrome con la especificación real:**
+
+  | Búsqueda o filtro | Operaciones |
+  |---|---|
+  | `usuarios` | 8 |
+  | `delete` | 5 |
+  | `config:edit` | 11 |
+  | `BUSQUEDA` | 4 |
+  | dominio `config` + `delete` | 2 |
+  | sin coincidencias | aviso |
+  | al limpiar | 58 |
+
+- **Riesgo del plan que no se materializa:** Swagger UI se repinta al cambiar la prop `spec` y no hace falta forzar el remontaje con `key`.
