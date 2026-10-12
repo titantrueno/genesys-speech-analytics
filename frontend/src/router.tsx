@@ -57,6 +57,12 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
       lazy: async () => ({ Component: (await import('./flows/FlowEditorPage')).FlowEditorPage }),
     },
     {
+      // Flujos de descarga de Genesys (FE011): formulario, sin React Flow.
+      path: 'descargas/:flowId',
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./downloads/DownloadFlowPage')).DownloadFlowPage }),
+    },
+    {
       path: ':flowId/ejecuciones',
       HydrateFallback: LoadingScreen,
       lazy: async () => ({ Component: (await import('./flows/RunPage')).RunsPage }),

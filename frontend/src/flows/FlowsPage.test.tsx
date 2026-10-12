@@ -56,6 +56,7 @@ function setup(options: {
     [`GET /api/flows/${fakeId('1FL', 10)}`]: () => ({ status: 200, body: asFlow(items[0]) }),
     [`GET /api/flows/${fakeId('1FL', 1)}`]: () => ({ status: 200, body: asFlow(FLOWS[0]) }),
     'GET /api/flows/catalog': () => ({ status: 404 }),
+    'GET /api/download-flows': () => ({ status: 200, body: { items: [] } }),
   }
   for (const item of FLOWS) {
     routes[`POST /api/flows/${item.id}/duplicate`] = (init) => {
@@ -87,7 +88,8 @@ describe('listado de flujos', () => {
     expect(await screen.findByRole('heading', { name: 'Flujos de insights' })).toBeInTheDocument()
     const fraud = await screen.findByRole('row', { name: /Motivos de fraude/ })
     const headers = screen.getAllByRole('columnheader').map((h) => h.textContent)
-    expect(headers).toEqual(['Nombre', 'Autor', 'Última modificación', 'Última ejecución', 'Estado', 'Acciones'])
+    // FE011: el listado incluye los flujos de descarga, con su tipo y su próxima ejecución.
+    expect(headers).toEqual(['Nombre', 'Tipo', 'Autor', 'Última modificación', 'Última ejecución', 'Próxima ejecución', 'Estado', 'Acciones'])
     expect(within(fraud).getByText('Analista Demo')).toBeInTheDocument()
     expect(within(fraud).getByText('27 sept, 10:30')).toBeInTheDocument()
     expect(within(fraud).getByText('27 sept, 11:00')).toBeInTheDocument()

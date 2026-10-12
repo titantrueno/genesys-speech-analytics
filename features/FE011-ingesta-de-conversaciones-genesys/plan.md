@@ -88,7 +88,8 @@
 | T4 | Extracción, carga idempotente, `Analyzer`, ejecutor y log | T3 | 2 (lectura), 6, 10, 11, 17, 18 (backend), 25 |
 | T5 | Flujos de descarga, ejecución manual y programador | T4 | 13, 14, 15, 16, 19 (backend) |
 | T6 | Rutas de la API: proxy, permisos, `503` y estado del conector | T5 | 12 (backend), 20, 21, 22 (backend), 23 |
-| T7 | Front: tipos de flujo, formulario, ejecución con log, historial y conector | T6 | 12, 13, 15, 18, 19, 22 |
+| T7a | Front: listado mixto con «Tipo», creación de los dos tipos y formulario del flujo de descarga | T6 | 12, 13 |
+| T7b | Front: «Ejecutar ahora», ejecución con log, historial y conector en Fuentes de datos | T7a | 15, 18, 19, 22 |
 | T8 | Prueba con las conversaciones del día y recorrido en Chrome | T7 | 26, 27, 28 |
 | T9 | Conocimiento, documentación y gate final | T1–T8 | 23 y conocimiento afectado |
 
@@ -378,3 +379,31 @@
   - **Estado del conector:** `GET /api/config/connectors/genesys` responde `200` con `service: no_disponible` en lugar de `503`, porque la pestaña tiene que poder decir que el servicio no responde (criterio 22).
   - **«Probar conexión»:** un fallo de credenciales es `200` con `ok: false`. La última prueba vive en la memoria del servicio de ingesta.
   - **`401` del servicio de ingesta:** la API lo trata como `503`, porque significa que la API y el servicio tienen tokens distintos (configuración), no que falte la sesión del usuario.
+
+### T7a — Hecha (2026-10-12)
+
+> **División de la T7** (prevista en «Riesgos del plan»): T7a (listado, creación y formulario) y T7b (ejecución, log, historial y conector), para que cada una tenga un commit verificable.
+
+- **Rojo:** los 8 tests de `src/downloads/DownloadFlows.test.tsx` fallaban, porque no existía nada de `src/downloads/`. En el primer verde fallaron tres cosas:
+  - un test que esperaba la hora de Madrid: sin configuración pública, los tests del front formatean en UTC, como el resto de la suite;
+  - el test de cabeceras de `FlowsPage.test.tsx`, que se actualizó a las columnas que pide la spec (`Tipo` y `Próxima ejecución`);
+  - el `setup` de ese test, que ahora simula `/api/download-flows`.
+- **Verde:** 9 tests:
+  - listado mixto con tipo, próxima ejecución, programación y última ejecución con su estado;
+  - con un `503`, aviso «las descargas de Genesys no están disponibles» y los flujos de insights a la vista;
+  - creación de cada tipo, con el cuerpo por defecto del de descarga y navegación a `/flujos/descargas/{id}`;
+  - borrado con confirmación;
+  - formulario: guarda intervalo, canales y programación sin enviar zona horaria ni autoría;
+  - intervalo específico en hora local; con programación, el error aparece antes de enviar y «Guardar» queda deshabilitado;
+  - `422` junto a su campo (`aria-invalid` y `aria-describedby`), conservando lo escrito;
+  - desmarcar y volver a marcar un canal no cuenta como cambio;
+  - solo lectura sin `flows:edit`.
+
+  La suite del front pasa entera (338 tests); `npm run lint` y `npm run build` terminan con código 0, y `DownloadFlowPage` va en un chunk propio (7,7 kB).
+- **Mutaciones:** mueren las 12 aplicables (cantidad, conflicto de programación, error en su campo, error del nombre, orden de canales, guardar sin cambios, ruta y tipo al crear, aviso del `503`, tipo, próxima ejecución, enlace). Sobrevivieron dos:
+  - «fecha sin recortar» destapó que recortar a minutos era innecesario, porque `datetime-local` y el backend aceptan segundos, y se quitó el recorte;
+  - «orden de canales» se cubrió con un test.
+- **Sin navegador en esta sesión:** no hay herramientas de navegador disponibles, así que la comprobación en Chrome que pide `AGENTS.md` para cambios de UI se hace en el recorrido de la T8.
+- **Decisiones:**
+  - Un flujo de descarga se crea con nombre y valores por defecto («hoy», voz y chat, sin programación) y se configura después en su página, igual que un flujo de insights se crea vacío.
+  - Las fechas del intervalo específico se envían sin zona: las interpreta el backend en la zona del flujo.
