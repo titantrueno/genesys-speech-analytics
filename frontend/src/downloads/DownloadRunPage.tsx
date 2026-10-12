@@ -146,8 +146,8 @@ export function DownloadRunPage() {
         <p className="text-sm text-slate-500">
           {flow.data?.name ?? 'Flujo de descarga'} · {ORIGIN_LABELS[data.origin]}
           {data.started_by && ` · lanzada por ${data.started_by.name}`} · intervalo {formatDateTime(data.interval.from)} –{' '}
-          {formatDateTime(data.interval.to)} · {data.channels.map((c) => CHANNEL_LABELS[c]).join(' y ')} ·{' '}
-          {data.overwrite ? 'sobrescribe las conversaciones que ya existen' : 'omite las conversaciones que ya existen'}
+          {formatDateTime(data.interval.to)} · {data.channels.map((c) => CHANNEL_LABELS[c]).join(' y ')}
+          {data.overwrite !== null && ` · ${data.overwrite ? 'sobrescribe' : 'omite'} las conversaciones que ya existen`}
         </p>
       </header>
       {data.status === 'error' && data.error && (

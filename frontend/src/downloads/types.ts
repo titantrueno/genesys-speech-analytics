@@ -62,7 +62,8 @@ export interface DownloadRun {
   status: DownloadRunStatus
   interval: { from: string; to: string }
   channels: DownloadChannel[]
-  overwrite: boolean
+  /** Nulo en las ejecuciones anteriores a FE013, cuyo modo no se conoce. */
+  overwrite: boolean | null
   counters: DownloadCounters
   error: string | null
   started_by: { id: string; name: string } | null

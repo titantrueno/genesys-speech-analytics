@@ -5852,9 +5852,12 @@ components:
           title: Channels
           type: array
         overwrite:
-          description: Valor de «Sobrescribir» del flujo cuando se creó la ejecución.
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          description: Valor de «Sobrescribir» del flujo cuando se creó la ejecución; nulo en las ejecuciones anteriores a
+            FE013, cuyo modo no se conoce.
           title: Overwrite
-          type: boolean
         counters:
           $ref: '#/components/schemas/DownloadCounters'
         error:

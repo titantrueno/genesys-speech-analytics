@@ -801,7 +801,8 @@ class DownloadRun(Doc):
     status: DownloadRunStatus
     interval: DownloadRunInterval = Field(description="Intervalo resuelto al lanzar la ejecución.")
     channels: list[DownloadChannel]
-    overwrite: bool = Field(description="Valor de «Sobrescribir» del flujo cuando se creó la ejecución.")
+    overwrite: bool | None = Field(description="Valor de «Sobrescribir» del flujo cuando se creó la ejecución; nulo en "
+                                             "las ejecuciones anteriores a FE013, cuyo modo no se conoce.")
     counters: DownloadCounters
     error: str | None
     started_by: Person | None = Field(description="Quién la lanzó; nulo en las programadas.")

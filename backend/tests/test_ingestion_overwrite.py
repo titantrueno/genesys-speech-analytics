@@ -147,3 +147,22 @@ def test_the_overwrite_column_defaults_to_false_for_existing_flows(pg_url):
     with psycopg.connect(pg_url) as conn:
         assert conn.execute("SELECT overwrite FROM download_flow WHERE id = %s", (flow_id,)).fetchone()[0] is False
 
+
+
+def test_runs_from_before_overwrite_existed_have_an_unknown_mode(pg_url):
+    # Hallazgo de /test: la migración 0003 dejaba `overwrite = false` en las ejecuciones antiguas, que sin embargo
+    # actualizaban las conversaciones existentes; el historial decía «omite» junto a «13 actualizadas».
+    from ingestion import db
+    flow_id = create_flow(pg_url)
+    with psycopg.connect(pg_url) as conn:
+        applied = conn.execute("SELECT applied_at FROM schema_migrations WHERE version = '0003_overwrite'").fetchone()[0]
+        conn.execute("INSERT INTO download_run (id, flow_id, origin, status, interval_from, interval_to, channels, "
+                     "counters, created_at) VALUES ('1RN-00000000-0000-4000-8000-0000000000AA', %s, 'manual', "
+                     "'completada', %s, %s, '{voz}', '{}', %s - interval '1 day')",
+                     (flow_id, DAY_START, DAY_END, applied))
+        conn.execute("DELETE FROM schema_migrations WHERE version >= '0005'")  # vuelve a aplicar la corrección
+        db.migrate(conn)
+    old = get_run(pg_url, "1RN-00000000-0000-4000-8000-0000000000AA")
+    assert old["overwrite"] is None and old["counters"]["skipped_existing"] == 0
+    new = _run(pg_url, make_fake([fixture("37dcbccf")]), flow_id)
+    assert new["overwrite"] is False

@@ -140,3 +140,33 @@ def test_a_one_call_flow_writes_both_fields_visible_in_the_next_request(wired, l
     assert detail["analysis"]["summary"] == "El cliente consulta un cargo."
     assert detail["analysis"]["main_topic"] == "comisiones"
     assert detail["analysis"]["pending"] is True  # el resto del análisis sigue pendiente
+
+
+# --- Casos límite añadidos en /test ---
+
+def test_two_simultaneous_writes_of_an_empty_field_write_it_once(service, pg_url):
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime, timezone
+    from ingestion.analysis import FieldsIn, write_fields
+    cid = _ids(pg_url, 1)[0]
+
+    def write(text):
+        body = FieldsIn(run_id=RUN_ID, provider="gemini", model="m", overwrite=False,
+                        items=[{"conversation_id": cid, "values": {"summary": text}}])
+        return write_fields(pg_url, body, datetime.now(timezone.utc))[0]["outcomes"]["summary"]
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        outcomes = list(pool.map(write, [f"Resumen {i}" for i in range(8)]))
+    # `SELECT … FOR UPDATE` serializa las escrituras: una gana y las demás ven el campo ya escrito.
+    assert sorted(outcomes) == ["escrito"] + ["omitido"] * 7
+    assert _row(pg_url, cid)[1] in {f"Resumen {i}" for i in range(8)}
+
+
+def test_a_batch_over_one_hundred_or_an_empty_value_is_refused(service, pg_url):
+    cid = _ids(pg_url, 1)[0]
+    body = {"run_id": RUN_ID, "provider": "gemini", "model": "m", "overwrite": False}
+    many = [{"conversation_id": cid, "values": {"summary": "x"}}] * 101
+    assert service.post("/analysis/fields", json={**body, "items": many}).status_code == 422
+    empty = service.post("/analysis/fields", json={**body, "items": [{"conversation_id": cid, "values": {"summary": ""}}]})
+    assert empty.status_code == 422
+    assert service.post("/analysis/fields", json={**body, "items": [{"conversation_id": cid, "values": {}}]}).status_code == 422
+    assert _row(pg_url, cid)[1] is None

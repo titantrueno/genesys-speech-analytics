@@ -516,7 +516,7 @@ La API no guarda nada: comprueba la sesión y los permisos y delega en el servic
 - `interval` es relativo (`{type: "relativo", unit: "hoy"|"ayer"|"horas"|"dias", amount}`, con horas de 1 a 720 y días de 1 a 90) o específico (`{type: "especifico", from, to}`, en hora local, sin zona, como mucho 90 días y sin futuro).
 - `schedule` es `{type: "desactivada"}`, `{type: "cada_horas", hours}` (de 1 a 24, alineadas con la medianoche) o `{type: "diaria", time: "HH:MM"}`. Una programación necesita un intervalo relativo.
 
-**Ejecución:** `{id, flow_id, origin: manual|programada, status: pendiente|en_curso|completada|completada_con_avisos|error, interval: {from, to}, channels, overwrite, counters, error, started_by, created_at, started_at, finished_at, duration_s}`.
+**Ejecución:** `{id, flow_id, origin: manual|programada, status: pendiente|en_curso|completada|completada_con_avisos|error, interval: {from, to}, channels, overwrite (nulo en las anteriores a FE013), counters, error, started_by, created_at, started_at, finished_at, duration_s}`.
 
 - `counters` lleva `found`, `downloaded`, `inserted`, `updated`, `skipped` (en curso o de otro canal), `skipped_existing` (ya en la base, sin «Sobrescribir»; FE013), `errors`, `by_channel`, `by_quality` y `undelivered_messages`. Al terminar, `found = inserted + updated + skipped + skipped_existing + errors`.
 - `POST …/runs` devuelve `202` con la ejecución `pendiente`, o `409` si ya hay una activa. El front consulta `GET …/runs/{run_id}` cada 2 s hasta que termina.

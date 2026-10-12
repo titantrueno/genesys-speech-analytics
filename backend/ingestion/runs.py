@@ -193,7 +193,7 @@ class _Execution:
         start, end, channels = self.row["interval_from"], self.row["interval_to"], self.row["channels"]
         self.conn.execute("UPDATE download_run SET status = 'en_curso', started_at = %s WHERE id = %s",
                           (now(), self.run_id))
-        mode = "sobrescribe las existentes" if self.row["overwrite"] else "omite las existentes"
+        mode = "sobrescribe las existentes" if self.row["overwrite"] else "omite las existentes"  # nulo: anterior a FE013
         self.log("info", "inicio", f"Ejecución {self.row['origin']}: {self.span(start, end)}, {', '.join(channels)}; "
                                    f"{mode}")
         for note in self.row.get("notes") or []:
@@ -234,7 +234,7 @@ class _Execution:
 
         names = GenesysNames(self.client)
         analyzed = 0
-        overwrite = self.row["overwrite"]
+        overwrite = bool(self.row["overwrite"])
         for details in result.found:
             genesys_id = details["conversationId"]
             stage = "descarga"

@@ -120,6 +120,12 @@ describe('Flujos de descarga: ejecución y log', () => {
     expect(screen.getByText(/omite las conversaciones que ya existen/i)).toBeInTheDocument()
   })
 
+  it('una ejecución anterior a «Sobrescribir» no afirma ningún modo', async () => {
+    setup({ path, runSequence: [downloadRun(1, { overwrite: null })] })
+    expect(await screen.findByRole('region', { name: 'Contadores' })).toBeInTheDocument()
+    expect(screen.queryByText(/conversaciones que ya existen/i)).not.toBeInTheDocument()
+  })
+
   it('una ejecución con «Sobrescribir» lo indica', async () => {
     setup({ path, runSequence: [downloadRun(1, { overwrite: true })] })
     expect(await screen.findByText(/sobrescribe las conversaciones que ya existen/i)).toBeInTheDocument()

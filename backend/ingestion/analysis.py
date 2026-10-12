@@ -6,16 +6,18 @@ quién los generó. El `status` de la fila no cambia: el resto del análisis sig
 """
 from collections.abc import Callable
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from fastapi import APIRouter
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 from psycopg.types.json import Jsonb
 
 from ingestion import db
 
 COLUMNS = {"summary": "summary", "main_topic": "main_topic"}  # lista blanca: el nombre de columna nunca viene de fuera
 Target = Literal["summary", "main_topic"]
+# Un valor vacío dejaría el campo «escrito» pero vacío, y la siguiente ejecución lo volvería a tomar por pendiente.
+Value = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 MAX_ITEMS = 100
 
 
@@ -25,7 +27,7 @@ class _Strict(BaseModel):
 
 class FieldItem(_Strict):
     conversation_id: str = Field(max_length=60)
-    values: dict[Target, str] = Field(min_length=1)
+    values: dict[Target, Value] = Field(min_length=1)
 
 
 class FieldsIn(_Strict):
