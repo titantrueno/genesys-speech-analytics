@@ -218,3 +218,11 @@ def test_a_thousand_conversations_load_in_under_a_minute(pg_url):
     elapsed = time.perf_counter() - started
     assert run["counters"]["inserted"] == 1000 and run["counters"]["errors"] == 0
     assert elapsed < 60, f"{elapsed:.1f} s"
+
+
+def test_the_log_shows_instants_in_the_flow_timezone_without_microseconds(pg_url):
+    run, _ = _run(pg_url, make_fake([fixture("37dcbccf")]))
+    messages = [e["message"] for e in list_log(pg_url, run["id"]) if e["stage"] in ("inicio", "búsqueda")]
+    start = next(m for m in messages if m.startswith("Ejecución"))
+    assert "12/10/2026 00:00 – 13/10/2026 00:00 (Europe/Madrid)" in start, start
+    assert not any("+00:00" in m or "." in m.split("(")[0][-8:] for m in messages), messages

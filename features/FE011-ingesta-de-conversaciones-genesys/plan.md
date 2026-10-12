@@ -434,3 +434,12 @@
   - El log en texto se descarga con `fetch` y la sesión actual, porque un enlace directo no lleva el token.
   - Al terminar una ejecución, el log hace una última lectura, para no perder entradas escritas después del último polling.
 - **Sin navegador** en esta sesión: la comprobación en Chrome se hace en la T8.
+
+### T8 — Hecha (2026-10-12)
+
+- Evidencia completa en [VERIFY.md](VERIFY.md):
+  - recuento del día igual al de Genesys (13 de 13);
+  - los 7 tipos con los valores del criterio 27;
+  - repetir la descarga no duplica nada;
+  - recorrido en Chrome real con Claude in Chrome, con `admin` y con un rol `flows:view`, incluida una **ejecución programada real** a las 16:00 y el servicio de ingesta parado.
+- **Hallazgo corregido:** el log mostraba instantes ISO UTC con microsegundos. Ahora los muestra en la zona del flujo y al minuto, con un test que falló antes del cambio.

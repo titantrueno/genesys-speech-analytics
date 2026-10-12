@@ -8,6 +8,7 @@ El log guarda identificadores, recuentos y motivos, nunca el texto de los turnos
 import random
 from collections.abc import Callable
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import psycopg
 from psycopg.rows import dict_row
@@ -118,9 +119,16 @@ class _Execution:
     def __init__(self, executor: RunExecutor, conn: psycopg.Connection, run_id: str):
         self.x, self.conn, self.run_id = executor, conn, run_id
         self.row = conn.execute("SELECT * FROM download_run WHERE id = %s", (run_id,)).fetchone()
+        flow = conn.execute("SELECT timezone FROM download_flow WHERE id = %s", (self.row["flow_id"],)).fetchone()
+        self.timezone = flow["timezone"] if flow else "UTC"
         self.counters = new_counters()
         self.warnings = 0
         self.client: GenesysClient | None = None
+
+    def span(self, start: datetime, end: datetime) -> str:
+        """Intervalo legible en la zona horaria del flujo: «12/10/2026 00:00 – 12/10/2026 15:51 (Europe/Madrid)»."""
+        zone = ZoneInfo(self.timezone)
+        return f"{start.astimezone(zone):%d/%m/%Y %H:%M} – {end.astimezone(zone):%d/%m/%Y %H:%M} ({self.timezone})"
 
     # Log y estado ------------------------------------------------------------------------------------------------------
 
@@ -148,8 +156,7 @@ class _Execution:
         start, end, channels = self.row["interval_from"], self.row["interval_to"], self.row["channels"]
         self.conn.execute("UPDATE download_run SET status = 'en_curso', started_at = %s WHERE id = %s",
                           (now(), self.run_id))
-        self.log("info", "inicio", f"Ejecución {self.row['origin']} de {_iso(start)} a {_iso(end)} "
-                                   f"({', '.join(channels)})")
+        self.log("info", "inicio", f"Ejecución {self.row['origin']}: {self.span(start, end)}, {', '.join(channels)}")
         for note in self.row.get("notes") or []:
             self.log("aviso", "programación", note)
         try:
@@ -173,7 +180,7 @@ class _Execution:
         c = self.counters
 
         def on_chunk(number, total, chunk_start, chunk_end, found):
-            self.log("info", "búsqueda", f"Tramo {number}/{total} ({_iso(chunk_start)} – {_iso(chunk_end)}): "
+            self.log("info", "búsqueda", f"Tramo {number}/{total} ({self.span(chunk_start, chunk_end)}): "
                                          f"{found} conversaciones")
 
         result = search(self.client, start, end, set(channels), on_chunk=on_chunk)
