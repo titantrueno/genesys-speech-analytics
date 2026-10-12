@@ -28,3 +28,25 @@ def api():
     admin = auth.get_store().find_by_email("admin@bancohorizonte.demo")
     client.headers["Authorization"] = f"Bearer {auth.create_token(admin)}"
     return client
+
+
+@pytest.fixture
+def pg_url():
+    """Base de PostgreSQL de tests (FE011), con el esquema `public` vacío.
+
+    Sin `TEST_DATABASE_URL` el test se salta; con `REQUIRE_PG=1` (el gate) falla, para que `ci.sh` nunca pase en verde
+    sin haber ejecutado los tests de PostgreSQL.
+    """
+    url = os.environ.get("TEST_DATABASE_URL")
+    if not url:
+        if os.environ.get("REQUIRE_PG") == "1":
+            pytest.fail("REQUIRE_PG=1 y falta TEST_DATABASE_URL")
+        pytest.skip("Sin TEST_DATABASE_URL: los tests de PostgreSQL los ejecuta ./scripts/ci.sh")
+    import psycopg
+
+    with psycopg.connect(url, autocommit=True) as conn:
+        name = conn.execute("SELECT current_database()").fetchone()[0]
+        assert name.endswith("_test"), f"TEST_DATABASE_URL apunta a {name!r}: solo se vacía una base *_test"
+        conn.execute("DROP SCHEMA public CASCADE")
+        conn.execute("CREATE SCHEMA public")
+    return url

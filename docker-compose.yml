@@ -1,0 +1,21 @@
+# PostgreSQL del servicio de ingesta (FE011). `docker compose up -d --wait` desde la raíz.
+# La contraseña sale del `.env` de la raíz (POSTGRES_PASSWORD), que no se versiona.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: speech
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en el .env de la raíz}
+      POSTGRES_DB: speech_analytics
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U speech -d speech_analytics"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:

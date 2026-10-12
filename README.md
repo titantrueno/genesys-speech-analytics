@@ -34,9 +34,24 @@ npm run dev
 
 Entra con cualquiera de los usuarios demo que aparecen en la pantalla de login (contraseña `demo`). Ver [backend/README.md](backend/README.md#usuarios-demo).
 
+### Servicio de ingesta de Genesys (FE011, en construcción)
+
+Descarga conversaciones reales de Genesys Cloud a PostgreSQL. Es un proceso aparte de la API y el único que lee las credenciales de Genesys. Requisitos: Docker (en esta máquina, el daemon es [Colima](https://github.com/abiosoft/colima): `colima start`) y un `.env` en la raíz con las claves de [`.env.example`](.env.example).
+
+```bash
+# PostgreSQL (desde la raíz)
+docker compose up -d --wait
+
+# Terminal 3 — servicio de ingesta en http://localhost:8001 (docs en /docs; el resto exige el token interno)
+cd backend
+.venv/bin/uvicorn ingestion.main:app --port 8001
+```
+
+El esquema se crea o actualiza al arrancar el servicio. Ver [backend/README.md](backend/README.md#servicio-de-ingesta).
+
 ## Verificación
 
-`./scripts/ci.sh` ejecuta todos los gates (vault, tests del backend con dos datasets mock distintos, tests del front, lint, build y auditoría de dependencias) y termina con código distinto de 0 si alguno falla. La misma pipeline está en `.github/workflows/ci.yml`. Por separado:
+`./scripts/ci.sh` ejecuta todos los gates (vault, tests del backend con dos datasets mock distintos, tests con PostgreSQL, que necesitan Docker, tests del front, lint, build y auditoría de dependencias) y termina con código distinto de 0 si alguno falla. La misma pipeline está en `.github/workflows/ci.yml`. Por separado:
 
 ```bash
 cd backend && .venv/bin/pytest          # tests de la API

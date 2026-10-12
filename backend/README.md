@@ -28,6 +28,31 @@ python3 -m venv .venv
 | `AUTH_SECRET` | valor solo para desarrollo | Secreto HMAC de los tokens. **Obligatorio fijarlo fuera de local.** |
 | `AUTH_TOKEN_TTL_SECONDS` | `28800` (8 h) | Caducidad del token. |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Orígenes permitidos (separados por comas). |
+| `INGESTION_URL` | `http://localhost:8001` | Dónde escucha el servicio de ingesta (FE011). |
+| `INGESTION_TOKEN` | — | Token compartido con el servicio de ingesta (FE011). |
+
+## Servicio de ingesta
+
+Proceso aparte (`ingestion/`, FE011) que descarga conversaciones de Genesys Cloud y las guarda en PostgreSQL. Comparte el venv y `requirements.txt` con la API, pero solo importa de `app` los módulos `ids`, `clock` y `envfile` (hay un test estructural), y la API no importa `ingestion`.
+
+```bash
+docker compose up -d --wait              # desde la raíz: PostgreSQL 16 en 127.0.0.1:5432
+.venv/bin/uvicorn ingestion.main:app --port 8001
+```
+
+- Lee del `.env` de la raíz (o del entorno, que tiene prioridad) solo `DATABASE_URL`, `INGESTION_TOKEN` y `GENESYS_*`. La API lee solo `INGESTION_URL` e `INGESTION_TOKEN` (`app/envfile.py`).
+- Toda ruta exige `Authorization: Bearer <INGESTION_TOKEN>`, salvo `/docs` y `/openapi.json`. No declara CORS: solo la llama la API.
+- Al arrancar aplica las migraciones pendientes de `ingestion/migrations/` (SQL numerado, registrado en `schema_migrations`).
+- `GET /health`: `200` con PostgreSQL disponible, `503` si no.
+
+### Tests con PostgreSQL
+
+Los tests marcados con `pg` necesitan `TEST_DATABASE_URL`, que debe apuntar a una base cuyo nombre termine en `_test` (se vacía en cada test). Sin ella se saltan; `./scripts/ci.sh` crea `speech_analytics_test`, la deriva de `DATABASE_URL` y los ejecuta con `REQUIRE_PG=1`, que convierte un salto en fallo.
+
+```bash
+.venv/bin/pytest -m "not pg"                                  # sin Docker
+TEST_DATABASE_URL=postgresql://speech:…@localhost:5432/speech_analytics_test .venv/bin/pytest -m pg
+```
 
 ## Usuarios demo
 
