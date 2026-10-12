@@ -119,7 +119,7 @@ Todo lo que se escribe (consultas guardadas, flujos de insights, ejecuciones, co
 | `404` | La entidad no existe, no es del usuario (consultas guardadas) o el identificador es de otro tipo |
 | `409` | Conflicto con el estado: ejecución ya en curso; tema en uso o check del análisis al borrar; rol base o en uso; protecciones de administración; email, código o nombre de rol duplicados (FE006) |
 | `422` | Validación: parámetros, cuerpo o reglas de negocio |
-| `503` | El servicio de ingesta no está disponible (rutas de descargas y «Probar conexión», FE011) |
+| `503` | El servicio de ingesta no está disponible (rutas de descargas y «Probar conexión», FE011) o, con el origen `real`, «Los datos reales no están disponibles» en las secciones de datos (FE012) |
 
 #### Formatos de error
 
@@ -551,6 +551,14 @@ La API no guarda nada: comprueba la sesión y los permisos y delega en el servic
 - **Modelos de respuesta solo documentales:** las rutas devuelven `dict` y FastAPI no valida la salida contra `app/openapi/schemas.py`. La coherencia la garantiza el test de contrato, que recorre las 58 operaciones con respuestas reales, no el tipado de las rutas.
 - **Hipótesis no verificada:** el contrato no se ha probado con clientes que no sean el front (por ejemplo, integraciones de terceros). Varias respuestas exponen detalles pensados para la UI (`label`, `max_score`, `options`).
 - **Mantenimiento:** al añadir o cambiar una ruta, documéntala en `app/openapi/spec.py` (si no, la API no arranca su `/openapi.json` y la suite falla), regenera `backend/openapi.yaml` y actualiza este documento en el mismo cambio.
+
+## Origen de datos (FE012)
+
+- `PUT /api/config/sources` (`config:edit`, auditado en `fuentes`) cambia el origen; `GET /api/config` devuelve `sources.origin` y `GET /api/catalog`, `origin`, `queues` y `agents` del origen activo.
+- Listado: `phone` (ANI exacto, con o sin +34) y `external_tag` (exacto) y los campos `analysis_pending`, `ani`, `external_tag`, `contained_in_bot` y `transcript_quality`. Los campos del análisis pueden ser `null`.
+- Detalle: `genesys` con tramos, temas, métricas y contención; `analysis.pending`; `turns[].delivered`.
+- KPIs: `pending` y `based_on` en `/summary`; `pending` en `/timeseries` y `/breakdown`.
+- Explorador: operadores `is_empty` e `is_not_empty` y campos `gc_*` solo con el origen `real`. Flujos: las incidencias de `/validate` pueden llevar `severity: "warning"`.
 
 ## Fuentes
 

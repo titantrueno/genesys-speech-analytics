@@ -136,6 +136,13 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
   - la tarjeta de Genesys está en Configuración → Fuentes de datos.
 - **Qué da Genesys y qué no:** [datos de Genesys para STA](../producto/datos-de-genesys-para-sta.md).
 
+### Origen de datos y repositorio (FE012)
+
+- `ConversationRepository` (`backend/app/data/repository.py`) tiene dos implementaciones: `SyntheticRepository` (el generador de siempre) y `RealRepository` (`app/data/real.py`, PostgreSQL de solo lectura con `DATABASE_URL`). `data/store.py` es la fachada que usan los servicios.
+- **Hecho:** el testigo de la base se consulta una vez por petición (middleware `begin_request`) y, si cambia, se recarga la instantánea. Si PostgreSQL no responde, las secciones de datos devuelven `503` «Los datos reales no están disponibles»; Configuración sigue sirviendo para volver a `sintetico`.
+- **Análisis pendiente:** una conversación real tiene `analysis.pending = true`. Los KPIs que dependen del análisis (resolución, escalado, FCR, CSAT, esfuerzo, cumplimiento, riesgo de abandono) y el desglose por main topic salen como pendientes; volumen, AHT (`handle_s` de las atendidas por un agente), sentimiento y % de negativas se calculan con Genesys, con `based_on`.
+- Los cachés derivados del dataset se indexan por origen y versión (`cached_by_version`) o por identidad del objeto, nunca por identificador solo.
+
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
@@ -143,7 +150,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 
 ## Límites y excepciones
 
-- Sin persistencia en la API: todo cambio de estado se pierde al reiniciar la API. La excepción son las conversaciones reales y los flujos de descarga (FE011), que guarda el servicio de ingesta en PostgreSQL. La plataforma aún no muestra esas conversaciones: el cambio entre datos sintéticos y reales es [FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/spec.md).
+- Sin persistencia en la API: todo cambio de estado se pierde al reiniciar la API. La excepción son las conversaciones reales y los flujos de descarga (FE011), que guarda el servicio de ingesta en PostgreSQL. Desde FE012 la plataforma las muestra: el **origen de datos** se elige en Configuración → Fuentes de datos y toda la API lee del repositorio activo.
 - **FCR:** para conversaciones de los últimos 7 días del dataset aún no ha pasado la ventana de recontacto, así que su FCR es optimista. Es un **hecho** del cálculo que hay que tener en cuenta al comparar periodos recientes.
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
 - Desde FE005, los DNI e IBAN ficticios de las conversaciones de voz se enmascaran por defecto y nunca llegan al índice de búsqueda ni a los prompts. Los patrones son españoles más email y tarjeta completa; con datos reales podrían escaparse formatos no previstos (hipótesis, [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).

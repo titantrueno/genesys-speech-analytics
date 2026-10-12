@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, busqueda, tf-idf, embeddings, fe003]
 created: 2026-09-28
-updated: 2026-10-02
+updated: 2026-10-12
 ---
 
 # ADR-005 — Búsqueda vectorial ligera sustituible por embeddings
@@ -57,6 +57,10 @@ Son hechos medidos en FE003:
 Las limitaciones 1, 2 y 4 se resolverían con **embeddings semánticos**: una paráfrasis queda cerca de su significado aunque no comparta palabras, las similitudes de un mismo modelo son comparables entre consultas y el diccionario deja de ser imprescindible. La limitación 3 se reduce indexando sobre todo los turnos del cliente.
 
 La migración no cambia la API: basta con otra implementación de `SearchEngine` que vectorice los mismos fragmentos, y con un índice vectorial si el volumen crece. Los tests de relevancia (`backend/tests/search_relevance.py`) sirven como línea base para comparar ambos motores. Mientras tanto, el diccionario se amplía con expresiones del dominio y no con las frases de test.
+
+## Ampliaciones
+
+- **FE012 (2026-10-12):** hay un índice por origen de datos (`app/search/index.py`). La primera vez que se usa un origen se construye en línea; si cambia su versión, una sola reconstrucción en un hilo sustituye al índice de forma atómica y la búsqueda sigue con el anterior hasta entonces. Mientras reconstruye (unos 2,5 s con 1.000 conversaciones) compite por el procesador y las peticiones tardan más: es un **hecho** medido en los tests de rendimiento, que miden el régimen estable. Se indexan los turnos de cliente, bot y agente, también los mensajes no entregados, siempre con texto enmascarado.
 
 ## Fuentes
 

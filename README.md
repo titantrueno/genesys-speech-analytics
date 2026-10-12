@@ -2,7 +2,7 @@
 
 Plataforma web de analítica de conversaciones para la atención al cliente de un banco. Trabaja solo sobre **transcripciones de llamadas y chats** (nunca audio): dashboards de KPIs con drill-down al listado de conversaciones y un detalle de cada conversación como chat, con su análisis.
 
-> La plataforma muestra datos **mock**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). Desde FE011, un servicio de ingesta aparte descarga conversaciones **reales** de Genesys Cloud a PostgreSQL; la plataforma podrá usarlas con FE012.
+> Por defecto la plataforma muestra datos **sintéticos**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). Un servicio de ingesta aparte (FE011) descarga conversaciones **reales** de Genesys Cloud a PostgreSQL y, desde FE012, **Configuración → Fuentes de datos** cambia toda la plataforma entre los dos orígenes. Con datos reales el análisis de la plataforma (summary, main topic, CSAT…) aparece como pendiente. La API lee PostgreSQL con `DATABASE_URL` (solo lectura) y el origen vuelve a sintético al reiniciarla.
 
 ## Estructura
 
@@ -87,4 +87,4 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE009 Tests independientes del dataset mock | Entregada en `v0.5.1` |
 | FE010 Especificación OpenAPI en Configuración | Entregada en `v0.7.0` |
 | FE011 Ingesta de conversaciones de Genesys | Entregada en `v0.8.0` |
-| FE012 Switch entre datos sintéticos y reales | Especificada (borrador pendiente de aprobación) |
+| FE012 Switch entre datos sintéticos y reales | Implementada (pendiente de `/test`, `/review` y `/ship`) |

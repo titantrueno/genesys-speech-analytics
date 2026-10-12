@@ -29,6 +29,9 @@ updated: 2026-10-12
 - **Servicio de ingesta:** proceso aparte de la API que descarga conversaciones de Genesys Cloud y las guarda en PostgreSQL (FE011, [ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md)).
 - **Flujo de descarga:** flujo (`1FL`) con intervalo, canales y programación que lanza descargas de Genesys, a mano o programadas. Convive con los flujos de insights.
 - **Analítica de Genesys:** lo que Genesys da de una conversación además de sus turnos (recorrido, tiempos, contención, Speech & Text Analytics). Es distinto del análisis de la plataforma.
+- **Origen de datos:** `sintetico` (dataset generado, en memoria) o `real` (conversaciones de PostgreSQL de FE011). Es global y se elige en Configuración → Fuentes de datos (FE012).
+- **Repositorio de conversaciones:** interfaz por la que todos los servicios obtienen las conversaciones; tiene una implementación por origen (FE012).
+- **Análisis pendiente:** estado de una conversación real a la que aún falta el análisis de la plataforma (summary, main topic, CSAT, resolución, cumplimiento…).
 - **Tramo:** cada paso de una conversación por un participante (cliente, flujo, IVR o bot, cola, agente).
 - **Contención en el bot:** conversación que termina en el IVR o el bot sin pasar a una cola. Si pasa, es **derivada a agente**.
 - **Transcripción parcial:** un agente o un bot intervino según las métricas, pero no tiene frases.

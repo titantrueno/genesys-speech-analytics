@@ -56,6 +56,10 @@ Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009, FE006, FE010 y F
 38. **FE011:** tres mutaciones del log de una ejecución (sin `after`, sin acumular, sin lectura final) sobrevivían. Los tests miraban las filas antes de que llegara la respuesta del polling.
 39. **FE011:** una conexión de psycopg configurada con `dict_row` rompía `fetchone()[0]` en otra función que la recibía; las 10 conversaciones acabaron con error. Los tests de la función aislada no lo veían.
 40. **FE011:** en `/review`, un `CHECK` que falla al insertar un turno metía en el log el `DETAIL` de PostgreSQL («Failing row contains …»), con el texto de la transcripción. Los tests de «el log no contiene texto de turnos» solo cubrían ejecuciones sin errores de base de datos.
+41. **FE012:** una instantánea cargada de PostgreSQL consultada una vez por conversación (campos del explorador, texto del cumplimiento, `followup_index`) convertía cada petición en miles de consultas. Se arregló con una comprobación por petición y cachés por identidad del objeto.
+42. **FE012:** una reconstrucción del índice en un hilo compite por el procesador y encarecía las peticiones medidas a la vez: el test de 500 ms falló solo al ejecutarse tras otros. Se mide en régimen estable.
+43. **FE012:** el informe de un flujo (`build_report`) asumía main topic y sentimiento en todas las conversaciones; solo lo destapó ejecutar el flujo completo sobre datos reales.
+44. En macOS, `DataUnavailable.tsx` y `dataUnavailable.ts` colisionaban al resolver imports: no nombrar dos módulos que solo difieren en mayúsculas.
 
 ## Causa
 
@@ -125,5 +129,6 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Plan y evidencia de FE006](../../features/FE006-gestion-de-usuarios-y-roles/plan.md)
 - [Verificación de FE010](../../features/FE010-especificacion-openapi-en-configuracion/VERIFY.md)
 - [Plan y evidencia de FE011](../../features/FE011-ingesta-de-conversaciones-genesys/plan.md)
+- [Plan y evidencia de FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/plan.md)
 - [swagger-ui-react · README](https://github.com/swagger-api/swagger-ui/blob/master/flavors/swagger-ui-react/README.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

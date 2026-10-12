@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, flujos, llm, prompts, fe004]
 created: 2026-09-28
-updated: 2026-09-29
+updated: 2026-10-12
 ---
 
 # ADR-006 — Ejecución de prompts simulada con punto de extensión para un LLM real
@@ -42,6 +42,10 @@ FE004 permite diseñar flujos `Sampling → Prompt → Output` y ejecutarlos. El
   La API, el formato JSON del flujo y el front no cambian.
 - **Pendiente con un LLM real** (hipótesis, sin validar): concurrencia y límites de tasa del proveedor, reintentos, coste por ejecución, cancelación, y ejecutar fuera del proceso de la API. El enmascarado de datos personales antes de enviar transcripciones ya está resuelto: desde FE005, el Sampling entrega a prompts y outputs conversaciones siempre enmascaradas ([ADR-007](adr-007-configuracion-global-y-enmascarado.md)).
 - Las ejecuciones viven en memoria y se pierden al reiniciar, como el resto de escrituras.
+
+## Ampliaciones
+
+- **FE012 (2026-10-12):** con conversaciones reales sin analizar, `{{summary}}` y `{{main_topic}}` llegan vacíos y `{{metadatos}}` incluye la analítica de Genesys (ANI, DNIS, `externalTag`, wrap-up, contención, tiempos, temas). `{{transcripcion}}` usa siempre texto enmascarado e incluye los turnos del bot, con «[no entregado]» en los mensajes no entregados. La validación del flujo avisa (`analysis_pending`, severidad `warning`) sin bloquear la ejecución.
 
 ## Fuentes
 

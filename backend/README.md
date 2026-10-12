@@ -40,7 +40,7 @@ docker compose up -d --wait              # desde la raíz: PostgreSQL 16 en 127.
 .venv/bin/uvicorn ingestion.main:app --port 8001
 ```
 
-- Lee del `.env` de la raíz (o del entorno, que tiene prioridad) solo `DATABASE_URL`, `INGESTION_TOKEN` y `GENESYS_*`. La API lee solo `INGESTION_URL` e `INGESTION_TOKEN` (`app/envfile.py`).
+- Lee del `.env` de la raíz (o del entorno, que tiene prioridad) solo `DATABASE_URL`, `INGESTION_TOKEN` y `GENESYS_*`. La API lee solo `INGESTION_URL`, `INGESTION_TOKEN` y, para el origen de datos `real` (FE012, solo lectura), `DATABASE_URL` (`app/envfile.py`); nunca `GENESYS_*`.
 - Toda ruta exige `Authorization: Bearer <INGESTION_TOKEN>`, salvo `/docs` y `/openapi.json`. No declara CORS: solo la llama la API.
 - Al arrancar aplica las migraciones pendientes de `ingestion/migrations/` (SQL numerado, registrado en `schema_migrations`).
 - `GET /health`: `200` con PostgreSQL disponible, `503` si no.

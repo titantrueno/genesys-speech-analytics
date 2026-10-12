@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [producto, speech-analytics, banca]
 created: 2026-09-27
-updated: 2026-09-27
+updated: 2026-10-12
 ---
 
 # Propósito del proyecto
@@ -27,7 +27,7 @@ Supervisores, analistas de calidad y responsables de experiencia de cliente nece
 - **Implementado:** FE001 (dashboards, drill-down, listado y detalle), FE007 (fila clicable) y FE008 (identificadores `PREFIJO-UUID`).
 - **Especificado:** FE002 a FE006.
 - **Decisión:** en esta fase el backend solo sirve **datos mock** generados de forma determinista ([ADR-002](../decisiones/adr-002-stack-vite-fastapi-mock.md)). El catálogo de motivos de contacto está en el [catálogo de main topics](catalogo-de-main-topics.md).
-- **Hipótesis:** el catálogo de main topics y la lista de KPIs cubren las necesidades de un contact center bancario. Hay que validarlos con datos reales antes de integrar Genesys.
+- **Hipótesis:** el catálogo de main topics y la lista de KPIs cubren las necesidades de un contact center bancario. Validarlos con datos reales queda para la fase con LLM: FE012 muestra las conversaciones reales con el análisis de la plataforma pendiente.
 
 ## Fuentes
 

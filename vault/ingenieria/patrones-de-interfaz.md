@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [ingenieria, frontend, ux, accesibilidad]
 created: 2026-09-27
-updated: 2026-10-02
+updated: 2026-10-12
 ---
 
 # Patrones de interfaz
@@ -87,6 +87,12 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 ### Fechas
 
 **Cómo:** toda fecha con hora se formatea con `frontend/src/lib/format.ts` en la zona de la plataforma (`GET /api/config/public`); un test impide usar `Intl.DateTimeFormat` fuera de ese módulo.
+
+### Análisis pendiente y datos reales (FE012)
+
+- Un campo del análisis que aún no existe se muestra como «Análisis pendiente» (cursiva gris), nunca como 0 ni «—»; los KPIs, «Sin datos · pendiente de análisis».
+- En el chat, una línea separadora (`role="separator"`) marca la transferencia del asistente virtual al agente y un mensaje no entregado conserva su texto con la marca «No entregado».
+- Las columnas y la búsqueda de Genesys solo aparecen con el origen `real` (`catalog.origin`). Un `503` de datos se muestra en un aviso único sobre el contenido.
 
 ## Límites y excepciones
 

@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, configuracion, privacidad, pii, fe005]
 created: 2026-09-29
-updated: 2026-09-29
+updated: 2026-10-12
 ---
 
 # ADR-007 — Configuración global en memoria, leída en caliente, y enmascarado de PII por defecto
@@ -41,6 +41,10 @@ FE005 hace editables la taxonomía, los checks de cumplimiento, los umbrales de 
 - Los patrones de PII son españoles (DNI/NIE con letra de control, IBAN, teléfonos 6/7/8/9 con o sin +34) más email y tarjeta completa. Los últimos 4 dígitos de una tarjeta se conservan. **Hipótesis:** con datos reales habrá formatos que se escapen; el test de dataset completo solo cubre los del generador.
 - Un check nuevo evaluado por frases es una aproximación léxica, no un modelo: «no dijo la frase» no siempre significa «no cumplió».
 - Con un LLM real ([ADR-006](adr-006-ejecucion-de-prompts-simulada.md)), las transcripciones ya salen enmascaradas hacia el proveedor.
+
+## Ampliaciones
+
+- **FE012 (2026-10-12):** el **origen de datos** (`sintetico` o `real`) es una sección más (`fuentes`), global, auditada, en memoria y con `sintetico` por defecto. El ANI, el DNIS y el `externalTag` **no se enmascaran** en este desarrollo (se muestran, se buscan y se filtran); el texto de los turnos y las frases de los temas sí. Con datos reales se pueden contrastar los formatos de PII que se escapan: queda como hipótesis a validar con conversaciones de más días.
 
 ## Fuentes
 
