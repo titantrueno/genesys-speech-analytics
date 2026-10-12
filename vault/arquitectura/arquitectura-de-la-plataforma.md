@@ -3,9 +3,9 @@ title: "Arquitectura de la plataforma"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad, usuarios, roles]
+tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad, usuarios, roles, genesys, ingesta, postgresql]
 created: 2026-09-27
-updated: 2026-10-03
+updated: 2026-10-12
 ---
 
 # Arquitectura de la plataforma
@@ -30,6 +30,8 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 | Flujos de insights | `backend/app/flows/` | Formato JSON del flujo, integridad y reglas de conexión, validación, sampling, prompt simulado detrás de `PromptRunner`, outputs y ejecuciones en segundo plano (ver [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)). |
 | Configuración | `backend/app/config/` | Instantánea global versionada (`store.py`, audita en `app/audit.py`), secciones Pydantic (`model.py`), taxonomía, checks y cumplimiento efectivo, y KPIs (ver [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). |
 | Privacidad | `backend/app/privacy/masking.py` | Enmascarado de PII por patrones sobre una copia de cada conversación. |
+| Servicio de ingesta (FE011) | `backend/ingestion/` | Proceso aparte (`uvicorn ingestion.main:app`) y único que lee `GENESYS_*`. Descarga, normaliza y guarda conversaciones de Genesys en PostgreSQL, y ejecuta los flujos de descarga y su programador (ver [ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md)). |
+| PostgreSQL (FE011) | `docker-compose.yml`, `backend/ingestion/migrations/` | Conversaciones reales, tramos, turnos, temas, análisis pendiente, respuestas originales, flujos de descarga, ejecuciones y logs. |
 | Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador, búsqueda semántica, diseñador de flujos, configuración y usuarios y roles. |
 
 ### Flujo de datos
@@ -111,6 +113,29 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Refresco de permisos:** el backend relee usuario y rol en cada petición. Un middleware añade `X-Auth-Version` (versión de usuarios y roles) a toda respuesta de una petición con sesión y CORS la expone; `api/client.ts` avisa cuando cambia y `AuthProvider` recarga `/api/auth/me`, así que menú y guardas cambian en la siguiente petición sin recargar.
 - **Front:** `/usuarios` en diferido con pestañas Usuarios y Roles (en `?tab=`), matriz de permisos que guarda al cambiar cada casilla y el registro de cambios. Las pestañas (`components/Tabs.tsx`) y el registro (`config/AuditLog.tsx`) se comparten con la configuración.
 
+### Ingesta de Genesys (FE011, [ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md))
+
+- **Procesos:**
+  - el front habla solo con la API;
+  - la API comprueba permisos y delega en el servicio de ingesta (`app/ingestion_client.py`, token interno, `503` si no responde);
+  - el servicio de ingesta habla con Genesys Cloud y con PostgreSQL.
+- **Pipeline** (`backend/ingestion/pipeline/`):
+  - `extract`: búsqueda en tramos de 7 días; descarga de Speech & Text Analytics, transcripciones y mensajes;
+  - `normalize`: tramos, turnos, hablantes, sentimiento, calidad de la transcripción y analítica; funciones puras;
+  - `analyze`: `Analyzer`, hoy `PendingAnalyzer`;
+  - `load`: `upsert` por conversación.
+- **Ejecuciones** (`runs.py`, `scheduler.py`):
+  - un pool de 2 hilos, una ejecución activa por flujo;
+  - contadores guardados tras cada conversación;
+  - log por etapas sin texto de turnos ni secretos;
+  - un programador por tics de 30 s, que no recupera las ejecuciones perdidas.
+- **Front** (`frontend/src/downloads/`):
+  - el listado de «Flujos de insights» une los dos tipos;
+  - el formulario del flujo de descarga está en `/flujos/descargas/{id}`;
+  - la ejecución, con polling de 2 s y log por tramos (`after`), está en `/flujos/descargas/{id}/ejecuciones/{runId}`;
+  - la tarjeta de Genesys está en Configuración → Fuentes de datos.
+- **Qué da Genesys y qué no:** [datos de Genesys para STA](../producto/datos-de-genesys-para-sta.md).
+
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
@@ -118,7 +143,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 
 ## Límites y excepciones
 
-- Sin persistencia: todo cambio de estado se pierde al reiniciar la API.
+- Sin persistencia en la API: todo cambio de estado se pierde al reiniciar la API. La excepción son las conversaciones reales y los flujos de descarga (FE011), que guarda el servicio de ingesta en PostgreSQL. La plataforma aún no muestra esas conversaciones: el cambio entre datos sintéticos y reales es [FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/spec.md).
 - **FCR:** para conversaciones de los últimos 7 días del dataset aún no ha pasado la ventana de recontacto, así que su FCR es optimista. Es un **hecho** del cálculo que hay que tener en cuenta al comparar periodos recientes.
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
 - Desde FE005, los DNI e IBAN ficticios de las conversaciones de voz se enmascaran por defecto y nunca llegan al índice de búsqueda ni a los prompts. Los patrones son españoles más email y tarjeta completa; con datos reales podrían escaparse formatos no previstos (hipótesis, [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
@@ -140,5 +165,6 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
 - [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)
 - [Spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)
+- [Spec FE011](../../features/FE011-ingesta-de-conversaciones-genesys/spec.md)
 - [Contrato de la API entre front y back](contrato-api-front-back.md)
 - [Gobierno del vault](../Governance.md)

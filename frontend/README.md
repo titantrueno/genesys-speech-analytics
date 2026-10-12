@@ -31,6 +31,7 @@ src/
   explorer/       # explorador de queries asistidas (constructor, lenguaje natural, consultas guardadas)
   search/         # búsqueda semántica, resultados por fragmento y conversaciones similares
   flows/          # flujos de insights: listado, editor con React Flow, paneles por nodo, ejecución e historial
+  downloads/      # flujos de descarga de Genesys (FE011): formulario, ejecución con log en vivo, historial y conector
   config/         # configuración: ocho pestañas, errores por campo, confirmación en fila y registro de cambios;
                   #   openapi/ y tabs/ApiTab.tsx: especificación de la API con Swagger UI (diferido; en tests, test/swaggerStub.ts)
   users/          # usuarios y roles: listado con filtros, alta y edición, roles y matriz de permisos

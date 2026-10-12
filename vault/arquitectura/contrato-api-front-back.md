@@ -3,16 +3,16 @@ title: "Contrato de la API entre front y back"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, api, contrato, frontend, backend, http, auth, errores]
+tags: [arquitectura, api, contrato, frontend, backend, http, auth, errores, genesys, ingesta]
 created: 2026-10-02
-updated: 2026-10-03
+updated: 2026-10-12
 ---
 
 # Contrato de la API entre front y back
 
 ## Resumen
 
-Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.7.0` (sin cambios de rutas desde `v0.6.0`): **58 operaciones** sobre 45 rutas, en 8 dominios (más la sonda de salud). Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
+Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.7.0` más FE011: **69 operaciones** sobre 52 rutas, en 9 dominios (más la sonda de salud). FE011 añade 11: los flujos de descarga de Genesys y el conector real. Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
 
 Es la fuente canónica del contrato. La tabla de endpoints de [backend/README.md](../../backend/README.md) es un resumen. Las decisiones que explican el contrato están en sus ADR (enlazados en cada sección).
 
@@ -104,7 +104,7 @@ Respuesta: `{total, page, page_size, pages, items}`. Una página fuera de rango 
 
 #### Persistencia
 
-Todo lo que se escribe (consultas guardadas, flujos, ejecuciones, configuración, usuarios y roles) vive **en memoria** y se pierde al reiniciar la API. El dataset se regenera con la semilla.
+Todo lo que se escribe (consultas guardadas, flujos de insights, ejecuciones, configuración, usuarios y roles) vive **en memoria** y se pierde al reiniciar la API. El dataset se regenera con la semilla. La excepción son los flujos de descarga, sus ejecuciones y sus logs (FE011): la API no los guarda, sino que los delega en el servicio de ingesta, que los persiste en PostgreSQL ([ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md)).
 
 #### Códigos HTTP
 
@@ -112,13 +112,14 @@ Todo lo que se escribe (consultas guardadas, flujos, ejecuciones, configuración
 |---|---|
 | `200` | Lectura o actualización correcta |
 | `201` | Creación (consulta guardada, flujo, duplicado, tema, check, usuario, rol) |
-| `202` | Ejecución de flujo aceptada (se procesa en segundo plano) |
+| `202` | Ejecución de flujo o de descarga aceptada (se procesa en segundo plano) |
 | `204` | Borrado correcto, sin cuerpo |
 | `401` | Sin sesión válida (ver «Autenticación») |
 | `403` | Falta el permiso |
 | `404` | La entidad no existe, no es del usuario (consultas guardadas) o el identificador es de otro tipo |
 | `409` | Conflicto con el estado: ejecución ya en curso; tema en uso o check del análisis al borrar; rol base o en uso; protecciones de administración; email, código o nombre de rol duplicados (FE006) |
 | `422` | Validación: parámetros, cuerpo o reglas de negocio |
+| `503` | El servicio de ingesta no está disponible (rutas de descargas y «Probar conexión», FE011) |
 
 #### Formatos de error
 
@@ -172,8 +173,13 @@ Todos los errores llevan `detail`, pero su forma depende del endpoint. El front 
 | 51–53 | `GET/POST /api/users`, `PUT /api/users/{id}` | `users:admin` | `users/api.ts` |
 | 54 | `GET /api/users/audit` | `users:admin` | `users/api.ts` |
 | 55–58 | `GET/POST /api/roles`, `PUT/DELETE /api/roles/{id}` | `users:admin` | `users/api.ts` |
+| 59–60 | `GET /api/config/connectors/genesys`, `POST /api/config/connectors/genesys/test` | `config:view` / `config:edit` | `downloads/api.ts` (tarjeta de Fuentes de datos) |
+| 61–62 | `GET/POST /api/download-flows` | `flows:view` / `flows:edit` | `downloads/api.ts` |
+| 63–65 | `GET/PUT/DELETE /api/download-flows/{id}` | `flows:view` / `flows:edit` | `downloads/api.ts` |
+| 66–68 | `POST/GET /api/download-flows/{id}/runs`, `GET …/runs/{run_id}` | `flows:edit` / `flows:view` | `downloads/api.ts` |
+| 69 | `GET /api/download-flows/{id}/runs/{run_id}/log` | `flows:view` | `downloads/api.ts` |
 
-La numeración cuenta operaciones (método más ruta): son las 58 del OpenAPI.
+La numeración cuenta operaciones (método más ruta): son las 69 del OpenAPI.
 
 ### 3. Autenticación y sesión
 
@@ -487,7 +493,34 @@ Cada cambio aceptado sube `X-Auth-Version` y audita en la sección `usuarios`.
 - **`DELETE /api/roles/{id}`** → `204`. Un rol base o con usuarios da `409`.
 - **`GET /api/users/audit`** → el registro de la sección `usuarios`. `before` y `after` son `{name, email, role, active}` para usuarios y `{name, permissions}` para roles; `null` en altas y bajas.
 
-### 11. Integración en el front
+### 11. Flujos de descarga y conector de Genesys (FE011, [ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md))
+
+La API no guarda nada: comprueba la sesión y los permisos y delega en el servicio de ingesta (`app/ingestion_client.py`, `INGESTION_URL` e `INGESTION_TOKEN`).
+
+- **Qué añade la API:** la autoría de quien crea, la zona horaria vigente de la plataforma al crear y al guardar, y quién lanza una ejecución. Ignora la autoría y la zona horaria que envíe el cliente.
+- **Errores:**
+  - `404` y `409` se reenvían tal cual (E1);
+  - los `422` se reducen a `loc`, `msg` y `type` (E3, sin `input`);
+  - si el servicio no responde, responde `401` (tokens distintos) o `5xx`, o falta el token, la API devuelve `503` con «El servicio de ingesta no está disponible».
+
+**Flujo de descarga:** `{id, name, interval, channels, schedule, active, timezone, author, created_at, updated_at, next_run_at, last_run}`.
+
+- `interval` es relativo (`{type: "relativo", unit: "hoy"|"ayer"|"horas"|"dias", amount}`, con horas de 1 a 720 y días de 1 a 90) o específico (`{type: "especifico", from, to}`, en hora local, sin zona, como mucho 90 días y sin futuro).
+- `schedule` es `{type: "desactivada"}`, `{type: "cada_horas", hours}` (de 1 a 24, alineadas con la medianoche) o `{type: "diaria", time: "HH:MM"}`. Una programación necesita un intervalo relativo.
+
+**Ejecución:** `{id, flow_id, origin: manual|programada, status: pendiente|en_curso|completada|completada_con_avisos|error, interval: {from, to}, channels, counters, error, started_by, created_at, started_at, finished_at, duration_s}`.
+
+- `counters` lleva `found`, `downloaded`, `inserted`, `updated`, `skipped` (en curso o de otro canal), `errors`, `by_channel`, `by_quality` y `undelivered_messages`. Al terminar, `found = inserted + updated + skipped + errors`.
+- `POST …/runs` devuelve `202` con la ejecución `pendiente`, o `409` si ya hay una activa. El front consulta `GET …/runs/{run_id}` cada 2 s hasta que termina.
+
+**Log:** `GET …/runs/{run_id}/log?after=&level=` devuelve `{items: [{id, at, level: info|aviso|error, stage, message, genesys_id}]}`, con `after` como cursor. Con `format=text`, devuelve el log completo como adjunto `text/plain`. Nunca contiene el texto de los turnos ni secretos.
+
+**Conector:**
+
+- `GET /api/config/connectors/genesys` devuelve `{service: disponible|no_disponible, region, credentials_configured, database, last_test, last_download, conversations: {total, by_channel, by_quality}}`. Con el servicio caído, responde `200` con `service: no_disponible` y el resto nulo.
+- `POST …/genesys/test` devuelve `{ok, at, organization, region, message}`. Unas credenciales malas son `200` con `ok: false`.
+
+### 12. Integración en el front
 
 - **Cliente único:** `apiRequest<T>(path, {method, body, query, signal})` en `frontend/src/api/client.ts`.
   - Añade el token y serializa el cuerpo.
@@ -526,4 +559,5 @@ Cada cambio aceptado sube `X-Auth-Version` y audita en la sección `usuarios`.
 - [Cliente HTTP del front](../../frontend/src/api/client.ts) · [Sesión](../../frontend/src/auth/AuthContext.tsx) · [Pestaña «API»](../../frontend/src/config/tabs/ApiTab.tsx) · [Spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)
 - [Tests de recorrido de rutas](../../backend/tests/test_auth.py) · [OpenAPI exportado](../../backend/openapi.yaml) · [Construcción del OpenAPI](../../backend/app/openapi/spec.py) · [Tests de contrato](../../backend/tests/test_openapi.py)
 - [Arquitectura de la plataforma](arquitectura-de-la-plataforma.md) · [ADR-003](../decisiones/adr-003-auth-mock-por-roles.md) · [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md) · [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md) · [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md) · [Registro de identificadores](../ingenieria/registro-de-identificadores.md)
+- [Rutas de descargas](../../backend/app/routers/downloads.py) · [Cliente del servicio de ingesta](../../backend/app/ingestion_client.py) · [Rutas internas del servicio](../../backend/ingestion/api.py) · [Front de descargas](../../frontend/src/downloads/api.ts) · [Spec FE011](../../features/FE011-ingesta-de-conversaciones-genesys/spec.md)
 - [FastAPI — Handling Errors](https://fastapi.tiangolo.com/tutorial/handling-errors/) (formato E2) · [FastAPI — CORS](https://fastapi.tiangolo.com/tutorial/cors/)

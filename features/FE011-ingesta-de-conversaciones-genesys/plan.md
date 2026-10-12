@@ -443,3 +443,23 @@
   - repetir la descarga no duplica nada;
   - recorrido en Chrome real con Claude in Chrome, con `admin` y con un rol `flows:view`, incluida una **ejecución programada real** a las 16:00 y el servicio de ingesta parado.
 - **Hallazgo corregido:** el log mostraba instantes ISO UTC con microsegundos. Ahora los muestra en la zona del flujo y al minuto, con un test que falló antes del cambio.
+
+### T9 — Hecha (2026-10-12)
+
+- **Nuevas:**
+  - [ADR-008 — PostgreSQL y servicio de ingesta de Genesys aparte](../../vault/decisiones/adr-008-postgresql-y-servicio-de-ingesta.md);
+  - [Datos de Genesys para STA](../../vault/producto/datos-de-genesys-para-sta.md) (Producto);
+  - [Runbook de la ingesta de Genesys](../../vault/operaciones/runbook-ingesta-de-genesys.md), con una tabla de diagnóstico del log.
+
+  Cada una está enlazada desde su índice.
+- **Actualizadas:**
+  - ADR-002 (PostgreSQL y `psycopg`);
+  - arquitectura (componentes, sección «Ingesta de Genesys», límite de persistencia);
+  - contrato de la API (69 operaciones sobre 52 rutas, `503`, mapa 59–69 y nueva sección 11);
+  - registro de identificadores (v5 `genesys:` de los datos reales);
+  - estado operativo;
+  - glosario (8 términos);
+  - lecciones (34–39, aprendizajes y acción preventiva);
+  - `README.md`, `frontend/README.md` y, en la T1 y la T6, `backend/README.md`.
+- **Sin cambios de FE011:** ADR-006, ADR-007, ADR-005, «Propósito del proyecto» y los patrones de interfaz están en la lista de conocimiento afectado de FE012, porque tratan del uso de los datos reales en la plataforma.
+- **Auditoría:** `python3 scripts/audit_vault.py` termina con código 0 (50 archivos, 0 errores). Ni el vault ni los README contienen teléfonos, nombres de la cuenta ni secretos.

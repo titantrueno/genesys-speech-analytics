@@ -3,16 +3,16 @@ title: "Lecciones de la construcción de la plataforma"
 type: lesson
 status: active
 owners: [equipo-del-proyecto]
-tags: [aprendizaje, testing, fastapi, react, recharts, usuarios, openapi, swagger]
+tags: [aprendizaje, testing, fastapi, react, recharts, usuarios, openapi, swagger, genesys, postgresql]
 created: 2026-09-27
-updated: 2026-10-03
+updated: 2026-10-12
 ---
 
 # Lecciones de la construcción de la plataforma
 
 ## Situación
 
-Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009 y FE006 aparecieron comportamientos de librerías y fallos de verificación que no eran evidentes a priori y que afectarán a las features siguientes.
+Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009, FE006, FE010 y FE011 aparecieron comportamientos de librerías y fallos de verificación que no eran evidentes a priori y que afectarán a las features siguientes.
 
 ## Resultado observado
 
@@ -49,6 +49,12 @@ Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009 y FE006 aparecier
 31. **FE006:** cuatro tests de FE001–FE004 creaban roles escribiendo un `set` directamente en el store; al convertir los roles en entidades fallaron por la estructura interna y no por el comportamiento.
 32. **FE010:** el README de `swagger-ui-react` dice que `spec` solo se aplica al montar, pero el código de la 5.33.1 la vuelve a cargar cuando cambia. Ocurre lo contrario con `requestInterceptor`, que el README da por dinámico y el código lee solo al montar. El filtro de la pestaña «API» depende de la recarga de `spec`.
 33. **FE010:** la búsqueda de operaciones comparaba el texto entero con «ruta método…», así que no encontraba `GET /api/users`, justo lo que Swagger muestra. Los ejemplos del plan eran de una sola palabra y no lo destapaban.
+34. **FE011:** el primer sondeo de Speech & Text Analytics solo imprimió la subclave `conversation` de la respuesta y concluyó que «no hay sentimiento de conversación». La respuesta completa traía `sentimentScore` y su tendencia. Se descubrió en la T3, al leer las fixtures completas.
+35. **FE011:** el `phraseIndex` de una entrada de sentimiento no es el índice de su frase. El primer verde de la normalización falló por eso; ahora se enlaza por lado, instante y texto.
+36. **FE011:** en una prueba con servidores reales, el puerto 8000 estaba ocupado por otro servidor. El `pkill -f "uvicorn app.main:app"` del script lo paró y la prueba habló con otro proceso: login fallido y `404` engañosos.
+37. **FE011:** user-event simula `date` y `time`, pero no `datetime-local`: escribir carácter a carácter deja valores parciales no válidos.
+38. **FE011:** tres mutaciones del log de una ejecución (sin `after`, sin acumular, sin lectura final) sobrevivían. Los tests miraban las filas antes de que llegara la respuesta del polling.
+39. **FE011:** una conexión de psycopg configurada con `dict_row` rompía `fetchone()[0]` en otra función que la recibía; las 10 conversaciones acabaron con error. Los tests de la función aislada no lo veían.
 
 ## Causa
 
@@ -56,6 +62,10 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 
 ## Aprendizaje
 
+- Antes de concluir que una API «no da» un dato, guarda e inspecciona la respuesta completa, no un resumen impreso de algunas claves.
+- Nunca pares procesos por patrón (`pkill -f`): usa puertos propios y su PID, y aborta la prueba si el arranque falla por puerto ocupado.
+- En tests con polling, espera a que llegue la respuesta de al menos una consulta posterior antes de comprobar el estado; si no, no se distingue acumular de sustituir.
+- Una función que recibe una conexión de otra no debe depender de cómo esté configurada: fija lo que necesita (por ejemplo, la fábrica de filas).
 - Enumera las rutas con el esquema OpenAPI (API pública), no con estructuras internas del framework.
 - Todo gráfico debe tener una vista de tabla enlazable. Así la interacción se prueba en jsdom y el navegador cubre el gráfico.
 - Para desplazar un contenedor, usa `container.scrollTo`, no `scrollIntoView`.
@@ -91,6 +101,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 
 ## Acción preventiva
 
+- FE011: pruebas con servidores reales en puertos propios (18000 y 18001), parando cada proceso por su PID; `datetime-local` se prueba con `fireEvent.change`; las funciones que reciben una conexión fijan su propia fábrica de filas (`tuple_row`); los sondeos guardan la respuesta completa en un fichero antes de sacar conclusiones.
 - Tests de regresión añadidos para los puntos 5, 6, 7 y 9 (propiedad de 500 frases).
 - Patrón de tabla navegable en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 - Revisar esta lista en `/plan` de FE004 a FE006.
@@ -111,5 +122,6 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Plan y evidencia de FE009](../../features/FE009-tests-independientes-del-dataset-mock/plan.md)
 - [Plan y evidencia de FE006](../../features/FE006-gestion-de-usuarios-y-roles/plan.md)
 - [Verificación de FE010](../../features/FE010-especificacion-openapi-en-configuracion/VERIFY.md)
+- [Plan y evidencia de FE011](../../features/FE011-ingesta-de-conversaciones-genesys/plan.md)
 - [swagger-ui-react · README](https://github.com/swagger-api/swagger-ui/blob/master/flavors/swagger-ui-react/README.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [glosario, harness]
 created: 2026-09-27
-updated: 2026-10-02
+updated: 2026-10-12
 ---
 
 # Términos del harness
@@ -26,6 +26,14 @@ updated: 2026-10-02
 
 ## Términos del producto
 
+- **Servicio de ingesta:** proceso aparte de la API que descarga conversaciones de Genesys Cloud y las guarda en PostgreSQL (FE011, [ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md)).
+- **Flujo de descarga:** flujo (`1FL`) con intervalo, canales y programación que lanza descargas de Genesys, a mano o programadas. Convive con los flujos de insights.
+- **Analítica de Genesys:** lo que Genesys da de una conversación además de sus turnos (recorrido, tiempos, contención, Speech & Text Analytics). Es distinto del análisis de la plataforma.
+- **Tramo:** cada paso de una conversación por un participante (cliente, flujo, IVR o bot, cola, agente).
+- **Contención en el bot:** conversación que termina en el IVR o el bot sin pasar a una cola. Si pasa, es **derivada a agente**.
+- **Transcripción parcial:** un agente o un bot intervino según las métricas, pero no tiene frases.
+- **Mensaje no entregado:** mensaje de chat con estado `delivery-failed` (por ejemplo, el agente responde cuando el cliente ya se ha ido).
+- **Análisis pendiente:** conversación real que aún no tiene el análisis de la plataforma (summary, main topic, CSAT…); lo calculará la fase con LLM.
 - **Summary:** resumen de 2 a 4 frases de una conversación: motivo, gestión y resultado.
 - **Main topic:** motivo principal del contacto, con un valor del [catálogo bancario](../producto/catalogo-de-main-topics.md).
 - **AHT (Average Handle Time):** duración media de las conversaciones.

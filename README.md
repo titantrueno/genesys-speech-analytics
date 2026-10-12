@@ -2,7 +2,7 @@
 
 Plataforma web de analítica de conversaciones para la atención al cliente de un banco. Trabaja solo sobre **transcripciones de llamadas y chats** (nunca audio): dashboards de KPIs con drill-down al listado de conversaciones y un detalle de cada conversación como chat, con su análisis.
 
-> Todos los datos son **mock**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). No hay integración real con Genesys ni persistencia.
+> La plataforma muestra datos **mock**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). Desde FE011, un servicio de ingesta aparte descarga conversaciones **reales** de Genesys Cloud a PostgreSQL; la plataforma podrá usarlas con FE012.
 
 ## Estructura
 
@@ -34,7 +34,7 @@ npm run dev
 
 Entra con cualquiera de los usuarios demo que aparecen en la pantalla de login (contraseña `demo`). Ver [backend/README.md](backend/README.md#usuarios-demo).
 
-### Servicio de ingesta de Genesys (FE011, en construcción)
+### Servicio de ingesta de Genesys (FE011)
 
 Descarga conversaciones reales de Genesys Cloud a PostgreSQL. Es un proceso aparte de la API y el único que lee las credenciales de Genesys. Requisitos: Docker (en esta máquina, el daemon es [Colima](https://github.com/abiosoft/colima): `colima start`) y un `.env` en la raíz con las claves de [`.env.example`](.env.example).
 
@@ -47,7 +47,7 @@ cd backend
 .venv/bin/uvicorn ingestion.main:app --port 8001
 ```
 
-El esquema se crea o actualiza al arrancar el servicio. Ver [backend/README.md](backend/README.md#servicio-de-ingesta).
+El esquema se crea o actualiza al arrancar el servicio. Las descargas se crean en «Flujos de insights» (tipo «Descarga de transcripciones») y el estado del conector está en Configuración → Fuentes de datos. Ver [backend/README.md](backend/README.md#servicio-de-ingesta) y el [runbook](vault/operaciones/runbook-ingesta-de-genesys.md).
 
 ## Verificación
 

@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, stack, frontend, backend, mock]
 created: 2026-09-27
-updated: 2026-10-03
+updated: 2026-10-12
 ---
 
 # ADR-002 — Stack Vite + FastAPI con datos mock deterministas
@@ -35,6 +35,7 @@ La plataforma de speech & text analytics para la atención al cliente del banco 
 
 ## Ampliaciones
 
+- **FE011 (2026-10-12):** la alternativa «Base de datos (pospuesta)» se resuelve con **PostgreSQL** para las conversaciones reales de Genesys, que descarga y guarda un servicio de ingesta aparte ([ADR-008](adr-008-postgresql-y-servicio-de-ingesta.md)). El backend añade `psycopg[binary]` (3.3, LGPL-3.0). El dataset mock, la configuración, los usuarios y los flujos de insights siguen en memoria.
 - **FE010 (2026-10-03):** el front añade `swagger-ui-react` (Apache-2.0) para la pestaña «API» de Configuración. Va en un chunk diferido (unos 1,3 MB, 363 kB gzip, más 184 kB de CSS) que solo se descarga al abrir la pestaña; la carga inicial no cambia. Consecuencias aceptadas:
   - `npm ci` avisa de que dos dependencias transitivas (`react-debounce-input` y `react-inspector`) declaran React ≤18, aunque funciona con React 19 sin flags;
   - la sección «Schemas» de Swagger UI rompe el orden de hooks en React 19, así que se oculta (`defaultModelsExpandDepth: -1`);

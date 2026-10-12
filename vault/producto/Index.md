@@ -16,3 +16,4 @@ Conservar el contexto de producto y negocio que explica qué problema resuelve e
 
 - [Propósito del proyecto](proposito-del-proyecto.md)
 - [Catálogo de main topics bancarios](catalogo-de-main-topics.md)
+- [Datos de Genesys para STA](datos-de-genesys-para-sta.md) — qué da Genesys Cloud (analítica, Speech & Text Analytics, transcripciones y mensajes) y qué no (FE011).

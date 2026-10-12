@@ -5,14 +5,14 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [operaciones, runbook, local]
 created: 2026-09-27
-updated: 2026-10-03
+updated: 2026-10-12
 ---
 
 # Estado operativo inicial
 
 ## Cuándo usarlo
 
-Para arrancar, comprobar o revertir la plataforma en su estado actual: **demo local con datos mock**. No existe entorno de producción, infraestructura desplegada ni telemetría.
+Para arrancar, comprobar o revertir la plataforma en su estado actual: **demo local con datos mock**, más la ingesta de conversaciones reales de Genesys en PostgreSQL (FE011), que tiene su propio [runbook](runbook-ingesta-de-genesys.md). No existe entorno de producción, infraestructura desplegada ni telemetría.
 
 ## Prerrequisitos
 
@@ -31,7 +31,7 @@ Para arrancar, comprobar o revertir la plataforma en su estado actual: **demo lo
 - **Humo funcional:** login con un usuario demo, abrir un dashboard y hacer drill-down al listado.
 - **Datos:** con `DATA_SEED` y `DATA_REFERENCE_DATE` fijos, el dataset es reproducible. La suite del backend pasa con cualquier combinación (FE009); `./scripts/ci.sh` la ejecuta con la del `conftest.py` y con semilla 7 y referencia 2026-11-10.
 - **Ejecutar el gate en un portátil:** con batería, el reposo del sistema congela los procesos y hace fallar tests por tiempo; usa la corriente y `caffeinate -i ./scripts/ci.sh`.
-- **Configuración (FE005):** la sección Configuración cambia taxonomía, checks, umbrales, zona horaria, enmascarado y modelo por defecto en caliente; todo se pierde al reiniciar la API. Los conectores de «Fuentes de datos» son **mock**: «Sincronizar» solo actualiza la fecha. `curl -s localhost:8000/api/config/public` devuelve nombre, zona horaria e idioma sin sesión.
+- **Configuración (FE005):** la sección Configuración cambia taxonomía, checks, umbrales, zona horaria, enmascarado y modelo por defecto en caliente; todo se pierde al reiniciar la API. Los conectores de «Fuentes de datos» son **mock**: «Sincronizar» solo actualiza la fecha. Debajo, la tarjeta «Genesys Cloud · datos reales» (FE011) muestra el estado real del servicio de ingesta y permite «Probar conexión». `curl -s localhost:8000/api/config/public` devuelve nombre, zona horaria e idioma sin sesión.
 - **Usuarios y roles (FE006):** con `admin`, «Usuarios y roles» permite crear usuarios (contraseña demo compartida), roles personalizados y cambiar la matriz de permisos; todo se pierde al reiniciar la API. Si alguien no ve una sección que debería, revisa su rol en la matriz: el cambio se aplica en su siguiente petición, sin volver a entrar. Las protecciones impiden quedarse sin administrador. Con sesión, cada respuesta lleva `X-Auth-Version`, que sube con cada cambio de usuarios o roles.
 - **Especificación de la API (FE010):** `curl -s localhost:8000/openapi.json` devuelve el OpenAPI (versión de la entrega y 58 operaciones) sin sesión. Con `config:view`, Configuración → «API» la muestra con Swagger UI. Si sale «No se ha podido cargar la especificación de la API.», comprueba que la API responde y que el proxy de Vite (o `VITE_API_URL` con `CORS_ORIGINS`) llega a `/openapi.json`. «Try it out» hace llamadas reales con la sesión: las escrituras cambian el estado en memoria y quedan en la auditoría; reiniciar la API lo restablece.
 - **Flujos de insights (FE004):** crear un flujo, ejecutarlo y ver cómo avanzan los nodos. El ritmo de la ejecución simulada se ajusta con `FLOW_RUN_STEP_DELAY_MS` (15 ms por elemento por defecto; 0 en los tests). Flujos y ejecuciones viven en memoria y se pierden al reiniciar la API.
@@ -39,7 +39,7 @@ Para arrancar, comprobar o revertir la plataforma en su estado actual: **demo lo
 ## Rollback
 
 - Cada entrega tiene una etiqueta de Git (por ejemplo `v0.1.0`). Para volver a la anterior: `git checkout <etiqueta>`, o revertir los commits con `git revert <desde>..<hasta>`.
-- No hay datos persistentes que migrar; reiniciar la API regenera el dataset.
+- La API no tiene datos persistentes que migrar: reiniciarla regenera el dataset. Los datos reales de Genesys están en PostgreSQL; para revertirlos, ver el [runbook de la ingesta](runbook-ingesta-de-genesys.md).
 
 ## Escalado
 
@@ -52,3 +52,4 @@ El propietario del proyecto (`equipo-del-proyecto`).
 - [README del proyecto](../../README.md)
 - [README del backend](../../backend/README.md)
 - [Script de CI local](../../scripts/ci.sh)
+- [Runbook de la ingesta de Genesys](runbook-ingesta-de-genesys.md)
