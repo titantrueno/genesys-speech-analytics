@@ -46,19 +46,23 @@ def build_report(conversations: list[Conversation], results: dict[str, Any], con
     size = len(conversations)
     zone = current_zone()
     days = sorted(local_day(conv.started_at, zone) for conv in conversations)
-    topics = Counter(topic_name(conv.analysis.main_topic) for conv in conversations)
+    # Las conversaciones reales sin analizar (FE012) no tienen main topic y puede que Genesys no dé su sentimiento.
+    topics = Counter(topic_name(conv.analysis.main_topic) for conv in conversations if conv.analysis.main_topic)
     topic_counts = [count for _, count in topics.most_common()]
     shares = dict(zip([name for name, _ in topics.most_common()], percentages(topic_counts)))
-    average = sum(conv.analysis.sentiment for conv in conversations) / size
+    sentiments = [conv.analysis.sentiment for conv in conversations if conv.analysis.sentiment is not None]
+    average = f"{_decimal(sum(sentiments) / len(sentiments))}" if sentiments else "sin dato"
+    topic_line = ("Reparto por main topic: " + "; ".join(
+        f"{name} ({count}, {shares[name]:.1f} %)".replace(".", ",") for name, count in topics.most_common(5)) + "."
+        if topics else "Reparto por main topic: pendiente de análisis.")
     frequent = Counter(r if isinstance(r, str) else json.dumps(r, ensure_ascii=False, sort_keys=True)
                        for r in results.values()).most_common(3)
     lines = [
         f"Informe «{config.destination.strip()}»",
         "",
         f"Muestra: {size} conversaciones, del {days[0]:%d/%m/%Y} al {days[-1]:%d/%m/%Y}.",
-        "Reparto por main topic: " + "; ".join(
-            f"{name} ({count}, {shares[name]:.1f} %)".replace(".", ",") for name, count in topics.most_common(5)) + ".",
-        f"Sentimiento medio: {_decimal(average)}.",
+        topic_line,
+        f"Sentimiento medio: {average}.",
         "Resultados más frecuentes: " + "; ".join(f"«{value[:160]}» ({count})" for value, count in frequent) + ".",
     ]
     return {"text": "\n".join(lines)}
