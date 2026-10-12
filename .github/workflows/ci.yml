@@ -1,3 +1,6 @@
+# Runner fijado a ubuntu-24.04: `ubuntu-latest` pasa a 26.04 entre el 19 de octubre y el 19 de noviembre de 2026
+# (actions/runner-images#14748). Subir de versión es un cambio deliberado, probado con este mismo workflow.
+# Acciones en v7 (Node.js 24; Node.js 20 está retirado en los runners).
 name: CI
 
 on:
@@ -7,16 +10,16 @@ on:
 
 jobs:
   vault:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
       - run: python scripts/audit_vault.py
 
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
@@ -34,8 +37,8 @@ jobs:
           --health-cmd "pg_isready -U speech -d speech_analytics_test"
           --health-interval 2s --health-timeout 3s --health-retries 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
       - run: python -m venv .venv && .venv/bin/pip install -r requirements.txt
@@ -57,13 +60,13 @@ jobs:
       - run: .venv/bin/pip install pip-audit && .venv/bin/pip-audit
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: lts/*
           cache: npm

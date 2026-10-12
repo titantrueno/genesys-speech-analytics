@@ -58,6 +58,7 @@ La primera vez hay que crear el entorno del backend (`python3 -m venv backend/.v
 - **Antes de cada `git push`**, `git log origin/main..HEAD --format=%B | grep -c "^Co-Authored-By"` debe devolver `0`.
 - Si algún commit local aún sin publicar lleva la línea, se quita antes de subir. Para ello se reescribe solo el rango `origin/main..HEAD` y se deja una rama de respaldo.
 - La historia ya publicada no se reescribe: los commits anteriores a FE011 que están en `origin` conservan la línea, porque cambiarlos exigiría un `push --force` sobre `main`.
+- **CI en GitHub Actions** (`.github/workflows/ci.yml`): el runner está fijado a `ubuntu-24.04` y las acciones van en v7 (Node.js 24). Pasar a `ubuntu-26.04` es un cambio deliberado, que se valida con el propio workflow ([actions/runner-images#14748](https://github.com/actions/runner-images/issues/14748)).
 
 ## Regla operativa
 
