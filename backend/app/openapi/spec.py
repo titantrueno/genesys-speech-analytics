@@ -304,9 +304,13 @@ OPERATIONS: dict[tuple[str, str], Op] = {
         body=(MainTopicIn, SecondaryTopicIn),
         errors={404: (NOT_FOUND, s.ErrorText), 422: ("Errores por campo.", s.FieldErrors)}),
     ("DELETE", "/api/config/taxonomy/{kind_name}/{topic_id}"): Op(
-        "Borrar un tema", None, "config:edit", status=204,
+        "Borrar un tema", None, "config:edit",
+        "Un main topic se comprueba en el dataset sintético y en las conversaciones reales de PostgreSQL, sea cual sea el "
+        "origen activo.", status=204,
         errors={404: (NOT_FOUND, s.ErrorText),
-                409: ("Está asignado a conversaciones: no se puede borrar, solo desactivar.", s.ErrorText)}),
+                409: ("Está asignado a conversaciones (el mensaje da el recuento de cada origen): no se puede borrar, "
+                      "solo desactivar.", s.ErrorText),
+                503: ("No se puede comprobar el uso en los datos reales (PostgreSQL no responde).", s.ErrorText)}),
     ("GET", "/api/config/compliance-checks"): Op("Checks de cumplimiento", s.ComplianceChecks, "config:view"),
     ("POST", "/api/config/compliance-checks"): Op(
         "Crear un check", s.ComplianceCheck, "config:edit", "Se evalúa por frases dichas por el agente.", status=201,

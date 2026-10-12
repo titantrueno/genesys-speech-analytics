@@ -8,7 +8,7 @@ recarga. Así los datos nuevos aparecen en la petición siguiente sin un canal d
 import itertools
 import threading
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -189,6 +189,21 @@ class RealRepository:
 
     def followups(self) -> dict[str, bool]:
         return self.snapshot().followups
+
+    def main_topic_usage_in_db(self) -> Counter | None:
+        """Conversaciones reales por main topic, leídas de la base aunque el origen activo sea el sintético (FE013).
+
+        `None` sin `DATABASE_URL` (no hay datos reales que proteger); `DataUnavailable` si la base no responde.
+        """
+        if not self._database_url():
+            return None
+        try:
+            with self._connect() as conn:
+                rows = conn.execute("SELECT main_topic, count(*) FROM analysis WHERE main_topic IS NOT NULL "
+                                    "GROUP BY main_topic").fetchall()
+        except psycopg.Error as exc:
+            raise DataUnavailable(type(exc).__name__) from None
+        return Counter(dict(rows))
 
     def queues(self) -> list[tuple[str, str]]:
         found = {c.queue_id: c.queue for c in self.conversations() if c.queue_id}

@@ -3552,7 +3552,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: 'Está asignado a conversaciones: no se puede borrar, solo desactivar.'
+          description: 'Está asignado a conversaciones (el mensaje da el recuento de cada origen): no se puede borrar, solo
+            desactivar.'
           content:
             application/json:
               schema: *id001
@@ -3568,7 +3569,16 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`.'
+        '503':
+          description: No se puede comprobar el uso en los datos reales (PostgreSQL no responde).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `config:edit`. Un main topic se comprueba en el dataset sintético y en las conversaciones reales
+        de PostgreSQL, sea cual sea el origen activo.'
   /api/config/compliance-checks:
     get:
       tags:

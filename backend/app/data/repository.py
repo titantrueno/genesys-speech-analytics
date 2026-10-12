@@ -105,6 +105,11 @@ def _synthetic_followups() -> dict[str, bool]:
 _synthetic = SyntheticRepository()
 
 
+def synthetic_repository() -> SyntheticRepository:
+    """El dataset sintético, esté o no activo (lo usa la protección del borrado de main topics, FE013)."""
+    return _synthetic
+
+
 def active_repository() -> ConversationRepository:
     from app.config.store import get_config  # import diferido: la configuración depende del dataset
     if get_config().sources.origin == REAL:

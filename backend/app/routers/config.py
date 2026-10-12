@@ -17,7 +17,8 @@ from app.config.taxonomy import (MainTopicIn, SecondaryTopicIn, Topic, main_topi
                                  secondary_topic_usage)
 from app.services.kpis import KPI_DEFS
 from app.text import normalize_text
-from app.data.repository import DataUnavailable, cached_by_version
+from app.data.real import real_repository
+from app.data.repository import DataUnavailable, cached_by_version, synthetic_repository
 from app.data.store import get_dataset
 from app.flows.catalog import MODELS, PROVIDERS
 from app.clock import now
@@ -264,11 +265,29 @@ def update_topic(kind_name: TopicKindParam, topic_id: str, payload: Any = Body(.
     return _topic_body(kind, topic)
 
 
+def _ensure_main_topic_unused(code: str) -> None:
+    """Un main topic se protege en los dos orígenes, sea cual sea el activo (FE013, criterio 30): los flujos de insights
+    lo escriben en conversaciones reales aunque se esté trabajando con el dataset sintético."""
+    synthetic = sum(1 for c in synthetic_repository().conversations() if c.analysis.main_topic == code)
+    try:
+        real_usage = real_repository().main_topic_usage_in_db()
+    except DataUnavailable:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
+                            detail="No se puede comprobar el uso en los datos reales") from None
+    real = real_usage[code] if real_usage is not None else 0
+    if synthetic or real:
+        where = f"{synthetic} conversaciones sintéticas" + (f" y {real} reales" if real_usage is not None else "")
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            detail=f"Está asignado a {where}: no se puede borrar, solo desactivar")
+
+
 @router.delete("/taxonomy/{kind_name}/{topic_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_topic(kind_name: TopicKindParam, topic_id: str, user: User = Depends(EDIT)) -> Response:
     kind = TOPIC_KINDS[kind_name]
     topic = _find_topic(kind, topic_id)
-    if kind.usage()[topic.code]:
+    if kind_name == "main-topics":
+        _ensure_main_topic_unused(topic.code)
+    elif kind.usage()[topic.code]:
         raise HTTPException(status.HTTP_409_CONFLICT,
                             detail="Está asignado a conversaciones: no se puede borrar, solo desactivar")
 
