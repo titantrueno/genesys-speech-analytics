@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Levanta todo el proyecto en local (PostgreSQL en Docker/Colima, servicio de ingesta, API y web) y lo para entero con
-# Ctrl+C: no deja ningún proceso ni contenedor en marcha. Uso y puertos: ver "Entorno local" en README.md.
+# Levanta todo el proyecto en local (PostgreSQL en Docker/Colima, servicios de ingesta y de LLM, API y web) y lo para
+# entero con Ctrl+C: no deja ningún proceso ni contenedor en marcha. Uso y puertos: ver "Entorno local" en README.md.
 #
 #   ./scripts/dev.sh              # todo
 #   ./scripts/dev.sh --no-db      # solo API + web (sin Docker, PostgreSQL ni ingesta)
 #   ./scripts/dev.sh --reload     # uvicorn con --reload (para editar código del backend)
 #
-# Puertos (cámbialos por entorno si los habituales están ocupados): API_PORT=8000 INGESTION_PORT=8001 WEB_PORT=5173
+# Puertos (cámbialos por entorno si los habituales están ocupados): API_PORT=8000 INGESTION_PORT=8001 LLM_PORT=8002
+# WEB_PORT=5173. El servicio de LLM solo arranca si hay LLM_TOKEN (en el entorno o en el .env).
 set -uo pipefail
 set -m # cada proceso lanzado en segundo plano va en su propio grupo: se para entero, con sus hijos
 cd "$(dirname "$0")/.."
@@ -14,6 +15,7 @@ ROOT=$PWD
 
 API_PORT=${API_PORT:-8000}
 INGESTION_PORT=${INGESTION_PORT:-8001}
+LLM_PORT=${LLM_PORT:-8002}
 WEB_PORT=${WEB_PORT:-5173}
 LOG_DIR=$ROOT/.dev-logs
 
@@ -23,7 +25,7 @@ for arg in "$@"; do
   case $arg in
     --no-db) WITH_DB=0 ;;
     --reload) RELOAD=(--reload) ;;
-    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,11p' "$0"; exit 0 ;;
     *) echo "Opción desconocida: $arg" >&2; exit 2 ;;
   esac
 done
@@ -69,7 +71,7 @@ cleanup() {
     espera colima stop >/dev/null 2>&1
   fi
   local leftover=""
-  for p in $API_PORT $INGESTION_PORT $WEB_PORT; do
+  for p in $API_PORT $INGESTION_PORT $LLM_PORT $WEB_PORT; do
     [ -n "$(port_owner "$p")" ] && leftover="$leftover $p"
   done
   if [ -n "$leftover" ]; then log "Aviso: siguen ocupados los puertos:$leftover"; else log "Todo parado."; fi
@@ -97,11 +99,15 @@ start() { # nombre, directorio, comando…: lanza en segundo plano con log propi
 }
 
 # --- Comprobaciones previas: nada se lanza si algo no está en orden -------------------------------------------------
+# El servicio de LLM (FE013) necesita su token; sin él, la plataforma funciona con el proveedor simulado.
+WITH_LLM=0
+{ [ -n "${LLM_TOKEN:-}" ] || grep -qE '^LLM_TOKEN=.+' .env 2>/dev/null; } && WITH_LLM=1
 ports="$API_PORT $WEB_PORT"
 [ "$WITH_DB" = 1 ] && ports="$ports $INGESTION_PORT"
+[ "$WITH_LLM" = 1 ] && ports="$ports $LLM_PORT"
 for p in $ports; do
   owner=$(port_owner "$p")
-  [ -z "$owner" ] || die "El puerto $p ya está ocupado por $owner. Páralo o usa otro (API_PORT / INGESTION_PORT / WEB_PORT)."
+  [ -z "$owner" ] || die "El puerto $p ya está ocupado por $owner. Páralo o usa otro (API_PORT / INGESTION_PORT / LLM_PORT / WEB_PORT)."
 done
 
 mkdir -p "$LOG_DIR"
@@ -139,8 +145,16 @@ if [ "$WITH_DB" = 1 ]; then
   wait_http "http://localhost:$INGESTION_PORT/health" ingestion "${PIDS[${#PIDS[@]}-1]}"
 fi
 
+if [ "$WITH_LLM" = 1 ]; then
+  log "Servicio de LLM en :$LLM_PORT"
+  start llm "$ROOT/backend" .venv/bin/uvicorn llm.main:app --port "$LLM_PORT" ${RELOAD[@]+"${RELOAD[@]}"}
+  wait_http "http://localhost:$LLM_PORT/health" llm "${PIDS[${#PIDS[@]}-1]}"
+else
+  log "Servicio de LLM desactivado: falta LLM_TOKEN en el .env (ver .env.example)"
+fi
+
 log "API en :$API_PORT"
-INGESTION_URL="http://localhost:$INGESTION_PORT" CORS_ORIGINS="http://localhost:$WEB_PORT,http://127.0.0.1:$WEB_PORT" \
+INGESTION_URL="http://localhost:$INGESTION_PORT" LLM_URL="http://localhost:$LLM_PORT" CORS_ORIGINS="http://localhost:$WEB_PORT,http://127.0.0.1:$WEB_PORT" \
   start api "$ROOT/backend" .venv/bin/uvicorn app.main:app --port "$API_PORT" ${RELOAD[@]+"${RELOAD[@]}"}
 wait_http "http://localhost:$API_PORT/openapi.json" api "${PIDS[${#PIDS[@]}-1]}"
 
@@ -154,7 +168,8 @@ cat <<MSG
   Web:        http://localhost:$WEB_PORT   (usuarios demo, contraseña «demo»)
   API:        http://localhost:$API_PORT/docs
   Ingesta:    $([ "$WITH_DB" = 1 ] && echo "http://localhost:$INGESTION_PORT/docs" || echo "desactivada (--no-db)")
-  Logs:       .dev-logs/{api,ingestion,web}.log
+  LLM:        $([ "$WITH_LLM" = 1 ] && echo "http://localhost:$LLM_PORT/health" || echo "desactivado (falta LLM_TOKEN)")
+  Logs:       .dev-logs/{api,ingestion,llm,web}.log
 
   Ctrl+C para parar todo.
 

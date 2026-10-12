@@ -181,6 +181,19 @@
   - recorrido en Chrome anotado en `VERIFY.md`: flujo de descarga con y sin «Sobrescribir» (recuento de existentes), Configuración → Modelos de IA, plantilla «Generar main topic» con `simulado` ejecutada sobre conversaciones reales y main topic visible en el detalle, y opción deshabilitada en sintético;
   - si hay una clave de Gemini, la misma ejecución con Gemini sobre 3 conversaciones; si no, se marca como no verificada.
 
+## Notas de T4: documentación contrastada el 2026-10-12
+
+| Proveedor | Fuente | Lo que fija |
+|---|---|---|
+| Gemini | [Generating content](https://ai.google.dev/api/generate-content), [Structured outputs](https://ai.google.dev/gemini-api/docs/generate-content/structured-output), [Modelos](https://ai.google.dev/gemini-api/docs/models) | `POST …/v1beta/models/{modelo}:generateContent` con `x-goog-api-key`; JSON con esquema en `generationConfig.responseFormat.text` (la guía REST no usa `responseJsonSchema`, que la referencia marca como obsoleto); `promptFeedback.blockReason` y `finishReason`. Modelos estables recomendados: `gemini-3.8-flash` y `gemini-3.5-flash-lite`. |
+| OpenAI | [Create chat completion](https://developers.openai.com/api/reference/python/resources/chat/subresources/completions/methods/create), [Structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [Modelos](https://developers.openai.com/api/docs/models) | `POST /v1/chat/completions` con `Authorization: Bearer`; `response_format` `json_schema` estricto; `message.refusal`. Modelos: `gpt-6.1-sol`, `gpt-6-luna`, `gpt-6-astra`, todos de razonamiento. **La documentación no confirma si admiten `temperature`.** |
+| Anthropic | Guía de la Messages API (skill `claude-api`, caché del 2026-10-06) | `POST /v1/messages` con `x-api-key` y `anthropic-version: 2023-06-01`; `output_config.format` para JSON; `stop_reason` `refusal`; `529` sobrecargado. Modelos: `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`. **Los tres rechazan `temperature` con `400`.** Opus y Sonnet 5.5 llevan `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`). |
+
+- **Decisión:** la `temperature` del nodo solo se envía a los modelos que la admiten. En T5 cada modelo del catálogo de la API lleva `temperature: bool` (`true` en Gemini, `false` en Anthropic y, por no estar confirmado, en OpenAI); el servicio de LLM envía lo que recibe y omite `null`.
+- **Decisión:** el formato etiqueta se pide como texto y lo valida la API (criterio 13); solo el JSON usa el modo estructurado de cada proveedor.
+- **Hipótesis:** Gemini responde a una clave no válida con `400` y el motivo `API_KEY_INVALID`; el adaptador lo trata como clave rechazada.
+- **Movido a T5:** el test que compara el registro de proveedores del servicio con el catálogo de la API, porque el catálogo se amplía en T5.
+
 ## Riesgos del plan
 
 - **Comportamiento de las suites:** hoy hay tests de ingesta que esperan `updated` al repetir una descarga. Con `overwrite=false` por defecto hay que cambiarlos a `overwrite=true` de forma explícita, no borrarlos (T1).
@@ -189,4 +202,4 @@
 
 ## Progreso
 
-- [x] T1 · [x] T2 · [x] T3 · [ ] T4 · [ ] T5 · [ ] T6 · [ ] T7 · [ ] T8 · [ ] T9
+- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [ ] T5 · [ ] T6 · [ ] T7 · [ ] T8 · [ ] T9
