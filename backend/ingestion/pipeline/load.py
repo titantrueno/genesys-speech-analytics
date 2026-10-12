@@ -99,6 +99,7 @@ def load(conn: psycopg.Connection, c: NormalizedConversation, analysis: Analysis
         conn.execute(
             f"INSERT INTO analysis (conversation_id, {', '.join(_ANALYSIS_FIELDS)}) "
             f"VALUES (%s, {', '.join(['%s'] * len(_ANALYSIS_FIELDS))}) "
-            f"ON CONFLICT (conversation_id) DO UPDATE SET {assignments}, updated_at = now()",
+            # Con «Sobrescribir» también se borra la trazabilidad de lo que escribió un LLM (FE013).
+            f"ON CONFLICT (conversation_id) DO UPDATE SET {assignments}, llm_meta = '{{}}', updated_at = now()",
             [c.id, *params])
     return INSERTED if inserted else UPDATED

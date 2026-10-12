@@ -438,6 +438,7 @@ class FlowCatalog(Doc):
     output_formats: list[ValueLabel]
     field_types: list[ValueLabel]
     output_kinds: list[ValueLabel]
+    target_fields: list[ValueLabel] = Field(description="Campos destino de un Output «campo» (FE013).")
     aggregations: list[ValueLabel]
     limits: FlowLimits
 
@@ -508,11 +509,28 @@ class ReportResult(Doc):
     text: str
 
 
+FieldState = Literal["escrito", "omitido", "rechazado", "error"]
+
+
+class FieldRow(Doc):
+    conversation: ConversationItem
+    values: dict[str, str] = Field(description="Valor guardado (o que se intentó guardar) por campo destino; "
+                                               "`main_topic`, por su código.")
+    states: dict[str, FieldState] = Field(description="Estado por campo destino.")
+    reason: str | None = Field(description="Motivo de un `rechazado` o `error`.")
+
+
+class FieldsResult(Doc):
+    targets: list[Literal["summary", "main_topic"]]
+    rows: list[FieldRow] = Field(description="Una fila por conversación que llegó al Prompt.")
+    counts: dict[str, dict[FieldState, int]] = Field(description="Recuento de cada estado por campo destino.")
+
+
 class RunOutput(Doc):
     node_id: str
-    kind: Literal["tabla", "metrica", "informe"]
-    destination: str
-    result: TableResult | MetricResult | ReportResult
+    kind: Literal["tabla", "metrica", "informe", "campo"]
+    destination: str = Field(description="Nombre de destino o, en `campo`, los campos destino («Summary + Main topic»).")
+    result: TableResult | MetricResult | ReportResult | FieldsResult
 
 
 class Run(RunSummary):

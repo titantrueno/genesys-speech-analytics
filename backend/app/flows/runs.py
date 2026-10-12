@@ -17,8 +17,12 @@ from typing import Any, Callable
 
 from app import ids
 from app.auth import User
+from app.flows import catalog
+from app.flows.analysis_writer import BATCH_SIZE, AnalysisWriter, WriterUnavailable
+from app.flows.fields import topic_code
 from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
 from app.flows.outputs import build_metric, build_report, build_table
+from app.services.listing import list_item
 from app.flows.prompting import PromptFailed, PromptRejected, PromptRunner, PromptUnavailable
 from app.flows.sampling import candidates, draw_sample
 from app.clock import now
@@ -176,10 +180,12 @@ def topological_order(graph: Graph) -> list[str]:
 
 
 class FlowExecutor:
-    def __init__(self, runner: PromptRunner, delay_s: float, on_step: Callable[[Run], None] | None = None):
+    def __init__(self, runner: PromptRunner, delay_s: float, on_step: Callable[[Run], None] | None = None,
+                 writer: AnalysisWriter | None = None):
         self.runner = runner
         self.delay_s = delay_s
         self.on_step = on_step
+        self.writer = writer  # solo lo usan los Output «campo» (FE013)
 
     def _step(self, run: Run) -> None:
         if self.delay_s:
@@ -192,6 +198,7 @@ class FlowExecutor:
         self._step(run)
         graph = run.graph
         sampled: dict[str, list[Conversation]] = {}
+        reached: dict[str, list[Conversation]] = {}  # por Prompt, las conversaciones que le llegaron
         results: dict[str, dict[str, Any]] = {}
         failed = False
         for node_id in topological_order(graph):
@@ -205,9 +212,13 @@ class FlowExecutor:
                 if isinstance(node, SamplingNode):
                     sampled[node_id] = self._sampling(run, node)
                 elif isinstance(node, PromptNode):
+                    reached[node_id] = sampled[inputs[0]]
                     results[node_id] = self._prompt(run, node, sampled[inputs[0]], results.get(inputs[0]))
                     # Solo siguen las conversaciones con un resultado válido (FE013, criterio 13).
                     sampled[node_id] = [c for c in sampled[inputs[0]] if c.id in results[node_id]]
+                elif node.config.kind == "campo":
+                    self._fields(run, node, graph.node(inputs[0]), reached[inputs[0]], results[inputs[0]])
+                    sampled[node_id] = sampled[inputs[0]]
                 else:
                     self._output(run, node, graph.node(inputs[0]), sampled[inputs[0]], results[inputs[0]])
                     sampled[node_id] = sampled[inputs[0]]
@@ -300,6 +311,61 @@ class FlowExecutor:
         with run.lock:
             run.outputs[node.id] = {"node_id": node.id, "kind": cfg.kind, "destination": cfg.destination.strip(),
                                     "result": result}
+        run.update_node(node.id, processed=len(conversations))
+
+
+    def _fields(self, run: Run, node: OutputNode, prompt: PromptNode, conversations: list[Conversation],
+                results: dict[str, Any]) -> None:
+        """Output «Guardar en campos» (FE013, criterios 19 y 22): escribe por lotes y da el estado de cada campo."""
+        cfg = node.config
+        targets = [m.target for m in cfg.mappings]
+        failures = {f["conversation_id"]: f for f in run.failures.get(prompt.id, [])}
+        run.update_node(node.id, total=len(conversations))
+        rows, items = [], []
+        for conv in conversations:
+            row = {"conversation": list_item(conv), "values": {}, "states": {}, "reason": None}
+            if conv.id not in results:  # el Prompt la rechazó o no obtuvo respuesta
+                failure = failures.get(conv.id, {"status": "error", "reason": "Sin resultado del Prompt"})
+                row["states"] = {t: failure["status"] for t in targets}
+                row["reason"] = failure["reason"]
+            else:
+                for mapping in cfg.mappings:
+                    value = results[conv.id] if mapping.source is None else results[conv.id][mapping.source]
+                    if mapping.target == "main_topic":
+                        code = topic_code(value)
+                        if code is None:  # la taxonomía cambió durante la ejecución
+                            row["states"]["main_topic"] = "rechazado"
+                            row["reason"] = f"«{value}» no es un main topic activo"
+                            continue
+                        value = code
+                    row["values"][mapping.target] = value
+                if row["values"]:
+                    items.append({"conversation_id": conv.id, "values": row["values"]})
+            rows.append(row)
+        by_id = {row["conversation"]["id"]: row for row in rows}
+        written = 0
+        for start in range(0, len(items), BATCH_SIZE):
+            batch = items[start:start + BATCH_SIZE]
+            try:
+                outcomes = self.writer.write(run.id, prompt.config.provider or catalog.SIMULATED, prompt.config.model,
+                                             bool(cfg.overwrite), batch)
+            except WriterUnavailable as exc:
+                raise NodeFailure(f"{exc}: se guardaron {written} de {len(items)} conversaciones.") from exc
+            for conversation_id, per_target in outcomes.items():
+                row = by_id[conversation_id]
+                for target, outcome in per_target.items():
+                    row["states"][target] = "error" if outcome == "no_encontrada" else outcome
+                    if outcome == "no_encontrada":
+                        row["reason"] = "La conversación no está en la base de datos"
+            written += len(batch)
+            run.update_node(node.id, processed=min(len(conversations), written))
+            self._step(run)
+        counts = {t: {state: sum(row["states"].get(t) == state for row in rows)
+                      for state in ("escrito", "omitido", "rechazado", "error")} for t in targets}
+        with run.lock:
+            run.outputs[node.id] = {"node_id": node.id, "kind": "campo",
+                                    "destination": " + ".join(catalog.TARGET_FIELDS[t] for t in targets),
+                                    "result": {"targets": targets, "rows": rows, "counts": counts}}
         run.update_node(node.id, processed=len(conversations))
 
 

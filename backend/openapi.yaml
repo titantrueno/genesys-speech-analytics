@@ -6052,6 +6052,99 @@ components:
       - type
       title: FieldIssue
       type: object
+    FieldMapping:
+      additionalProperties: false
+      description: 'Un campo destino y de dónde sale: la respuesta entera (`None`) o un campo del JSON del Prompt (FE013).'
+      properties:
+        target:
+          enum:
+          - summary
+          - main_topic
+          title: Target
+          type: string
+        source:
+          anyOf:
+          - maxLength: 40
+            type: string
+          - type: 'null'
+          default: null
+          title: Source
+      required:
+      - target
+      title: FieldMapping
+      type: object
+    FieldRow:
+      additionalProperties: false
+      properties:
+        conversation:
+          $ref: '#/components/schemas/ConversationItem'
+        values:
+          additionalProperties:
+            type: string
+          description: Valor guardado (o que se intentó guardar) por campo destino; `main_topic`, por su código.
+          title: Values
+          type: object
+        states:
+          additionalProperties:
+            enum:
+            - escrito
+            - omitido
+            - rechazado
+            - error
+            type: string
+          description: Estado por campo destino.
+          title: States
+          type: object
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Motivo de un `rechazado` o `error`.
+          title: Reason
+      required:
+      - conversation
+      - values
+      - states
+      - reason
+      title: FieldRow
+      type: object
+    FieldsResult:
+      additionalProperties: false
+      properties:
+        targets:
+          items:
+            enum:
+            - summary
+            - main_topic
+            type: string
+          title: Targets
+          type: array
+        rows:
+          description: Una fila por conversación que llegó al Prompt.
+          items:
+            $ref: '#/components/schemas/FieldRow'
+          title: Rows
+          type: array
+        counts:
+          additionalProperties:
+            additionalProperties:
+              type: integer
+            propertyNames:
+              enum:
+              - escrito
+              - omitido
+              - rechazado
+              - error
+            type: object
+          description: Recuento de cada estado por campo destino.
+          title: Counts
+          type: object
+      required:
+      - targets
+      - rows
+      - counts
+      title: FieldsResult
+      type: object
     Flow:
       additionalProperties: false
       properties:
@@ -6157,6 +6250,12 @@ components:
             $ref: '#/components/schemas/ValueLabel'
           title: Output Kinds
           type: array
+        target_fields:
+          description: Campos destino de un Output «campo» (FE013).
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Target Fields
+          type: array
         aggregations:
           items:
             $ref: '#/components/schemas/ValueLabel'
@@ -6178,6 +6277,7 @@ components:
       - output_formats
       - field_types
       - output_kinds
+      - target_fields
       - aggregations
       - limits
       title: FlowCatalog
@@ -7210,6 +7310,7 @@ components:
             - tabla
             - metrica
             - informe
+            - campo
             type: string
           - type: 'null'
           default: null
@@ -7230,6 +7331,21 @@ components:
           - type: 'null'
           default: null
           title: Destination
+        mappings:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/FieldMapping'
+            maxItems: 2
+            type: array
+          - type: 'null'
+          default: null
+          title: Mappings
+        overwrite:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          default: null
+          title: Overwrite
       title: OutputConfig
       type: object
     OutputFormat:
@@ -7283,6 +7399,8 @@ components:
             kind: null
             aggregation: null
             destination: null
+            mappings: null
+            overwrite: null
       required:
       - id
       - position
@@ -7893,9 +8011,11 @@ components:
           - tabla
           - metrica
           - informe
+          - campo
           title: Kind
           type: string
         destination:
+          description: Nombre de destino o, en `campo`, los campos destino («Summary + Main topic»).
           title: Destination
           type: string
         result:
@@ -7903,6 +8023,7 @@ components:
           - $ref: '#/components/schemas/TableResult'
           - $ref: '#/components/schemas/MetricResult'
           - $ref: '#/components/schemas/ReportResult'
+          - $ref: '#/components/schemas/FieldsResult'
           title: Result
       required:
       - node_id
@@ -8172,6 +8293,16 @@ components:
           - booleano
           title: Type
           type: string
+        options:
+          anyOf:
+          - items:
+              maxLength: 60
+              type: string
+            maxItems: 100
+            type: array
+          - type: 'null'
+          default: null
+          title: Options
       required:
       - name
       - type

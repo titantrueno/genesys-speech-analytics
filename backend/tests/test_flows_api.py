@@ -203,7 +203,7 @@ def test_catalog_lists_the_configuration_options(api):
     assert values("strata") == ["canal", "cola", "main_topic"]
     assert values("variables") == ["transcripcion", "summary", "main_topic", "metadatos", "resultado_anterior"]
     assert values("output_formats") == ["texto", "etiqueta", "json"]
-    assert values("output_kinds") == ["tabla", "metrica", "informe"]
+    assert values("output_kinds") == ["tabla", "metrica", "informe", "campo"]  # «campo», desde FE013
     assert values("models") and values("order_keys") and values("aggregations") and values("field_types")
     assert body["limits"]["max_sample_size"] == 1000
 

@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 from app.flows import catalog
 from app.flows.connections import Rejection, connection_rejection
 from app.config.store import get_config
+from app.flows.fields import topic_code
 from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
 from app.query.model import QueryError, parse_query
 
@@ -20,6 +21,10 @@ FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 # Proveedores con clave configurada según el servicio de LLM, o `None` si no responde (FE013). Se consulta una vez por
 # validación y solo si algún Prompt usa un proveedor real.
 LlmKeys = Callable[[], dict[str, bool] | None]
+
+
+def active_origin() -> str:
+    return get_config().sources.origin
 
 
 @dataclass(frozen=True)
@@ -131,7 +136,7 @@ def _prompt(node: PromptNode, graph: Graph, llm_keys: LlmKeys | None = None) -> 
             issues.append(Issue("prompt_without_variables",
                                 "El prompt no usa ninguna variable: todas las conversaciones recibirían el mismo texto.", node.id))
         pending = sorted({v for v in used if v in PENDING_VARIABLES})
-        if pending and get_config().sources.origin == "real":
+        if pending and active_origin() == "real":
             issues.append(Issue(
                 "analysis_pending",
                 f"Las conversaciones reales aún no tienen análisis: {', '.join('{{' + v + '}}' for v in pending)} "
@@ -143,8 +148,59 @@ def _prompt(node: PromptNode, graph: Graph, llm_keys: LlmKeys | None = None) -> 
     return issues + _provider(node, llm_keys) + _output_format(node)
 
 
+def _mapping(node: OutputNode, mapping, prompt: PromptNode) -> list[Issue]:
+    """Una asignación de un Output `campo` frente al formato del Prompt de entrada (FE013, criterio 17)."""
+    fmt = prompt.config.output
+    label = catalog.TARGET_FIELDS[mapping.target]
+    if fmt.type == "json":
+        field = next((f for f in fmt.fields or [] if f.name == mapping.source), None)
+        if field is None or field.type != "texto":
+            return [Issue("invalid_mapping", f"{label}: elige un campo de texto del JSON del Prompt.", node.id)]
+        free_text, values = field.options is None, field.options
+    else:
+        if mapping.source is not None:
+            return [Issue("invalid_mapping", f"{label}: el Prompt no devuelve JSON, así que no hay campo de origen.",
+                          node.id)]
+        free_text, values = fmt.type == "texto", fmt.labels if fmt.type == "etiqueta" else None
+    if mapping.target == "summary" and not free_text:
+        return [Issue("summary_requires_text", "Summary necesita texto libre: un Prompt de texto o un campo de "
+                                               "texto sin valores permitidos.", node.id)]
+    if mapping.target == "main_topic":
+        unknown = [v for v in values or [] if topic_code(v) is None]
+        if not values or unknown:
+            detail = f" No lo son: {', '.join(unknown)}." if unknown else ""
+            return [Issue("main_topic_requires_taxonomy", "Main topic necesita etiquetas o valores permitidos que sean "
+                                                          f"main topics activos de la taxonomía.{detail}", node.id)]
+    return []
+
+
+def _fields_output(node: OutputNode, graph: Graph) -> list[Issue]:
+    cfg = node.config
+    if not cfg.mappings:
+        return [Issue("node_unconfigured", "Sin configurar: falta al menos un campo destino.", node.id)]
+    issues = []
+    if active_origin() != "real":
+        issues.append(Issue("field_output_requires_real_data", "Guardar en campos solo funciona con datos reales.",
+                            node.id))
+    targets = [m.target for m in cfg.mappings]
+    if len(set(targets)) != len(targets):
+        issues.append(Issue("duplicate_target", "Un campo destino solo puede aparecer una vez.", node.id))
+    prompt = next((graph.node(s) for s in graph.inputs(node.id) if isinstance(graph.node(s), PromptNode)), None)
+    if prompt is None or prompt.config.output is None:
+        return issues
+    if prompt.config.output.type != "json" and len(cfg.mappings) > 1:
+        issues.append(Issue("invalid_mapping", "Un Prompt de texto o etiqueta solo da un valor: usa una sola "
+                                               "asignación, o un Prompt JSON para varios campos.", node.id))
+        return issues
+    for mapping in cfg.mappings:
+        issues += _mapping(node, mapping, prompt)
+    return issues
+
+
 def _output(node: OutputNode, graph: Graph) -> list[Issue]:
     cfg = node.config
+    if cfg.kind == "campo":
+        return _fields_output(node, graph)
     missing = _missing([("tipo", cfg.kind is not None), ("nombre de destino", bool((cfg.destination or "").strip())),
                         ("agregación", cfg.kind != "metrica" or cfg.aggregation is not None)])
     issues = [Issue("node_unconfigured", f"Sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
@@ -190,6 +246,7 @@ def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
     if "output" not in types:
         issues.append(Issue("missing_output", "El flujo necesita al menos un nodo Output."))
     destinations: set[str] = set()
+    targets: set[str] = set()
     for node in graph.nodes:
         if isinstance(node, SamplingNode):
             issues += _sampling(node)
@@ -197,11 +254,19 @@ def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
             issues += _prompt(node, graph, llm_keys)
         else:
             issues += _output(node, graph)
-            destination = _normalized(node.config.destination or "")
-            if destination and destination in destinations:
-                issues.append(Issue("duplicate_destination",
-                                    f"Ya hay otro Output con el destino «{node.config.destination.strip()}».", node.id))
-            destinations.add(destination)
+            if node.config.kind == "campo":
+                own = {m.target for m in node.config.mappings or []}
+                if own & targets:
+                    names = ", ".join(catalog.TARGET_FIELDS[t] for t in sorted(own & targets))
+                    issues.append(Issue("duplicate_target", f"Otro Output ya guarda en: {names}.", node.id))
+                targets |= own
+            else:
+                destination = _normalized(node.config.destination or "")
+                if destination and destination in destinations:
+                    issues.append(Issue("duplicate_destination",
+                                        f"Ya hay otro Output con el destino «{node.config.destination.strip()}».",
+                                        node.id))
+                destinations.add(destination)
         loose = _disconnected(node, graph)
         if loose:
             issues.append(loose)

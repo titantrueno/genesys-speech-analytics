@@ -10,6 +10,7 @@ from app.config.store import get_config
 from app.data.store import get_dataset
 from app.flows import catalog
 from app.flows.model import Graph, GraphError, parse_graph
+from app.flows.analysis_writer import AnalysisWriter, get_analysis_writer
 from app.flows.llm_runner import build_runner
 from app.flows.prompting import PromptRunner
 from app.flows.runs import FlowExecutor, Run, get_run_store, step_delay_seconds
@@ -104,6 +105,7 @@ def flow_catalog() -> dict:
         "output_formats": catalog.as_options(catalog.OUTPUT_FORMATS),
         "field_types": catalog.as_options(catalog.FIELD_TYPES),
         "output_kinds": catalog.as_options(catalog.OUTPUT_KINDS),
+        "target_fields": catalog.as_options(catalog.TARGET_FIELDS),
         "aggregations": catalog.as_options(catalog.AGGREGATIONS),
         "limits": {
             "max_sample_size": catalog.MAX_SAMPLE_SIZE, "max_template": catalog.MAX_TEMPLATE,
@@ -168,7 +170,8 @@ def delete_flow(flow_id: str) -> Response:
 @router.post("/{flow_id}/runs", status_code=status.HTTP_202_ACCEPTED)
 def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(EDIT),
               runner: PromptRunner = Depends(get_prompt_runner),
-              client: LlmClient = Depends(get_llm_client)) -> dict:
+              client: LlmClient = Depends(get_llm_client),
+              writer: AnalysisWriter = Depends(get_analysis_writer)) -> dict:
     flow = _flow(flow_id)
     issues = blocking(validate(flow.graph, llm_keys(client)))
     if issues:
@@ -177,7 +180,7 @@ def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(ED
     if run is None:
         raise HTTPException(status.HTTP_409_CONFLICT, detail="Ya hay una ejecución en curso de este flujo")
     snapshot = run.snapshot()
-    background.add_task(FlowExecutor(runner, step_delay_seconds()).execute, run)
+    background.add_task(FlowExecutor(runner, step_delay_seconds(), writer=writer).execute, run)
     return snapshot
 
 

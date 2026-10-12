@@ -21,10 +21,23 @@ JSON_TYPES = {"texto": "string", "numero": "number", "booleano": "boolean"}
 STOPPING_CODES = {"missing_key", "key_rejected", "unknown_provider"}
 
 
+def _property(field) -> dict:
+    prop = {"type": JSON_TYPES[field.type]}
+    if field.options:  # valores permitidos (FE013): el proveedor restringe la respuesta a ellos
+        prop["enum"] = list(field.options)
+    return prop
+
+
 def json_schema(config: PromptConfig) -> dict:
     fields = config.output.fields or []
     return {"type": "object", "additionalProperties": False, "required": [f.name for f in fields],
-            "properties": {f.name: {"type": JSON_TYPES[f.type]} for f in fields}}
+            "properties": {f.name: _property(f) for f in fields}}
+
+
+def _matching(value: str, options: list[str]) -> str | None:
+    """La opción escrita como en la lista que coincide sin distinguir mayúsculas, tildes ni espacios en los extremos."""
+    wanted = normalize_text(value.strip())
+    return next((option for option in options if normalize_text(option.strip()) == wanted), None)
 
 
 def _instructions(config: PromptConfig) -> str:
@@ -35,7 +48,8 @@ def _instructions(config: PromptConfig) -> str:
                 + " | ".join(output.labels))
     if output.type == "json":
         return "\n\nResponde únicamente con un objeto JSON con los campos: " + ", ".join(
-            f"{f.name} ({f.type})" for f in output.fields or [])
+            f"{f.name} ({f.type}: {' | '.join(f.options)})" if f.options else f"{f.name} ({f.type})"
+            for f in output.fields or [])
     return ""
 
 
@@ -55,8 +69,7 @@ def validate_answer(config: PromptConfig, text: str) -> Any:
             raise PromptRejected("La respuesta está vacía")
         return answer
     if output.type == "etiqueta":
-        wanted = normalize_text(answer)
-        label = next((label for label in output.labels if normalize_text(label.strip()) == wanted), None)
+        label = _matching(answer, output.labels)
         if label is None:
             raise PromptRejected(f"«{answer[:80]}» no es una de las etiquetas")
         return label
@@ -70,7 +83,14 @@ def validate_answer(config: PromptConfig, text: str) -> Any:
     wrong = [name for name, field_type in fields.items() if not _is_type(data[name], field_type)]
     if wrong:
         raise PromptRejected(f"Tipo incorrecto en: {', '.join(wrong)}")
-    return {name: data[name] for name in fields}
+    result = {name: data[name] for name in fields}
+    for field in output.fields or []:
+        if field.options:
+            option = _matching(result[field.name], field.options)
+            if option is None:
+                raise PromptRejected(f"«{result[field.name][:80]}» no es un valor permitido de {field.name}")
+            result[field.name] = option
+    return result
 
 
 class LlmPromptRunner:

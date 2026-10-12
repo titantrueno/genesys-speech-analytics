@@ -84,8 +84,10 @@ def _analysis(row: dict, analysis: dict | None, turns: list[Turn]) -> Analysis:
     timeline = [t.sentiment for t in turns if t.speaker == "cliente" and t.sentiment is not None]
     done = analysis is not None and analysis["status"] == "completo"
     data = analysis if done else {}
+    # Summary y main topic pueden venir de un flujo de insights aunque el resto siga pendiente (FE013, criterio 21).
+    written = analysis or {}
     return Analysis(
-        summary=data.get("summary") or "", main_topic=data.get("main_topic"),
+        summary=written.get("summary") or "", main_topic=written.get("main_topic"),
         secondary_topics=data.get("secondary_topics") or [], sentiment=row["customer_sentiment"],
         sentiment_timeline=timeline, resolution=data.get("resolution"), csat=data.get("csat"),
         effort=data.get("effort"), churn_risk=data.get("churn_risk"), compliance=data.get("compliance") or {},

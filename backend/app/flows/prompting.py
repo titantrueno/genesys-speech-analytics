@@ -190,6 +190,7 @@ def _known_field(name: str, field_type: str, conv: Conversation) -> tuple[bool, 
         ("canal", "texto"): conv.channel,
         ("cola", "texto"): conv.queue or "",
         ("resumen", "texto"): analysis.summary,
+        ("summary", "texto"): analysis.summary,
     }
     key = (normalize_text(name), field_type)
     return (key in known, known.get(key))
@@ -199,6 +200,8 @@ def _json(config: PromptConfig, conv: Conversation, previous: Any | None) -> dic
     result = {}
     for field in config.output.fields or []:
         found, value = _known_field(field.name, field.type, conv)
+        if field.options:  # valores permitidos (FE013): siempre uno de ellos
+            found, value = True, choose_label(field.options, conv, _unit(conv.id, config.template, field.name))
         if not found:
             unit = _unit(conv.id, config.template, config.model, field.name, previous)
             value = {"texto": _topic_name(conv), "numero": round(unit * 10, 1), "booleano": unit >= 0.5}[field.type]

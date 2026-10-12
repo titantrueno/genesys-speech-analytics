@@ -52,8 +52,12 @@ MAX_LABELS = 20
 MAX_LABEL = 60
 MAX_FIELDS = 20
 MAX_FIELD_NAME = 40
+MAX_OPTIONS = 100  # valores permitidos de un campo JSON de texto (FE013): caben los main topics de la taxonomía
 
-OUTPUT_KINDS = {"tabla": "Tabla de insights por conversación", "metrica": "Métrica agregada", "informe": "Informe resumen"}
+OUTPUT_KINDS = {"tabla": "Tabla de insights por conversación", "metrica": "Métrica agregada", "informe": "Informe resumen",
+                "campo": "Guardar en campos de la conversación"}
+# Campos del análisis que un Output «campo» puede escribir en las conversaciones reales (FE013).
+TARGET_FIELDS = {"summary": "Summary", "main_topic": "Main topic"}
 AGGREGATIONS = {"recuento": "Recuento por etiqueta", "porcentaje": "% por etiqueta"}
 MAX_DESTINATION = 80
 

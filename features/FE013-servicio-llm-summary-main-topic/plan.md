@@ -1,6 +1,6 @@
 # FE013 — Plan
 
-> Fase `/plan`. Spec: [spec.md](spec.md), aprobada el 2026-10-12 y ampliada en esta fase con los criterios 25–30: casilla «Sobrescribir» de la ingesta y protección de la taxonomía. Siguiente paso: `/build`, una tarea cada vez y en orden.
+> Fase `/plan`. **Numeración de criterios:** la de la spec actual; en `/build` de T6 se añadió el criterio 16 (summary y main topic en una llamada) y los siguientes subieron un número. Spec: [spec.md](spec.md), aprobada el 2026-10-12 y ampliada en esta fase con los criterios 26–31 (numeración actual): casilla «Sobrescribir» de la ingesta y protección de la taxonomía. Siguiente paso: `/build`, una tarea cada vez y en orden.
 
 ## Contraste con el vault y el código
 
@@ -59,15 +59,15 @@
 
 | Id | Título | Depende de | Criterios |
 |---|---|---|---|
-| T1 | Ingesta: «Sobrescribir» y omisión de existentes (backend) | — | 25, 26, 27 (con escritura simulada por SQL), 28 |
-| T2 | Front de la ingesta: casilla y recuento | T1 | 29 |
-| T3 | Taxonomía: no borrar main topics usados en datos reales | — | 30 |
-| T4 | Servicio de LLM con proveedores intercambiables | — | 1–7, 23 (dev.sh y `.env.example`) |
+| T1 | Ingesta: «Sobrescribir» y omisión de existentes (backend) | — | 26, 27, 28 (con escritura simulada por SQL), 29 |
+| T2 | Front de la ingesta: casilla y recuento | T1 | 30 |
+| T3 | Taxonomía: no borrar main topics usados en datos reales | — | 31 |
+| T4 | Servicio de LLM con proveedores intercambiables | — | 1–7, 24 (dev.sh y `.env.example`) |
 | T5 | API: proveedores en Configuración y `LlmPromptRunner` | T4 | 8 y 9 (API), 10–14 |
-| T6 | Output `campo`: modelo, validación, escritura y lectura | T1, T5 | 15, 16, 18–21 (API), 27 (con la escritura real) |
+| T6 | Output `campo`: asignaciones, valores permitidos, validación, escritura y lectura | T1, T5 | 15, 16, 17, 19–22 (API), 28 (con la escritura real) |
 | T7 | Front: Modelos de IA y nodo Prompt | T5 | 8, 9, 10 (UI) |
-| T8 | Front: Output «Guardar en campo» y plantillas | T6, T7 | 17, 21 (UI), 22 |
-| T9 | Conocimiento, OpenAPI, navegador y gate | T1–T8 | 23, 24, conocimiento afectado |
+| T8 | Front: Output «Guardar en campos», valores permitidos y plantillas | T6, T7 | 16 y 18 (UI), 22 (UI), 23 |
+| T9 | Conocimiento, OpenAPI, navegador y gate | T1–T8 | 24, 25, conocimiento afectado |
 
 ### T1 — Ingesta: «Sobrescribir» y omisión de existentes
 - **Qué:**
@@ -134,22 +134,23 @@
   - la suite actual de flujos sigue en verde.
 - **Conocimiento:** ADR-006 (ampliación) y ADR-009 (nuevo), en T9.
 
-### T6 — Output `campo`
-- **Qué:**
-  - `OutputConfig.field` y `overwrite`, y `TARGET_FIELDS` en el catálogo;
-  - las reglas del criterio 16;
-  - `POST /analysis/fields` en el servicio de ingesta y la migración `0004_llm_meta.sql`;
-  - `AnalysisWriter` en la API y el nodo `campo` del ejecutor (estados `escrito`, `omitido`, `rechazado` y `error`, y sus recuentos);
-  - lectura de `summary` y `main_topic` en `real.py` aunque la fila esté `pendiente`;
-  - en `load` con «Sobrescribir», `llm_meta` vuelve a `'{}'`.
+### T6 — Output `campo` con asignaciones y valores permitidos
+- **Diseño** (cambio pedido en `/build`: summary y main topic en una sola llamada):
+  - `SchemaField.options` (lista opcional de valores permitidos, solo en campos de texto): el esquema enviado al LLM lleva `enum` y la API rechaza otro valor.
+  - `OutputConfig.mappings: [{target: summary|main_topic, source: campo JSON | null}]` y `overwrite: bool = False`; para `campo`, `destination` no se pide.
+  - Un Prompt JSON con `summary` y `main_topic` (con los main topics activos como valores permitidos) y un Output con dos asignaciones guardan los dos campos con **una llamada** por conversación.
+  - Escritura: `AnalysisWriter` en la API (dependencia `get_analysis_writer`) → `POST /analysis/fields` del servicio de ingesta, en lotes de 100: `{run_id, provider, model, overwrite, items: [{conversation_id, values: {summary?, main_topic?}}]}` → `{results: [{conversation_id, outcomes: {campo: escrito|omitido}}]}` (o `no_encontrada`). Por conversación, `SELECT … FOR UPDATE` y un `UPDATE` con los campos que tocan y `llm_meta = llm_meta || {campo: {provider, model, run_id, at}}`. Los nombres de columna salen de una lista blanca.
+  - Migración `0004_llm_meta.sql`: `analysis.llm_meta jsonb NOT NULL DEFAULT '{}'`; con «Sobrescribir», la ingesta la vacía.
+  - Resultado del Output: `{targets, rows: [{conversation, values, states, reason}], counts: {campo: {escrito, omitido, rechazado, error}}}`; las filas incluyen las conversaciones que el Prompt rechazó o no obtuvo.
 - **Hecho cuando:**
-  - ida y vuelta del JSON;
-  - un test de `validate` por regla (formato, etiquetas fuera de la taxonomía activa, destino repetido, origen `sintetico`);
-  - tests `pg` de las cuatro combinaciones del criterio 18 y de la trazabilidad en `llm_meta`, sin cambiar el `status` de una fila `completo`;
-  - un nombre en la respuesta se guarda como código;
-  - la integración del criterio 20 (`GET /api/conversations?main_topic=<código>` devuelve la conversación pendiente recién escrita);
-  - la suma de recuentos es igual a la muestra;
-  - el criterio 27 repetido con la escritura real.
+  - ida y vuelta del JSON (asignaciones y valores permitidos);
+  - un test de `validate` por regla del criterio 17;
+  - el flujo de una llamada: una petición al servicio de LLM por conversación con el `enum` de los main topics, y los dos campos escritos;
+  - un valor fuera de los valores permitidos se rechaza;
+  - tests `pg` de las cuatro combinaciones del criterio 19 y de la trazabilidad en `llm_meta`, sin cambiar el `status`;
+  - un nombre de main topic en la respuesta se guarda como código;
+  - la integración del criterio 21 y las sumas del criterio 22;
+  - el criterio 28 repetido con la escritura real.
 
 ### T7 — Front: Modelos de IA y nodo Prompt
 - **Qué:**
@@ -199,6 +200,7 @@
 - **Hecho:** con la clave de la persona usuaria y `gemini-3.5-flash-lite` (modelo por defecto, a petición suya): la prueba de proveedor, el formato etiqueta y un flujo de 3 conversaciones desde la API terminan bien.
 - **Hecho:** la forma REST de la guía para JSON (`generationConfig.responseFormat.text` con `mimeType: "application/json"`) responde `400`. `responseMimeType` + `responseJsonSchema` funciona y admite `additionalProperties`; el adaptador usa esa forma. La hipótesis de T4 sobre la salida JSON de Gemini queda resuelta.
 - **Hecho:** los logs de los dos procesos no contienen la clave.
+- **Hecho (T6, 2026-10-12):** Gemini acepta el esquema con `enum` de los 15 main topics activos: una llamada devuelve summary y main topic, y el main topic es uno de los valores permitidos.
 - **Pendiente para T7:** hasta que el panel del nodo Prompt envíe el proveedor, un nodo nuevo toma el modelo por defecto (`gemini-3.5-flash-lite`) sin proveedor y la validación lo marca como `model_not_in_provider`.
 
 ## Riesgos del plan
@@ -209,4 +211,4 @@
 
 ## Progreso
 
-- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [ ] T6 · [ ] T7 · [ ] T8 · [ ] T9
+- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [x] T6 · [ ] T7 · [ ] T8 · [ ] T9

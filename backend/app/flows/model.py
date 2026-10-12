@@ -6,7 +6,7 @@ La integridad se exige siempre al guardar: un borrador puede estar incompleto (l
 import re
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, TypeAdapter, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, TypeAdapter, ValidationError, model_validator
 
 from app import ids
 from app.flows import catalog
@@ -35,12 +35,20 @@ class SamplingConfig(_Strict):
     size: int | None = Field(None, ge=1, le=catalog.MAX_SAMPLE_SIZE)
 
 
+Label = Annotated[str, StringConstraints(max_length=catalog.MAX_LABEL)]
+
+
 class SchemaField(_Strict):
     name: str = Field(max_length=catalog.MAX_FIELD_NAME)
     type: Literal[tuple(catalog.FIELD_TYPES)]
+    # Valores permitidos de un campo de texto (FE013): el LLM los recibe como `enum` y otro valor se rechaza.
+    options: list[Label] | None = Field(None, max_length=catalog.MAX_OPTIONS)
 
-
-Label = Annotated[str, StringConstraints(max_length=catalog.MAX_LABEL)]
+    @model_validator(mode="after")
+    def _options_only_for_text(self) -> "SchemaField":
+        if self.options is not None and self.type != "texto":
+            raise ValueError("Solo un campo de texto puede tener valores permitidos")
+        return self
 
 
 class OutputFormat(_Strict):
@@ -58,10 +66,19 @@ class PromptConfig(_Strict):
     output: OutputFormat | None = None
 
 
+class FieldMapping(_Strict):
+    """Un campo destino y de dónde sale: la respuesta entera (`None`) o un campo del JSON del Prompt (FE013)."""
+    target: Literal[tuple(catalog.TARGET_FIELDS)]
+    source: str | None = Field(None, max_length=catalog.MAX_FIELD_NAME)
+
+
 class OutputConfig(_Strict):
     kind: Literal[tuple(catalog.OUTPUT_KINDS)] | None = None
     aggregation: Literal[tuple(catalog.AGGREGATIONS)] | None = None
     destination: str | None = Field(None, max_length=catalog.MAX_DESTINATION)
+    # Solo en `campo` (FE013): asignaciones y si se sustituyen los valores que ya tiene la conversación.
+    mappings: list[FieldMapping] | None = Field(None, max_length=len(catalog.TARGET_FIELDS))
+    overwrite: bool | None = None
 
 
 class _Node(_Strict):
