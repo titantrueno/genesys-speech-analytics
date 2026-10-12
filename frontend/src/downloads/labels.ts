@@ -38,3 +38,8 @@ export function describeSchedule(schedule: DownloadSchedule): string {
   if (schedule.type === 'diaria') return `Diaria a las ${schedule.time}`
   return 'Solo manual'
 }
+
+export function formatSeconds(seconds: number | null): string {
+  if (seconds === null) return '—'
+  return `${seconds.toLocaleString('es-ES', { maximumFractionDigits: 1 })} s`
+}

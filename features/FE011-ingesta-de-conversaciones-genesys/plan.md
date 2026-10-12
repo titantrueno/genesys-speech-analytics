@@ -407,3 +407,30 @@
 - **Decisiones:**
   - Un flujo de descarga se crea con nombre y valores por defecto («hoy», voz y chat, sin programación) y se configura después en su página, igual que un flujo de insights se crea vacío.
   - Las fechas del intervalo específico se envían sin zona: las interpreta el backend en la zona del flujo.
+
+### T7b — Hecha (2026-10-12)
+
+- **Rojo:** los 13 tests nuevos (`src/downloads/DownloadRuns.test.tsx` y `src/config/GenesysConnector.test.tsx`) fallaban, porque no existían ni las rutas ni los componentes. En el verde se corrigió un test que buscaba el texto exacto «Manual» en una celda que dice «Manual · Admin Demo».
+- **Verde:** 15 tests:
+  - «Ejecutar ahora» abre la ejecución, y con un `409` explica que ya hay una en curso;
+  - el historial muestra origen, quién la lanzó, contadores y estado, y abre la ejecución desde la fila;
+  - sin `flows:edit` se ve el historial pero no se puede ejecutar;
+  - polling cada 2 s hasta que termina, y después deja de consultar;
+  - log por tramos con `after`, sin duplicar ni perder entradas en tres lecturas, y filtrado por nivel;
+  - lectura final del log al terminar;
+  - descarga del log en texto (`log-1RN-….txt`);
+  - error de la ejecución;
+  - tarjeta de Genesys: región, credenciales, última prueba y descarga, y conversaciones por canal y por calidad; «Probar conexión» correcta, con credenciales malas y con el servicio caído; servicio no disponible; solo lectura con `config:view`.
+
+  Pasan la suite del front (352 tests), `npm run lint` sin avisos, `tsc -b` y `npm run build`. `DownloadRunPage` (6 kB) y `DownloadFlowPage` (8,6 kB) van en chunks propios.
+- **Mutaciones:** mueren las 14 aplicables (polling, `after`, acumulado del log, lectura final, nombre y formato del fichero, error de la ejecución, contadores, `409`, navegación tras ejecutar, credenciales malas, `503` de la prueba, «Probar» sin `config:edit`, «Sin probar»). Tres sobrevivieron al principio por tests flojos:
+  - el log se comprobaba antes del primer polling;
+  - ninguna entrada se escribía al final de la ejecución;
+  - el acumulado se comprobaba sin esperar a que llegara la respuesta del polling.
+
+  Se reforzaron los tests, y el del log se repitió 3 veces sin fallos.
+- **Decisiones:**
+  - La tarjeta de Genesys usa una lista de definición, no una tabla, para no cambiar las filas de la tabla de conectores mock que comprueban los tests de FE005.
+  - El log en texto se descarga con `fetch` y la sesión actual, porque un enlace directo no lleva el token.
+  - Al terminar una ejecución, el log hace una última lectura, para no perder entradas escritas después del último polling.
+- **Sin navegador** en esta sesión: la comprobación en Chrome se hace en la T8.

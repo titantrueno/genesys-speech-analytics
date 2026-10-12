@@ -63,6 +63,11 @@ const SECTION_ROUTES: Record<string, RouteObject[]> = {
       lazy: async () => ({ Component: (await import('./downloads/DownloadFlowPage')).DownloadFlowPage }),
     },
     {
+      path: 'descargas/:flowId/ejecuciones/:runId',
+      HydrateFallback: LoadingScreen,
+      lazy: async () => ({ Component: (await import('./downloads/DownloadRunPage')).DownloadRunPage }),
+    },
+    {
       path: ':flowId/ejecuciones',
       HydrateFallback: LoadingScreen,
       lazy: async () => ({ Component: (await import('./flows/RunPage')).RunsPage }),
