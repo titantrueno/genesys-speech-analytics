@@ -473,3 +473,7 @@
 - **Tests nuevos:**
   - ninguna fila de la base de datos contiene secretos, tokens ni URL firmadas (criterio 3);
   - el servicio publica su OpenAPI (criterio 5).
+
+### `/review` (2026-10-12)
+
+- [REVIEW.md](REVIEW.md): aprobado. Se resuelven R1 (un error de base de datos podía meter el texto de un turno en el log), R2 (ejecución bloqueada en `en_curso` tras un fallo inesperado) y R3 (fallos del programador sin registrar), cada uno con su test en rojo y su mutación. Lección 40 en el vault.

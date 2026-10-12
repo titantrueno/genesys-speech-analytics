@@ -5,6 +5,7 @@ conversación, así que quien consulta la ejecución ve el progreso. Cada conver
 en una no deshace las anteriores y la ejecución sigue. Solo un error de autenticación (o de la búsqueda) la detiene.
 El log guarda identificadores, recuentos y motivos, nunca el texto de los turnos ni secretos.
 """
+import logging
 import random
 from collections.abc import Callable
 from datetime import datetime
@@ -23,6 +24,7 @@ from ingestion.pipeline.load import INSERTED, load
 from ingestion.pipeline.normalize import normalize
 
 _rng = random.SystemRandom()
+logger = logging.getLogger("ingestion")
 ACTIVE = ("pendiente", "en_curso")
 LEVELS = ("info", "aviso", "error")
 
@@ -111,8 +113,29 @@ class RunExecutor:
         self.on_step = on_step or (lambda stage: None)
 
     def execute(self, run_id: str) -> None:
-        with psycopg.connect(self.database_url, autocommit=True, row_factory=dict_row) as conn:
-            _Execution(self, conn, run_id).run()
+        try:
+            with psycopg.connect(self.database_url, autocommit=True, row_factory=dict_row) as conn:
+                _Execution(self, conn, run_id).run()
+        except Exception:  # noqa: BLE001 - una ejecución activa para siempre bloquearía su flujo (409)
+            logger.exception("Ejecución %s: fallo inesperado", run_id)
+            try:
+                with psycopg.connect(self.database_url) as conn:
+                    conn.execute("UPDATE download_run SET status = 'error', error = %s, finished_at = %s "
+                                 "WHERE id = %s AND status = ANY(%s)",
+                                 ("Fallo inesperado del servicio de ingesta", now(), run_id, list(ACTIVE)))
+            except psycopg.Error:
+                logger.exception("Ejecución %s: no se pudo marcar como fallida", run_id)
+
+
+def describe_error(exc: Exception) -> str:
+    """Motivo de un fallo para el log, sin datos de la conversación.
+
+    Un error de PostgreSQL puede traer la fila entera en su `DETAIL` («Failing row contains …», con el texto de un
+    turno): solo se usa su mensaje principal.
+    """
+    if isinstance(exc, psycopg.Error):
+        return f"{type(exc).__name__}: {exc.diag.message_primary or 'error de base de datos'}"
+    return str(exc) if isinstance(exc, GenesysError) else f"{type(exc).__name__}: {exc}"
 
 
 class _Execution:
@@ -170,7 +193,7 @@ class _Execution:
             self.finish("error", str(exc))
             return
         except Exception as exc:  # la búsqueda no se puede completar: la ejecución no tiene qué descargar
-            message = self.client.redact(f"{exc}") if self.client else type(exc).__name__
+            message = self.client.redact(describe_error(exc)) if self.client else type(exc).__name__
             self.log("error", "búsqueda", message)
             self.finish("error", message)
             return
@@ -217,8 +240,7 @@ class _Execution:
                 raise
             except Exception as exc:  # noqa: BLE001 - una conversación que falla no detiene la ejecución
                 c["errors"] += 1
-                detail = str(exc) if isinstance(exc, GenesysError) else f"{type(exc).__name__}: {exc}"
-                self.log("error", stage, f"No se pudo procesar: {detail}", genesys_id)
+                self.log("error", stage, f"No se pudo procesar: {describe_error(exc)}", genesys_id)
                 self.save()
                 continue
             c["inserted" if outcome == INSERTED else "updated"] += 1

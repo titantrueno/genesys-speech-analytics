@@ -240,3 +240,35 @@ def test_no_stored_row_contains_the_secret_a_token_or_a_signed_url(pg_url):
     assert run["counters"]["inserted"] == 10 and len(dump) > 100_000
     for secret in [SECRET, *fake.issued_tokens, fake.bucket_host, "X-Amz-", "firma-"]:
         assert secret not in dump, secret
+
+
+def test_a_database_error_never_puts_turn_text_in_the_log(pg_url):
+    """Un CHECK que falla devuelve la fila entera en el DETAIL de PostgreSQL: el log solo lleva el mensaje principal."""
+    broken = fixture("37dcbccf")
+    for document in broken.transcripts.values():
+        for transcript in (document or {}).get("transcripts", []):
+            for entry in (transcript.get("analytics") or {}).get("sentiment", []) or []:
+                entry["sentiment"] = 5.0  # fuera del CHECK (-1..1) de turn.sentiment
+            if transcript["phrases"]:
+                transcript["analytics"]["sentiment"] = [{
+                    "participant": "external", "phrase": "hola mira si tengo un movimiento de tarjeta",
+                    "startTimeMs": next(p["startTimeMs"] for p in transcript["phrases"]
+                                        if p["participantPurpose"] == "external"), "sentiment": 5.0}]
+    run, _ = _run(pg_url, make_fake([broken]))
+    errors = [e for e in list_log(pg_url, run["id"]) if e["level"] == "error"]
+    assert run["counters"]["errors"] == 1 and len(errors) == 1
+    assert "check" in errors[0]["message"].lower()
+    assert "movimiento" not in errors[0]["message"] and "Failing row" not in errors[0]["message"]
+
+
+def test_a_run_that_crashes_outside_its_handlers_ends_in_error(pg_url, monkeypatch):
+    from ingestion import runs as runs_module
+
+    flow_id = create_flow(pg_url)
+    run_id = create_run(pg_url, flow_id, "manual", DAY_START, DAY_END, CHANNELS)
+    monkeypatch.setattr(runs_module._Execution, "run", lambda self: (_ for _ in ()).throw(RuntimeError("fallo raro")))
+    RunExecutor(pg_url, client_factory(make_fake())).execute(run_id)
+    run = get_run(pg_url, run_id)
+    assert run["status"] == "error" and "inesperado" in run["error"]
+    monkeypatch.undo()
+    assert create_run(pg_url, flow_id, "manual", DAY_START, DAY_END, CHANNELS)  # el flujo no queda bloqueado

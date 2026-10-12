@@ -55,6 +55,7 @@ Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009, FE006, FE010 y F
 37. **FE011:** user-event simula `date` y `time`, pero no `datetime-local`: escribir carácter a carácter deja valores parciales no válidos.
 38. **FE011:** tres mutaciones del log de una ejecución (sin `after`, sin acumular, sin lectura final) sobrevivían. Los tests miraban las filas antes de que llegara la respuesta del polling.
 39. **FE011:** una conexión de psycopg configurada con `dict_row` rompía `fetchone()[0]` en otra función que la recibía; las 10 conversaciones acabaron con error. Los tests de la función aislada no lo veían.
+40. **FE011:** en `/review`, un `CHECK` que falla al insertar un turno metía en el log el `DETAIL` de PostgreSQL («Failing row contains …»), con el texto de la transcripción. Los tests de «el log no contiene texto de turnos» solo cubrían ejecuciones sin errores de base de datos.
 
 ## Causa
 
@@ -62,6 +63,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 
 ## Aprendizaje
 
+- Los errores de base de datos pueden traer los datos de la fila: al registrarlos, usa solo su mensaje principal, y prueba las garantías de privacidad del log también en los caminos de error.
 - Antes de concluir que una API «no da» un dato, guarda e inspecciona la respuesta completa, no un resumen impreso de algunas claves.
 - Nunca pares procesos por patrón (`pkill -f`): usa puertos propios y su PID, y aborta la prueba si el arranque falla por puerto ocupado.
 - En tests con polling, espera a que llegue la respuesta de al menos una consulta posterior antes de comprobar el estado; si no, no se distingue acumular de sustituir.

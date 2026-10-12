@@ -306,3 +306,12 @@ def test_two_simultaneous_launches_start_a_single_run(api, pg_url, clock, fake):
         thread.join(10)
     assert sorted(o == "409" for o in outcomes) == [False, True]
     assert len(api.get(f"/download-flows/{flow['id']}/runs").json()["items"]) == 1
+
+
+def test_a_failing_tick_is_logged_and_the_scheduler_keeps_going(pg_url, caplog):
+    import logging
+
+    scheduler = Scheduler("postgresql://nadie@127.0.0.1:1/nada?connect_timeout=1", client_factory(make_fake()))
+    with caplog.at_level(logging.ERROR, logger="ingestion"):
+        assert scheduler.safe_tick() == []
+    assert any("programador" in record.getMessage() for record in caplog.records)

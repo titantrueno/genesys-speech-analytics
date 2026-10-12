@@ -4,6 +4,7 @@
 ejecución (`RunAlreadyActive` si ya hay una activa) y la ejecuta en segundo plano. El programador es un hilo que cada
 30 s lanza las ejecuciones debidas; los tests llaman a `tick()` con un reloj simulado, sin hilos.
 """
+import logging
 import threading
 from collections.abc import Callable
 from datetime import datetime
@@ -20,6 +21,7 @@ from ingestion.pipeline.analyze import Analyzer
 from ingestion.runs import RunAlreadyActive, RunExecutor, create_run
 
 TICK_SECONDS = 30
+logger = logging.getLogger("ingestion")
 Job = Callable[[], None]
 
 
@@ -74,13 +76,19 @@ class Scheduler:
                              (following, Jsonb(missed), flow["id"]))
         return launched
 
+    def safe_tick(self) -> list[str]:
+        """`tick` sin dejar caer el hilo: un fallo (por ejemplo, PostgreSQL caído) se registra y se reintenta en el
+        siguiente tic."""
+        try:
+            return self.tick()
+        except Exception:  # noqa: BLE001
+            logger.exception("Fallo en un tic del programador de descargas")
+            return []
+
     def start(self) -> None:
         def loop():
             while not self._stop.wait(TICK_SECONDS):
-                try:
-                    self.tick()
-                except Exception:  # noqa: BLE001 - un fallo de un tic no detiene el programador
-                    pass
+                self.safe_tick()
 
         self._thread = threading.Thread(target=loop, name="programador-de-descargas", daemon=True)
         self._thread.start()
