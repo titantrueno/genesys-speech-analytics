@@ -12,7 +12,7 @@ Plataforma web de analítica de conversaciones para la atención al cliente de u
 | [`frontend/`](frontend/README.md) | SPA Vite + React + TypeScript + Tailwind. |
 | [`features/`](features/README.md) | Documentación de cada feature (`FEXXX-descripcion-breve/`: spec, plan…). |
 | [`vault/`](vault/Home.md) | Conocimiento del proyecto: producto, arquitectura, decisiones, convenciones. |
-| `.devin/skills/` | Skills del ciclo `spec → plan → build → test → review → ship` y `vault`. |
+| `.claude/skills/` | Skills del ciclo `spec → plan → build → test → review → ship` y `vault`. |
 | `scripts/audit_vault.py` | Auditoría del vault. |
 
 ## Entorno local con un solo comando

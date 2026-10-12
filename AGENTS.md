@@ -26,7 +26,7 @@
 
 ## Skills
 
-- Los skills del ciclo viven en `.devin/skills/<nombre>/SKILL.md`: `spec → plan → build → test → review → ship`, más `vault`.
+- Los skills del ciclo viven en `.claude/skills/<nombre>/SKILL.md`: `spec → plan → build → test → review → ship`, más `vault`.
 
 ## Verificación
 

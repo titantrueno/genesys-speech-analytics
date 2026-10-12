@@ -3,7 +3,7 @@ title: "Arquitectura del harness"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, skills, devin]
+tags: [arquitectura, skills, claude-code]
 created: 2026-09-27
 updated: 2026-09-27
 ---
@@ -13,7 +13,7 @@ updated: 2026-09-27
 ## Componentes
 
 - `AGENTS.md`: instrucciones del proyecto para los agentes.
-- `.devin/skills/`: los skills `spec`, `plan`, `build`, `test`, `review`, `ship` y `vault`.
+- `.claude/skills/`: los skills `spec`, `plan`, `build`, `test`, `review`, `ship` y `vault`.
 - `vault/`: conocimiento versionado del proyecto.
 - `scripts/audit_vault.py`: valida metadatos, enlaces, entradas huérfanas, wikilinks y posibles secretos del vault.
 - `features/`: una carpeta `FEXXX-descripcion-breve/` por feature con sus artefactos del ciclo.
@@ -29,6 +29,6 @@ Todavía no existe código de aplicación, infraestructura ni CI. La arquitectur
 ## Fuentes
 
 - [Instrucciones del proyecto](../../AGENTS.md)
-- [Skill spec](../../.devin/skills/spec/SKILL.md)
-- [Skill vault](../../.devin/skills/vault/SKILL.md)
+- [Skill spec](../../.claude/skills/spec/SKILL.md)
+- [Skill vault](../../.claude/skills/vault/SKILL.md)
 - [Script de auditoría](../../scripts/audit_vault.py)
