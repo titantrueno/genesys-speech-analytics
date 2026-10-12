@@ -1,10 +1,12 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app import auth
+from app.data.repository import DataUnavailable
 from app.openapi.spec import API_VERSION, build_openapi
 from app.routers import auth as auth_router
 from app.routers import config as config_router
@@ -18,6 +20,7 @@ from app.routers import users as users_router
 
 
 AUTH_VERSION_HEADER = "X-Auth-Version"
+DATA_UNAVAILABLE = "Los datos reales no están disponibles"
 
 
 @asynccontextmanager
@@ -48,6 +51,11 @@ def create_app() -> FastAPI:
         if "authorization" in request.headers:
             response.headers[AUTH_VERSION_HEADER] = str(auth.get_store().version)
         return response
+
+    @app.exception_handler(DataUnavailable)
+    async def data_unavailable(_: Request, __: DataUnavailable) -> JSONResponse:
+        """El origen `real` no responde (FE012, criterio 3): las secciones de datos caen; Configuración sigue sirviendo."""
+        return JSONResponse({"detail": DATA_UNAVAILABLE}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     @app.get("/api/health")
     def health() -> dict:

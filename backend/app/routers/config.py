@@ -1,7 +1,6 @@
 """API de configuración (FE005). Lecturas con `config:view`; escrituras con `config:edit`; el nombre, público."""
 from collections import Counter
 from dataclasses import dataclass, replace
-from functools import cache
 from typing import Any, Callable, Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
@@ -18,6 +17,7 @@ from app.config.taxonomy import (MainTopicIn, SecondaryTopicIn, Topic, main_topi
                                  secondary_topic_usage)
 from app.services.kpis import KPI_DEFS
 from app.text import normalize_text
+from app.data.repository import DataUnavailable, cached_by_version
 from app.data.store import get_dataset
 from app.flows.catalog import MODELS, PROVIDERS
 from app.clock import now
@@ -32,15 +32,23 @@ VIEW = require_permission("config:view")
 EDIT = require_permission("config:edit")
 
 
-@cache
+@cached_by_version
 def _conversations_by_channel() -> Counter:
     return Counter(c.channel for c in get_dataset())
+
+
+def _channel_count(channel: str) -> int:
+    """Volumen del conector mock; con el origen `real` caído, Configuración sigue accesible (FE012, criterio 3)."""
+    try:
+        return _conversations_by_channel()[channel]
+    except DataUnavailable:
+        return 0
 
 
 def _connector(connector: Connector) -> dict:
     return {"id": connector.id, "name": connector.name, "channel": connector.channel, "status": connector.status,
             "last_sync": connector.last_sync.isoformat(),
-            "conversations": _conversations_by_channel()[connector.channel]}
+            "conversations": _channel_count(connector.channel)}
 
 
 def _options() -> dict:

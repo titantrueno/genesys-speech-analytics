@@ -9,6 +9,8 @@ from pathlib import Path
 
 ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
 API_KEYS = ("INGESTION_URL", "INGESTION_TOKEN")
+# Lectura de solo lectura de las conversaciones reales (FE012). Nunca las credenciales de Genesys.
+API_DATABASE_KEYS = ("DATABASE_URL",)
 
 
 def _parse(path: Path) -> dict[str, str]:

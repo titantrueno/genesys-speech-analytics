@@ -30,6 +30,14 @@ class ConversationRepository(Protocol):
 
     def followups(self) -> dict[str, bool]: ...
 
+    def queues(self) -> list[tuple[str, str]]:
+        """Colas `(id, nombre)` que ofrecen los filtros."""
+        ...
+
+    def agents(self) -> list[tuple[str, str, str | None, str | None]]:
+        """Agentes `(id, nombre, id de su cola, nombre de su cola)` que ofrecen los filtros."""
+        ...
+
 
 def followup_map(conversations: list[Conversation]) -> dict[str, bool]:
     """Indica si el cliente volvió a contactar en los 7 días siguientes a cada conversación."""
@@ -62,6 +70,15 @@ class SyntheticRepository:
     def followups(self) -> dict[str, bool]:
         return _synthetic_followups()
 
+    def queues(self) -> list[tuple[str, str]]:
+        from app.data.catalog import QUEUE_IDS, QUEUES
+        return [(QUEUE_IDS[name], name) for name in QUEUES]
+
+    def agents(self) -> list[tuple[str, str, str | None, str | None]]:
+        from app.data.catalog import AGENT_IDS, AGENTS_BY_QUEUE, QUEUE_IDS
+        return [(AGENT_IDS[name], name, QUEUE_IDS[queue], queue)
+                for queue, names in AGENTS_BY_QUEUE.items() for name in names]
+
 
 @cache
 def _synthetic_dataset() -> list[Conversation]:
@@ -91,3 +108,24 @@ def active_repository() -> ConversationRepository:
         from app.data.real import real_repository
         return real_repository()
     return _synthetic
+
+
+def cached_by_version(fn):
+    """Cachea el resultado de `fn()` mientras no cambien el origen activo ni su versión (FE012).
+
+    Sustituye a `@cache` en lo derivado del dataset: al cambiar de origen o llegar datos nuevos, se recalcula.
+    """
+    import functools
+    cache: dict = {}
+
+    @functools.wraps(fn)
+    def wrapper():
+        repository = active_repository()
+        key = (repository.origin, repository.version())
+        if key not in cache:
+            cache.clear()
+            cache[key] = fn()
+        return cache[key]
+
+    wrapper.cache_clear = cache.clear
+    return wrapper

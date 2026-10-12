@@ -6,7 +6,6 @@ conversaciones, KPIs y drill-down no cambian.
 """
 from collections import Counter
 from dataclasses import dataclass
-from functools import cache
 from typing import Annotated
 
 from pydantic import Field, StringConstraints
@@ -14,6 +13,7 @@ from pydantic import Field, StringConstraints
 from app import ids
 from app.config.model import Section
 from app.data.catalog import MAIN_TOPIC_DESCRIPTIONS, MAIN_TOPICS, SECONDARY_TOPICS
+from app.data.repository import cached_by_version
 from app.data.store import get_dataset
 
 MAX_NAME = 80
@@ -69,11 +69,11 @@ def initial_secondary_topics() -> dict[str, Topic]:
             for code in SECONDARY_TOPICS}
 
 
-@cache
+@cached_by_version
 def main_topic_usage() -> Counter:
     return Counter(c.analysis.main_topic for c in get_dataset())
 
 
-@cache
+@cached_by_version
 def secondary_topic_usage() -> Counter:
     return Counter(s for c in get_dataset() for s in set(c.analysis.secondary_topics))

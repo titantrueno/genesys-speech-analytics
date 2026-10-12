@@ -4,7 +4,7 @@ from app.auth import require_permission
 from app import ids
 from app.config.store import get_config, topic_name
 from app.config.compliance import active_checks, effective_compliance
-from app.data.catalog import AGENT_IDS, AGENTS_BY_QUEUE, QUEUE_IDS, QUEUES
+from app.data.repository import active_repository
 from app.data.store import conversation_index, get_dataset, reference_date
 from app.privacy.masking import shown
 from app.services.filters import ConversationFilters, conversation_list_filters
@@ -33,12 +33,13 @@ def get_conversation(conversation_id: str) -> dict:
 
 @router.get("/catalog", dependencies=[Depends(require_permission("dashboards:view", "conversations:view"))])
 def catalog() -> dict:
+    repository = active_repository()
     return {
         "reference_date": reference_date().isoformat(),
         "channels": [{"code": "voz", "label": "Voz"}, {"code": "chat", "label": "Chat"}],
-        "queues": [{"id": QUEUE_IDS[name], "name": name} for name in QUEUES],
-        "agents": [{"id": AGENT_IDS[name], "name": name, "queue_id": QUEUE_IDS[queue], "queue": queue}
-                   for queue, names in AGENTS_BY_QUEUE.items() for name in names],
+        "queues": [{"id": qid, "name": name} for qid, name in repository.queues()],
+        "agents": [{"id": aid, "name": name, "queue_id": qid, "queue": queue}
+                   for aid, name, qid, queue in repository.agents()],
         # Incluye los desactivados, para poner nombre a sus filtros; el front solo ofrece los activos (FE005).
         "main_topics": [{"code": t.code, "name": t.name, "active": t.active} for t in get_config().main_topics.values()],
         "compliance_checks": [{"code": c.code, "label": c.name} for c in active_checks()],
