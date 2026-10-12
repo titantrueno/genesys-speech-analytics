@@ -85,3 +85,14 @@ describe('drill-down desde dashboards', () => {
     await waitFor(() => expect(params(router).get('channel')).toBe('chat'))
   })
 })
+
+describe('periodo con datos reales (FE012)', () => {
+  it('acaba hoy con datos reales y ayer con sintéticos', async () => {
+    const { presetRange, matchingPreset } = await import('./useDashboardFilters')
+    const today = new Date(2026, 9, 12)
+    expect(presetRange(7, today)).toEqual({ from: '2026-10-05', to: '2026-10-11' })
+    expect(presetRange(7, today, true)).toEqual({ from: '2026-10-06', to: '2026-10-12' })
+    expect(matchingPreset('2026-10-06', '2026-10-12', today, true)).toBe(7)
+    expect(matchingPreset('2026-10-06', '2026-10-12', today)).toBe('custom')
+  })
+})

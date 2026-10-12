@@ -66,7 +66,7 @@ export function SearchPage() {
     setDraft(raw.q)
   }
 
-  const fallback = catalog ? presetRange(DEFAULT_PRESET, parseIsoDate(catalog.reference_date)) : undefined
+  const fallback = catalog ? presetRange(DEFAULT_PRESET, parseIsoDate(catalog.reference_date), catalog.origin === 'real') : undefined
   const from = raw.from ?? run.data?.period.from ?? fallback?.from ?? ''
   const to = raw.to ?? run.data?.period.to ?? fallback?.to ?? ''
 

@@ -19,8 +19,9 @@ export function isoDate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
-export function presetRange(days: number, today = new Date()): { from: string; to: string } {
-  const to = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1)
+/** Con datos reales (`includeToday`), el periodo acaba hoy, porque se descargan al día; con sintéticos, ayer (FE012). */
+export function presetRange(days: number, today = new Date(), includeToday = false): { from: string; to: string } {
+  const to = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (includeToday ? 0 : 1))
   const from = new Date(to.getFullYear(), to.getMonth(), to.getDate() - (days - 1))
   return { from: isoDate(from), to: isoDate(to) }
 }
@@ -30,10 +31,10 @@ export function parseIsoDate(iso: string): Date {
   return new Date(y, m - 1, d)
 }
 
-export function matchingPreset(from?: string, to?: string, today = new Date()): number | 'custom' {
+export function matchingPreset(from?: string, to?: string, today = new Date(), includeToday = false): number | 'custom' {
   if (!from && !to) return DEFAULT_PRESET
   const match = PERIOD_PRESETS.find((days) => {
-    const range = presetRange(days, today)
+    const range = presetRange(days, today, includeToday)
     return range.from === from && range.to === to
   })
   return match ?? 'custom'

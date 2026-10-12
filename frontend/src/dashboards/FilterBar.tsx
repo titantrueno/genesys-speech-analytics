@@ -9,14 +9,15 @@ export function FilterBar({ effectivePeriod }: { effectivePeriod?: Period }) {
   const { filters, update, clear, activeCount } = useDashboardFilters()
   const { data: catalog } = useCatalog()
   const today = catalog ? parseIsoDate(catalog.reference_date) : new Date()
-  const preset = matchingPreset(filters.from, filters.to, today)
-  const fallback = effectivePeriod ?? presetRange(DEFAULT_PRESET, today)
+  const includeToday = catalog?.origin === 'real'
+  const preset = matchingPreset(filters.from, filters.to, today, includeToday)
+  const fallback = effectivePeriod ?? presetRange(DEFAULT_PRESET, today, includeToday)
   const from = filters.from ?? fallback.from
   const to = filters.to ?? fallback.to
 
   function onPreset(value: string) {
     if (value === 'custom') return
-    update(Number(value) === DEFAULT_PRESET ? { from: undefined, to: undefined } : presetRange(Number(value), today))
+    update(Number(value) === DEFAULT_PRESET ? { from: undefined, to: undefined } : presetRange(Number(value), today, includeToday))
   }
 
   return (

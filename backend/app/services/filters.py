@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, Query, status
 from app import ids
 from app.config.compliance import is_compliant
 from app.config.store import current_zone, local_day
-from app.data.store import followup_index, reference_date
+from app.data.store import default_period_end, followup_index
 from app.models import Conversation
 
 DEFAULT_PERIOD_DAYS = 30
@@ -83,7 +83,7 @@ def conversation_filters(
     agent: list[str] = Query(default_factory=list),
     main_topic: list[str] = Query(default_factory=list),
 ) -> ConversationFilters:
-    date_to = date_to or reference_date() - timedelta(days=1)
+    date_to = date_to or default_period_end()
     date_from = date_from or date_to - timedelta(days=DEFAULT_PERIOD_DAYS - 1)
     if date_from > date_to:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="'from' debe ser anterior o igual a 'to'")

@@ -4,7 +4,7 @@ from typing import Annotated, Any, Literal, Union
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, ValidationError
 
 from app import ids
-from app.data.store import reference_date
+from app.data.store import default_period_end
 from app.query.fields import EMPTY_OPERATORS, SPEAKERS, FieldDef, get_fields
 
 MAX_DEPTH = 2
@@ -49,7 +49,7 @@ class Query(BaseModel):
 
 
 def default_period() -> tuple[date, date]:
-    date_to = reference_date() - timedelta(days=1)
+    date_to = default_period_end()
     return date_to - timedelta(days=DEFAULT_PERIOD_DAYS - 1), date_to
 
 

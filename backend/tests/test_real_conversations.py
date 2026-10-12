@@ -160,3 +160,20 @@ def test_the_kpi_drill_down_matches_the_list(real_api):
     queue = real_api.get("/api/catalog").json()["queues"][0]["id"]
     for params in ({}, {"queue": queue}, {"channel": "chat"}, {"channel": "voz"}):
         assert _kpis(real_api, **params)["volume"]["value"] == _list(real_api, **params)["total"]
+
+
+# --- Periodo por defecto ---
+
+def test_the_default_period_includes_today_with_real_data(real_api, monkeypatch):
+    """Las conversaciones reales se descargan al día: el periodo por defecto debe incluir hoy, no acabar ayer."""
+    monkeypatch.setenv("DATA_REFERENCE_DATE", "2026-10-12")
+    assert real_api.get("/api/conversations", params={"page_size": 100}).json()["total"] == 10
+    assert real_api.get("/api/metrics/summary").json()["period"]["to"] == "2026-10-12"
+    body = real_api.post("/api/query/run", json={"root": {"op": "and", "conditions": []}}).json()
+    assert body["total"] == 10 and body["period"]["to"] == "2026-10-12"
+    assert real_api.get("/api/query/schema").json()["default_period"]["to"] == "2026-10-12"
+
+
+def test_the_default_period_still_ends_yesterday_with_synthetic_data(api, monkeypatch):
+    monkeypatch.setenv("DATA_REFERENCE_DATE", "2026-10-12")
+    assert api.get("/api/metrics/summary").json()["period"]["to"] == "2026-10-11"
