@@ -5955,6 +5955,7 @@ components:
           - previous_result_without_chain
           - metric_requires_labels
           - duplicate_destination
+          - analysis_pending
           title: Code
           type: string
         message:
@@ -5966,6 +5967,14 @@ components:
           - type: 'null'
           default: null
           title: Node Id
+        severity:
+          default: error
+          description: '`warning` avisa sin impedir la ejecución (FE012); `error` la impide.'
+          enum:
+          - error
+          - warning
+          title: Severity
+          type: string
       required:
       - code
       - message

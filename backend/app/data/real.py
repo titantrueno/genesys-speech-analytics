@@ -5,7 +5,9 @@ La API no importa `ingestion` (test estructural de FE011): lee las tablas con su
 consulta en cada petición: si una descarga de FE011 ha insertado, actualizado o borrado algo, el testigo cambia y se
 recarga. Así los datos nuevos aparecen en la petición siguiente sin un canal de avisos entre los dos procesos.
 """
+import itertools
 import threading
+import time
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -19,12 +21,24 @@ from app.envfile import API_DATABASE_KEYS, read_env
 from app.models import Analysis, Conversation, GenesysInfo, Turn
 
 CONNECT_TIMEOUT_S = 2
+# El testigo de la base se consulta una vez por petición HTTP, no una vez por llamada a un servicio: `begin_request()`
+# marca el comienzo de cada petición y la comprobación se recuerda hasta la siguiente. El límite de tiempo cubre las
+# llamadas fuera de una petición (tests, tareas en segundo plano).
+CHECK_VALIDITY_S = 1.0
+_requests = itertools.count(1)
+_current_request = 0
 _TOKEN_SQL = ("SELECT (SELECT count(*) FROM conversation) AS n, (SELECT max(updated_at) FROM conversation) AS c, "
               "(SELECT max(updated_at) FROM analysis) AS a")
 
 
 def _iso(value: datetime | None) -> str | None:
     return value.isoformat() if value else None
+
+
+def begin_request() -> None:
+    """Lo llama el middleware al empezar cada petición: obliga a comprobar el testigo al menos una vez por petición."""
+    global _current_request
+    _current_request = next(_requests)
 
 
 @dataclass(frozen=True)
@@ -130,7 +144,7 @@ class RealRepository:
         self._database_url = database_url
         self._lock = threading.Lock()
         self._snapshot: Snapshot | None = None
-        self._url: str | None = None
+        self._checked: tuple[int, float] | None = None  # (petición, instante) de la última comprobación del testigo
 
     def _connect(self) -> psycopg.Connection:
         url = self._database_url()
@@ -144,12 +158,18 @@ class RealRepository:
 
     def snapshot(self) -> Snapshot:
         """Instantánea vigente; si el testigo de la base ha cambiado (o cambió la URL), se recarga."""
+        current = self._snapshot
+        if (current is not None and self._checked is not None and self._checked[0] == _current_request
+                and time.monotonic() - self._checked[1] < CHECK_VALIDITY_S
+                and current.token[0] == self._database_url()):
+            return current
         try:
             with self._connect() as conn:
                 row = conn.execute(_TOKEN_SQL).fetchone()
                 token = (self._database_url(), *row)
                 with self._lock:
                     current = self._snapshot
+                    self._checked = (_current_request, time.monotonic())
                     if current is not None and current.token == token:
                         return current
                     # La carga completa corre bajo el cerrojo: dos peticiones simultáneas no la duplican.

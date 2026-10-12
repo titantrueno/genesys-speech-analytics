@@ -8,10 +8,13 @@ from dataclasses import asdict, dataclass
 
 from app.flows import catalog
 from app.flows.connections import Rejection, connection_rejection
+from app.config.store import get_config
 from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
 from app.query.model import QueryError, parse_query
 
 VARIABLE = re.compile(r"\{\{\s*([^{}]*?)\s*\}\}")
+# Variables que salen del análisis de la plataforma: vacías con conversaciones reales sin analizar (FE012).
+PENDING_VARIABLES = {"summary", "main_topic"}
 FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
@@ -20,9 +23,18 @@ class Issue:
     code: str
     message: str
     node_id: str | None = None
+    # `warning` avisa sin bloquear la ejecución (FE012); `error` la bloquea.
+    severity: str = "error"
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        data = asdict(self)
+        if self.severity == "error":  # el formato de FE004 no cambia: `severity` solo aparece en los avisos
+            del data["severity"]
+        return data
+
+
+def blocking(issues: list[Issue]) -> list[Issue]:
+    return [issue for issue in issues if issue.severity == "error"]
 
 
 def can_connect(graph: Graph, source: str, target: str) -> Rejection | None:
@@ -96,6 +108,12 @@ def _prompt(node: PromptNode, graph: Graph) -> list[Issue]:
         if not any(v in catalog.VARIABLES for v in used):
             issues.append(Issue("prompt_without_variables",
                                 "El prompt no usa ninguna variable: todas las conversaciones recibirían el mismo texto.", node.id))
+        pending = sorted({v for v in used if v in PENDING_VARIABLES})
+        if pending and get_config().sources.origin == "real":
+            issues.append(Issue(
+                "analysis_pending",
+                f"Las conversaciones reales aún no tienen análisis: {', '.join('{{' + v + '}}' for v in pending)} "
+                "llegará vacía al prompt.", node.id, "warning"))
         chained = any(isinstance(graph.node(source), PromptNode) for source in graph.inputs(node.id))
         if catalog.PREVIOUS_RESULT in used and not chained:
             issues.append(Issue("previous_result_without_chain",

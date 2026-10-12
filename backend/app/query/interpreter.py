@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from app.config.store import get_config
 from app.config.compliance import active_checks
-from app.data.catalog import AGENT_IDS, QUEUE_IDS
+from app.data.repository import active_repository
 from app.data.store import reference_date
 from app.text import normalize_text
 
@@ -144,8 +144,9 @@ def interpret(text: str) -> tuple[dict, list[str]]:
     if chat != voice:
         conditions.append(_cond("channel", "is", "chat" if chat else "voz"))
 
+    repository = active_repository()
     queues = []
-    for name, queue_id in QUEUE_IDS.items():
+    for queue_id, name in repository.queues():
         key = normalize_text(name)
         short = key.split(" ")[0]
         if m.take(rf"(?:la )?cola (?:de |del )?(?:{re.escape(key)}|{re.escape(short)})\b"):
@@ -153,7 +154,8 @@ def interpret(text: str) -> tuple[dict, list[str]]:
     if queues:
         conditions.append(_one_or_many("queue", queues))
 
-    agents = [agent_id for name, agent_id in AGENT_IDS.items() if m.take(rf"\b{re.escape(normalize_text(name))}\b")]
+    agents = [agent_id for agent_id, name, _, _ in repository.agents()
+              if m.take(rf"\b{re.escape(normalize_text(name))}\b")]
     if agents:
         conditions.append(_one_or_many("agent", agents))
 

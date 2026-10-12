@@ -3,20 +3,23 @@
 Todo lo que antes leía `analysis.compliance` (detalle, KPI, desglose por check, filtro `compliant` del drill-down y
 campos `check:*` del explorador) pasa por aquí, así que un cambio de configuración se refleja en todos a la vez.
 """
-from functools import cache
-
 from app.config.checks import Check
 from app.config.store import Config, get_config
-from app.data.store import conversation_index
 from app.models import Conversation
 from app.text import normalize_text
 
+# Turnos del agente normalizados, por conversación. Se comprueba que sigue siendo el mismo objeto: una descarga nueva de
+# conversaciones reales (FE012) lo sustituye, y las que crean los tests tienen su propio identificador.
+_agent_texts: dict[str, tuple[Conversation, str]] = {}
 
-@cache
-def _agent_text(conversation_id: str) -> str:
-    """Turnos del agente normalizados. Se evalúa sobre el texto original: el enmascarado solo afecta a lo que se ve."""
-    conv = conversation_index()[conversation_id]
-    return "\n".join(normalize_text(t.text) for t in conv.turns if t.speaker == "agente")
+
+def _agent_text(conv: Conversation) -> str:
+    """Se evalúa sobre el texto original: el enmascarado solo afecta a lo que se ve."""
+    cached = _agent_texts.get(conv.id)
+    if cached is None or cached[0] is not conv:
+        text = "\n".join(normalize_text(t.text) for t in conv.turns if t.speaker == "agente")
+        cached = _agent_texts[conv.id] = (conv, text)
+    return cached[1]
 
 
 def evaluate(check: Check, conv: Conversation) -> bool | None:
@@ -24,8 +27,7 @@ def evaluate(check: Check, conv: Conversation) -> bool | None:
         return None  # sin analizar (FE012) o un check que no aplica al canal
     if check.builtin:
         return conv.analysis.compliance.get(check.code)
-    text = _agent_text(conv.id) if conv.id in conversation_index() else \
-        "\n".join(normalize_text(t.text) for t in conv.turns if t.speaker == "agente")
+    text = _agent_text(conv)
     return any(normalize_text(phrase) in text for phrase in check.phrases)
 
 

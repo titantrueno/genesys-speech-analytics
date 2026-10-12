@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import auth
+from app.data.real import begin_request
 from app.data.repository import DataUnavailable
 from app.openapi.spec import API_VERSION, build_openapi
 from app.routers import auth as auth_router
@@ -40,6 +41,12 @@ def create_app() -> FastAPI:
         allow_headers=["Authorization", "Content-Type"],
         expose_headers=[AUTH_VERSION_HEADER],
     )
+
+    @app.middleware("http")
+    async def new_request(request: Request, call_next):
+        """Cada petición comprueba una vez si PostgreSQL tiene datos nuevos (FE012, criterio 4)."""
+        begin_request()
+        return await call_next(request)
 
     @app.middleware("http")
     async def auth_version(request: Request, call_next):

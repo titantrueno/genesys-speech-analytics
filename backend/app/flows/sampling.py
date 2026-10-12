@@ -58,5 +58,7 @@ def draw_sample(conversations: list[Conversation], config: SamplingConfig, seed:
     key = ORDER_KEYS[config.order_by]
     descending = config.order == "desc"
     ordered = sorted(conversations, key=lambda c: c.id)
-    ordered.sort(key=key, reverse=descending)
-    return ordered[:size]
+    # Una conversación sin ese dato (sin analizar, FE012) va siempre al final.
+    with_value = [c for c in ordered if key(c) is not None]
+    with_value.sort(key=key, reverse=descending)
+    return (with_value + [c for c in ordered if key(c) is None])[:size]

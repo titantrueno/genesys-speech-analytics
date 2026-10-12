@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, Validatio
 
 from app import ids
 from app.data.store import reference_date
-from app.query.fields import SPEAKERS, FieldDef, get_fields
+from app.query.fields import EMPTY_OPERATORS, SPEAKERS, FieldDef, get_fields
 
 MAX_DEPTH = 2
 MAX_CONDITIONS = 50
@@ -83,6 +83,9 @@ def _check_condition(cond: Condition, path: str) -> str | None:
         return f"El campo {fdef.label} no admite hablante"
     if cond.speaker is not None and cond.speaker not in SPEAKERS:
         return f"Hablante no válido: {cond.speaker}"
+    if cond.operator in EMPTY_OPERATORS:  # «está vacío» no lleva valor (FE012)
+        cond.value = None
+        return None
     return {
         "categorical": _check_categorical, "numeric": _check_numeric, "check": _check_check,
         "text": _check_text, "boolean": _check_boolean,

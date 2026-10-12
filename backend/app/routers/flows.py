@@ -12,7 +12,7 @@ from app.flows import catalog
 from app.flows.model import Graph, GraphError, parse_graph
 from app.flows.prompting import MockPromptRunner, PromptRunner
 from app.flows.runs import FlowExecutor, Run, get_run_store, step_delay_seconds
-from app.flows.rules import validate
+from app.flows.rules import blocking, validate
 from app.flows.store import Flow, get_flow_store
 from app.query.engine import run_query
 from app.query.model import QueryError, parse_query
@@ -103,7 +103,7 @@ def flow_catalog() -> dict:
 @router.post("/validate", dependencies=[Depends(VIEW)])
 def validate_graph(graph: Graph = Depends(parsed_graph)) -> dict:
     issues = validate(graph)
-    return {"valid": not issues, "issues": [issue.to_dict() for issue in issues]}
+    return {"valid": not blocking(issues), "issues": [issue.to_dict() for issue in issues]}
 
 
 @router.post("/sampling/estimate", dependencies=[Depends(VIEW)])
@@ -155,7 +155,7 @@ def delete_flow(flow_id: str) -> Response:
 def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(EDIT),
               runner: PromptRunner = Depends(get_prompt_runner)) -> dict:
     flow = _flow(flow_id)
-    issues = validate(flow.graph)
+    issues = blocking(validate(flow.graph))
     if issues:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=[issue.to_dict() for issue in issues])
     run = get_run_store().start(flow, user)

@@ -59,7 +59,7 @@ class GraphErrors(Doc):
 IssueCode = Literal[
     "missing_sampling", "missing_output", "node_unconfigured", "invalid_config", "disconnected_node",
     "prompt_without_variables", "unknown_variable", "previous_result_without_chain", "metric_requires_labels",
-    "duplicate_destination",
+    "duplicate_destination", "analysis_pending",
 ]
 
 
@@ -67,6 +67,8 @@ class FlowIssue(Doc):
     code: IssueCode
     message: str
     node_id: str | None = None
+    severity: Literal["error", "warning"] = Field(
+        "error", description="`warning` avisa sin impedir la ejecución (FE012); `error` la impide.")
 
 
 class FlowIssues(Doc):
