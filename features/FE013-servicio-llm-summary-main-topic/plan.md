@@ -205,7 +205,8 @@
 
 ## Notas de T7
 
-- **Pendiente para T9:** la comprobación en navegador de Configuración → Modelos de IA y del panel del Prompt. El 2026-10-12 la extensión de Chrome no hizo llegar clics ni texto a la página (la API no recibió ningún `POST /api/auth/login`, que sí funciona por `curl` a través del proxy de Vite).
+- **Hecho (2026-10-12, Chrome):** Configuración → Modelos de IA muestra Gemini con clave, OpenAI y Anthropic sin clave y Simulado sin necesitarla; «Probar» en Gemini responde correctamente (llamada real) y en OpenAI muestra «El proveedor OpenAI no tiene clave configurada». Un Prompt nuevo toma Gemini 3.5 Flash-Lite; al pasar a Anthropic propone Claude Opus 5.5 y desactiva la temperatura con su aviso. Sin errores en la consola.
+- **Aprendizaje:** en el primer intento los clics por coordenadas no llegaban porque el marco de la captura (1568 px) no coincidía con el viewport (1920 px); con clics por referencia de elemento (`find` → `ref`) funciona.
 
 ## Riesgos del plan
 
