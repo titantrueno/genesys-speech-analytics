@@ -1,7 +1,11 @@
 """Carga idempotente de una conversación normalizada en PostgreSQL (FE011, criterio 10).
 
 Una transacción por conversación: catálogos, `upsert` de la conversación por su identificador de Genesys y reemplazo de
-sus tramos, turnos, temas y respuestas originales. Un análisis `completo` (del LLM) no se pisa con uno pendiente.
+sus tramos, turnos, temas y respuestas originales.
+
+Casilla «Sobrescribir» del flujo (FE013): sin ella, una conversación que ya existe no se toca (`OMITTED`); el ejecutor
+ya lo comprueba antes de descargar, y esto cubre otra ejecución que la cargue mientras tanto. Con ella, la conversación
+se sustituye entera y su análisis también, aunque estuviera `completo`: se borran el summary y el main topic del LLM.
 """
 from dataclasses import asdict
 
@@ -12,7 +16,7 @@ from psycopg.types.json import Jsonb
 from ingestion.pipeline.analyze import Analysis
 from ingestion.pipeline.normalize import NormalizedConversation
 
-INSERTED, UPDATED = "insertada", "actualizada"
+INSERTED, UPDATED, OMITTED = "insertada", "actualizada", "omitida"
 
 _CONVERSATION_COLUMNS = [
     "id", "genesys_id", "channel", "started_at", "ended_at", "duration_s", "direction", "external_tag", "ani", "dnis",
@@ -31,7 +35,7 @@ def _conversation_values(c: NormalizedConversation) -> list:
     return [values[name] for name in _CONVERSATION_COLUMNS]
 
 
-def load(conn: psycopg.Connection, c: NormalizedConversation, analysis: Analysis) -> str:
+def load(conn: psycopg.Connection, c: NormalizedConversation, analysis: Analysis, overwrite: bool) -> str:
     with conn.transaction():
         for queue_id, (genesys_id, name) in c.queues.items():
             conn.execute("INSERT INTO queue (id, genesys_id, name) VALUES (%s, %s, %s) ON CONFLICT (id) "
@@ -56,6 +60,8 @@ def load(conn: psycopg.Connection, c: NormalizedConversation, analysis: Analysis
         inserted = conn.cursor(row_factory=tuple_row).execute(
             f"INSERT INTO conversation ({columns}) VALUES ({', '.join(['%s'] * len(_CONVERSATION_COLUMNS))}) "
             "ON CONFLICT (genesys_id) DO NOTHING RETURNING id", values).fetchone() is not None
+        if not inserted and not overwrite:
+            return OMITTED
         if not inserted:
             editable = [name for name in _CONVERSATION_COLUMNS if name != "genesys_id"]
             conn.execute(f"UPDATE conversation SET {', '.join(f'{name} = %s' for name in editable)}, updated_at = now() "
@@ -90,11 +96,9 @@ def load(conn: psycopg.Connection, c: NormalizedConversation, analysis: Analysis
         params = [Jsonb(values[f]) if f in _JSON_ANALYSIS and values[f] is not None else values[f]
                   for f in _ANALYSIS_FIELDS]
         assignments = ", ".join(f"{f} = EXCLUDED.{f}" for f in _ANALYSIS_FIELDS)
-        # Una descarga posterior no borra un análisis ya completo (del LLM) con uno pendiente.
         conn.execute(
             f"INSERT INTO analysis (conversation_id, {', '.join(_ANALYSIS_FIELDS)}) "
             f"VALUES (%s, {', '.join(['%s'] * len(_ANALYSIS_FIELDS))}) "
-            f"ON CONFLICT (conversation_id) DO UPDATE SET {assignments}, updated_at = now() "
-            "WHERE analysis.status <> 'completo' OR EXCLUDED.status = 'completo'",
+            f"ON CONFLICT (conversation_id) DO UPDATE SET {assignments}, updated_at = now()",
             [c.id, *params])
     return INSERTED if inserted else UPDATED

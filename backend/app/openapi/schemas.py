@@ -686,6 +686,8 @@ class DownloadFlowIn(Doc):
     channels: list[DownloadChannel] = Field(min_length=1)
     schedule: DownloadSchedule = Field(description="Una descarga programada necesita un intervalo relativo.")
     active: bool = Field(True, description="Un flujo inactivo no se ejecuta por programación, pero sí a mano.")
+    overwrite: bool = Field(False, description="Sobrescribir: vuelve a descargar las conversaciones que ya existen y borra su summary y "
+                                         "main topic del LLM. Sin marcar, las existentes no se descargan.")
 
 
 class DownloadRunRef(Doc):
@@ -701,6 +703,7 @@ class DownloadFlow(Doc):
     channels: list[DownloadChannel]
     schedule: DownloadSchedule
     active: bool
+    overwrite: bool
     timezone: str = Field(description="Zona horaria de la plataforma cuando se guardó el flujo.")
     author: Person
     created_at: datetime
@@ -714,13 +717,15 @@ class DownloadFlowList(Doc):
 
 
 class DownloadCounters(Doc):
-    found: int = Field(description="Encontradas = insertadas + actualizadas + omitidas + con error, al terminar.")
+    found: int = Field(description="Encontradas = insertadas + actualizadas + omitidas + ya existentes + con error, al "
+                                   "terminar.")
     downloaded: int
     inserted: int
     updated: int
     skipped: int
     errors: int
     skipped_in_progress: int
+    skipped_existing: int = Field(description="Ya estaban en la base y no se descargaron (flujo sin «Sobrescribir»).")
     skipped_other_channel: int = Field(description="De otro canal o de un medio no soportado.")
     by_channel: dict[str, int]
     by_quality: dict[str, int] = Field(description="`completa`, `parcial` y `sin_transcripcion`.")
@@ -739,6 +744,7 @@ class DownloadRun(Doc):
     status: DownloadRunStatus
     interval: DownloadRunInterval = Field(description="Intervalo resuelto al lanzar la ejecución.")
     channels: list[DownloadChannel]
+    overwrite: bool = Field(description="Valor de «Sobrescribir» del flujo cuando se creó la ejecución.")
     counters: DownloadCounters
     error: str | None
     started_by: Person | None = Field(description="Quién la lanzó; nulo en las programadas.")

@@ -148,7 +148,8 @@ def test_history_is_newest_first_and_the_flow_shows_its_last_run(api):
     assert [r["id"] for r in history] == [second["id"], first["id"]]
     assert {"origin", "interval", "counters", "duration_s", "status", "created_at"} <= history[0].keys()
     listed = api.get("/download-flows").json()["items"][0]
-    assert listed["last_run"]["id"] == second["id"] and listed["last_run"]["status"] == "completada_con_avisos"
+    # La segunda omite las conversaciones que ya cargó la primera (sin «Sobrescribir», FE013): no hay avisos.
+    assert listed["last_run"]["id"] == second["id"] and listed["last_run"]["status"] == "completada"
 
 
 def test_only_the_200_most_recent_runs_are_kept(api, pg_url):

@@ -111,6 +111,7 @@ class FlowIn(_Strict):
     channels: list[Literal["voz", "chat"]]
     schedule: Schedule = Schedule({"type": "desactivada"})
     active: bool = True
+    overwrite: bool = False
     timezone: str
     author: Person | None = None
 
@@ -216,7 +217,8 @@ def _next_run(flow: FlowIn, now: datetime) -> datetime | None:
 
 def _to_dict(row: dict, last_run: dict | None) -> dict:
     return {"id": row["id"], "name": row["name"], "interval": row["interval"], "channels": row["channels"],
-            "schedule": row["schedule"], "active": row["active"], "timezone": row["timezone"],
+            "schedule": row["schedule"], "active": row["active"], "overwrite": row["overwrite"],
+            "timezone": row["timezone"],
             "author": {"id": row["author_id"], "name": row["author_name"]},
             "created_at": _iso(row["created_at"]), "updated_at": _iso(row["updated_at"]),
             "next_run_at": _iso(row["next_run_at"]),
@@ -250,20 +252,20 @@ def get_flow(conn: psycopg.Connection, flow_id: str) -> dict | None:
 
 def _values(flow: FlowIn) -> tuple:
     return (flow.name, Jsonb(flow.interval.model_dump(mode="json", by_alias=True)), flow.channels,
-            Jsonb(flow.schedule.model_dump(mode="json")), flow.active, flow.timezone)
+            Jsonb(flow.schedule.model_dump(mode="json")), flow.active, flow.overwrite, flow.timezone)
 
 
 def create_flow(conn: psycopg.Connection, flow: FlowIn, author: Person, now: datetime) -> dict:
     flow_id = ids.new_id(ids.FLOW, _rng)
-    conn.execute("INSERT INTO download_flow (name, interval, channels, schedule, active, timezone, id, author_id, "
-                 "author_name, next_run_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+    conn.execute("INSERT INTO download_flow (name, interval, channels, schedule, active, overwrite, timezone, id, "
+                 "author_id, author_name, next_run_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                  (*_values(flow), flow_id, author.id, author.name, _next_run(flow, now)))
     return get_flow(conn, flow_id)
 
 
 def update_flow(conn: psycopg.Connection, flow_id: str, flow: FlowIn, now: datetime) -> dict:
     conn.execute("UPDATE download_flow SET name = %s, interval = %s, channels = %s, schedule = %s, active = %s, "
-                 "timezone = %s, next_run_at = %s, updated_at = now() WHERE id = %s",
+                 "overwrite = %s, timezone = %s, next_run_at = %s, updated_at = now() WHERE id = %s",
                  (*_values(flow), _next_run(flow, now), flow_id))
     return get_flow(conn, flow_id)
 

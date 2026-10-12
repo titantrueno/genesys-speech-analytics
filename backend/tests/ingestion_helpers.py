@@ -73,16 +73,16 @@ def with_media(raw: RawConversation, media: str) -> RawConversation:
     return copied
 
 
-def create_flow(database_url: str, name: str = "Descarga de prueba") -> str:
+def create_flow(database_url: str, name: str = "Descarga de prueba", overwrite: bool = False) -> str:
     """Flujo de descarga mínimo para colgar ejecuciones (el CRUD llega en T5)."""
     flow_id = ids.new_id(ids.FLOW, __import__("random").SystemRandom())
     with psycopg.connect(database_url) as conn:
         db.migrate(conn)
         conn.execute(
-            "INSERT INTO download_flow (id, name, interval, channels, schedule, timezone, author_id, author_name) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO download_flow (id, name, interval, channels, schedule, timezone, author_id, author_name, "
+            "overwrite) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (flow_id, name, json.dumps({"type": "relativo", "unit": "dias", "amount": 1}), ["voz", "chat"],
-             json.dumps({"type": "desactivada"}), "Europe/Madrid", "1US-PRUEBA", "Admin de prueba"))
+             json.dumps({"type": "desactivada"}), "Europe/Madrid", "1US-PRUEBA", "Admin de prueba", overwrite))
     return flow_id
 
 

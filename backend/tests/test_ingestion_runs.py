@@ -83,7 +83,7 @@ def test_the_read_resolves_queue_agent_and_wrapup_names(pg_url):
 
 def test_repeating_a_run_duplicates_nothing(pg_url):
     fake = make_fake()
-    _, flow_id = _run(pg_url, fake)
+    _, flow_id = _run(pg_url, fake, flow_id=create_flow(pg_url, overwrite=True))
     before = table_counts(pg_url)
     run, _ = _run(pg_url, fake, flow_id=flow_id)
     assert table_counts(pg_url) == before
@@ -119,7 +119,8 @@ def test_a_partial_transcript_becomes_complete_on_a_later_run(pg_url):
         for transcript in document["transcripts"]:
             if any(p.get("userIds") for p in transcript["phrases"]):
                 transcript["phrases"] = []  # el tramo del agente aún sin transcribir
-    _, flow_id = _run(pg_url, make_fake([partial]))
+    # Para que llegue la transcripción completa hay que volver a descargarla con «Sobrescribir» (FE013).
+    _, flow_id = _run(pg_url, make_fake([partial]), flow_id=create_flow(pg_url, overwrite=True))
     with psycopg.connect(pg_url) as conn:
         assert conn.execute("SELECT transcript_quality FROM conversation").fetchone()[0] == "parcial"
     run, _ = _run(pg_url, make_fake([complete]), flow_id=flow_id)
@@ -165,7 +166,7 @@ def test_an_analyzer_fills_the_analysis_without_changing_the_schema(pg_url):
         analysis = api.get("/conversations/37dcbccf-2d89-424e-bc9e-9e53d8494a9a").json()["analysis"]
     assert (analysis["status"], analysis["source"], analysis["main_topic"]) == ("completo", "llm", "cargo_no_reconocido")
     assert analysis["summary"] == "Resumen de 37dcbccf"
-    _run(pg_url, make_fake([fixture("37dcbccf")]), flow_id=flow_id)  # una descarga posterior no lo borra
+    _run(pg_url, make_fake([fixture("37dcbccf")]), flow_id=flow_id)  # sin «Sobrescribir», ni se descarga
     with _api(pg_url) as api:
         assert api.get("/conversations/37dcbccf-2d89-424e-bc9e-9e53d8494a9a").json()["analysis"]["status"] == "completo"
 

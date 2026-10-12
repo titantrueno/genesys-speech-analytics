@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/download-flows", tags=["downloads"])
 
 VIEW = require_permission("flows:view")
 EDIT = require_permission("flows:edit")
-EDITABLE = ("name", "interval", "channels", "schedule", "active")
+EDITABLE = ("name", "interval", "channels", "schedule", "active", "overwrite")
 
 
 def call(client: IngestionClient, method: str, path: str, **kwargs) -> httpx.Response:

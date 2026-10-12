@@ -63,6 +63,16 @@ def test_the_api_sets_the_author_and_the_current_timezone(api, ingestion_stub):
     assert sent["timezone"] == "UTC" and "author" not in sent
 
 
+def test_overwrite_reaches_the_service_when_creating_and_saving(api, ingestion_stub):
+    # FE013, criterio 25: la casilla «Sobrescribir» no se pierde en el relevo de la API.
+    flow = api.post("/api/download-flows", json={**BODY, "overwrite": True}).json()
+    _, _, sent = ingestion_stub.received[-1]
+    assert sent["overwrite"] is True and flow["overwrite"] is True
+    api.put(f"/api/download-flows/{flow['id']}", json={**BODY, "overwrite": False})
+    _, _, sent = ingestion_stub.received[-1]
+    assert sent["overwrite"] is False
+
+
 def test_the_person_who_launches_a_run_reaches_the_service(api, ingestion_stub):
     flow = _flow(api)
     run = api.post(f"/api/download-flows/{flow['id']}/runs").json()

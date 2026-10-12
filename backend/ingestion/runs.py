@@ -20,7 +20,7 @@ from app.clock import now
 from ingestion.genesys.client import GenesysAuthError, GenesysClient, GenesysError
 from ingestion.pipeline.analyze import Analyzer, PendingAnalyzer
 from ingestion.pipeline.extract import IN_PROGRESS, GenesysNames, fetch, search
-from ingestion.pipeline.load import INSERTED, load
+from ingestion.pipeline.load import INSERTED, OMITTED, load
 from ingestion.pipeline.normalize import normalize
 
 _rng = random.SystemRandom()
@@ -38,7 +38,7 @@ def _iso(value: datetime | None) -> str | None:
 
 
 def new_counters() -> dict:
-    return {"found": 0, "downloaded": 0, "inserted": 0, "updated": 0, "skipped": 0, "errors": 0,
+    return {"found": 0, "downloaded": 0, "inserted": 0, "updated": 0, "skipped": 0, "skipped_existing": 0, "errors": 0,
             "skipped_in_progress": 0, "skipped_other_channel": 0, "by_channel": {"voz": 0, "chat": 0},
             "by_quality": {"completa": 0, "parcial": 0, "sin_transcripcion": 0}, "undelivered_messages": 0}
 
@@ -48,17 +48,21 @@ MAX_RUNS_PER_FLOW = 200
 
 def create_run(database_url: str, flow_id: str, origin: str, start: datetime, end: datetime, channels: list[str],
                user: tuple[str, str] | None = None, notes: list[str] | None = None) -> str:
-    """Crea una ejecución `pendiente` (como mucho una activa por flujo) y conserva las 200 más recientes del flujo."""
+    """Crea una ejecución `pendiente` (como mucho una activa por flujo) y conserva las 200 más recientes del flujo.
+
+    Copia la casilla «Sobrescribir» del flujo: editar el flujo con la ejecución ya creada no la cambia.
+    """
     run_id = ids.new_id(ids.RUN, _rng)
     user_id, user_name = user or (None, None)
     try:
         with psycopg.connect(database_url) as conn:
             conn.execute(
                 "INSERT INTO download_run (id, flow_id, origin, status, interval_from, interval_to, channels, counters, "
-                "started_by_id, started_by_name, created_at, notes) "
-                "VALUES (%s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s, %s)",
+                "started_by_id, started_by_name, created_at, notes, overwrite) "
+                "VALUES (%s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s, %s, "
+                "(SELECT overwrite FROM download_flow WHERE id = %s))",
                 (run_id, flow_id, origin, start, end, list(channels), Jsonb(new_counters()), user_id, user_name, now(),
-                 Jsonb(notes or [])))
+                 Jsonb(notes or []), flow_id))
             conn.execute(
                 "DELETE FROM download_run WHERE flow_id = %s AND status <> ALL(%s) AND id NOT IN ("
                 "SELECT id FROM download_run WHERE flow_id = %s ORDER BY created_at DESC LIMIT %s)",
@@ -80,7 +84,9 @@ def run_to_dict(row: dict) -> dict:
     return {
         "id": row["id"], "flow_id": row["flow_id"], "origin": row["origin"], "status": row["status"],
         "interval": {"from": _iso(row["interval_from"]), "to": _iso(row["interval_to"])},
-        "channels": row["channels"], "counters": row["counters"], "error": row["error"],
+        "channels": row["channels"], "overwrite": row["overwrite"],
+        # Las ejecuciones anteriores a FE013 no tienen `skipped_existing`.
+        "counters": {**new_counters(), **row["counters"]}, "error": row["error"],
         "started_by": {"id": row["started_by_id"], "name": row["started_by_name"]} if row["started_by_id"] else None,
         "created_at": _iso(row["created_at"]), "started_at": _iso(started), "finished_at": _iso(finished),
         "duration_s": round((finished - started).total_seconds(), 3) if finished and started else None,
@@ -173,13 +179,23 @@ class _Execution:
         self.conn.execute("UPDATE download_run SET status = %s, error = %s, counters = %s, finished_at = %s "
                           "WHERE id = %s", (status, error, Jsonb(self.counters), now(), self.run_id))
 
+    def exists(self, genesys_id: str) -> bool:
+        return self.conn.execute("SELECT 1 FROM conversation WHERE genesys_id = %s", (genesys_id,)).fetchone() is not None
+
+    def skip_existing(self, genesys_id: str) -> None:
+        self.counters["skipped_existing"] += 1
+        self.log("info", "descarga", "Ya existe: no se descarga", genesys_id)
+        self.save()
+
     # Ejecución ---------------------------------------------------------------------------------------------------------
 
     def run(self) -> None:
         start, end, channels = self.row["interval_from"], self.row["interval_to"], self.row["channels"]
         self.conn.execute("UPDATE download_run SET status = 'en_curso', started_at = %s WHERE id = %s",
                           (now(), self.run_id))
-        self.log("info", "inicio", f"Ejecución {self.row['origin']}: {self.span(start, end)}, {', '.join(channels)}")
+        mode = "sobrescribe las existentes" if self.row["overwrite"] else "omite las existentes"
+        self.log("info", "inicio", f"Ejecución {self.row['origin']}: {self.span(start, end)}, {', '.join(channels)}; "
+                                   f"{mode}")
         for note in self.row.get("notes") or []:
             self.log("aviso", "programación", note)
         try:
@@ -218,10 +234,15 @@ class _Execution:
 
         names = GenesysNames(self.client)
         analyzed = 0
+        overwrite = self.row["overwrite"]
         for details in result.found:
             genesys_id = details["conversationId"]
             stage = "descarga"
             try:
+                # Sin «Sobrescribir», lo que ya está en la base no se descarga (FE013, criterio 26).
+                if not overwrite and self.exists(genesys_id):
+                    self.skip_existing(genesys_id)
+                    continue
                 raw = fetch(self.client, details)
                 c["downloaded"] += 1
                 self.step("descarga")
@@ -235,13 +256,16 @@ class _Execution:
                 analyzed += analysis.status == "completo"
                 self.x.on_step("análisis")
                 stage = "carga"
-                outcome = load(self.conn, normalized, analysis)
+                outcome = load(self.conn, normalized, analysis, overwrite)
             except GenesysAuthError:
                 raise
             except Exception as exc:  # noqa: BLE001 - una conversación que falla no detiene la ejecución
                 c["errors"] += 1
                 self.log("error", stage, f"No se pudo procesar: {describe_error(exc)}", genesys_id)
                 self.save()
+                continue
+            if outcome == OMITTED:  # otra ejecución la cargó mientras se descargaba
+                self.skip_existing(genesys_id)
                 continue
             c["inserted" if outcome == INSERTED else "updated"] += 1
             c["by_channel"][normalized.channel] += 1
@@ -255,4 +279,5 @@ class _Execution:
                                           f"{c['by_quality']['sin_transcripcion']} sin transcripción; "
                                           f"{c['undelivered_messages']} mensajes no entregados")
         self.log("info", "análisis", f"{analyzed} analizadas, {c['downloaded'] - analyzed - c['errors']} pendientes")
-        self.log("info", "carga", f"{c['inserted']} insertadas, {c['updated']} actualizadas")
+        self.log("info", "carga", f"{c['inserted']} insertadas, {c['updated']} actualizadas, "
+                                  f"{c['skipped_existing']} ya existentes")

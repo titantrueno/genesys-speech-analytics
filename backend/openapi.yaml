@@ -5310,7 +5310,7 @@ components:
       additionalProperties: false
       properties:
         found:
-          description: Encontradas = insertadas + actualizadas + omitidas + con error, al terminar.
+          description: Encontradas = insertadas + actualizadas + omitidas + ya existentes + con error, al terminar.
           title: Found
           type: integer
         downloaded:
@@ -5330,6 +5330,10 @@ components:
           type: integer
         skipped_in_progress:
           title: Skipped In Progress
+          type: integer
+        skipped_existing:
+          description: Ya estaban en la base y no se descargaron (flujo sin «Sobrescribir»).
+          title: Skipped Existing
           type: integer
         skipped_other_channel:
           description: De otro canal o de un medio no soportado.
@@ -5357,6 +5361,7 @@ components:
       - skipped
       - errors
       - skipped_in_progress
+      - skipped_existing
       - skipped_other_channel
       - by_channel
       - by_quality
@@ -5387,6 +5392,9 @@ components:
           $ref: '#/components/schemas/DownloadSchedule'
         active:
           title: Active
+          type: boolean
+        overwrite:
+          title: Overwrite
           type: boolean
         timezone:
           description: Zona horaria de la plataforma cuando se guardó el flujo.
@@ -5420,6 +5428,7 @@ components:
       - channels
       - schedule
       - active
+      - overwrite
       - timezone
       - author
       - created_at
@@ -5454,6 +5463,12 @@ components:
           default: true
           description: Un flujo inactivo no se ejecuta por programación, pero sí a mano.
           title: Active
+          type: boolean
+        overwrite:
+          default: false
+          description: 'Sobrescribir: vuelve a descargar las conversaciones que ya existen y borra su summary y main topic
+            del LLM. Sin marcar, las existentes no se descargan.'
+          title: Overwrite
           type: boolean
       required:
       - name
@@ -5613,6 +5628,10 @@ components:
             type: string
           title: Channels
           type: array
+        overwrite:
+          description: Valor de «Sobrescribir» del flujo cuando se creó la ejecución.
+          title: Overwrite
+          type: boolean
         counters:
           $ref: '#/components/schemas/DownloadCounters'
         error:
@@ -5653,6 +5672,7 @@ components:
       - status
       - interval
       - channels
+      - overwrite
       - counters
       - error
       - started_by

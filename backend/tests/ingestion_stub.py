@@ -28,7 +28,7 @@ def _now() -> str:
 
 
 COUNTERS = {"found": 2, "downloaded": 2, "inserted": 2, "updated": 0, "skipped": 0, "errors": 0,
-            "skipped_in_progress": 0, "skipped_other_channel": 0, "by_channel": {"voz": 1, "chat": 1},
+            "skipped_in_progress": 0, "skipped_existing": 0, "skipped_other_channel": 0, "by_channel": {"voz": 1, "chat": 1},
             "by_quality": {"completa": 1, "parcial": 1, "sin_transcripcion": 0}, "undelivered_messages": 0}
 
 
@@ -68,6 +68,7 @@ class Stub:
                                                  "ctx": {"error": {}}}]}, status_code=422)
             flow = {"id": _id("1FL"), "name": body["name"], "interval": body["interval"], "channels": body["channels"],
                     "schedule": body.get("schedule", {"type": "desactivada"}), "active": body.get("active", True),
+                    "overwrite": body.get("overwrite", False),
                     "timezone": body["timezone"], "author": body["author"], "created_at": _now(),
                     "updated_at": _now(), "next_run_at": None, "last_run": None}
             stub.flows[flow["id"]] = flow
@@ -81,7 +82,7 @@ class Stub:
         def update(flow_id: str, body: dict = Body(...)):
             stub.received.append(("PUT", f"/download-flows/{flow_id}", body))
             flow = flow_or_404(flow_id)
-            flow.update({k: body[k] for k in ("name", "interval", "channels", "schedule", "active", "timezone")
+            flow.update({k: body[k] for k in ("name", "interval", "channels", "schedule", "active", "overwrite", "timezone")
                          if k in body})
             return flow
 
@@ -100,7 +101,7 @@ class Stub:
             user = (body or {}).get("user")
             run = {"id": _id("1RN"), "flow_id": flow_id, "origin": "manual", "status": "pendiente",
                    "interval": {"from": "2026-10-11T22:00:00+00:00", "to": _now()}, "channels": ["voz", "chat"],
-                   "counters": COUNTERS, "error": None, "started_by": user, "created_at": _now(), "started_at": None,
+                   "overwrite": False, "counters": COUNTERS, "error": None, "started_by": user, "created_at": _now(), "started_at": None,
                    "finished_at": None, "duration_s": None}
             stub.runs[run["id"]] = run
             return run
