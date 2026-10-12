@@ -44,11 +44,15 @@ def followup_map(conversations: list[Conversation]) -> dict[str, bool]:
     from bisect import bisect_right
     by_customer = defaultdict(list)
     for conv in conversations:
-        by_customer[conv.customer_id].append(conv.started_at)
+        if conv.customer_id is not None:
+            by_customer[conv.customer_id].append(conv.started_at)
     for starts in by_customer.values():
         starts.sort()
     index = {}
     for conv in conversations:
+        if conv.customer_id is None:  # sin cliente identificado no hay recontacto que detectar
+            index[conv.id] = False
+            continue
         starts = by_customer[conv.customer_id]
         nxt = bisect_right(starts, conv.started_at)
         index[conv.id] = nxt < len(starts) and starts[nxt] <= conv.started_at + FCR_WINDOW

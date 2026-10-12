@@ -21,6 +21,8 @@ Para arrancar PostgreSQL y el servicio de ingesta, comprobar la conexión con Ge
 
 ## Procedimiento
 
+Atajo: `./scripts/dev.sh` ejecuta los pasos 1 a 3 (y la web) y lo para todo con Ctrl+C, incluidos el contenedor de PostgreSQL y Colima si lo arrancó él (ver el README, «Entorno local con un solo comando»). Los pasos manuales siguen siendo válidos:
+
 1. **PostgreSQL:** `docker compose up -d --wait`, desde la raíz.
 2. **Servicio de ingesta:** `cd backend && .venv/bin/uvicorn ingestion.main:app --port 8001`. Al arrancar:
    - aplica las migraciones pendientes;

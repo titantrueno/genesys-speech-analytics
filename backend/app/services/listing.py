@@ -13,11 +13,13 @@ SortOrder = Literal["asc", "desc"]
 SORT_KEYS = {
     "date": lambda c: c.started_at,
     "duration": lambda c: c.duration_s,
-    "sentiment": lambda c: c.analysis.sentiment,
+    # Sin sentimiento (conversación real sin dato de Genesys), al final en orden descendente (FE012).
+    "sentiment": lambda c: (c.analysis.sentiment is not None, c.analysis.sentiment or 0.0),
 }
 
 
 def list_item(conv: Conversation) -> dict:
+    genesys = conv.genesys
     return {
         "id": conv.id,
         "started_at": conv.started_at,
@@ -33,6 +35,12 @@ def list_item(conv: Conversation) -> dict:
         "resolution": conv.analysis.resolution,
         "csat": conv.analysis.csat,
         "duration_s": conv.duration_s,
+        # Genesys y análisis pendiente (FE012): vacíos en el dataset sintético.
+        "analysis_pending": conv.analysis.pending,
+        "ani": genesys.ani if genesys else None,
+        "external_tag": genesys.external_tag if genesys else None,
+        "contained_in_bot": genesys.contained_in_bot if genesys else None,
+        "transcript_quality": genesys.transcript_quality if genesys else None,
     }
 
 

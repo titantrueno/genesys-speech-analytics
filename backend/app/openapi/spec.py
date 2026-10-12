@@ -129,7 +129,8 @@ OPERATIONS: dict[tuple[str, str], Op] = {
     ("GET", "/api/conversations"): Op(
         "Listado de conversaciones", s.ConversationPage, "conversations:view",
         "Listado filtrado, paginado y ordenado. Los filtros `resolution`, `churn_risk`, `sentiment_lt`, `compliant` y "
-        "`repeat_contact` son los del drill-down: seleccionan el numerador de cada KPI.",
+        "`repeat_contact` son los del drill-down: seleccionan el numerador de cada KPI. `phone` (ANI, con o sin +34) y "
+        "`external_tag` buscan de forma exacta en las conversaciones reales (FE012).",
         errors=FILTERS_422),
     ("GET", "/api/conversations/{conversation_id}"): Op(
         "Detalle de una conversación", s.ConversationDetail, "conversations:view",

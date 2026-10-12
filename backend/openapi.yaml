@@ -547,6 +547,24 @@ paths:
           - type: boolean
           - type: 'null'
           title: Repeat Contact
+      - name: phone
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 30
+          - type: 'null'
+          title: Phone
+      - name: external_tag
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 200
+          - type: 'null'
+          title: External Tag
       - name: from
         in: query
         required: false
@@ -677,7 +695,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `conversations:view`. Listado filtrado, paginado y ordenado. Los filtros `resolution`, `churn_risk`,
-        `sentiment_lt`, `compliant` y `repeat_contact` son los del drill-down: seleccionan el numerador de cada KPI.'
+        `sentiment_lt`, `compliant` y `repeat_contact` son los del drill-down: seleccionan el numerador de cada KPI. `phone`
+        (ANI, con o sin +34) y `external_tag` buscan de forma exacta en las conversaciones reales (FE012).'
   /api/conversations/{conversation_id}:
     get:
       tags:
@@ -4647,6 +4666,11 @@ components:
           type: string
         period:
           $ref: '#/components/schemas/Period'
+        pending:
+          description: '`true` si hay conversaciones sin analizar: sus KPIs de análisis son `null` y el desglose por main
+            topic no tiene grupos.'
+          title: Pending
+          type: boolean
         items:
           items:
             $ref: '#/components/schemas/BreakdownItem'
@@ -4655,6 +4679,7 @@ components:
       required:
       - dimension
       - period
+      - pending
       - items
       title: Breakdown
       type: object
@@ -5061,20 +5086,30 @@ components:
           title: Duration S
           type: integer
         queue_id:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Queue Id
-          type: string
         queue:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Queue
-          type: string
         agent_id:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Agent Id
-          type: string
         agent:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Agent
-          type: string
         customer_id:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Customer Id
-          type: string
         turns:
           items:
             $ref: '#/components/schemas/Turn'
@@ -5084,8 +5119,10 @@ components:
           $ref: '#/components/schemas/Analysis'
           description: '`compliance` es el cumplimiento efectivo con los checks activos (`true`, `false` o `null` si no aplica).'
         main_topic_label:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Main Topic Label
-          type: string
         genesys:
           anyOf:
           - $ref: '#/components/schemas/GenesysInfo'
@@ -5125,43 +5162,92 @@ components:
           title: Channel
           type: string
         queue_id:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Queue Id
-          type: string
         queue:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Queue
-          type: string
         agent_id:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Agent Id
-          type: string
         agent:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Agent
-          type: string
         main_topic:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Main Topic
-          type: string
         main_topic_label:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Main Topic Label
-          type: string
         summary:
-          description: Enmascarado si `privacy.pii_masking` está activado.
+          description: Enmascarado si `privacy.pii_masking` está activado; vacío si el análisis está pendiente.
           title: Summary
           type: string
         sentiment:
+          anyOf:
+          - type: number
+          - type: 'null'
           title: Sentiment
-          type: number
         resolution:
-          enum:
-          - resuelta
-          - no_resuelta
-          - escalada
+          anyOf:
+          - enum:
+            - resuelta
+            - no_resuelta
+            - escalada
+            type: string
+          - type: 'null'
           title: Resolution
-          type: string
         csat:
+          anyOf:
+          - type: number
+          - type: 'null'
           title: Csat
-          type: number
         duration_s:
           title: Duration S
           type: integer
+        analysis_pending:
+          description: Conversación real cuyo análisis de la plataforma aún no existe (FE012).
+          title: Analysis Pending
+          type: boolean
+        ani:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Teléfono de origen; solo en conversaciones reales con teléfono.
+          title: Ani
+        external_tag:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: External Tag
+        contained_in_bot:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          description: Solo en conversaciones reales.
+          title: Contained In Bot
+        transcript_quality:
+          anyOf:
+          - enum:
+            - completa
+            - parcial
+            - sin_transcripcion
+            type: string
+          - type: 'null'
+          description: Solo en conversaciones reales.
+          title: Transcript Quality
       required:
       - id
       - started_at
@@ -5177,6 +5263,11 @@ components:
       - resolution
       - csat
       - duration_s
+      - analysis_pending
+      - ani
+      - external_tag
+      - contained_in_bot
+      - transcript_quality
       title: ConversationItem
       type: object
     ConversationPage:
@@ -8085,6 +8176,18 @@ components:
           - type: 'null'
           description: Según los umbrales; `null` sin umbrales.
           title: Status
+        pending:
+          description: '`true` si depende del análisis de la plataforma y las conversaciones reales aún no lo tienen: la UI
+            muestra «Sin datos · pendiente de análisis».'
+          title: Pending
+          type: boolean
+        based_on:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: Conversaciones sobre las que se calcula, en los KPIs que pueden usar solo una parte (AHT, sentimiento,
+            primera respuesta); `null` en el resto.
+          title: Based On
       required:
       - code
       - label
@@ -8096,6 +8199,8 @@ components:
       - delta_pct
       - target
       - status
+      - pending
+      - based_on
       title: SummaryKpi
       type: object
     TableResult:
@@ -8229,6 +8334,10 @@ components:
           type: string
         period:
           $ref: '#/components/schemas/Period'
+        pending:
+          description: '`true` si el KPI depende del análisis y aún está pendiente (puntos `null`).'
+          title: Pending
+          type: boolean
         points:
           items:
             $ref: '#/components/schemas/TimePoint'
@@ -8238,6 +8347,7 @@ components:
       - kpi
       - granularity
       - period
+      - pending
       - points
       title: Timeseries
       type: object

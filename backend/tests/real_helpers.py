@@ -33,3 +33,14 @@ def as_role(api, role: str):
     user = auth.get_store().find_by_email(f"{role}@bancohorizonte.demo")
     api.headers["Authorization"] = f"Bearer {auth.create_token(user)}"
     return api
+
+
+def real_id(short_id: str) -> str:
+    """Identificador `1CO` de una fixture de FE011 (v5 derivado del identificador de Genesys)."""
+    from app import ids
+    from ingestion.pipeline.normalize import platform_id
+    from tests.ingestion_helpers import fixture
+    return platform_id(ids.CONVERSATION, fixture(short_id).id)
+
+
+QS = {"from": "2026-10-01", "to": "2026-10-31"}

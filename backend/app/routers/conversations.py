@@ -27,7 +27,8 @@ def get_conversation(conversation_id: str) -> dict:
     if conv is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
     body = shown(conv).model_dump()
-    body["analysis"]["compliance"] = effective_compliance(conv)
+    # Sin analizar no hay cumplimiento que mostrar (un «no aplica» engañaría); la UI dice «Análisis pendiente».
+    body["analysis"]["compliance"] = {} if conv.analysis.pending else effective_compliance(conv)
     return {**body, "main_topic_label": topic_name(conv.analysis.main_topic)}
 
 

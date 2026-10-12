@@ -149,6 +149,10 @@ class SummaryKpi(Doc):
     delta_pct: float | None = Field(description="`null` si el anterior es 0 o nulo, o si la unidad es `índice`.")
     target: float | None
     status: Literal["verde", "ambar", "rojo"] | None = Field(description="Según los umbrales; `null` sin umbrales.")
+    pending: bool = Field(description="`true` si depende del análisis de la plataforma y las conversaciones reales aún "
+                                      "no lo tienen: la UI muestra «Sin datos · pendiente de análisis».")
+    based_on: int | None = Field(description="Conversaciones sobre las que se calcula, en los KPIs que pueden usar solo "
+                                             "una parte (AHT, sentimiento, primera respuesta); `null` en el resto.")
 
 
 class CheckRate(Doc):
@@ -175,6 +179,7 @@ class Timeseries(Doc):
     kpi: KpiCode
     granularity: Literal["day", "week"]
     period: Period
+    pending: bool = Field(description="`true` si el KPI depende del análisis y aún está pendiente (puntos `null`).")
     points: list[TimePoint]
 
 
@@ -203,6 +208,8 @@ class BreakdownItem(Doc):
 class Breakdown(Doc):
     dimension: Literal["main_topic", "channel", "queue", "agent"]
     period: Period
+    pending: bool = Field(description="`true` si hay conversaciones sin analizar: sus KPIs de análisis son `null` y el "
+                                      "desglose por main topic no tiene grupos.")
     items: list[BreakdownItem]
 
 
@@ -213,17 +220,24 @@ class ConversationItem(Doc):
     id: str
     started_at: datetime
     channel: Literal["voz", "chat"]
-    queue_id: str
-    queue: str
-    agent_id: str
-    agent: str
-    main_topic: str
-    main_topic_label: str
-    summary: str = Field(description="Enmascarado si `privacy.pii_masking` está activado.")
-    sentiment: float
-    resolution: Literal["resuelta", "no_resuelta", "escalada"]
-    csat: float
+    queue_id: str | None
+    queue: str | None
+    agent_id: str | None
+    agent: str | None
+    main_topic: str | None
+    main_topic_label: str | None
+    summary: str = Field(description="Enmascarado si `privacy.pii_masking` está activado; vacío si el análisis está "
+                                     "pendiente.")
+    sentiment: float | None
+    resolution: Literal["resuelta", "no_resuelta", "escalada"] | None
+    csat: float | None
     duration_s: int
+    analysis_pending: bool = Field(description="Conversación real cuyo análisis de la plataforma aún no existe (FE012).")
+    ani: str | None = Field(description="Teléfono de origen; solo en conversaciones reales con teléfono.")
+    external_tag: str | None
+    contained_in_bot: bool | None = Field(description="Solo en conversaciones reales.")
+    transcript_quality: Literal["completa", "parcial", "sin_transcripcion"] | None = Field(
+        description="Solo en conversaciones reales.")
 
 
 class ConversationPage(Doc):
@@ -239,15 +253,15 @@ class ConversationDetail(Doc):
     channel: Literal["voz", "chat"]
     started_at: datetime
     duration_s: int
-    queue_id: str
-    queue: str
-    agent_id: str
-    agent: str
-    customer_id: str
+    queue_id: str | None
+    queue: str | None
+    agent_id: str | None
+    agent: str | None
+    customer_id: str | None
     turns: list[Turn]
     analysis: Analysis = Field(description="`compliance` es el cumplimiento efectivo con los checks activos "
                                            "(`true`, `false` o `null` si no aplica).")
-    main_topic_label: str
+    main_topic_label: str | None
     genesys: GenesysInfo | None = Field(None, description="Analítica de Genesys; solo con el origen `real` (FE012).")
 
 

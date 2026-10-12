@@ -15,7 +15,20 @@ Plataforma web de analítica de conversaciones para la atención al cliente de u
 | `.devin/skills/` | Skills del ciclo `spec → plan → build → test → review → ship` y `vault`. |
 | `scripts/audit_vault.py` | Auditoría del vault. |
 
-## Arranque rápido
+## Entorno local con un solo comando
+
+```bash
+./scripts/dev.sh             # PostgreSQL (Docker/Colima) + ingesta + API + web
+./scripts/dev.sh --no-db     # solo API + web, sin Docker
+./scripts/dev.sh --reload    # uvicorn con --reload
+API_PORT=18000 INGESTION_PORT=18001 WEB_PORT=15173 ./scripts/dev.sh   # puertos propios
+```
+
+Por defecto: web en `:5173`, API en `:8000`, ingesta en `:8001`. El script comprueba antes que los puertos (y el 5432) estén libres y, si no, aborta sin lanzar nada; arranca Colima si el daemon no responde; crea el venv y hace `npm install` si faltan; espera a que cada servicio responda y escribe sus logs en `.dev-logs/` (ignorado por git).
+
+**Ctrl+C lo para todo**: cada servicio va en su propio grupo de procesos (se mata con sus hijos), se hace `docker compose stop` + `rm` del contenedor de PostgreSQL (el volumen `pgdata` se conserva) y se ejecuta `colima stop` solo si lo arrancó el propio script. Si un servicio muere, el script para el resto. Al terminar avisa si algún puerto sigue ocupado. Los tests con PostgreSQL de `ci.sh` dejan el contenedor levantado; `dev.sh` lo para al salir.
+
+## Arranque rápido (manual)
 
 Requisitos: Python 3.11+ y Node 20+.
 

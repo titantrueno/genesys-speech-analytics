@@ -13,6 +13,19 @@ from app.models import Conversation
 DEFAULT_PERIOD_DAYS = 30
 
 
+def phone_digits(value: str | None) -> str:
+    """Número sin espacios, guiones ni prefijo de España (`+34`, `0034`): «+34 675 075 376» y «675075376» coinciden."""
+    digits = "".join(ch for ch in (value or "") if ch.isdigit())
+    for prefix in ("0034", "34"):
+        if digits.startswith(prefix) and len(digits) == len(prefix) + 9:
+            return digits[len(prefix):]
+    return digits
+
+
+def same_phone(ani: str | None, wanted: str) -> bool:
+    return bool(ani) and phone_digits(ani) == phone_digits(wanted) != ""
+
+
 @dataclass
 class ConversationFilters:
     date_from: date
@@ -26,6 +39,8 @@ class ConversationFilters:
     sentiment_lt: float | None = None
     compliant: bool | None = None
     repeat_contact: bool | None = None
+    phone: str | None = None  # ANI exacto, con o sin prefijo +34 (FE012)
+    external_tag: str | None = None  # `externalTag` exacto (FE012)
 
     def matches(self, conv: Conversation, date_from: date | None = None, date_to: date | None = None,
                 zone: tzinfo | None = None) -> bool:
@@ -38,9 +53,16 @@ class ConversationFilters:
             and (not self.main_topics or conv.analysis.main_topic in self.main_topics)
             and (not self.resolutions or conv.analysis.resolution in self.resolutions)
             and (not self.churn_risks or conv.analysis.churn_risk in self.churn_risks)
-            and (self.sentiment_lt is None or conv.analysis.sentiment < self.sentiment_lt)
-            and (self.compliant is None or is_compliant(conv) == self.compliant)
-            and (self.repeat_contact is None or followup_index()[conv.id] == self.repeat_contact)
+            and (self.sentiment_lt is None
+                 or (conv.analysis.sentiment is not None and conv.analysis.sentiment < self.sentiment_lt))
+            # Un campo sin analizar no cumple ninguna condición (FE012, criterio 10).
+            and (self.compliant is None or (not conv.analysis.pending and is_compliant(conv) == self.compliant))
+            and (self.repeat_contact is None
+                 or (not conv.analysis.pending and followup_index()[conv.id] == self.repeat_contact))
+            and (self.phone is None or (conv.genesys is not None and same_phone(conv.genesys.ani, self.phone)))
+            and (self.external_tag is None
+                 or (conv.genesys is not None and (conv.genesys.external_tag or "").casefold()
+                     == self.external_tag.strip().casefold()))
         )
 
     def apply(self, convs, date_from: date | None = None, date_to: date | None = None) -> list[Conversation]:
@@ -85,10 +107,14 @@ def conversation_list_filters(
     sentiment_lt: float | None = Query(None, ge=-1, le=1),
     compliant: bool | None = None,
     repeat_contact: bool | None = None,
+    phone: str | None = Query(None, max_length=30),
+    external_tag: str | None = Query(None, max_length=200),
 ) -> ConversationFilters:
     base.resolutions = list(resolution)
     base.churn_risks = list(churn_risk)
     base.sentiment_lt = sentiment_lt
     base.compliant = compliant
     base.repeat_contact = repeat_contact
+    base.phone = phone.strip() if phone and phone.strip() else None
+    base.external_tag = external_tag if external_tag and external_tag.strip() else None
     return base

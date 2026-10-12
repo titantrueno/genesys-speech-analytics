@@ -9,7 +9,8 @@ from app.config.kpis import DASHBOARDS
 from app.config.store import current_zone, get_config, local_day, topic_name
 from app.data.store import followup_index, get_dataset
 from app.services.filters import ConversationFilters, conversation_filters
-from app.services.kpis import KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta, delta_pct, round_value
+from app.services.kpis import (ANALYSIS_KPIS, KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta,
+                               delta_pct, kpi_bases, pending_analysis, round_value)
 
 router = APIRouter(prefix="/api/metrics", tags=["metrics"],
                    dependencies=[Depends(require_permission("dashboards:view"))])
@@ -21,14 +22,14 @@ KpiCode = Literal[
 DIMENSIONS = {
     "main_topic": lambda c: c.analysis.main_topic,
     "channel": lambda c: c.channel,
-    "queue": lambda c: c.queue_id,
-    "agent": lambda c: c.agent_id,
+    "queue": lambda c: c.queue_id or "",
+    "agent": lambda c: c.agent_id or "",
 }
 LABELS = {
     "main_topic": lambda c: topic_name(c.analysis.main_topic),
     "channel": lambda c: c.channel,
-    "queue": lambda c: c.queue,
-    "agent": lambda c: c.agent,
+    "queue": lambda c: c.queue or "Sin cola",
+    "agent": lambda c: c.agent or "Sin agente",
 }
 
 
@@ -47,6 +48,7 @@ def summary(
     prev_from, prev_to = filters.previous_period()
     current_convs = filters.apply(dataset)
     current = compute_kpis(current_convs, followups, rounded=False)
+    pending, bases = pending_analysis(current_convs), kpi_bases(current_convs)
     previous = compute_kpis(filters.apply(dataset, prev_from, prev_to), followups, rounded=False)
     return {
         "period": _period(filters.date_from, filters.date_to),
@@ -54,6 +56,9 @@ def summary(
         "kpis": [
             {"code": k.code, "label": k.label, "unit": k.unit, "higher_is_better": k.higher_is_better,
              "value": round_value(current[k.code]), "previous": round_value(previous[k.code]),
+             # Sin analizar (FE012): «Sin datos · pendiente de análisis» en lugar de 0. `based_on`: sobre cuántas
+             # conversaciones se calcula, cuando no son todas.
+             "pending": pending and k.code in ANALYSIS_KPIS, "based_on": bases.get(k.code),
              "delta": delta(current[k.code], previous[k.code]),
              "delta_pct": delta_pct(current[k.code], previous[k.code], k.unit),
              "target": targets[k.code].target,
@@ -89,7 +94,7 @@ def timeseries(
         points.append({"period_start": start.isoformat(), "period_end": end.isoformat(),
                        "value": compute_kpi(kpi, bucket, followups)})
     return {"kpi": kpi, "granularity": granularity, "period": _period(filters.date_from, filters.date_to),
-            "points": points}
+            "pending": pending_analysis(convs) and kpi in ANALYSIS_KPIS, "points": points}
 
 
 @router.get("/breakdown")
@@ -98,6 +103,10 @@ def breakdown(
     filters: ConversationFilters = Depends(conversation_filters),
 ) -> dict:
     convs, followups = filters.apply(get_dataset()), followup_index()
+    pending = pending_analysis(convs)
+    if dimension == "main_topic" and pending:  # sin main topic no hay grupos que mostrar (FE012)
+        return {"dimension": dimension, "period": _period(filters.date_from, filters.date_to), "pending": True,
+                "items": []}
     groups = defaultdict(list)
     for c in convs:
         groups[DIMENSIONS[dimension](c)].append(c)
@@ -106,4 +115,5 @@ def breakdown(
         for key, group in groups.items()
     ]
     items.sort(key=lambda i: (-i["kpis"]["volume"], i["label"]))
-    return {"dimension": dimension, "period": _period(filters.date_from, filters.date_to), "items": items}
+    return {"dimension": dimension, "period": _period(filters.date_from, filters.date_to), "pending": pending,
+            "items": items}

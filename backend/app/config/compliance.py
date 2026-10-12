@@ -20,8 +20,8 @@ def _agent_text(conversation_id: str) -> str:
 
 
 def evaluate(check: Check, conv: Conversation) -> bool | None:
-    if not check.applies_to(conv.channel):
-        return None
+    if conv.analysis.pending or not check.applies_to(conv.channel):
+        return None  # sin analizar (FE012) o un check que no aplica al canal
     if check.builtin:
         return conv.analysis.compliance.get(check.code)
     text = _agent_text(conv.id) if conv.id in conversation_index() else \
