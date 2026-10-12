@@ -21,7 +21,7 @@
 | Front (`npm test`, lint, build, `tsc -b`) | **383 passed** (35 ficheros); lint sin avisos |
 | OpenAPI | Al día y válido (`PUT /api/config/sources` y los campos nuevos documentados) |
 | `pip-audit` / `npm audit --audit-level=high` | Sin vulnerabilidades / 0 «high»; siguen las 4 «moderate» de `swagger-ui-react` (ADR-002) |
-| Mutaciones | **31 de 31 detectadas** (34 con las 3 supervivientes ya cubiertas): 21 de backend y 10 de front sobre el repositorio y su testigo, el periodo por defecto, el teléfono, los KPIs pendientes, el motor de «vacío», el enmascarado, el índice, las variables de prompts, los permisos, la transferencia del chat, los mensajes no entregados, los tiles pendientes, el selector y los avisos de validación |
+| Mutaciones | **31 de 31 detectadas** (34 con las 3 supervivientes ya cubiertas): 20 de backend y 11 de front sobre el repositorio y su testigo, el periodo por defecto, el teléfono, los KPIs pendientes, el motor de «vacío», el enmascarado, el índice, las variables de prompts, los permisos, la transferencia del chat, los mensajes no entregados, los tiles pendientes, el selector y los avisos de validación |
 | Rendimiento | 12 endpoints con 1.000 conversaciones por debajo de 500 ms en régimen estable |
 | Contrato | Más de 150 llamadas (todos los endpoints y cada operador de cada campo del explorador) sin `500` con datos degradados |
 

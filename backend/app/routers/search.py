@@ -100,8 +100,13 @@ def similar(conversation_id: str, engine: SearchEngine = Depends(get_search_engi
     if conv is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
     index = conversation_index()
+    try:
+        similar_ids = engine.similar(conv.id, SIMILAR_COUNT)
+    except KeyError:
+        # El índice que sirve aún no conoce esta conversación (acaba de descargarse y se está reconstruyendo, FE012).
+        similar_ids = []
     return {
         "conversation_id": conv.id,
         "results": [{"conversation_id": cid, "score": round(score, 4), "conversation": list_item(index[cid])}
-                    for cid, score in engine.similar(conv.id, SIMILAR_COUNT) if cid in index],
+                    for cid, score in similar_ids if cid in index],
     }

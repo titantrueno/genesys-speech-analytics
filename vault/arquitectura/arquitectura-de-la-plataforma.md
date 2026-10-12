@@ -141,6 +141,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - `ConversationRepository` (`backend/app/data/repository.py`) tiene dos implementaciones: `SyntheticRepository` (el generador de siempre) y `RealRepository` (`app/data/real.py`, PostgreSQL de solo lectura con `DATABASE_URL`). `data/store.py` es la fachada que usan los servicios.
 - **Hecho:** el testigo de la base se consulta una vez por petición (middleware `begin_request`) y, si cambia, se recarga la instantánea. Si PostgreSQL no responde, las secciones de datos devuelven `503` «Los datos reales no están disponibles»; Configuración sigue sirviendo para volver a `sintetico`.
 - **Análisis pendiente:** una conversación real tiene `analysis.pending = true`. Los KPIs que dependen del análisis (resolución, escalado, FCR, CSAT, esfuerzo, cumplimiento, riesgo de abandono) y el desglose por main topic salen como pendientes; volumen, AHT (`handle_s` de las atendidas por un agente), sentimiento y % de negativas se calculan con Genesys, con `based_on`.
+- **Pendiente para producción:** la API se conecta con el mismo usuario que el servicio de ingesta; la solo lectura se impone en la sesión, no con un rol de base de datos. Conviene un rol `SELECT` propio ([revisión de FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/REVIEW.md)).
 - Los cachés derivados del dataset se indexan por origen y versión (`cached_by_version`) o por identidad del objeto, nunca por identificador solo.
 
 ### Rendimiento

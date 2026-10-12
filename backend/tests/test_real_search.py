@@ -1,4 +1,6 @@
 """Búsqueda y privacidad con el origen `real` (FE012, T5; criterios 11 y 12)."""
+from datetime import timedelta
+
 import psycopg
 import pytest
 
@@ -140,3 +142,19 @@ def test_the_phrases_behind_genesys_topics_are_masked(real_api, pg_url):
     topics = real_api.get(f"/api/conversations/{real_id('7b94988a')}").json()["genesys"]["topics"]
     assert topics and all("ana.perez@example.com" not in (t["phrase"] or "") for t in topics)
     assert any("[EMAIL]" in (t["phrase"] or "") for t in topics)
+
+
+def test_similar_for_a_conversation_the_serving_index_does_not_know_yet_is_empty_not_a_500(real_api, pg_url):
+    """Revisión: tras una descarga, el índice anterior sigue sirviendo y aún no conoce las conversaciones nuevas."""
+    from tests.ingestion_helpers import DAY_START, fixture, spread
+    from tests.real_helpers import seed_real
+    search(real_api, "hola")  # construye el índice con las conversaciones actuales
+    new = spread([fixture("7b94988a")], 1, DAY_START + timedelta(hours=1), 1)[0]
+    seed_real(pg_url, [new])
+    from app import ids
+    from ingestion.pipeline.normalize import platform_id
+    new_id = platform_id(ids.CONVERSATION, new.id)
+    response = real_api.get(f"/api/search/similar/{new_id}")
+    assert response.status_code == 200, response.text
+    assert response.json()["results"] == []
+    search_index.wait()
