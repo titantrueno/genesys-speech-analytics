@@ -87,6 +87,8 @@ export interface Issue {
   code: string
   message: string
   node_id: string | null
+  /** `warning` avisa sin impedir la ejecución (FE012); sin él, es un error. */
+  severity?: 'error' | 'warning'
 }
 
 export interface Option<T extends string = string> { value: T; label: string }

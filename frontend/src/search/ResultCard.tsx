@@ -32,7 +32,7 @@ export function ResultCard({ conversation: conv, score, href, turns, highlights 
 }) {
   const { onClick, onAuxClick, linkState } = useRowNavigation(href)
   const ChannelIcon = conv.channel === 'voz' ? Phone : MessageSquareText
-  const speaker = (s: SearchResult['turns'][number]['speaker']) => s === 'agente' ? conv.agent : s === 'bot' ? 'Asistente virtual' : 'Cliente'
+  const speaker = (s: SearchResult['turns'][number]['speaker']) => s === 'agente' ? conv.agent ?? 'Agente' : s === 'bot' ? 'Asistente virtual' : 'Cliente'
 
   return (
     <article onClick={onClick} onAuxClick={onAuxClick}
@@ -44,7 +44,9 @@ export function ResultCard({ conversation: conv, score, href, turns, highlights 
           </Link>
           <span className="inline-flex items-center gap-1.5"><ChannelIcon className="size-3.5 text-slate-400" aria-hidden />{CHANNEL_LABELS[conv.channel]}</span>
           <span>{conv.queue}</span>
-          <span className="rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{conv.main_topic_label}</span>
+          {conv.main_topic_label && (
+            <span className="rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{conv.main_topic_label}</span>
+          )}
           <SentimentValue value={conv.sentiment} />
         </div>
         <ScoreBar score={score} />

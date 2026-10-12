@@ -42,6 +42,10 @@ export interface QuerySchema {
 
 export type NodePath = number[]
 
+/** Operadores sin valor, que el origen real añade a todos los campos (FE012): un campo sin analizar está vacío. */
+export const EMPTY_OPERATORS = ['is_empty', 'is_not_empty']
+export const isEmptyOperator = (operator: string) => EMPTY_OPERATORS.includes(operator)
+
 export const DEFAULT_QUERY: ExplorerQuery = { root: { op: 'and', conditions: [] } }
 
 export function isGroup(node: QueryNode): node is Group {
@@ -100,7 +104,7 @@ function conditionText(cond: Condition, schema: QuerySchema): string {
   const field = schema.fields.find((f) => f.key === cond.field)
   const label = `${field?.label ?? cond.field}${cond.speaker ? ` (${cond.speaker})` : ''}`
   const operator = field?.operators.find((o) => o.key === cond.operator)?.label ?? cond.operator
-  if (field?.type === 'check') return `${label} ${operator}`
+  if (field?.type === 'check' || isEmptyOperator(cond.operator)) return `${label} ${operator}`
   if (field?.type === 'text') return `${label} ${operator} «${cond.value ?? ''}»`
   if (cond.operator === 'between' && Array.isArray(cond.value)) {
     return `${label} ${operator} ${valueLabel(field, cond.value[0])} y ${valueLabel(field, cond.value[1])}`
@@ -208,6 +212,9 @@ function withValue(cond: Condition, value: ConditionValue): Condition {
 }
 
 export function changeOperator(cond: Condition, operator: string, field: FieldSchema): Condition {
+  // «Está vacío» no lleva valor; al volver a un operador con valor se parte del valor por defecto del campo.
+  if (isEmptyOperator(operator)) return withValue({ ...cond, operator }, undefined)
+  if (isEmptyOperator(cond.operator)) return withValue({ ...cond, operator }, defaultValue(field, operator))
   const multiple = (op: string) => op === 'in' || op === 'not_in'
   let value = cond.value
   if (field.type === 'categorical' && multiple(operator) !== multiple(cond.operator)) {
@@ -220,7 +227,7 @@ export function changeOperator(cond: Condition, operator: string, field: FieldSc
 }
 
 export function isComplete(cond: Condition, field: FieldSchema | undefined): boolean {
-  if (!field) return true
+  if (!field || isEmptyOperator(cond.operator)) return true
   if (field.type === 'text') return typeof cond.value === 'string' && cond.value.trim() !== ''
   if (field.type === 'numeric') {
     const values = Array.isArray(cond.value) ? cond.value : [cond.value]

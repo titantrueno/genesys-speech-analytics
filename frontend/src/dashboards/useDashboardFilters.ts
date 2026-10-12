@@ -6,7 +6,7 @@ export type FilterChanges = Record<string, string | string[] | undefined>
 
 export const FILTER_KEYS = [
   'from', 'to', 'channel', 'queue', 'agent', 'main_topic',
-  'resolution', 'churn_risk', 'sentiment_lt', 'compliant', 'repeat_contact',
+  'resolution', 'churn_risk', 'sentiment_lt', 'compliant', 'repeat_contact', 'phone', 'external_tag',
 ] as const
 
 export const PERIOD_PRESETS = [7, 30, 90] as const

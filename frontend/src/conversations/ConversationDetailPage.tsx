@@ -7,6 +7,8 @@ import { useAuth } from '../auth/useAuth'
 import { LoadingScreen } from '../layout/LoadingScreen'
 import { formatDateTimeLong, formatDuration } from '../lib/format'
 import { AnalysisPanel } from './AnalysisPanel'
+import { PendingText } from './badges'
+import { GenesysPanel } from './GenesysPanel'
 import { ChatTranscript } from './ChatTranscript'
 import { CHANNEL_LABELS } from './labels'
 
@@ -104,8 +106,8 @@ export function ConversationDetailPage() {
                 {conversation.channel === 'voz' && <span className="font-normal text-slate-500">(transcripción)</span>}
               </span>
               <span>{formatDateTimeLong(conversation.started_at)}</span>
-              <span>{conversation.queue}</span>
-              <span>{conversation.agent}</span>
+              <span>{conversation.queue ?? 'Sin cola'}</span>
+              <span>{conversation.agent ?? 'Sin agente'}</span>
               <span>{formatDuration(conversation.duration_s)}</span>
             </p>
           </div>
@@ -116,17 +118,25 @@ export function ConversationDetailPage() {
                 <ScanSearch className="size-4" aria-hidden />Buscar conversaciones similares
               </Link>
             )}
-            <span className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white">{conversation.main_topic_label}</span>
+            {conversation.main_topic_label
+              ? <span className="rounded-lg bg-brand-600 px-3 py-1.5 text-sm font-semibold text-white">{conversation.main_topic_label}</span>
+              : <span className="rounded-lg border border-dashed border-slate-300 px-3 py-1.5"><PendingText className="text-sm" /></span>}
           </div>
         </div>
-        <p className="mt-4 text-sm leading-relaxed text-slate-700"><span className="font-medium text-slate-900">Summary. </span>{conversation.analysis.summary}</p>
+        <p className="mt-4 text-sm leading-relaxed text-slate-700">
+          <span className="font-medium text-slate-900">Summary. </span>
+          {conversation.analysis.summary || <PendingText className="text-sm" />}
+        </p>
       </section>
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div ref={chatRef} data-testid="chat-scroll"
           className="relative max-h-[calc(100vh-17rem)] min-h-96 overflow-y-auto rounded-xl border border-slate-200 bg-[#efeae2]">
           <ChatTranscript conversation={conversation} activeTurn={activeTurn} registerTurn={registerTurn} />
         </div>
-        <AnalysisPanel conversation={conversation} activeTurn={activeTurn} onSelectTurn={selectTurn} />
+        <div className="space-y-4">
+          <AnalysisPanel conversation={conversation} activeTurn={activeTurn} onSelectTurn={selectTurn} />
+          <GenesysPanel conversation={conversation} onSelectTurn={selectTurn} />
+        </div>
       </div>
     </div>
   )

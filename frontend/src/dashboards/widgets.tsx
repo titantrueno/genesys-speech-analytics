@@ -5,7 +5,7 @@ import { ChartCard, DataTable, LoadError } from './ChartCard'
 import { RankedBars, SplitBar, TimeseriesChart } from './charts'
 import { dimensionDrill, drillDownHref, KPI_DRILL } from './drilldown'
 import { KpiTile } from './KpiTile'
-import { KPI_META } from './kpiMeta'
+import { ANALYSIS_KPIS, KPI_META } from './kpiMeta'
 import { useDashboardFilters } from './useDashboardFilters'
 
 const CHANNEL_COLORS: Record<string, { label: string; color: string }> = {
@@ -53,7 +53,7 @@ export function TimeseriesWidget({ kpi, title }: { kpi: KpiCode; title: string }
   )
   return (
     <ChartCard title={title} subtitle={granularity === 'day' ? 'Por día' : 'Por semana'} actions={toggle} loading={isFetching} error={isError}
-      className="lg:col-span-2"
+      pending={data?.pending && ANALYSIS_KPIS.has(kpi)} className="lg:col-span-2"
       table={<DataTable caption={title} columns={[granularity === 'day' ? 'Día' : 'Semana', KPI_META[kpi].short]}
         rows={points.map((p) => [
           <Link key="period" to={hrefFor(p)} className="text-brand-700 hover:underline">
@@ -79,6 +79,7 @@ export function BreakdownBars({ title, dimension, kpi, order = 'desc', diverging
   const hrefFor = (item: { key: string }) => drillDownHref(filters, KPI_DRILL[kpi], dimensionDrill(dimension, item.key))
   return (
     <ChartCard title={title} subtitle={subtitle} loading={isFetching} error={isError}
+      pending={data?.pending && (ANALYSIS_KPIS.has(kpi) || dimension === 'main_topic')}
       table={<DataTable caption={title} columns={['', KPI_META[kpi].short]}
         rows={items.map((i) => [<Link key="label" to={hrefFor(i)} className="text-brand-700 hover:underline">{i.label}</Link>, format(i.value)])} />}>
       <RankedBars label={title} items={items} format={format} diverging={diverging} hrefFor={hrefFor}
@@ -107,8 +108,10 @@ export function ComplianceChecks() {
   const { data, isFetching, isError } = useSummary(filters)
   const items = (data?.compliance_by_check ?? []).map((c) => ({ key: c.code, label: c.label, value: c.value }))
   const format = (v: number | null) => formatKpi(v, '%')
+  const pending = data?.kpis.find((k) => k.code === 'compliance_rate')?.pending
   return (
     <ChartCard title="Cumplimiento por check" subtitle="% de conversaciones en las que aplica y se cumple" loading={isFetching} error={isError}
+      pending={pending}
       table={<DataTable caption="Cumplimiento por check" columns={['Check', 'Cumplimiento']} rows={items.map((i) => [i.label, format(i.value)])} />}>
       <RankedBars label="Cumplimiento por check" items={items} format={format} maxValue={100} />
     </ChartCard>
@@ -119,11 +122,12 @@ export function BreakdownTable({ title, dimension, codes }: { title: string; dim
   const { filters } = useDashboardFilters()
   const { data, isFetching, isError } = useBreakdown(dimension, filters)
   return (
-    <ChartCard title={title} loading={isFetching} error={isError} className="lg:col-span-2">
+    <ChartCard title={title} loading={isFetching} error={isError} pending={data?.pending && dimension === 'main_topic'}
+      className="lg:col-span-2">
       <DataTable caption={title} columns={['', ...codes.map((c) => KPI_META[c].short)]}
         rows={(data?.items ?? []).map((i) => [
           <Link key="label" to={drillDownHref(filters, dimensionDrill(dimension, i.key))} className="text-brand-700 hover:underline">{i.label}</Link>,
-          ...codes.map((c) => formatKpi(i.kpis[c], KPI_META[c].unit)),
+          ...codes.map((c) => (data?.pending && ANALYSIS_KPIS.has(c) ? 'Pendiente de análisis' : formatKpi(i.kpis[c], KPI_META[c].unit))),
         ])} />
     </ChartCard>
   )

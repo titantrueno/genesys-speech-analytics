@@ -131,6 +131,7 @@ class CatalogTopic(Doc):
 
 class Catalog(Doc):
     reference_date: date = Field(description="Fecha de referencia del dataset; el periodo por defecto acaba el día anterior.")
+    origin: Literal["sintetico", "real"] = Field(description="Origen de datos activo (FE012).")
     channels: list[CodeLabel]
     queues: list[CatalogQueue]
     agents: list[CatalogAgent]

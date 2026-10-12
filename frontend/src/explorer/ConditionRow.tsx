@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { useState } from 'react'
 import { MultiSelect } from '../components/MultiSelect'
 import { useSuggestions } from './api'
-import { changeOperator, isComplete, newCondition, type Condition, type FieldSchema, type QuerySchema, type Speaker } from './queryModel'
+import { changeOperator, isComplete, isEmptyOperator, newCondition, type Condition, type FieldSchema, type QuerySchema, type Speaker } from './queryModel'
 
 const control = 'h-9 rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700'
 
@@ -61,6 +61,7 @@ interface Props {
 export function ConditionRow({ label, cond, schema, from, to, error, onChange, onRemove }: Props) {
   const field = schema.fields.find((f) => f.key === cond.field)
   const setValue = (value: Condition['value']) => onChange({ ...cond, value })
+  const hasValue = !isEmptyOperator(cond.operator)
 
   return (
     <div role="group" aria-label={`Condición ${label}`} className="rounded-lg border border-slate-200 bg-white p-2.5">
@@ -83,8 +84,8 @@ export function ConditionRow({ label, cond, schema, from, to, error, onChange, o
           onChange={(e) => field && onChange(changeOperator(cond, e.target.value, field))}>
           {field?.operators.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
         </select>
-        {field?.type === 'categorical' && <CategoricalValue cond={cond} field={field} from={from} to={to} onChange={setValue} />}
-        {field?.type === 'numeric' && cond.operator === 'between' && (
+        {hasValue && field?.type === 'categorical' && <CategoricalValue cond={cond} field={field} from={from} to={to} onChange={setValue} />}
+        {hasValue && field?.type === 'numeric' && cond.operator === 'between' && (
           <>
             <NumberInput label="Mínimo" value={(cond.value as number[] | undefined)?.[0]} min={field.min} max={field.max}
               onChange={(v) => setValue([v as number, (cond.value as number[] | undefined)?.[1] as number])} />
@@ -93,14 +94,14 @@ export function ConditionRow({ label, cond, schema, from, to, error, onChange, o
               onChange={(v) => setValue([(cond.value as number[] | undefined)?.[0] as number, v as number])} />
           </>
         )}
-        {field?.type === 'numeric' && cond.operator !== 'between' && (
+        {hasValue && field?.type === 'numeric' && cond.operator !== 'between' && (
           <NumberInput label="Valor" value={cond.value} min={field.min} max={field.max} onChange={setValue} />
         )}
-        {field?.type === 'text' && (
+        {hasValue && field?.type === 'text' && (
           <input type="text" aria-label="Valor" className={`${control} min-w-56 flex-1`} value={String(cond.value ?? '')}
             placeholder="Texto a buscar" onChange={(e) => setValue(e.target.value)} />
         )}
-        {field?.type === 'boolean' && (
+        {hasValue && field?.type === 'boolean' && (
           <select aria-label="Valor" className={control} value={String(cond.value ?? true)} onChange={(e) => setValue(e.target.value === 'true')}>
             <option value="true">Sí</option>
             <option value="false">No</option>

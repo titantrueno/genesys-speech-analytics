@@ -70,7 +70,8 @@ def suggest(
     for conv in get_dataset():
         if date_from <= local_day(conv.started_at, zone) <= date_to:
             value = fdef.extract(conv)
-            counts.update(set(value) if fdef.multi_valued else [value])
+            # Un campo sin valor (sin cola, sin analizar) no es una sugerencia (FE012).
+            counts.update(set(value) if fdef.multi_valued else [] if value is None else [value])
     labels = dict(fdef.values)
     values = [{"value": v, "label": labels.get(v, v), "count": n} for v, n in counts.items()]
     values.sort(key=lambda item: (-item["count"], item["label"]))

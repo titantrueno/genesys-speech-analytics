@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import type { ConversationListItem, SortKey, SortOrder } from '../api/conversations'
 import { formatDateTime, formatDecimal, formatDuration, shortId } from '../lib/format'
 import { CHANNEL_LABELS } from './labels'
-import { ResolutionBadge, SentimentValue } from './badges'
+import { PendingText, ResolutionBadge, SentimentValue } from './badges'
 import type { SortState } from './sorting'
 import { useRowNavigation } from './useRowNavigation'
 
@@ -30,7 +30,14 @@ function SortHeader({ label, sortKey, query, onSort }: {
   )
 }
 
-function Row({ item }: { item: ConversationListItem }) {
+const QUALITY_LABELS = { completa: 'Completa', parcial: 'Parcial', sin_transcripcion: 'Sin transcripción' } as const
+
+/** Las columnas de Genesys solo existen con conversaciones reales (FE012). */
+function hasGenesysColumns(items: ConversationListItem[]): boolean {
+  return items.some((item) => Boolean(item.transcript_quality))
+}
+
+function Row({ item, genesys }: { item: ConversationListItem; genesys: boolean }) {
   const href = `/conversaciones/${item.id}`
   const { onClick, onAuxClick, linkState } = useRowNavigation(href)
   const ChannelIcon = item.channel === 'voz' ? Phone : MessageSquareText
@@ -46,18 +53,34 @@ function Row({ item }: { item: ConversationListItem }) {
       <td className="px-2.5 py-2.5 whitespace-nowrap">
         <span className="inline-flex items-center gap-1.5 text-slate-700"><ChannelIcon className="size-3.5 text-slate-400" aria-hidden />{CHANNEL_LABELS[item.channel]}</span>
       </td>
-      <td className="px-2.5 py-2.5 text-slate-700">{item.queue}</td>
-      <td className="px-2.5 py-2.5 text-slate-700">{item.agent}</td>
+      <td className="px-2.5 py-2.5 text-slate-700">{item.queue ?? '—'}</td>
+      <td className="px-2.5 py-2.5 text-slate-700">{item.agent ?? '—'}</td>
+      {genesys && (
+        <>
+          <td className="px-2.5 py-2.5 whitespace-nowrap text-slate-700 tabular-nums">{item.ani ?? '—'}</td>
+          <td className="px-2.5 py-2.5 text-slate-700">{item.external_tag ?? '—'}</td>
+          <td className="px-2.5 py-2.5 whitespace-nowrap text-slate-700">
+            {item.contained_in_bot === null ? '—' : item.contained_in_bot ? 'Contenida en el asistente' : 'Derivada'}
+          </td>
+          <td className="px-2.5 py-2.5 whitespace-nowrap text-slate-700">
+            {item.transcript_quality ? QUALITY_LABELS[item.transcript_quality] : '—'}
+          </td>
+        </>
+      )}
       <td className="px-2.5 py-2.5">
-        <span className="inline-block rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{item.main_topic_label}</span>
+        {item.main_topic_label
+          ? <span className="inline-block rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{item.main_topic_label}</span>
+          : <PendingText />}
       </td>
       <td className="min-w-56 px-2.5 py-2.5 text-slate-600">
-        <span title={item.summary} className="line-clamp-2">{firstSentence(item.summary)}</span>
+        {item.summary
+          ? <span title={item.summary} className="line-clamp-2">{firstSentence(item.summary)}</span>
+          : <PendingText />}
       </td>
       <td className="px-2.5 py-2.5 text-right whitespace-nowrap text-slate-700 tabular-nums">{formatDuration(item.duration_s)}</td>
       <td className="px-2.5 py-2.5 whitespace-nowrap"><SentimentValue value={item.sentiment} /></td>
       <td className="px-2.5 py-2.5"><ResolutionBadge resolution={item.resolution} /></td>
-      <td className="px-2.5 py-2.5 text-right text-slate-700 tabular-nums">{formatDecimal(item.csat, 2)}</td>
+      <td className="px-2.5 py-2.5 text-right text-slate-700 tabular-nums">{item.csat === null ? '—' : formatDecimal(item.csat, 2)}</td>
     </tr>
   )
 }
@@ -71,6 +94,7 @@ export function ConversationTable({ items, sort, order, onSort, dimmed, empty }:
   empty?: ReactNode
 }) {
   const query = { sort, order }
+  const genesys = hasGenesysColumns(items)
   return (
     <div className={`overflow-x-auto rounded-xl border border-slate-200 bg-white transition-opacity ${dimmed ? 'opacity-60' : ''}`}>
       <table aria-label="Conversaciones" className="w-full text-sm">
@@ -80,6 +104,14 @@ export function ConversationTable({ items, sort, order, onSort, dimmed, empty }:
             <th scope="col" className="px-2.5 py-2 font-medium">Canal</th>
             <th scope="col" className="px-2.5 py-2 font-medium">Cola</th>
             <th scope="col" className="px-2.5 py-2 font-medium">Agente</th>
+            {genesys && (
+              <>
+                <th scope="col" className="px-2.5 py-2 font-medium">ANI</th>
+                <th scope="col" className="px-2.5 py-2 font-medium">externalTag</th>
+                <th scope="col" className="px-2.5 py-2 font-medium">Contención</th>
+                <th scope="col" className="px-2.5 py-2 font-medium">Transcripción</th>
+              </>
+            )}
             <th scope="col" className="px-2.5 py-2 font-medium">Main topic</th>
             <th scope="col" className="px-2.5 py-2 font-medium">Summary</th>
             <SortHeader label="Duración" sortKey="duration" query={query} onSort={onSort} />
@@ -88,7 +120,7 @@ export function ConversationTable({ items, sort, order, onSort, dimmed, empty }:
             <th scope="col" className="px-2.5 py-2 text-right font-medium">CSAT</th>
           </tr>
         </thead>
-        <tbody>{items.map((item) => <Row key={item.id} item={item} />)}</tbody>
+        <tbody>{items.map((item) => <Row key={item.id} item={item} genesys={genesys} />)}</tbody>
       </table>
       {items.length === 0 && empty}
     </div>

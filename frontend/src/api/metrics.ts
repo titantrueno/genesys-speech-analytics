@@ -23,6 +23,10 @@ export interface KpiSummary {
   /** Objetivo y estado según los umbrales de Configuración › KPIs (FE005); `null` si el KPI no tiene umbrales. */
   target?: number | null
   status?: 'verde' | 'ambar' | 'rojo' | null
+  /** Depende del análisis y las conversaciones reales aún no lo tienen: «Sin datos · pendiente de análisis» (FE012). */
+  pending?: boolean
+  /** Conversaciones sobre las que se calcula, cuando no son todas (AHT, sentimiento, primera respuesta). */
+  based_on?: number | null
 }
 
 export interface SummaryResponse {
@@ -36,17 +40,21 @@ export interface TimeseriesResponse {
   kpi: KpiCode
   granularity: Granularity
   period: Period
+  pending?: boolean
   points: Array<{ period_start: string; period_end: string; value: number | null }>
 }
 
 export interface BreakdownResponse {
   dimension: Dimension
   period: Period
+  pending?: boolean
   items: Array<{ key: string; label: string; kpis: KpiValues }>
 }
 
 export interface Catalog {
   reference_date: string
+  /** Origen de datos activo (FE012). */
+  origin?: 'sintetico' | 'real'
   channels: Array<{ code: string; label: string }>
   queues: Array<{ id: string; name: string }>
   agents: Array<{ id: string; name: string; queue_id: string; queue: string }>

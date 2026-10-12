@@ -50,6 +50,9 @@ function ValidationPanel({ issues, loading, nodes, onSelect, onClose }: {
   issues: Issue[] | undefined; loading: boolean; nodes: CanvasNode[]; onSelect: (id: string) => void; onClose: () => void
 }) {
   const names = useNodeNames(nodes)
+  // Un aviso no impide ejecutar el flujo (FE012): se muestra aparte y no marca el nodo como erróneo.
+  const errors = (issues ?? []).filter((issue) => issue.severity !== 'warning')
+  const warnings = (issues ?? []).filter((issue) => issue.severity === 'warning')
   return (
     <section aria-label="Validación" className="rounded-xl border border-slate-200 bg-white p-3">
       <header className="mb-2 flex items-center justify-between">
@@ -59,14 +62,27 @@ function ValidationPanel({ issues, loading, nodes, onSelect, onClose }: {
         </button>
       </header>
       {!issues && loading && <p role="status" className="text-sm text-slate-500">Validando…</p>}
-      {issues && issues.length === 0 && (
+      {issues && errors.length === 0 && (
         <p className="inline-flex items-center gap-1.5 text-sm text-[var(--status-good-text)]">
           <CheckCircle2 className="size-4" aria-hidden />El flujo es válido.
         </p>
       )}
-      {issues && issues.length > 0 && (
+      {warnings.length > 0 && (
+        <ul aria-label="Avisos de validación" className="mt-1 space-y-1">
+          {warnings.map((issue, i) => {
+            const name = issue.node_id ? names.get(issue.node_id)?.split(' · ')[0] : undefined
+            return (
+              <li key={`${issue.code}-${issue.node_id}-${i}`} className="flex items-start gap-1.5 text-sm text-amber-800">
+                <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+                <span>{name && <span className="font-medium">{name}: </span>}{issue.message}</span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      {errors.length > 0 && (
         <ul aria-label="Errores de validación" className={`space-y-1 ${loading ? 'opacity-60' : ''}`}>
-          {issues.map((issue, i) => {
+          {errors.map((issue, i) => {
             // «Prompt 2»: tipo y número, sin el resumen, para distinguir nodos del mismo tipo.
             const name = issue.node_id ? names.get(issue.node_id)?.split(' · ')[0] : undefined
             return (
@@ -131,7 +147,7 @@ function Editor({ flow }: { flow: Flow }) {
 
   const issuesByNode = useMemo(() => {
     const map = new Map<string, Issue[]>()
-    for (const issue of issues ?? []) {
+    for (const issue of (issues ?? []).filter((i) => i.severity !== 'warning')) {
       if (issue.node_id) map.set(issue.node_id, [...(map.get(issue.node_id) ?? []), issue])
     }
     return map

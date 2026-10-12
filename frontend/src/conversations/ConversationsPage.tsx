@@ -20,11 +20,42 @@ function useConversationQuery(): ConversationQuery {
     sentiment_lt: params.get('sentiment_lt') ?? undefined,
     compliant: params.get('compliant') ?? undefined,
     repeat_contact: params.get('repeat_contact') ?? undefined,
+    phone: params.get('phone') ?? undefined,
+    external_tag: params.get('external_tag') ?? undefined,
     page: Math.max(1, Number(params.get('page') ?? 1) || 1),
     page_size: PAGE_SIZE,
     sort,
     order: params.get('order') === 'asc' ? 'asc' : 'desc',
   }
+}
+
+/** Búsqueda exacta por ANI y `externalTag`; solo con conversaciones reales (FE012). */
+function ExactSearch() {
+  const { params, update } = useDashboardFilters()
+  const phone = params.get('phone') ?? ''
+  const tag = params.get('external_tag') ?? ''
+  return (
+    // La clave reinicia los campos cuando un chip quita el filtro.
+    <form key={`${phone}|${tag}`} role="search" aria-label="Buscar por teléfono o externalTag"
+      className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"
+      onSubmit={(event) => {
+        event.preventDefault()
+        const data = new FormData(event.currentTarget)
+        update({ phone: String(data.get('phone') ?? '').trim() || undefined, external_tag: String(data.get('external_tag') ?? '').trim() || undefined })
+      }}>
+      <label className="text-xs font-medium text-slate-600">
+        Teléfono (ANI)
+        <input name="phone" defaultValue={phone} placeholder="675075376 o +34675075376"
+          className="mt-1 block w-56 rounded-md border border-slate-300 px-2 py-1.5 text-sm font-normal" />
+      </label>
+      <label className="text-xs font-medium text-slate-600">
+        externalTag
+        <input name="external_tag" defaultValue={tag}
+          className="mt-1 block w-56 rounded-md border border-slate-300 px-2 py-1.5 text-sm font-normal" />
+      </label>
+      <button type="submit" className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">Buscar</button>
+    </form>
+  )
 }
 
 export function ConversationsPage() {
@@ -50,6 +81,7 @@ export function ConversationsPage() {
         </p>
       </header>
       <FilterBar />
+      {catalog?.origin === 'real' && <ExactSearch />}
       {chips.length > 0 && (
         <ul aria-label="Filtros activos" className="flex flex-wrap gap-2">
           {chips.map((chip) => (

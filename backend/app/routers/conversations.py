@@ -37,6 +37,8 @@ def catalog() -> dict:
     repository = active_repository()
     return {
         "reference_date": reference_date().isoformat(),
+        # El front adapta listado y filtros al origen (FE012); lo leen todos los roles con acceso a datos.
+        "origin": repository.origin,
         "channels": [{"code": "voz", "label": "Voz"}, {"code": "chat", "label": "Chat"}],
         "queues": [{"id": qid, "name": name} for qid, name in repository.queues()],
         "agents": [{"id": aid, "name": name, "queue_id": qid, "queue": queue}

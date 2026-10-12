@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { explorerSchemaFixture, QUEUE } from '../test/fixtures'
 import {
-  addCondition, addGroup, decodeQuery, DEFAULT_QUERY, encodeQuery, pathFromApi, queryToText, removeNode,
-  setGroupOp, updateCondition, type ExplorerQuery, type QuerySchema,
+  addCondition, addGroup, changeOperator, decodeQuery, DEFAULT_QUERY, encodeQuery, isComplete, pathFromApi, queryToText, removeNode,
+  setGroupOp, updateCondition, type ExplorerQuery, type FieldSchema, type QuerySchema,
 } from './queryModel'
 
 const schema = explorerSchemaFixture as QuerySchema
@@ -81,5 +81,33 @@ describe('edición inmutable por rutas', () => {
     expect(pathFromApi('root')).toEqual([])
     expect(pathFromApi('root.conditions[1].conditions[0]')).toEqual([1, 0])
     expect(pathFromApi('from')).toBeNull()
+  })
+})
+
+describe('«está vacío» (FE012)', () => {
+  const field = (type: FieldSchema['type']): FieldSchema => ({
+    key: 'f', label: 'Campo', type, operators: [{ key: 'is', label: 'es' }, { key: 'is_empty', label: 'está vacío' }],
+    values: [{ value: 'a', label: 'A' }], min: 0, max: 10,
+  })
+
+  it('al elegirlo se quita el valor y la condición está completa', () => {
+    const changed = changeOperator({ field: 'f', operator: 'is', value: 'a' }, 'is_empty', field('categorical'))
+    expect(changed).toEqual({ field: 'f', operator: 'is_empty' })
+    expect(isComplete(changed, field('categorical'))).toBe(true)
+    expect(isComplete({ field: 'f', operator: 'is_empty' }, field('text'))).toBe(true)
+    expect(isComplete({ field: 'f', operator: 'is_empty' }, field('numeric'))).toBe(true)
+  })
+
+  it('al volver a un operador con valor se parte del valor por defecto', () => {
+    expect(changeOperator({ field: 'f', operator: 'is_empty' }, 'is', field('categorical')))
+      .toEqual({ field: 'f', operator: 'is', value: 'a' })
+    expect(changeOperator({ field: 'f', operator: 'is_not_empty' }, 'is', field('boolean')))
+      .toEqual({ field: 'f', operator: 'is', value: true })
+  })
+
+  it('se lee en el texto de la consulta sin valor', () => {
+    const schema = { reference_date: '2026-10-12', default_period: { from: '', to: '' }, fields: [field('categorical')] }
+    expect(queryToText({ root: { op: 'and', conditions: [{ field: 'f', operator: 'is_empty' }] } }, schema))
+      .toBe('Campo está vacío')
   })
 })

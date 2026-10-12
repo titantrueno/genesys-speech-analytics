@@ -192,3 +192,11 @@ def test_validation_does_not_warn_with_synthetic_data(api):
         if node["type"] == "prompt":
             node["config"]["template"] = "Resume {{summary}}"
     assert api.post("/api/flows/validate", json=graph).json()["issues"] == []
+
+
+def test_suggestions_skip_empty_values_of_real_conversations(real_api):
+    for field in ("queue", "agent", "main_topic", "gc_disconnect_by", "gc_topic", "gc_wrapup"):
+        response = real_api.get("/api/query/suggest", params={**QS, "field": field})
+        assert response.status_code == 200, (field, response.text)
+        assert all(item["value"] is not None for item in response.json()["values"])
+    assert real_api.get("/api/query/suggest", params={**QS, "field": "main_topic"}).json()["values"] == []

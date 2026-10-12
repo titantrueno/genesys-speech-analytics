@@ -120,6 +120,23 @@ describe('editor de flujos', () => {
     expect(saveState()).toHaveTextContent('Cambios sin guardar')
   })
 
+  it('Validar muestra un aviso de análisis pendiente aparte de los errores, sin marcar el nodo como erróneo (FE012)', async () => {
+    const warning: Issue = {
+      code: 'analysis_pending', severity: 'warning', node_id: nodeId(3),
+      message: 'Las conversaciones reales aún no tienen análisis: {{summary}} llegará vacía al prompt.',
+    }
+    const { node } = setup({ validate: () => [warning] })
+    const user = userEvent.setup()
+    await loaded()
+    await user.click(screen.getByRole('button', { name: 'Validar' }))
+    const panel = await screen.findByRole('region', { name: 'Validación' })
+    expect(within(panel).getByText('El flujo es válido.')).toBeInTheDocument()
+    const warnings = within(panel).getByRole('list', { name: 'Avisos de validación' })
+    expect(warnings).toHaveTextContent('Prompt 2: Las conversaciones reales aún no tienen análisis')
+    expect(within(panel).queryByRole('list', { name: 'Errores de validación' })).not.toBeInTheDocument()
+    expect(within(node(nodeId(3))).queryByText(/error/)).not.toBeInTheDocument()
+  })
+
   it('Validar lista los errores, marca sus nodos y selecciona el nodo de un error', async () => {
     const issues: Issue[] = [
       { code: 'missing_output', message: 'El flujo necesita al menos un nodo Output.', node_id: null },

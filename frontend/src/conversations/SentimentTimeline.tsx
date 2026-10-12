@@ -14,12 +14,14 @@ interface Props {
 }
 
 export function SentimentTimeline({ turns, activeTurn, onSelect }: Props) {
-  const points = turns.map((turn, index) => ({ index, turn })).filter((p) => p.turn.speaker === 'cliente')
+  // Solo los turnos del cliente con sentimiento: en las conversaciones reales, Genesys puede no darlo (FE012).
+  const points = turns.flatMap((turn, index) =>
+    turn.speaker === 'cliente' && turn.sentiment !== null ? [{ index, turn, sentiment: turn.sentiment }] : [])
   const innerW = WIDTH - M.left - M.right
   const innerH = HEIGHT - M.top - M.bottom
   const x = (i: number) => M.left + (points.length === 1 ? innerW / 2 : (i / (points.length - 1)) * innerW)
   const y = (v: number) => M.top + ((1 - v) / 2) * innerH
-  const line = points.map((p, i) => `${x(i)},${y(p.turn.sentiment)}`).join(' ')
+  const line = points.map((p, i) => `${x(i)},${y(p.sentiment)}`).join(' ')
 
   function onKey(event: KeyboardEvent, turnIndex: number) {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -42,15 +44,15 @@ export function SentimentTimeline({ turns, activeTurn, onSelect }: Props) {
         ))}
         <polyline points={line} fill="none" stroke="var(--chart-muted)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {points.map((p, i) => {
-          const tone = sentimentTone(p.turn.sentiment)
+          const tone = sentimentTone(p.sentiment)
           const active = activeTurn === p.index
           return (
             <g key={p.index} role="button" tabIndex={0} className="cursor-pointer outline-none [&:focus-visible>circle:last-child]:stroke-[var(--series-1)]"
-              aria-label={`Turno ${p.index + 1}: sentimiento ${formatSigned(p.turn.sentiment)} (${tone.label.toLowerCase()})`}
+              aria-label={`Turno ${p.index + 1}: sentimiento ${formatSigned(p.sentiment)} (${tone.label.toLowerCase()})`}
               onClick={() => onSelect(p.index)} onKeyDown={(e) => onKey(e, p.index)}>
-              <title>{`Turno ${p.index + 1} · ${formatOffset(p.turn.offset_s)} · ${formatSigned(p.turn.sentiment)}`}</title>
-              <circle cx={x(i)} cy={y(p.turn.sentiment)} r={12} fill="transparent" />
-              <circle cx={x(i)} cy={y(p.turn.sentiment)} r={active ? 6 : 4.5} fill={tone.color}
+              <title>{`Turno ${p.index + 1} · ${formatOffset(p.turn.offset_s)} · ${formatSigned(p.sentiment)}`}</title>
+              <circle cx={x(i)} cy={y(p.sentiment)} r={12} fill="transparent" />
+              <circle cx={x(i)} cy={y(p.sentiment)} r={active ? 6 : 4.5} fill={tone.color}
                 stroke={active ? 'var(--series-1)' : 'var(--chart-surface)'} strokeWidth={2} />
             </g>
           )

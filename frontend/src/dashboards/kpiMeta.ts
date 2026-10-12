@@ -15,3 +15,10 @@ export const KPI_META: Record<KpiCode, { short: string; unit: KpiUnit }> = {
   first_response_s: { short: '1.ª respuesta', unit: 's' },
   avg_turns: { short: 'Turnos', unit: 'turnos' },
 }
+
+/** KPIs que dependen del análisis de la plataforma: pendientes con conversaciones reales sin analizar (FE012). */
+export const ANALYSIS_KPIS: ReadonlySet<KpiCode> = new Set<KpiCode>([
+  'resolution_rate', 'escalation_rate', 'fcr_rate', 'csat_avg', 'effort_avg', 'compliance_rate', 'churn_high_pct',
+])
+
+export const PENDING_KPI_TEXT = 'Sin datos · pendiente de análisis'

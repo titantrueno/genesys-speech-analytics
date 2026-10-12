@@ -1,9 +1,9 @@
 import { CheckCircle2, CircleMinus, XCircle } from 'lucide-react'
-import type { ReactNode } from 'react'
 import type { ConversationDetail } from '../api/conversations'
 import { useCatalog } from '../api/metrics'
 import { formatDecimal } from '../lib/format'
-import { ResolutionBadge, SentimentValue } from './badges'
+import { PendingText, ResolutionBadge, SentimentValue } from './badges'
+import { Metric, Section } from './panelParts'
 import { CHURN_LABELS } from './labels'
 import { SentimentTimeline } from './SentimentTimeline'
 
@@ -12,24 +12,6 @@ const CHURN_STYLE: Record<string, string> = {
   bajo: 'text-[var(--status-good-text)]',
   medio: 'text-amber-700',
   alto: 'text-[var(--status-critical)]',
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="border-b border-slate-100 px-4 py-4 last:border-0">
-      <h2 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase">{title}</h2>
-      {children}
-    </section>
-  )
-}
-
-function Metric({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-2 py-1 text-sm">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className="font-medium text-slate-800">{children}</dd>
-    </div>
-  )
 }
 
 interface Props {
@@ -43,14 +25,38 @@ export function AnalysisPanel({ conversation, activeTurn, onSelectTurn }: Props)
   const a = conversation.analysis
   const checks = (catalog?.compliance_checks ?? []).filter((check) => check.code in a.compliance)
 
+  // Conversación real sin el análisis de la plataforma (FE012): solo lo que da Genesys.
+  if (a.pending) {
+    return (
+      <aside aria-label="Análisis" className="rounded-xl border border-slate-200 bg-white">
+        <Section title="Resultado">
+          <p className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            <PendingText className="text-sm font-medium" />
+            <span className="mt-1 block">
+              El summary, el main topic, la resolución, el cumplimiento y las puntuaciones llegarán con el análisis de la plataforma.
+            </span>
+          </p>
+          <dl className="mt-2">
+            <Metric label="Sentimiento global (Genesys)"><SentimentValue value={a.sentiment} /></Metric>
+          </dl>
+        </Section>
+        <Section title="Evolución del sentimiento">
+          <SentimentTimeline turns={conversation.turns} activeTurn={activeTurn} onSelect={onSelectTurn} />
+        </Section>
+      </aside>
+    )
+  }
+
   return (
     <aside aria-label="Análisis" className="rounded-xl border border-slate-200 bg-white">
       <Section title="Resultado">
         <dl>
           <Metric label="Resolución"><ResolutionBadge resolution={a.resolution} /></Metric>
-          <Metric label="CSAT predicho">{formatDecimal(a.csat, 1)} / 5</Metric>
-          <Metric label="Esfuerzo del cliente">{formatDecimal(a.effort, 1)} / 5</Metric>
-          <Metric label="Riesgo de abandono"><span className={CHURN_STYLE[a.churn_risk]}>{CHURN_LABELS[a.churn_risk]}</span></Metric>
+          <Metric label="CSAT predicho">{a.csat === null ? '—' : `${formatDecimal(a.csat, 1)} / 5`}</Metric>
+          <Metric label="Esfuerzo del cliente">{a.effort === null ? '—' : `${formatDecimal(a.effort, 1)} / 5`}</Metric>
+          <Metric label="Riesgo de abandono">
+            {a.churn_risk === null ? '—' : <span className={CHURN_STYLE[a.churn_risk]}>{CHURN_LABELS[a.churn_risk]}</span>}
+          </Metric>
           <Metric label="Sentimiento global"><SentimentValue value={a.sentiment} /></Metric>
         </dl>
       </Section>

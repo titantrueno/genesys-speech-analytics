@@ -1,7 +1,12 @@
 import { useState, type ReactNode } from 'react'
+import { PENDING_KPI_TEXT } from './kpiMeta'
 
 export function LoadError({ message = 'No se han podido cargar los datos. Revisa los filtros o prueba a limpiarlos.' }: { message?: string }) {
   return <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>
+}
+
+export function PendingNotice() {
+  return <p className="rounded-md bg-slate-50 px-3 py-6 text-center text-sm text-slate-500">{PENDING_KPI_TEXT}</p>
 }
 
 interface Props {
@@ -11,11 +16,13 @@ interface Props {
   table?: ReactNode
   loading?: boolean
   error?: boolean
+  /** Depende del análisis de la plataforma y las conversaciones reales aún no lo tienen (FE012). */
+  pending?: boolean
   children: ReactNode
   className?: string
 }
 
-export function ChartCard({ title, subtitle, actions, table, loading, error, children, className = '' }: Props) {
+export function ChartCard({ title, subtitle, actions, table, loading, error, pending, children, className = '' }: Props) {
   const [showTable, setShowTable] = useState(false)
   return (
     <section className={`rounded-xl border border-slate-200 bg-[var(--chart-surface)] p-4 ${className}`}>
@@ -26,7 +33,7 @@ export function ChartCard({ title, subtitle, actions, table, loading, error, chi
         </div>
         <div className="flex items-center gap-2">
           {actions}
-          {table && (
+          {table && !pending && (
             <button type="button" onClick={() => setShowTable((v) => !v)}
               className="rounded-md px-2 py-1 text-xs text-brand-600 hover:bg-brand-50">
               {showTable ? 'Ver gráfico' : 'Ver tabla'}
@@ -35,7 +42,7 @@ export function ChartCard({ title, subtitle, actions, table, loading, error, chi
         </div>
       </header>
       <div className={`transition-opacity ${loading ? 'opacity-50' : ''}`}>
-        {error ? <LoadError /> : showTable ? table : children}
+        {error ? <LoadError /> : pending ? <PendingNotice /> : showTable ? table : children}
       </div>
     </section>
   )

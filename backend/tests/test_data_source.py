@@ -39,3 +39,7 @@ def test_the_same_origin_changes_and_audits_nothing(api):
 def test_the_synthetic_origin_serves_the_generated_dataset(api):
     assert api.get("/api/conversations").json()["total"] <= len(get_dataset())
     assert len(active_repository().conversations()) == len(get_dataset())
+
+
+def test_the_catalog_tells_the_active_origin(api):
+    assert api.get("/api/catalog").json()["origin"] == "sintetico"

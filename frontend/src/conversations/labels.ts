@@ -32,6 +32,12 @@ export function activeFilterChips(params: URLSearchParams, catalog?: Catalog): C
   multi('resolution', 'Resolución', (v) => RESOLUTION_LABELS[v] ?? v)
   multi('churn_risk', 'Riesgo de abandono', (v) => CHURN_LABELS[v] ?? v)
 
+  // Búsqueda exacta en conversaciones reales (FE012).
+  const phone = params.get('phone')
+  if (phone) chips.push({ id: 'phone', label: `Teléfono: ${phone}`, remove: { phone: undefined } })
+  const externalTag = params.get('external_tag')
+  if (externalTag) chips.push({ id: 'external_tag', label: `externalTag: ${externalTag}`, remove: { external_tag: undefined } })
+
   if (params.has('sentiment_lt')) {
     const value = Number(params.get('sentiment_lt'))
     chips.push({ id: 'sentiment', label: value === -0.3 ? 'Sentimiento negativo' : `Sentimiento < ${value}`, remove: { sentiment_lt: undefined } })

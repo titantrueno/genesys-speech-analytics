@@ -4709,6 +4709,13 @@ components:
           format: date
           title: Reference Date
           type: string
+        origin:
+          description: Origen de datos activo (FE012).
+          enum:
+          - sintetico
+          - real
+          title: Origin
+          type: string
         channels:
           items:
             $ref: '#/components/schemas/CodeLabel'
@@ -4747,6 +4754,7 @@ components:
           type: array
       required:
       - reference_date
+      - origin
       - channels
       - queues
       - agents

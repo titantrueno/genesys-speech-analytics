@@ -1,7 +1,8 @@
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router'
 import type { KpiSummary } from '../api/metrics'
-import { formatDelta, formatKpi, trendOf } from '../lib/format'
+import { formatDelta, formatInteger, formatKpi, trendOf } from '../lib/format'
+import { PENDING_KPI_TEXT } from './kpiMeta'
 
 const TREND_STYLE = {
   mejora: { className: 'text-[var(--status-good-text)]', label: 'Mejora' },
@@ -27,11 +28,16 @@ export function KpiTile({ kpi, href, comparison = true }: { kpi: KpiSummary; hre
         {kpi.label}
         {status && <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${status.badge}`}>{status.label}</span>}
       </p>
-      <p className="mt-1 text-2xl font-semibold text-slate-900">{formatKpi(kpi.value, kpi.unit)}</p>
-      {kpi.target !== null && kpi.target !== undefined && (
+      {kpi.pending
+        ? <p className="mt-2 text-sm font-medium text-slate-500">{PENDING_KPI_TEXT}</p>
+        : <p className="mt-1 text-2xl font-semibold text-slate-900">{formatKpi(kpi.value, kpi.unit)}</p>}
+      {kpi.based_on !== null && kpi.based_on !== undefined && !kpi.pending && (
+        <p className="mt-1 text-xs text-slate-500">Calculado sobre {formatInteger(kpi.based_on)} {kpi.based_on === 1 ? 'conversación' : 'conversaciones'}</p>
+      )}
+      {!kpi.pending && kpi.target !== null && kpi.target !== undefined && (
         <p className="mt-1 text-xs text-slate-500">Objetivo: {formatKpi(kpi.target, kpi.unit)}</p>
       )}
-      {comparison && (delta && trend ? (
+      {comparison && !kpi.pending && (delta && trend ? (
         <p className={`mt-2 flex flex-wrap items-center gap-x-1 text-xs ${TREND_STYLE[trend].className}`}
           title={`Periodo anterior: ${formatKpi(kpi.previous, kpi.unit)}`}>
           <Arrow className="size-3.5" aria-hidden />

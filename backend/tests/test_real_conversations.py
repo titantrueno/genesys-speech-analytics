@@ -65,6 +65,7 @@ def test_analysis_filters_find_nothing_while_the_analysis_is_pending(real_api):
 
 def test_the_catalog_offers_the_real_queues_and_agents(real_api):
     catalog = real_api.get("/api/catalog").json()
+    assert catalog["origin"] == "real"
     assert {"AIT_Transcription"} <= {q["name"] for q in catalog["queues"]}
     assert "Javier Del Olmo" in {a["name"] for a in catalog["agents"]}
 

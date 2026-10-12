@@ -48,7 +48,9 @@ def summary(
     prev_from, prev_to = filters.previous_period()
     current_convs = filters.apply(dataset)
     current = compute_kpis(current_convs, followups, rounded=False)
-    pending, bases = pending_analysis(current_convs), kpi_bases(current_convs)
+    pending = pending_analysis(current_convs)
+    # `based_on` solo tiene sentido con datos reales, donde algunos KPIs usan una parte de las conversaciones.
+    bases = kpi_bases(current_convs) if any(c.genesys for c in current_convs) else {}
     previous = compute_kpis(filters.apply(dataset, prev_from, prev_to), followups, rounded=False)
     return {
         "period": _period(filters.date_from, filters.date_to),
