@@ -68,6 +68,7 @@ export function useConfigMutation<TBody, TResult = unknown>(request: (body: TBod
 
 export const configRequests = {
   general: (body: unknown) => apiRequest<PlatformConfig>('/api/config/general', { method: 'PUT', body }),
+  sources: (body: unknown) => apiRequest<PlatformConfig>('/api/config/sources', { method: 'PUT', body }),
   privacy: (body: unknown) => apiRequest<PlatformConfig>('/api/config/privacy', { method: 'PUT', body }),
   ai: (body: unknown) => apiRequest<PlatformConfig>('/api/config/ai', { method: 'PUT', body }),
   sync: (id: string) => apiRequest<Connector>(`/api/config/connectors/${id}/sync`, { method: 'POST' }),

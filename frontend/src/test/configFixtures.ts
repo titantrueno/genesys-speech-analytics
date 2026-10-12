@@ -11,6 +11,7 @@ export function platformConfig(overrides: Partial<PlatformConfig> = {}): Platfor
   return {
     version: 0,
     general: { platform_name: 'Speech & Text Analytics', timezone: 'Europe/Madrid', language: 'es-ES' },
+    sources: { origin: 'sintetico' },
     privacy: { pii_masking: true },
     ai: { provider: 'simulado', model: 'mock-rapido', simulated: true },
     kpis: KPI_CONFIG,

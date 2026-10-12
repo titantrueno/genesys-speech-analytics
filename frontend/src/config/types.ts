@@ -7,6 +7,9 @@ export type ConfigTabCode = SectionCode | 'api'
 export type Option<T extends string = string> = { value: T; label: string }
 
 export interface GeneralConfig { platform_name: string; timezone: string; language: string }
+/** Origen de datos de toda la plataforma (FE012). */
+export type DataOrigin = 'sintetico' | 'real'
+export interface SourcesConfig { origin: DataOrigin }
 export interface PrivacyConfig { pii_masking: boolean }
 export interface AiConfig { provider: string; model: string }
 
@@ -24,6 +27,7 @@ export interface KpiConfig {
 export interface PlatformConfig {
   version: number
   general: GeneralConfig
+  sources: SourcesConfig
   privacy: PrivacyConfig
   ai: AiConfig & { simulated: boolean }
   kpis: KpiConfig[]

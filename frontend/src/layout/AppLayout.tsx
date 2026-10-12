@@ -1,6 +1,7 @@
 import { AudioLines, LogOut } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/useAuth'
+import { DataUnavailableBanner } from '../components/DataUnavailable'
 import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
 import { setDisplayTimeZone } from '../lib/format'
 import { NAV_ITEMS } from './navigation'
@@ -54,7 +55,8 @@ export function AppLayout() {
           </button>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 px-8 py-6">
+      <main className="min-w-0 flex-1 space-y-4 px-8 py-6">
+        <DataUnavailableBanner />
         <Outlet key={settings?.timezone ?? ''} />
       </main>
     </div>

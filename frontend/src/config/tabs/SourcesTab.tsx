@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { ApiError } from '../../api/client'
 import { useGenesysConnector, useTestGenesys } from '../../downloads/api'
 import { CHANNEL_LABELS, DOWNLOAD_STATUS, QUALITY_LABELS } from '../../downloads/labels'
@@ -6,6 +6,7 @@ import { StatusBadge } from '../../flows/StatusBadge'
 import { formatDateTime, formatInteger } from '../../lib/format'
 import { configRequests, useConfigMutation, useConnectors } from '../api'
 import { Card } from '../controls'
+import type { DataOrigin, PlatformConfig } from '../types'
 
 const STATUS: Record<string, string> = { conectado: 'Conectado' }
 
@@ -139,10 +140,65 @@ function GenesysCard({ canEdit }: { canEdit: boolean }) {
   )
 }
 
-export function SourcesTab({ canEdit }: { canEdit: boolean }) {
+const ORIGINS: Array<{ value: DataOrigin; label: string; description: string }> = [
+  { value: 'sintetico', label: 'Sintético', description: 'El dataset generado de demostración (1.000 conversaciones de los últimos 90 días).' },
+  { value: 'real', label: 'Real (Genesys Cloud)', description: 'Las conversaciones que ha descargado el servicio de ingesta y guarda PostgreSQL.' },
+]
+
+/** Origen de datos de toda la plataforma (FE012): al cambiarlo, dashboards, listado, explorador, búsqueda y flujos lo siguen. */
+function OriginCard({ origin, canEdit }: { origin: DataOrigin; canEdit: boolean }) {
+  const [pending, setPending] = useState<DataOrigin | null>(null)
+  const change = useConfigMutation(configRequests.sources)
+  const target = ORIGINS.find((o) => o.value === pending)
+  return (
+    <Card title="Origen de datos"
+      description="Toda la plataforma trabaja con un único origen a la vez. Se pierde al reiniciar la API y vuelve a sintético.">
+      <fieldset disabled={!canEdit || change.isPending} className="space-y-2">
+        <legend className="sr-only">Origen de datos</legend>
+        {ORIGINS.map((option) => (
+          <label key={option.value} className="flex items-start gap-3 text-sm text-slate-700">
+            <input type="radio" name="data-origin" className="mt-0.5 size-4" checked={origin === option.value}
+              onChange={() => { change.reset(); setPending(option.value === origin ? null : option.value) }} />
+            <span>
+              <span className="font-medium">{option.label}</span>
+              <span className="block text-slate-500">{option.description}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      {canEdit && target && (
+        <div role="alertdialog" aria-label="Confirmar cambio de origen"
+          className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p>
+            {target.value === 'real'
+              ? 'Todas las secciones pasarán a trabajar con las conversaciones reales de Genesys. El análisis de la plataforma (summary, main topic, CSAT…) aparecerá como pendiente.'
+              : 'Todas las secciones volverán a trabajar con el dataset sintético.'}
+          </p>
+          <div className="flex gap-2">
+            <button type="button" disabled={change.isPending}
+              onClick={() => change.mutate({ origin: target.value }, { onSuccess: () => setPending(null) })}
+              className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50">
+              Confirmar cambio
+            </button>
+            <button type="button" onClick={() => { change.reset(); setPending(null) }}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm hover:bg-slate-50">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      {change.isError && <p role="alert" className="text-sm text-red-700">No se ha podido cambiar el origen de datos.</p>}
+    </Card>
+  )
+}
+
+export function SourcesTab({ config, canEdit }: { config: PlatformConfig; canEdit: boolean }) {
+  const origin = config.sources.origin
   return (
     <div className="space-y-4">
-      <MockConnectors canEdit={canEdit} />
+      <OriginCard origin={origin} canEdit={canEdit} />
+      {/* Con el origen real, el estado del conector de Genesys sustituye a los conectores simulados. */}
+      {origin === 'sintetico' && <MockConnectors canEdit={canEdit} />}
       <GenesysCard canEdit={canEdit} />
     </div>
   )

@@ -21,7 +21,7 @@ type TabProps = { config: PlatformConfig; canEdit: boolean }
 
 const TABS: Array<{ code: ConfigTabCode; label: string; render: (props: TabProps) => ReactNode }> = [
   { code: 'general', label: 'General', render: (p) => <GeneralTab {...p} /> },
-  { code: 'fuentes', label: 'Fuentes de datos', render: (p) => <SourcesTab canEdit={p.canEdit} /> },
+  { code: 'fuentes', label: 'Fuentes de datos', render: (p) => <SourcesTab {...p} /> },
   { code: 'taxonomia', label: 'Taxonomía', render: (p) => <TaxonomyTab canEdit={p.canEdit} /> },
   { code: 'kpis', label: 'KPIs y objetivos', render: (p) => <KpisTab {...p} /> },
   { code: 'cumplimiento', label: 'Cumplimiento', render: (p) => <ComplianceTab canEdit={p.canEdit} /> },
