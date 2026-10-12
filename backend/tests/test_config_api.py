@@ -32,7 +32,8 @@ def test_config_returns_every_section_with_defaults(api):
     assert body["general"] == {"platform_name": "Speech & Text Analytics", "timezone": "Europe/Madrid",
                                "language": "es-ES"}
     assert body["privacy"] == {"pii_masking": True}
-    assert body["ai"] == {"provider": "simulado", "model": "mock-rapido", "simulated": True}
+    # Desde FE013, Gemini 3.5 Flash-Lite por defecto.
+    assert body["ai"] == {"provider": "gemini", "model": "gemini-3.5-flash-lite", "simulated": False}
     assert isinstance(body["version"], int)
     assert {"languages", "providers", "timezones"} <= set(body["options"])
     assert "Europe/Madrid" in body["options"]["timezones"]
@@ -79,7 +80,7 @@ def test_public_endpoint_only_exposes_name_timezone_and_language(api):
 
 
 def test_new_prompt_nodes_take_the_default_model_from_the_flow_catalog(api):
-    assert api.get("/api/flows/catalog").json()["default_model"] == "mock-rapido"
+    assert api.get("/api/flows/catalog").json()["default_model"] == "gemini-3.5-flash-lite"
     api.put("/api/config/ai", json={"provider": "simulado", "model": "mock-preciso"})
     assert api.get("/api/flows/catalog").json()["default_model"] == "mock-preciso"
 
@@ -135,7 +136,8 @@ def test_update_ai_default_model(api):
 
 
 @pytest.mark.parametrize("payload,field", [
-    ({"provider": "openai", "model": "mock-rapido"}, "provider"),
+    ({"provider": "otro", "model": "mock-rapido"}, "provider"),
+    ({"provider": "openai", "model": "mock-rapido"}, "model"),
     ({"provider": "simulado", "model": "gpt-5"}, "model"),
 ])
 def test_invalid_ai_config_returns_field_error(api, payload, field):

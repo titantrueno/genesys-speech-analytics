@@ -9,7 +9,8 @@ from collections.abc import Callable
 from typing import Literal
 
 import httpx
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
+from fastapi import APIRouter, Depends, FastAPI, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from llm.providers import REGISTRY
@@ -46,10 +47,12 @@ class TestIn(_Strict):
     model: str = Field(pattern=MODEL_PATTERN)
 
 
-def _failure(exc: Exception) -> HTTPException:
-    if isinstance(exc, UnknownProvider):
-        return HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Proveedor desconocido: {exc}")
-    return HTTPException(exc.status, detail=str(exc))
+class Failure(Exception):
+    def __init__(self, exc: Exception):
+        unknown = isinstance(exc, UnknownProvider)
+        self.status = status.HTTP_404_NOT_FOUND if unknown else exc.status
+        self.body = {"detail": f"Proveedor desconocido: {exc}" if unknown else str(exc),
+                     "code": "unknown_provider" if unknown else exc.code}
 
 
 def create_app(settings: Settings | None = None, providers: dict[str, LlmProvider] | None = None,
@@ -59,6 +62,10 @@ def create_app(settings: Settings | None = None, providers: dict[str, LlmProvide
     providers = providers or REGISTRY
     completer = Completer(settings, providers, http or httpx.Client(timeout=TIMEOUT_S), sleep, backoff)
     app = FastAPI(title="Servicio de LLM", version=VERSION)
+
+    @app.exception_handler(Failure)
+    async def failure(_, exc: Failure) -> JSONResponse:
+        return JSONResponse(exc.body, status_code=exc.status)
 
     @app.get("/health", summary="Estado del servicio y proveedores con clave configurada")
     def health():
@@ -70,7 +77,7 @@ def create_app(settings: Settings | None = None, providers: dict[str, LlmProvide
         try:
             return completer.complete(name, request)
         except (UnknownProvider, ProviderError) as exc:
-            raise _failure(exc) from None
+            raise Failure(exc) from None
 
     @router.post("/complete", summary="Respuesta del modelo a un prompt, con el formato pedido")
     def complete(body: CompleteIn):

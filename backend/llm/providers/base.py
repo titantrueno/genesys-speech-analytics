@@ -42,13 +42,17 @@ class Completion:
 
 class ProviderError(Exception):
     status = 502
+    code = "provider_failure"  # la API distingue los fallos por el código, no por el texto
 
 
 class MissingKey(ProviderError):
     status = 503
+    code = "missing_key"
 
 
 class KeyRejected(ProviderError):
+    code = "key_rejected"
+
     def __init__(self):
         super().__init__("El proveedor rechazó la clave")
 

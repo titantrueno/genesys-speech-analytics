@@ -6,7 +6,7 @@ from zoneinfo import available_timezones
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError, field_validator, model_validator
 
-from app.flows.catalog import MODELS, PROVIDERS
+from app.flows.catalog import PROVIDERS
 
 LANGUAGES = {"es-ES": "Español (España)"}
 MAX_PLATFORM_NAME = 60

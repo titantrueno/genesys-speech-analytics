@@ -51,6 +51,8 @@ class OutputFormat(_Strict):
 
 class PromptConfig(_Strict):
     template: str | None = Field(None, max_length=catalog.MAX_TEMPLATE)
+    # Sin proveedor, el nodo es simulado: así se leen los flujos guardados antes de FE013.
+    provider: Literal[tuple(catalog.PROVIDERS)] | None = None
     model: Literal[tuple(catalog.MODELS)] | None = None
     temperature: float | None = Field(None, ge=0, le=1)
     output: OutputFormat | None = None

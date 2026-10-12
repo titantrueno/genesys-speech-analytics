@@ -3101,6 +3101,119 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `config:edit`.'
+  /api/config/ai/status:
+    get:
+      tags:
+      - config
+      summary: Estado del servicio de LLM
+      description: 'Permiso: `config:view`. Qué proveedores tienen clave en el servicio de LLM (sí o no, nunca la clave).'
+      operationId: ai_status_api_config_ai_status_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiStatus'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de LLM no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+  /api/config/ai/test/{provider}:
+    post:
+      tags:
+      - config
+      summary: Probar un proveedor de LLM
+      description: 'Permiso: `config:edit`. Hace una petición mínima con el modelo indicado. Un error del proveedor (sin clave,
+        clave rechazada…) responde `200` con `ok: false` y su mensaje.'
+      operationId: test_ai_provider_api_config_ai_test__provider__post
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          enum:
+          - gemini
+          - openai
+          - anthropic
+          - simulado
+          type: string
+          title: Provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiTestIn'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiTestResult'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Proveedor desconocido o modelo de otro proveedor. Los parámetros fuera de rango o de tipo devuelven
+            el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id010
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de LLM no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
   /api/config/connectors:
     get:
       tags:
@@ -4400,6 +4513,15 @@ components:
       - access_token
       - user
       title: LoginResponse
+    ProviderTestIn:
+      properties:
+        model:
+          type: string
+          title: Model
+      type: object
+      required:
+      - model
+      title: ProviderTestIn
     SavedQueryIn:
       properties:
         name:
@@ -4504,6 +4626,25 @@ components:
       - model
       title: AiConfig
       type: object
+    AiProviderStatus:
+      additionalProperties: false
+      properties:
+        value:
+          title: Value
+          type: string
+        label:
+          title: Label
+          type: string
+        key_configured:
+          description: Si el servicio de LLM tiene su clave; nunca la clave.
+          title: Key Configured
+          type: boolean
+      required:
+      - value
+      - label
+      - key_configured
+      title: AiProviderStatus
+      type: object
     AiSettings:
       additionalProperties: false
       properties:
@@ -4521,6 +4662,56 @@ components:
       - model
       - simulated
       title: AiSettings
+      type: object
+    AiStatus:
+      additionalProperties: false
+      properties:
+        service:
+          const: disponible
+          title: Service
+          type: string
+        providers:
+          items:
+            $ref: '#/components/schemas/AiProviderStatus'
+          title: Providers
+          type: array
+      required:
+      - service
+      - providers
+      title: AiStatus
+      type: object
+    AiTestIn:
+      additionalProperties: false
+      properties:
+        model:
+          title: Model
+          type: string
+      required:
+      - model
+      title: AiTestIn
+      type: object
+    AiTestResult:
+      additionalProperties: false
+      properties:
+        ok:
+          title: Ok
+          type: boolean
+        provider:
+          title: Provider
+          type: string
+        model:
+          title: Model
+          type: string
+        message:
+          description: «El proveedor respondió correctamente» o el error del proveedor.
+          title: Message
+          type: string
+      required:
+      - ok
+      - provider
+      - model
+      - message
+      title: AiTestResult
       type: object
     Analysis:
       description: 'Análisis de la plataforma. Con `pending`, los campos que aún no existen son `None` (FE012): quien los
@@ -5927,10 +6118,21 @@ components:
           title: Orders
           type: array
         models:
+          description: Todos los modelos, de todos los proveedores.
           items:
             $ref: '#/components/schemas/ValueLabel'
           title: Models
           type: array
+        providers:
+          description: Proveedores con sus modelos (FE013).
+          items:
+            $ref: '#/components/schemas/ProviderOption'
+          title: Providers
+          type: array
+        default_provider:
+          description: Proveedor que toma un nodo Prompt nuevo (Configuración › Modelos de IA).
+          title: Default Provider
+          type: string
         default_model:
           description: Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA).
           title: Default Model
@@ -5969,6 +6171,8 @@ components:
       - order_keys
       - orders
       - models
+      - providers
+      - default_provider
       - default_model
       - variables
       - output_formats
@@ -6900,6 +7104,25 @@ components:
       - items
       title: MetricResult
       type: object
+    ModelOption:
+      additionalProperties: false
+      properties:
+        value:
+          title: Value
+          type: string
+        label:
+          title: Label
+          type: string
+        temperature:
+          description: Si el modelo admite `temperature`; si no, no se le envía (FE013).
+          title: Temperature
+          type: boolean
+      required:
+      - value
+      - label
+      - temperature
+      title: ModelOption
+      type: object
     NewRoleIn:
       additionalProperties: false
       properties:
@@ -6947,11 +7170,21 @@ components:
           - type: string
           - type: 'null'
           title: Message
+        rejected:
+          description: 'Prompt con LLM: respuestas fuera del formato de salida (FE013).'
+          title: Rejected
+          type: integer
+        failed:
+          description: 'Prompt con LLM: conversaciones sin respuesta del proveedor (FE013).'
+          title: Failed
+          type: integer
       required:
       - status
       - processed
       - total
       - message
+      - rejected
+      - failed
       title: NodeState
       type: object
     Operator:
@@ -7162,9 +7395,28 @@ components:
           - type: 'null'
           default: null
           title: Template
+        provider:
+          anyOf:
+          - enum:
+            - gemini
+            - openai
+            - anthropic
+            - simulado
+            type: string
+          - type: 'null'
+          default: null
+          title: Provider
         model:
           anyOf:
           - enum:
+            - gemini-3.5-flash-lite
+            - gemini-3.8-flash
+            - gpt-6.1-sol
+            - gpt-6-luna
+            - gpt-6-astra
+            - claude-opus-5-5
+            - claude-sonnet-5-5
+            - claude-haiku-5-5
             - mock-rapido
             - mock-preciso
             type: string
@@ -7186,6 +7438,28 @@ components:
           default: null
       title: PromptConfig
       type: object
+    PromptFailure:
+      additionalProperties: false
+      properties:
+        conversation_id:
+          title: Conversation Id
+          type: string
+        status:
+          enum:
+          - rechazado
+          - error
+          title: Status
+          type: string
+        reason:
+          description: Motivo, sin datos de la conversación ni del proveedor.
+          title: Reason
+          type: string
+      required:
+      - conversation_id
+      - status
+      - reason
+      title: PromptFailure
+      type: object
     PromptNode:
       additionalProperties: false
       properties:
@@ -7202,6 +7476,7 @@ components:
           $ref: '#/components/schemas/PromptConfig'
           default:
             template: null
+            provider: null
             model: null
             temperature: null
             output: null
@@ -7221,8 +7496,9 @@ components:
           title: Label
           type: string
         models:
+          description: El primero es el que se propone al elegir el proveedor.
           items:
-            $ref: '#/components/schemas/ValueLabel'
+            $ref: '#/components/schemas/ModelOption'
           title: Models
           type: array
       required:
@@ -7569,6 +7845,14 @@ components:
           description: Resultado por identificador de nodo Output.
           title: Outputs
           type: object
+        failures:
+          additionalProperties:
+            items:
+              $ref: '#/components/schemas/PromptFailure'
+            type: array
+          description: Por nodo Prompt con LLM, las conversaciones excluidas de los outputs (FE013).
+          title: Failures
+          type: object
       required:
       - id
       - created_at
@@ -7583,6 +7867,7 @@ components:
       - graph
       - nodes
       - outputs
+      - failures
       title: Run
       type: object
     RunList:

@@ -11,7 +11,9 @@ from app import auth
 from app.main import app
 from app.openapi import schemas as s
 from app.openapi.spec import OPERATIONS, _as_tuple
+from app.llm_client import get_llm_client
 from tests.ingestion_stub import ingestion_stub  # noqa: F401 (fixture)
+from tests.test_llm_flows import FakeLlm
 
 EXPORTED = Path(__file__).resolve().parents[1] / "openapi.yaml"
 ADMIN = "admin@bancohorizonte.demo"
@@ -262,6 +264,17 @@ def test_real_responses_match_the_documented_schemas(call, api, ingestion_stub):
     call("DELETE", f"/api/download-flows/{download['id']}", 204)
     call("GET", "/api/config/connectors/genesys", 200)
     call("POST", "/api/config/connectors/genesys/test", 200)
+    llm = FakeLlm()
+    app.dependency_overrides[get_llm_client] = lambda: llm
+    try:
+        call("GET", "/api/config/ai/status", 200)
+        call("POST", "/api/config/ai/test/gemini", 200, json={"model": "gemini-3.5-flash-lite"})
+        call("POST", "/api/config/ai/test/gemini", 422, json={"model": "gpt-6.1-sol"})
+        llm.down = True
+        call("GET", "/api/config/ai/status", 503)
+        call("POST", "/api/config/ai/test/gemini", 503, json={"model": "gemini-3.5-flash-lite"})
+    finally:
+        app.dependency_overrides.pop(get_llm_client, None)
 
     config = call("GET", "/api/config", 200)
     call("PUT", "/api/config/general", 200, json={**config["general"], "timezone": "UTC"})

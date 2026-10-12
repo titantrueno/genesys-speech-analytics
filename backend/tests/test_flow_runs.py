@@ -51,7 +51,8 @@ def test_run_starts_pending_and_finishes_with_every_output(api):
     started = run(api, flow)
     assert ids.is_valid(started["id"], ids.RUN)
     assert started["status"] == "pendiente"
-    assert set(next(iter(started["nodes"].values()))) == {"status", "processed", "total", "message"}
+    assert set(next(iter(started["nodes"].values()))) == {"status", "processed", "total", "message",
+                                                           "rejected", "failed"}  # estos dos, desde FE013
     assert all(state["status"] == "pendiente" for state in started["nodes"].values())
 
     final = detail(api, flow, started["id"])
@@ -187,7 +188,7 @@ def test_a_failing_prompt_fails_only_its_branch(api):
     nodes = {n["id"]: n for n in flow["graph"]["nodes"]}
     first, chained = by_type(flow)["prompt"]
     assert final["status"] == "error"
-    assert final["nodes"][chained] == {"status": "error", "processed": 2, "total": 40,
+    assert final["nodes"][chained] == {"status": "error", "processed": 2, "total": 40, "rejected": 0, "failed": 0,
                                        "message": "Error al ejecutar el prompt: el proveedor no responde"}
     assert final["nodes"][first]["status"] == "ok"
     for node_id in by_type(flow)["output"]:

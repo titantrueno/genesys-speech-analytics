@@ -25,6 +25,20 @@ class PromptRunner(Protocol):
         """Resultado del prompt para una conversación; `previous` es el del prompt anterior en una cadena."""
 
 
+# Fallos de un prompt con un LLM real (FE013, criterios 13 y 14). Los dos primeros afectan a una conversación, que se
+# excluye de los outputs y se cuenta; el tercero detiene el nodo.
+class PromptRejected(Exception):
+    """La respuesta no cumple el formato de salida (texto vacío, etiqueta fuera de la lista, JSON fuera del esquema)."""
+
+
+class PromptFailed(Exception):
+    """El proveedor no dio respuesta para esta conversación."""
+
+
+class PromptUnavailable(Exception):
+    """No se puede seguir con ninguna conversación: servicio de LLM caído, proveedor sin clave o clave rechazada."""
+
+
 def sentiment_class(value: float | None) -> str:
     if value is None:
         return "sin dato"

@@ -4,6 +4,7 @@
 """
 import copy
 import re
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
 from app.flows import catalog
@@ -16,6 +17,9 @@ VARIABLE = re.compile(r"\{\{\s*([^{}]*?)\s*\}\}")
 # Variables que salen del análisis de la plataforma: vacías con conversaciones reales sin analizar (FE012).
 PENDING_VARIABLES = {"summary", "main_topic"}
 FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+# Proveedores con clave configurada según el servicio de LLM, o `None` si no responde (FE013). Se consulta una vez por
+# validación y solo si algún Prompt usa un proveedor real.
+LlmKeys = Callable[[], dict[str, bool] | None]
 
 
 @dataclass(frozen=True)
@@ -94,7 +98,25 @@ def _output_format(node: PromptNode) -> list[Issue]:
     return []
 
 
-def _prompt(node: PromptNode, graph: Graph) -> list[Issue]:
+def _provider(node: PromptNode, llm_keys: LlmKeys | None) -> list[Issue]:
+    cfg = node.config
+    provider = cfg.provider or catalog.SIMULATED
+    spec = catalog.PROVIDERS[provider]
+    if cfg.model is not None and cfg.model not in spec["models"]:
+        return [Issue("model_not_in_provider",
+                      f"El modelo {catalog.MODELS[cfg.model]} no pertenece al proveedor {spec['label']}.", node.id)]
+    if provider == catalog.SIMULATED or llm_keys is None:
+        return []
+    keys = llm_keys()
+    if keys is None:
+        return [Issue("llm_unavailable",
+                      f"El servicio de LLM no está disponible: no se puede ejecutar con {spec['label']}.", node.id)]
+    if not keys.get(provider):
+        return [Issue("provider_without_key", f"El proveedor {spec['label']} no tiene clave configurada.", node.id)]
+    return []
+
+
+def _prompt(node: PromptNode, graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
     cfg = node.config
     template = (cfg.template or "").strip()
     missing = _missing([("plantilla", bool(template)), ("modelo", cfg.model is not None),
@@ -118,7 +140,7 @@ def _prompt(node: PromptNode, graph: Graph) -> list[Issue]:
         if catalog.PREVIOUS_RESULT in used and not chained:
             issues.append(Issue("previous_result_without_chain",
                                 "{{resultado_anterior}} solo está disponible en un prompt conectado a otro prompt.", node.id))
-    return issues + _output_format(node)
+    return issues + _provider(node, llm_keys) + _output_format(node)
 
 
 def _output(node: OutputNode, graph: Graph) -> list[Issue]:
@@ -146,7 +168,21 @@ def _disconnected(node, graph: Graph) -> Issue | None:
     return Issue("disconnected_node", f"Nodo suelto: {needs}.", node.id)
 
 
-def validate(graph: Graph) -> list[Issue]:
+def _once(llm_keys: LlmKeys | None) -> LlmKeys | None:
+    if llm_keys is None:
+        return None
+    cached: list = []
+
+    def read() -> dict[str, bool] | None:
+        if not cached:
+            cached.append(llm_keys())
+        return cached[0]
+    return read
+
+
+def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
+    """Sin `llm_keys` no se comprueban las claves de los proveedores (las reglas siguen siendo puras en los tests)."""
+    llm_keys = _once(llm_keys)
     types = [n.type for n in graph.nodes]
     issues: list[Issue] = []
     if "sampling" not in types:
@@ -158,7 +194,7 @@ def validate(graph: Graph) -> list[Issue]:
         if isinstance(node, SamplingNode):
             issues += _sampling(node)
         elif isinstance(node, PromptNode):
-            issues += _prompt(node, graph)
+            issues += _prompt(node, graph, llm_keys)
         else:
             issues += _output(node, graph)
             destination = _normalized(node.config.destination or "")

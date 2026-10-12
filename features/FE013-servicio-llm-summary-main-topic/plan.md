@@ -194,6 +194,13 @@
 - **Hipótesis:** Gemini responde a una clave no válida con `400` y el motivo `API_KEY_INVALID`; el adaptador lo trata como clave rechazada.
 - **Movido a T5:** el test que compara el registro de proveedores del servicio con el catálogo de la API, porque el catálogo se amplía en T5.
 
+## Notas de T5: comprobación contra Gemini real (2026-10-12)
+
+- **Hecho:** con la clave de la persona usuaria y `gemini-3.5-flash-lite` (modelo por defecto, a petición suya): la prueba de proveedor, el formato etiqueta y un flujo de 3 conversaciones desde la API terminan bien.
+- **Hecho:** la forma REST de la guía para JSON (`generationConfig.responseFormat.text` con `mimeType: "application/json"`) responde `400`. `responseMimeType` + `responseJsonSchema` funciona y admite `additionalProperties`; el adaptador usa esa forma. La hipótesis de T4 sobre la salida JSON de Gemini queda resuelta.
+- **Hecho:** los logs de los dos procesos no contienen la clave.
+- **Pendiente para T7:** hasta que el panel del nodo Prompt envíe el proveedor, un nodo nuevo toma el modelo por defecto (`gemini-3.5-flash-lite`) sin proveedor y la validación lo marca como `model_not_in_provider`.
+
 ## Riesgos del plan
 
 - **Comportamiento de las suites:** hoy hay tests de ingesta que esperan `updated` al repetir una descarga. Con `overwrite=false` por defecto hay que cambiarlos a `overwrite=true` de forma explícita, no borrarlos (T1).
@@ -202,4 +209,4 @@
 
 ## Progreso
 
-- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [ ] T5 · [ ] T6 · [ ] T7 · [ ] T8 · [ ] T9
+- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [ ] T6 · [ ] T7 · [ ] T8 · [ ] T9

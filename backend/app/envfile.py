@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
-API_KEYS = ("INGESTION_URL", "INGESTION_TOKEN")
+API_KEYS = ("INGESTION_URL", "INGESTION_TOKEN", "LLM_URL", "LLM_TOKEN")
 # Lectura de solo lectura de las conversaciones reales (FE012). Nunca las credenciales de Genesys.
 API_DATABASE_KEYS = ("DATABASE_URL",)
 # Servicio de LLM (FE013): es el único proceso que lee las claves de los proveedores.

@@ -10,9 +10,11 @@ from app.config.store import get_config
 from app.data.store import get_dataset
 from app.flows import catalog
 from app.flows.model import Graph, GraphError, parse_graph
-from app.flows.prompting import MockPromptRunner, PromptRunner
+from app.flows.llm_runner import build_runner
+from app.flows.prompting import PromptRunner
 from app.flows.runs import FlowExecutor, Run, get_run_store, step_delay_seconds
-from app.flows.rules import blocking, validate
+from app.flows.rules import LlmKeys, blocking, validate
+from app.llm_client import LlmClient, LlmUnavailable, get_llm_client
 from app.flows.store import Flow, get_flow_store
 from app.query.engine import run_query
 from app.query.model import QueryError, parse_query
@@ -53,9 +55,19 @@ def parsed_graph(payload: Any = Body(...)) -> Graph:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=exc.errors) from None
 
 
-def get_prompt_runner() -> PromptRunner:
-    """Punto de sustitución del motor de prompts (ADR-006): hoy simulado, mañana un LLM real."""
-    return MockPromptRunner()
+def get_prompt_runner(client: LlmClient = Depends(get_llm_client)) -> PromptRunner:
+    """Punto de sustitución del motor de prompts (ADR-006): simulado o, según el proveedor del nodo, el LLM (FE013)."""
+    return build_runner(client)
+
+
+def llm_keys(client: LlmClient) -> LlmKeys:
+    """Proveedores con clave según el servicio de LLM, o `None` si no responde."""
+    def read() -> dict[str, bool] | None:
+        try:
+            return client.health().get("keys", {})
+        except LlmUnavailable:
+            return None
+    return read
 
 
 def _summary(flow: Flow) -> dict:
@@ -84,7 +96,9 @@ def flow_catalog() -> dict:
         "order_keys": catalog.as_options(catalog.ORDER_KEYS),
         "orders": catalog.as_options(catalog.ORDERS),
         "models": catalog.as_options(catalog.MODELS),
-        # Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA, FE005).
+        "providers": catalog.provider_options(),
+        # Proveedor y modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA, FE005).
+        "default_provider": get_config().ai.provider,
         "default_model": get_config().ai.model,
         "variables": catalog.as_options(catalog.VARIABLES),
         "output_formats": catalog.as_options(catalog.OUTPUT_FORMATS),
@@ -101,8 +115,8 @@ def flow_catalog() -> dict:
 
 
 @router.post("/validate", dependencies=[Depends(VIEW)])
-def validate_graph(graph: Graph = Depends(parsed_graph)) -> dict:
-    issues = validate(graph)
+def validate_graph(graph: Graph = Depends(parsed_graph), client: LlmClient = Depends(get_llm_client)) -> dict:
+    issues = validate(graph, llm_keys(client))
     return {"valid": not blocking(issues), "issues": [issue.to_dict() for issue in issues]}
 
 
@@ -153,9 +167,10 @@ def delete_flow(flow_id: str) -> Response:
 
 @router.post("/{flow_id}/runs", status_code=status.HTTP_202_ACCEPTED)
 def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(EDIT),
-              runner: PromptRunner = Depends(get_prompt_runner)) -> dict:
+              runner: PromptRunner = Depends(get_prompt_runner),
+              client: LlmClient = Depends(get_llm_client)) -> dict:
     flow = _flow(flow_id)
-    issues = blocking(validate(flow.graph))
+    issues = blocking(validate(flow.graph, llm_keys(client)))
     if issues:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=[issue.to_dict() for issue in issues])
     run = get_run_store().start(flow, user)

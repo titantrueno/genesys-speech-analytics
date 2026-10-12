@@ -79,8 +79,8 @@ def test_gemini_sends_generate_content_with_its_key_header():
 def test_gemini_asks_for_json_with_the_schema_and_omits_an_unsupported_temperature():
     recorder = Recorder(GEMINI_RESPONSE)
     _complete("gemini", recorder, "gemini-3.8-flash", OutputSpec("json", schema=SCHEMA), temperature=None)
-    assert recorder.sent["generationConfig"] == {
-        "responseFormat": {"text": {"mimeType": "application/json", "schema": SCHEMA}}}
+    # Comprobado contra la API real el 2026-10-12: `responseFormat.text` de la guía REST responde 400.
+    assert recorder.sent["generationConfig"] == {"responseMimeType": "application/json", "responseJsonSchema": SCHEMA}
 
 
 @pytest.mark.parametrize("body, message", [

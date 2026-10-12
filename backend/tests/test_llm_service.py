@@ -79,7 +79,7 @@ def test_a_provider_without_key_is_503_and_nothing_is_called():
     upstream = Upstream()
     response = _client(upstream, keys={}).post("/complete", json=REQUEST)
     assert response.status_code == 503
-    assert response.json()["detail"] == "El proveedor OpenAI no tiene clave configurada"
+    assert response.json() == {"detail": "El proveedor OpenAI no tiene clave configurada", "code": "missing_key"}
     assert upstream.calls == 0
 
 
@@ -87,7 +87,7 @@ def test_a_rejected_key_is_502_without_retries():
     upstream = Upstream(401)
     response = _client(upstream).post("/complete", json=REQUEST)
     assert response.status_code == 502
-    assert response.json()["detail"] == "El proveedor rechazó la clave"
+    assert response.json() == {"detail": "El proveedor rechazó la clave", "code": "key_rejected"}
     assert upstream.calls == 1
 
 

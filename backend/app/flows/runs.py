@@ -10,6 +10,7 @@ import random
 import threading
 import time
 from collections import defaultdict
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable
@@ -18,7 +19,7 @@ from app import ids
 from app.auth import User
 from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
 from app.flows.outputs import build_metric, build_report, build_table
-from app.flows.prompting import PromptRunner
+from app.flows.prompting import PromptFailed, PromptRejected, PromptRunner, PromptUnavailable
 from app.flows.sampling import candidates, draw_sample
 from app.clock import now
 from app.flows.store import Flow
@@ -52,6 +53,9 @@ class NodeState:
     processed: int = 0
     total: int | None = None
     message: str | None = None
+    # Solo en los Prompt con un LLM real (FE013): respuestas fuera de formato y conversaciones sin respuesta.
+    rejected: int = 0
+    failed: int = 0
 
 
 @dataclass
@@ -69,6 +73,8 @@ class Run:
     sample_size: int | None = None
     nodes: dict[str, NodeState] = field(default_factory=dict)
     outputs: dict[str, dict] = field(default_factory=dict)
+    # Por nodo Prompt, las conversaciones excluidas de los outputs y el motivo (FE013).
+    failures: dict[str, list[dict]] = field(default_factory=dict)
     lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def __post_init__(self):
@@ -100,6 +106,7 @@ class Run:
                 "graph": self.graph.dump(),
                 "nodes": {node_id: vars(state) for node_id, state in self.nodes.items()},
                 "outputs": self.outputs,
+                "failures": self.failures,
             })
 
     def update(self, **changes: Any) -> None:
@@ -198,8 +205,9 @@ class FlowExecutor:
                 if isinstance(node, SamplingNode):
                     sampled[node_id] = self._sampling(run, node)
                 elif isinstance(node, PromptNode):
-                    sampled[node_id] = sampled[inputs[0]]
-                    results[node_id] = self._prompt(run, node, sampled[node_id], results.get(inputs[0]))
+                    results[node_id] = self._prompt(run, node, sampled[inputs[0]], results.get(inputs[0]))
+                    # Solo siguen las conversaciones con un resultado válido (FE013, criterio 13).
+                    sampled[node_id] = [c for c in sampled[inputs[0]] if c.id in results[node_id]]
                 else:
                     self._output(run, node, graph.node(inputs[0]), sampled[inputs[0]], results[inputs[0]])
                     sampled[node_id] = sampled[inputs[0]]
@@ -228,15 +236,56 @@ class FlowExecutor:
     def _prompt(self, run: Run, node: PromptNode, conversations: list[Conversation],
                 previous: dict[str, Any] | None) -> dict[str, Any]:
         run.update_node(node.id, total=len(conversations))
-        results = {}
-        for i, conv in enumerate(conversations, start=1):
+        results: dict[str, Any] = {}
+        failures: list[dict] = []
+
+        def one(conv: Conversation) -> None:
             try:
-                results[conv.id] = self.runner.run(node.config, conv, previous.get(conv.id) if previous else None)
+                value = self.runner.run(node.config, conv, previous.get(conv.id) if previous else None)
+            except (PromptRejected, PromptFailed) as exc:
+                status = "rechazado" if isinstance(exc, PromptRejected) else "error"
+                with run.lock:
+                    failures.append({"conversation_id": conv.id, "status": status, "reason": str(exc)})
+            except PromptUnavailable as exc:
+                raise NodeFailure(f"Error al ejecutar el prompt: {exc}") from exc
             except Exception as exc:  # un proveedor real puede fallar por muchas causas; se informa en el nodo
                 raise NodeFailure(f"Error al ejecutar el prompt: {exc}") from exc
-            run.update_node(node.id, processed=i)
-            self._step(run)
-        return results
+            else:
+                with run.lock:
+                    results[conv.id] = value
+
+        parallelism = getattr(self.runner, "parallelism_for", lambda _: 1)(node.config)
+        if parallelism <= 1:
+            for i, conv in enumerate(conversations, start=1):
+                one(conv)
+                self._progress(run, node.id, i, failures)
+        else:
+            with ThreadPoolExecutor(max_workers=parallelism, thread_name_prefix="prompt") as pool:
+                pending = {pool.submit(one, conv) for conv in conversations}
+                done_count = 0
+                while pending:
+                    done, pending = wait(pending, return_when=FIRST_COMPLETED)
+                    for future in done:
+                        if future.exception() is not None:
+                            for other in pending:
+                                other.cancel()
+                            raise future.exception()
+                        done_count += 1
+                        self._progress(run, node.id, done_count, failures)
+        if conversations and not results:
+            raise NodeFailure("Ninguna conversación obtuvo un resultado válido: revisa la plantilla y el formato.")
+        # En el orden de la muestra, como el resto de nodos.
+        order = {conv.id: i for i, conv in enumerate(conversations)}
+        with run.lock:
+            run.failures[node.id] = sorted(failures, key=lambda f: order[f["conversation_id"]])
+        return {conv.id: results[conv.id] for conv in conversations if conv.id in results}
+
+    def _progress(self, run: Run, node_id: str, processed: int, failures: list[dict]) -> None:
+        with run.lock:
+            rejected = sum(f["status"] == "rechazado" for f in failures)
+            failed = len(failures) - rejected
+        run.update_node(node_id, processed=processed, rejected=rejected, failed=failed)
+        self._step(run)
 
     def _output(self, run: Run, node: OutputNode, prompt: PromptNode, conversations: list[Conversation],
                 results: dict[str, Any]) -> None:

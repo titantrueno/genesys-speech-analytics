@@ -430,7 +430,9 @@ class FlowCatalog(Doc):
     strata: list[ValueLabel]
     order_keys: list[ValueLabel]
     orders: list[ValueLabel]
-    models: list[ValueLabel]
+    models: list[ValueLabel] = Field(description="Todos los modelos, de todos los proveedores.")
+    providers: list["ProviderOption"] = Field(description="Proveedores con sus modelos (FE013).")
+    default_provider: str = Field(description="Proveedor que toma un nodo Prompt nuevo (Configuración › Modelos de IA).")
     default_model: str = Field(description="Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA).")
     variables: list[ValueLabel]
     output_formats: list[ValueLabel]
@@ -471,6 +473,14 @@ class NodeState(Doc):
     processed: int
     total: int | None
     message: str | None
+    rejected: int = Field(description="Prompt con LLM: respuestas fuera del formato de salida (FE013).")
+    failed: int = Field(description="Prompt con LLM: conversaciones sin respuesta del proveedor (FE013).")
+
+
+class PromptFailure(Doc):
+    conversation_id: str
+    status: Literal["rechazado", "error"]
+    reason: str = Field(description="Motivo, sin datos de la conversación ni del proveedor.")
 
 
 class TableRow(Doc):
@@ -511,6 +521,8 @@ class Run(RunSummary):
     graph: Graph = Field(description="Copia del grafo ejecutado.")
     nodes: dict[str, NodeState] = Field(description="Estado por identificador de nodo.")
     outputs: dict[str, RunOutput] = Field(description="Resultado por identificador de nodo Output.")
+    failures: dict[str, list[PromptFailure]] = Field(
+        description="Por nodo Prompt con LLM, las conversaciones excluidas de los outputs (FE013).")
 
 
 # --- Configuración -------------------------------------------------------------------------------------------------
@@ -547,8 +559,32 @@ class KpiSettings(Doc):
     dashboards: list[str]
 
 
+class ModelOption(ValueLabel):
+    temperature: bool = Field(description="Si el modelo admite `temperature`; si no, no se le envía (FE013).")
+
+
 class ProviderOption(ValueLabel):
-    models: list[ValueLabel]
+    models: list[ModelOption] = Field(description="El primero es el que se propone al elegir el proveedor.")
+
+
+class AiProviderStatus(ValueLabel):
+    key_configured: bool = Field(description="Si el servicio de LLM tiene su clave; nunca la clave.")
+
+
+class AiStatus(Doc):
+    service: Literal["disponible"]
+    providers: list[AiProviderStatus]
+
+
+class AiTestIn(Doc):
+    model: str
+
+
+class AiTestResult(Doc):
+    ok: bool
+    provider: str
+    model: str
+    message: str = Field(description="«El proveedor respondió correctamente» o el error del proveedor.")
 
 
 class ConfigOptions(Doc):

@@ -1,8 +1,10 @@
 """Gemini (Google): `generateContent` de la API de Gemini (FE013).
 
 Documentación consultada el 2026-10-12: https://ai.google.dev/api/generate-content y
-https://ai.google.dev/gemini-api/docs/generate-content/structured-output (el JSON con esquema va en
-`generationConfig.responseFormat.text`). La clave viaja en la cabecera `x-goog-api-key`, nunca en la URL.
+https://ai.google.dev/gemini-api/docs/generate-content/structured-output. El JSON con esquema va en
+`generationConfig.responseMimeType` + `responseJsonSchema`: comprobado contra la API real ese día, la forma REST de la
+guía (`responseFormat.text` con `mimeType: "application/json"`) responde `400`. La clave viaja en la cabecera
+`x-goog-api-key`, nunca en la URL.
 """
 from typing import Any
 
@@ -22,7 +24,8 @@ class Gemini(HttpProvider):
         if request.temperature is not None:
             config["temperature"] = request.temperature
         if request.output.type == "json":
-            config["responseFormat"] = {"text": {"mimeType": "application/json", "schema": request.output.schema}}
+            config["responseMimeType"] = "application/json"
+            config["responseJsonSchema"] = request.output.schema
         if config:
             body["generationConfig"] = config
         return f"{BASE_URL}/{request.model}:generateContent", {"x-goog-api-key": key}, body

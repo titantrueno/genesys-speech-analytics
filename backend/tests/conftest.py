@@ -6,6 +6,8 @@ os.environ.setdefault("FLOW_RUN_STEP_DELAY_MS", "0")
 # Los tests no leen la PostgreSQL de desarrollo del `.env`: un valor vacío tiene prioridad sobre el fichero. Los que
 # necesitan una base la ponen con `monkeypatch.setenv("DATABASE_URL", pg_url)`.
 os.environ["DATABASE_URL"] = ""
+# Ni el servicio de LLM real (FE013): sin token, el cliente lo da por no disponible. Los tests usan un doble.
+os.environ["LLM_TOKEN"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

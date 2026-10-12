@@ -81,6 +81,7 @@ class Op:
 
 NOT_FOUND = "No existe (o el identificador es de otro tipo)."
 UNAVAILABLE_503 = "El servicio de ingesta no está disponible."
+LLM_503 = "El servicio de LLM no está disponible."
 DOWNLOAD_422 = ("Un campo no es válido: nombre, intervalo (rangos, orden, 90 días, sin futuro), canales o programación (solo con intervalo relativo).")
 
 
@@ -276,6 +277,16 @@ OPERATIONS: dict[tuple[str, str], Op] = {
                                        errors=_e422("Errores por campo.", s.FieldErrors)),
     ("PUT", "/api/config/ai"): Op("Guardar Modelos de IA", s.PlatformConfig, "config:edit", body=AiConfig,
                                   errors=_e422("Proveedor o modelo desconocidos.", s.FieldErrors)),
+    ("GET", "/api/config/ai/status"): Op(
+        "Estado del servicio de LLM", s.AiStatus, "config:view",
+        "Qué proveedores tienen clave en el servicio de LLM (sí o no, nunca la clave).",
+        errors={503: (LLM_503, s.ErrorText)}),
+    ("POST", "/api/config/ai/test/{provider}"): Op(
+        "Probar un proveedor de LLM", s.AiTestResult, "config:edit",
+        "Hace una petición mínima con el modelo indicado. Un error del proveedor (sin clave, clave rechazada…) "
+        "responde `200` con `ok: false` y su mensaje.", body=s.AiTestIn,
+        errors={422: ("Proveedor desconocido o modelo de otro proveedor.", s.FieldErrors),
+                503: (LLM_503, s.ErrorText)}),
     ("GET", "/api/config/connectors"): Op("Conectores", s.Connectors, "config:view",
                                           "Conectores mock de Genesys con su volumen de conversaciones."),
     ("POST", "/api/config/connectors/{connector_id}/sync"): Op(

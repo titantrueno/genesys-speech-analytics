@@ -4,7 +4,7 @@ from dataclasses import dataclass, replace
 from typing import Any, Callable, Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app import ids
 from app.auth import User, require_permission
@@ -20,7 +20,8 @@ from app.text import normalize_text
 from app.data.real import real_repository
 from app.data.repository import DataUnavailable, cached_by_version, synthetic_repository
 from app.data.store import get_dataset
-from app.flows.catalog import MODELS, PROVIDERS
+from app.flows.catalog import PROVIDERS, SIMULATED, provider_options
+from app.llm_client import UNAVAILABLE as LLM_UNAVAILABLE, LlmClient, LlmError, LlmUnavailable, get_llm_client
 from app.clock import now
 from app.ingestion_client import UNAVAILABLE, IngestionClient, IngestionUnavailable, get_ingestion_client
 
@@ -56,8 +57,7 @@ def _options() -> dict:
     return {
         "languages": [{"value": v, "label": label} for v, label in LANGUAGES.items()],
         "timezones": timezones(),
-        "providers": [{"value": v, "label": p["label"], "models": [{"value": m, "label": MODELS[m]} for m in p["models"]]}
-                      for v, p in PROVIDERS.items()],
+        "providers": provider_options(),
         "sections": [{"value": v, "label": label} for v, label in SECTIONS.items()],
         "dashboards": [{"value": v, "label": label} for v, label in DASHBOARDS.items()],
     }
@@ -69,7 +69,7 @@ def config_body(config: Config) -> dict:
         "general": config.general.model_dump(),
         "sources": config.sources.model_dump(),
         "privacy": config.privacy.model_dump(),
-        "ai": {**config.ai.model_dump(), "simulated": True},
+        "ai": {**config.ai.model_dump(), "simulated": config.ai.provider == SIMULATED},
         "kpis": [{"code": k.code, "label": k.label, "unit": k.unit, "higher_is_better": k.higher_is_better,
                   **config.kpis[k.code].to_dict()} for k in KPI_DEFS],
         "options": _options(),
@@ -118,6 +118,35 @@ def update_ai(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
     config = get_config_store().apply_change(user, "modelos", "Modelo por defecto", lambda c: (
         c.ai.model_dump(), ai.model_dump(), {"ai": ai}))
     return config_body(config)
+
+
+class ProviderTestIn(BaseModel):
+    model: str
+
+
+@router.get("/ai/status", dependencies=[Depends(VIEW)])
+def ai_status(client: LlmClient = Depends(get_llm_client)) -> dict:
+    """Si el servicio de LLM responde y qué proveedores tienen clave (sí o no, nunca la clave) (FE013, criterio 9)."""
+    try:
+        keys = client.health().get("keys", {})
+    except LlmUnavailable:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=LLM_UNAVAILABLE) from None
+    return {"service": "disponible", "providers": [
+        {"value": name, "label": spec["label"], "key_configured": bool(keys.get(name))} for name, spec in PROVIDERS.items()]}
+
+
+@router.post("/ai/test/{provider}", dependencies=[Depends(EDIT)])
+def test_ai_provider(provider: Literal[tuple(PROVIDERS)], body: ProviderTestIn,
+                     client: LlmClient = Depends(get_llm_client)) -> dict:
+    """Petición mínima al proveedor: éxito o el mensaje del servicio de LLM; `503` si el servicio no responde."""
+    if body.model not in PROVIDERS[provider]["models"]:
+        raise _unprocessable("model", "El modelo no pertenece al proveedor")
+    try:
+        return client.test_provider(provider, body.model)
+    except LlmUnavailable:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=LLM_UNAVAILABLE) from None
+    except LlmError as exc:
+        return {"ok": False, "provider": provider, "model": body.model, "message": exc.detail}
 
 
 @router.get("/connectors", dependencies=[Depends(VIEW)])

@@ -17,6 +17,7 @@ from app.config.checks import Check, initial_checks
 from app.config.kpis import KpiTarget, initial_kpis
 from app.config.model import SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, SourcesConfig
 from app.config.taxonomy import Topic, initial_main_topics, initial_secondary_topics
+from app.flows.catalog import DEFAULT_MODEL, DEFAULT_PROVIDER
 from app.clock import now
 
 DEFAULT_GENERAL = GeneralConfig(platform_name="Speech & Text Analytics", timezone="Europe/Madrid", language="es-ES")
@@ -45,7 +46,7 @@ class Config:
     general: GeneralConfig = DEFAULT_GENERAL
     sources: SourcesConfig = SourcesConfig(origin="sintetico")
     privacy: PrivacyConfig = PrivacyConfig(pii_masking=True)
-    ai: AiConfig = AiConfig(provider="simulado", model="mock-rapido")
+    ai: AiConfig = AiConfig(provider=DEFAULT_PROVIDER, model=DEFAULT_MODEL)
     connectors: dict[str, Connector] = field(default_factory=_default_connectors)
     main_topics: dict[str, Topic] = field(default_factory=initial_main_topics)
     secondary_topics: dict[str, Topic] = field(default_factory=initial_secondary_topics)
