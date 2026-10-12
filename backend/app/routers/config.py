@@ -21,8 +21,12 @@ from app.text import normalize_text
 from app.data.store import get_dataset
 from app.flows.catalog import MODELS, PROVIDERS
 from app.clock import now
+from app.ingestion_client import UNAVAILABLE, IngestionClient, IngestionUnavailable, get_ingestion_client
 
 router = APIRouter(prefix="/api/config", tags=["config"])
+
+GENESYS_STATUS_FIELDS = ("region", "credentials_configured", "database", "last_test", "last_download", "conversations")
+GENESYS_TEST_TIMEOUT_S = 20.0
 
 VIEW = require_permission("config:view")
 EDIT = require_permission("config:edit")
@@ -100,6 +104,27 @@ def update_ai(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
 @router.get("/connectors", dependencies=[Depends(VIEW)])
 def list_connectors() -> dict:
     return {"items": [_connector(c) for c in get_config().connectors.values()]}
+
+
+@router.get("/connectors/genesys", dependencies=[Depends(VIEW)])
+def genesys_connector(client: IngestionClient = Depends(get_ingestion_client)) -> dict:
+    """Estado del conector real (FE011): si el servicio de ingesta no responde, se dice así en lugar de fallar."""
+    try:
+        response = client.request("GET", "/status")
+    except IngestionUnavailable:
+        response = None
+    if response is None or response.status_code != status.HTTP_200_OK:
+        return {"service": "no_disponible", **dict.fromkeys(GENESYS_STATUS_FIELDS)}
+    return {"service": "disponible", **{key: response.json().get(key) for key in GENESYS_STATUS_FIELDS}}
+
+
+@router.post("/connectors/genesys/test", dependencies=[Depends(EDIT)])
+def test_genesys_connector(client: IngestionClient = Depends(get_ingestion_client)) -> dict:
+    """Prueba las credenciales de Genesys desde el servicio de ingesta (la API no las conoce)."""
+    try:
+        return client.request("POST", "/status/test", timeout=GENESYS_TEST_TIMEOUT_S).json()
+    except IngestionUnavailable:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=UNAVAILABLE) from None
 
 
 @router.post("/connectors/{connector_id}/sync")

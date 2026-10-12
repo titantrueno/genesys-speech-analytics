@@ -631,3 +631,143 @@ class RoleItem(Doc):
 class Roles(Doc):
     items: list[RoleItem]
     permissions: list[ValueLabel] = Field(description="Catálogo de los 9 permisos con su etiqueta.")
+
+
+# --- Flujos de descarga de Genesys Cloud (FE011) -------------------------------------------------------------------
+
+DownloadRunStatus = Literal["pendiente", "en_curso", "completada", "completada_con_avisos", "error"]
+DownloadChannel = Literal["voz", "chat"]
+
+
+class DownloadInterval(Doc):
+    """Relativo (`hoy`, `ayer`, últimas N `horas` o `dias`) o específico (`from`–`to` en la zona horaria del flujo)."""
+    type: Literal["relativo", "especifico"]
+    unit: Literal["hoy", "ayer", "horas", "dias"] | None = Field(None, description="Solo en un intervalo relativo.")
+    amount: int | None = Field(None, description="Horas (1–720) o días (1–90); nulo en `hoy` y `ayer`.")
+    from_: str | None = Field(None, alias="from", description="Solo en uno específico: fecha y hora local.",
+                              examples=["2026-10-01T08:00:00"])
+    to: str | None = Field(None, description="Solo en uno específico; como mucho 90 días después de `from`.")
+
+
+class DownloadSchedule(Doc):
+    type: Literal["desactivada", "cada_horas", "diaria"]
+    hours: int | None = Field(None, description="Cada cuántas horas (1–24), alineadas con la medianoche local.")
+    time: str | None = Field(None, description="Hora local `HH:MM` de la ejecución diaria.", examples=["07:30"])
+
+
+class DownloadFlowIn(Doc):
+    """Cuerpo para crear o guardar un flujo de descarga. La API añade la autoría y la zona horaria vigente."""
+    name: str = Field(max_length=80)
+    interval: DownloadInterval
+    channels: list[DownloadChannel] = Field(min_length=1)
+    schedule: DownloadSchedule = Field(description="Una descarga programada necesita un intervalo relativo.")
+    active: bool = Field(True, description="Un flujo inactivo no se ejecuta por programación, pero sí a mano.")
+
+
+class DownloadRunRef(Doc):
+    id: str = Field(description="Identificador `1RN-…`.")
+    status: DownloadRunStatus
+    created_at: datetime
+
+
+class DownloadFlow(Doc):
+    id: str = Field(description="Identificador `1FL-…`.")
+    name: str
+    interval: DownloadInterval
+    channels: list[DownloadChannel]
+    schedule: DownloadSchedule
+    active: bool
+    timezone: str = Field(description="Zona horaria de la plataforma cuando se guardó el flujo.")
+    author: Person
+    created_at: datetime
+    updated_at: datetime
+    next_run_at: datetime | None = Field(description="Próxima ejecución programada; nula si no está programado o activo.")
+    last_run: DownloadRunRef | None
+
+
+class DownloadFlowList(Doc):
+    items: list[DownloadFlow]
+
+
+class DownloadCounters(Doc):
+    found: int = Field(description="Encontradas = insertadas + actualizadas + omitidas + con error, al terminar.")
+    downloaded: int
+    inserted: int
+    updated: int
+    skipped: int
+    errors: int
+    skipped_in_progress: int
+    skipped_other_channel: int = Field(description="De otro canal o de un medio no soportado.")
+    by_channel: dict[str, int]
+    by_quality: dict[str, int] = Field(description="`completa`, `parcial` y `sin_transcripcion`.")
+    undelivered_messages: int
+
+
+class DownloadRunInterval(Doc):
+    from_: datetime = Field(alias="from")
+    to: datetime
+
+
+class DownloadRun(Doc):
+    id: str = Field(description="Identificador `1RN-…`.")
+    flow_id: str
+    origin: Literal["manual", "programada"]
+    status: DownloadRunStatus
+    interval: DownloadRunInterval = Field(description="Intervalo resuelto al lanzar la ejecución.")
+    channels: list[DownloadChannel]
+    counters: DownloadCounters
+    error: str | None
+    started_by: Person | None = Field(description="Quién la lanzó; nulo en las programadas.")
+    created_at: datetime
+    started_at: datetime | None
+    finished_at: datetime | None
+    duration_s: float | None
+
+
+class DownloadRunList(Doc):
+    items: list[DownloadRun]
+
+
+class DownloadLogEntry(Doc):
+    id: int = Field(description="Creciente; sirve de cursor para `after`.")
+    at: datetime
+    level: Literal["info", "aviso", "error"]
+    stage: str = Field(examples=["normalización"])
+    message: str = Field(description="Identificadores, recuentos y motivos; nunca el texto de los turnos.")
+    genesys_id: str | None = Field(description="Conversación de Genesys afectada, si la hay.")
+
+
+class DownloadLog(Doc):
+    items: list[DownloadLogEntry]
+
+
+class GenesysTest(Doc):
+    ok: bool
+    at: datetime
+    organization: str | None = Field(description="Nombre de la organización de Genesys, si la conexión funciona.")
+    region: str | None
+    message: str
+
+
+class GenesysLastDownload(Doc):
+    run_id: str
+    flow_id: str
+    status: DownloadRunStatus
+    finished_at: datetime | None
+
+
+class GenesysConversations(Doc):
+    total: int
+    by_channel: dict[str, int]
+    by_quality: dict[str, int]
+
+
+class GenesysConnector(Doc):
+    """Estado del conector real. Con el servicio de ingesta caído, `service` es `no_disponible` y el resto, nulo."""
+    service: Literal["disponible", "no_disponible"]
+    region: str | None
+    credentials_configured: bool | None = Field(description="Si el servicio de ingesta tiene `GENESYS_*`.")
+    database: str | None
+    last_test: GenesysTest | None = Field(description="Última «Probar conexión» desde que arrancó el servicio.")
+    last_download: GenesysLastDownload | None
+    conversations: GenesysConversations | None

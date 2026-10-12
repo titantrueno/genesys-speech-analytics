@@ -345,3 +345,36 @@
   - **«Cada N horas»** se alinea con la medianoche local (cada 5 horas: 00, 05, 10, 15 y 20 h), no con el momento de guardar.
   - **«Últimas N horas o días»** se calculan sobre tiempo real (UTC). «Hoy» y «ayer» usan días naturales en la zona del flujo.
   - **Borrar** un flujo con una ejecución activa devuelve `409`. La spec no lo decía; evita borrar una ejecución mientras escribe.
+
+### T6 — Hecha (2026-10-12)
+
+- **Rojo:** `test_downloads_api.py` fallaba en la recogida, porque no existía `app.ingestion_client`. Después, la suite sin PostgreSQL falló por «Operación sin documentar: GET /api/download-flows» hasta documentar las 11 operaciones en `app/openapi/spec.py`. `test_downloads_integration.py` falló en los dos tests del conector hasta añadir `/status` y `/status/test` al servicio de ingesta.
+- **Verde:**
+  - **Rutas de la API** (17 tests con el doble en memoria `tests/ingestion_stub.py`):
+    - CRUD y ejecución con `admin`;
+    - la autoría y la zona horaria las pone la API, aunque el cliente envíe otras, y al guardar no se reenvía la autoría;
+    - quien lanza llega al servicio;
+    - `422` reducido a `loc`, `msg` y `type`, sin `input`;
+    - `404` y `409` reenviados;
+    - log en texto como adjunto;
+    - con solo `flows:view`, `200` en las 5 lecturas y `403` en las 4 escrituras, sin que nada llegue al servicio; `viewer`, `403`;
+    - conector: `config:view` para el estado y `config:edit` para «Probar conexión»;
+    - `503` con el servicio caído, sin token o con un token rechazado, mientras `/api/flows` sigue respondiendo;
+    - con el servicio caído, el estado del conector responde `200` con `no_disponible`.
+  - **Contrato:** las 11 operaciones nuevas se llaman en `test_real_responses_match_the_documented_schemas` y sus respuestas cumplen los esquemas en modo estricto. El recorrido de `401` de `test_auth.py` las cubre sin cambios.
+  - **Integración** (3 tests `pg`): la API llama al servicio de ingesta real, que usa PostgreSQL, y sus respuestas cumplen los mismos esquemas. Así el doble no puede desviarse del servicio real sin que falle un test. Se comprueban los recuentos del conector, «Probar conexión» y las credenciales malas sin revelar el secreto.
+- **Mutaciones** (`python -B`): mueren las 17 (zona horaria y autoría del cliente, autoría al guardar, `422` sin sanear, quién lanza, permisos de crear, borrar y probar, adjunto del log, `401`/`5xx`/fallo de red/sin token como `503`, estado `404` y estado caído, secreto en la prueba, última prueba y recuentos).
+- **Procesos reales** (API en el 18000 e ingesta en el 18001, Genesys real):
+  - «Probar conexión» devuelve `ok`, organización «SGTO» y región `eu-west-1`;
+  - el estado muestra 13 conversaciones (7 de voz y 6 de chat; 9 completas, 2 parciales y 2 sin transcripción);
+  - el flujo creado por la API lleva la zona `Europe/Madrid` y la autoría «Admin Demo»; su descarga acaba en `completada_con_avisos` con 13 de 13, lanzada por «Admin Demo»;
+  - `viewer` recibe `403`; `supervisor` ve el estado (`200`) y la lista (`200`), y no puede probar (`403`);
+  - borrar devuelve `204`;
+  - con la ingesta parada, `/api/download-flows` da `503` («El servicio de ingesta no está disponible»), `/api/flows` da `200` y el conector sale `no_disponible`;
+  - ningún `Traceback` en los logs.
+- **Incidencia durante la prueba:** el primer intento usó los puertos 8000 y 8001. El 8000 estaba ocupado por otro servidor, y el `pkill -f "uvicorn app.main:app"` del script lo paró. Desde entonces las pruebas usan puertos propios (18000 y 18001) y paran solo sus procesos por PID.
+- **Decisiones:**
+  - **Rutas:** `/api/download-flows`, separado de `/api/flows/{flow_id}`, que lo capturaría.
+  - **Estado del conector:** `GET /api/config/connectors/genesys` responde `200` con `service: no_disponible` en lugar de `503`, porque la pestaña tiene que poder decir que el servicio no responde (criterio 22).
+  - **«Probar conexión»:** un fallo de credenciales es `200` con `ok: false`. La última prueba vive en la memoria del servicio de ingesta.
+  - **`401` del servicio de ingesta:** la API lo trata como `503`, porque significa que la API y el servicio tienen tokens distintos (configuración), no que falte la sesión del usuario.

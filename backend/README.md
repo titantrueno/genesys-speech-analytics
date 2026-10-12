@@ -100,6 +100,9 @@ Resumen. El contrato completo (parámetros, cuerpos, respuestas, formatos de err
 | `GET /api/config` | `config:view` | Configuración completa (General, Privacidad, Modelos de IA, KPIs), versión y opciones. |
 | `PUT /api/config/general`, `/privacy`, `/ai`, `/kpis/{code}` | `config:edit` | Guarda una sección; `422` con un error por campo (`loc`, `msg`). |
 | `GET /api/config/connectors`, `POST /api/config/connectors/{id}/sync` | `config:view` / `config:edit` | Conectores mock (`1CN-…`) y sincronización simulada. |
+| `GET /api/config/connectors/genesys`, `POST /api/config/connectors/genesys/test` | `config:view` / `config:edit` | Estado del conector real (servicio de ingesta, región, credenciales, última descarga, conversaciones por canal y calidad) y «Probar conexión» (FE011). |
+| `GET/POST /api/download-flows`, `GET/PUT/DELETE /api/download-flows/{id}` | `flows:view` / `flows:edit` | Flujos de descarga de Genesys (FE011); la API añade la autoría y la zona horaria vigente y delega en el servicio de ingesta (`503` si no está disponible). |
+| `POST /api/download-flows/{id}/runs`, `GET …/runs`, `GET …/runs/{run_id}`, `GET …/runs/{run_id}/log` | `flows:edit` / `flows:view` | «Descargar ahora» (`202`, `409` si hay una en curso), historial, estado y log (`after`, `level`, `format=text`). |
 | `GET /api/config/taxonomy`, `POST/PUT/DELETE /api/config/taxonomy/{main-topics,secondary-topics}[/{id}]` | `config:view` / `config:edit` | Taxonomía (`1TP-…`, `1TS-…`); el código no cambia y uno en uso no se borra (`409`). |
 | `GET/POST /api/config/compliance-checks`, `PUT/DELETE /api/config/compliance-checks/{id}` | `config:view` / `config:edit` | Checks de cumplimiento (`1CK-…`); los de FE001 no se borran (`409`). |
 | `GET /api/config/audit?section=` | `config:view` | Registro de cambios de la configuración (`1AU-…`), el más reciente primero. |

@@ -36,7 +36,8 @@ info:
     grafo (`GraphErrors`) e incidencias de flujo (`FlowIssues`).
 
 
-    **Persistencia.** Todo lo que se escribe vive en memoria y se pierde al reiniciar la API.
+    **Persistencia.** Todo lo que se escribe vive en memoria y se pierde al reiniciar la API, salvo los flujos de descarga
+    (FE011), que guarda el servicio de ingesta en PostgreSQL. Si ese servicio no está disponible, sus rutas responden `503`.
 
 
     Referencia ampliada: `vault/arquitectura/contrato-api-front-back.md`.'
@@ -2212,6 +2213,630 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `flows:view`. Instantánea con el estado de cada nodo y los resultados de cada Output.'
+  /api/download-flows:
+    get:
+      tags:
+      - downloads
+      summary: Flujos de descarga
+      operationId: list_download_flows_api_download_flows_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadFlowList'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Flujos de descarga de Genesys con su última ejecución y la próxima programada,
+        del más reciente al más antiguo.'
+    post:
+      tags:
+      - downloads
+      summary: Crear un flujo de descarga
+      operationId: create_download_flow_api_download_flows_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: &id009
+              $ref: '#/components/schemas/DownloadFlowIn'
+            example:
+              name: Descarga diaria
+              interval:
+                type: relativo
+                unit: ayer
+              channels:
+              - voz
+              - chat
+              schedule:
+                type: diaria
+                time: 07:30
+              active: true
+      responses:
+        '201':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id008
+                $ref: '#/components/schemas/DownloadFlow'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: 'Un campo no es válido: nombre, intervalo (rangos, orden, 90 días, sin futuro), canales o programación
+            (solo con intervalo relativo). Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - &id010
+                  $ref: '#/components/schemas/FieldErrors'
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. La autoría es quien llama y la zona horaria, la de la plataforma: «hoy», «ayer»
+        y la programación se calculan en ella.'
+  /api/download-flows/{flow_id}:
+    get:
+      tags:
+      - downloads
+      summary: Flujo de descarga
+      operationId: get_download_flow_api_download_flows__flow_id__get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id008
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`.'
+    put:
+      tags:
+      - downloads
+      summary: Guardar un flujo de descarga
+      operationId: update_download_flow_api_download_flows__flow_id__put
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: *id009
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id008
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: 'Un campo no es válido: nombre, intervalo (rangos, orden, 90 días, sin futuro), canales o programación
+            (solo con intervalo relativo). Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id010
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Sustituye la configuración y recalcula la próxima ejecución; la autoría no cambia
+        y la zona horaria pasa a ser la vigente.'
+    delete:
+      tags:
+      - downloads
+      summary: Borrar un flujo de descarga
+      operationId: delete_download_flow_api_download_flows__flow_id__delete
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '204':
+          description: Hecho, sin cuerpo.
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: Tiene una ejecución en curso.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Borra también sus ejecuciones y sus logs.'
+  /api/download-flows/{flow_id}/runs:
+    post:
+      tags:
+      - downloads
+      summary: Descargar ahora
+      operationId: start_download_run_api_download_flows__flow_id__runs_post
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '202':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id011
+                $ref: '#/components/schemas/DownloadRun'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '409':
+          description: Ya hay una ejecución en curso de este flujo.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:edit`. Resuelve el intervalo en este momento, crea la ejecución `pendiente` y la lanza
+        en segundo plano. El progreso se consulta con `GET /api/download-flows/{flow_id}/runs/{run_id}`.'
+    get:
+      tags:
+      - downloads
+      summary: Historial de descargas
+      operationId: list_download_runs_api_download_flows__flow_id__runs_get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadRunList'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Ejecuciones del flujo, de la más reciente a la más antigua (se conservan las 200
+        últimas).'
+  /api/download-flows/{flow_id}/runs/{run_id}:
+    get:
+      tags:
+      - downloads
+      summary: Descarga
+      operationId: get_download_run_api_download_flows__flow_id__runs__run_id__get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id011
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Estado y contadores, que se actualizan tras cada conversación.'
+  /api/download-flows/{flow_id}/runs/{run_id}/log:
+    get:
+      tags:
+      - downloads
+      summary: Log de una descarga
+      operationId: get_download_run_log_api_download_flows__flow_id__runs__run_id__log_get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: After
+      - name: level
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^(info|aviso|error)$
+          - type: 'null'
+          title: Level
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(json|text)$
+          default: json
+          title: Format
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLog'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: No existe (o el identificador es de otro tipo).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Parámetros no válidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+      description: 'Permiso: `flows:view`. Entradas a partir de `after` (cursor `id`), filtrables por `level`. Con `format=text`,
+        el log completo como adjunto `text/plain`. Nunca contiene el texto de los turnos ni secretos.'
   /api/config/public:
     get:
       tags:
@@ -2238,7 +2863,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id008
+              schema: &id012
                 $ref: '#/components/schemas/PlatformConfig'
           headers:
             X-Auth-Version:
@@ -2277,7 +2902,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id008
+              schema: *id012
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2303,8 +2928,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - &id009
-                  $ref: '#/components/schemas/FieldErrors'
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -2327,7 +2951,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id008
+              schema: *id012
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2353,7 +2977,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -2376,7 +3000,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id008
+              schema: *id012
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2403,7 +3027,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -2442,6 +3066,83 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `config:view`. Conectores mock de Genesys con su volumen de conversaciones.'
+  /api/config/connectors/genesys:
+    get:
+      tags:
+      - config
+      summary: Conector de Genesys Cloud
+      description: 'Permiso: `config:view`. Estado del servicio de ingesta (FE011): región, credenciales configuradas, última
+        prueba y última descarga, y conversaciones guardadas por canal y por calidad de la transcripción. Si el servicio no
+        responde, `200` con `service: no_disponible`.'
+      operationId: genesys_connector_api_config_connectors_genesys_get
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenesysConnector'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+  /api/config/connectors/genesys/test:
+    post:
+      tags:
+      - config
+      summary: Probar la conexión con Genesys Cloud
+      description: 'Permiso: `config:edit`. El servicio de ingesta pide un token con las credenciales del `.env` y lee la
+        organización. Un fallo de credenciales es `200` con `ok: false`.'
+      operationId: test_genesys_connector_api_config_connectors_genesys_test_post
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenesysTest'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: El servicio de ingesta no está disponible.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
   /api/config/connectors/{connector_id}/sync:
     post:
       tags:
@@ -2527,7 +3228,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id017
+              schema: &id020
                 $ref: '#/components/schemas/AuditLog'
           headers:
             X-Auth-Version:
@@ -2613,16 +3314,16 @@ paths:
           application/json:
             schema:
               oneOf:
-              - &id010
+              - &id013
                 $ref: '#/components/schemas/MainTopicIn'
-              - &id011
+              - &id014
                 $ref: '#/components/schemas/SecondaryTopicIn'
       responses:
         '201':
           description: Correcto.
           content:
             application/json:
-              schema: &id012
+              schema: &id015
                 $ref: '#/components/schemas/TaxonomyTopic'
           headers:
             X-Auth-Version:
@@ -2650,7 +3351,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -2684,14 +3385,14 @@ paths:
           application/json:
             schema:
               oneOf:
-              - *id010
-              - *id011
+              - *id013
+              - *id014
       responses:
         '200':
           description: Correcto.
           content:
             application/json:
-              schema: *id012
+              schema: *id015
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2725,7 +3426,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -2842,14 +3543,14 @@ paths:
         required: true
         content:
           application/json:
-            schema: &id013
+            schema: &id016
               $ref: '#/components/schemas/CheckIn'
       responses:
         '201':
           description: Correcto.
           content:
             application/json:
-              schema: &id014
+              schema: &id017
                 $ref: '#/components/schemas/ComplianceCheck'
           headers:
             X-Auth-Version:
@@ -2877,7 +3578,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -2900,13 +3601,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: *id013
+            schema: *id016
       responses:
         '200':
           description: Correcto.
           content:
             application/json:
-              schema: *id014
+              schema: *id017
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2940,7 +3641,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -3036,7 +3737,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id008
+              schema: *id012
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3070,7 +3771,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -3153,7 +3854,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: &id015
+            schema: &id018
               $ref: '#/components/schemas/UserIn'
             example:
               name: Lucía Pérez
@@ -3164,7 +3865,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id016
+              schema: &id019
                 $ref: '#/components/schemas/ManagedUser'
           headers:
             X-Auth-Version:
@@ -3189,7 +3890,7 @@ paths:
           description: Email duplicado (en el campo `email`).
           content:
             application/json:
-              schema: *id009
+              schema: *id010
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3200,7 +3901,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -3224,13 +3925,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: *id015
+            schema: *id018
       responses:
         '200':
           description: Correcto.
           content:
             application/json:
-              schema: *id016
+              schema: *id019
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3265,7 +3966,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - *id001
           headers:
             X-Auth-Version:
@@ -3276,7 +3977,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -3294,7 +3995,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id017
+              schema: *id020
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3369,7 +4070,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id018
+              schema: &id021
                 $ref: '#/components/schemas/RoleItem'
           headers:
             X-Auth-Version:
@@ -3394,7 +4095,7 @@ paths:
           description: Código o nombre duplicados (por campo).
           content:
             application/json:
-              schema: *id009
+              schema: *id010
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3405,7 +4106,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -3435,7 +4136,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id018
+              schema: *id021
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3478,7 +4179,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                - *id009
+                - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
           headers:
             X-Auth-Version:
@@ -4431,6 +5132,446 @@ components:
       - items
       title: ConversationPage
       type: object
+    DownloadCounters:
+      additionalProperties: false
+      properties:
+        found:
+          description: Encontradas = insertadas + actualizadas + omitidas + con error, al terminar.
+          title: Found
+          type: integer
+        downloaded:
+          title: Downloaded
+          type: integer
+        inserted:
+          title: Inserted
+          type: integer
+        updated:
+          title: Updated
+          type: integer
+        skipped:
+          title: Skipped
+          type: integer
+        errors:
+          title: Errors
+          type: integer
+        skipped_in_progress:
+          title: Skipped In Progress
+          type: integer
+        skipped_other_channel:
+          description: De otro canal o de un medio no soportado.
+          title: Skipped Other Channel
+          type: integer
+        by_channel:
+          additionalProperties:
+            type: integer
+          title: By Channel
+          type: object
+        by_quality:
+          additionalProperties:
+            type: integer
+          description: '`completa`, `parcial` y `sin_transcripcion`.'
+          title: By Quality
+          type: object
+        undelivered_messages:
+          title: Undelivered Messages
+          type: integer
+      required:
+      - found
+      - downloaded
+      - inserted
+      - updated
+      - skipped
+      - errors
+      - skipped_in_progress
+      - skipped_other_channel
+      - by_channel
+      - by_quality
+      - undelivered_messages
+      title: DownloadCounters
+      type: object
+    DownloadFlow:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1FL-…`.
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        interval:
+          $ref: '#/components/schemas/DownloadInterval'
+        channels:
+          items:
+            enum:
+            - voz
+            - chat
+            type: string
+          title: Channels
+          type: array
+        schedule:
+          $ref: '#/components/schemas/DownloadSchedule'
+        active:
+          title: Active
+          type: boolean
+        timezone:
+          description: Zona horaria de la plataforma cuando se guardó el flujo.
+          title: Timezone
+          type: string
+        author:
+          $ref: '#/components/schemas/Person'
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        updated_at:
+          format: date-time
+          title: Updated At
+          type: string
+        next_run_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: Próxima ejecución programada; nula si no está programado o activo.
+          title: Next Run At
+        last_run:
+          anyOf:
+          - $ref: '#/components/schemas/DownloadRunRef'
+          - type: 'null'
+      required:
+      - id
+      - name
+      - interval
+      - channels
+      - schedule
+      - active
+      - timezone
+      - author
+      - created_at
+      - updated_at
+      - next_run_at
+      - last_run
+      title: DownloadFlow
+      type: object
+    DownloadFlowIn:
+      additionalProperties: false
+      description: Cuerpo para crear o guardar un flujo de descarga. La API añade la autoría y la zona horaria vigente.
+      properties:
+        name:
+          maxLength: 80
+          title: Name
+          type: string
+        interval:
+          $ref: '#/components/schemas/DownloadInterval'
+        channels:
+          items:
+            enum:
+            - voz
+            - chat
+            type: string
+          minItems: 1
+          title: Channels
+          type: array
+        schedule:
+          $ref: '#/components/schemas/DownloadSchedule'
+          description: Una descarga programada necesita un intervalo relativo.
+        active:
+          default: true
+          description: Un flujo inactivo no se ejecuta por programación, pero sí a mano.
+          title: Active
+          type: boolean
+      required:
+      - name
+      - interval
+      - channels
+      - schedule
+      title: DownloadFlowIn
+      type: object
+    DownloadFlowList:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DownloadFlow'
+          title: Items
+          type: array
+      required:
+      - items
+      title: DownloadFlowList
+      type: object
+    DownloadInterval:
+      additionalProperties: false
+      description: Relativo (`hoy`, `ayer`, últimas N `horas` o `dias`) o específico (`from`–`to` en la zona horaria del flujo).
+      properties:
+        type:
+          enum:
+          - relativo
+          - especifico
+          title: Type
+          type: string
+        unit:
+          anyOf:
+          - enum:
+            - hoy
+            - ayer
+            - horas
+            - dias
+            type: string
+          - type: 'null'
+          default: null
+          description: Solo en un intervalo relativo.
+          title: Unit
+        amount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          description: Horas (1–720) o días (1–90); nulo en `hoy` y `ayer`.
+          title: Amount
+        from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: 'Solo en uno específico: fecha y hora local.'
+          examples:
+          - '2026-10-01T08:00:00'
+          title: From
+        to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Solo en uno específico; como mucho 90 días después de `from`.
+          title: To
+      required:
+      - type
+      title: DownloadInterval
+      type: object
+    DownloadLog:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DownloadLogEntry'
+          title: Items
+          type: array
+      required:
+      - items
+      title: DownloadLog
+      type: object
+    DownloadLogEntry:
+      additionalProperties: false
+      properties:
+        id:
+          description: Creciente; sirve de cursor para `after`.
+          title: Id
+          type: integer
+        at:
+          format: date-time
+          title: At
+          type: string
+        level:
+          enum:
+          - info
+          - aviso
+          - error
+          title: Level
+          type: string
+        stage:
+          examples:
+          - normalización
+          title: Stage
+          type: string
+        message:
+          description: Identificadores, recuentos y motivos; nunca el texto de los turnos.
+          title: Message
+          type: string
+        genesys_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Conversación de Genesys afectada, si la hay.
+          title: Genesys Id
+      required:
+      - id
+      - at
+      - level
+      - stage
+      - message
+      - genesys_id
+      title: DownloadLogEntry
+      type: object
+    DownloadRun:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1RN-…`.
+          title: Id
+          type: string
+        flow_id:
+          title: Flow Id
+          type: string
+        origin:
+          enum:
+          - manual
+          - programada
+          title: Origin
+          type: string
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - completada
+          - completada_con_avisos
+          - error
+          title: Status
+          type: string
+        interval:
+          $ref: '#/components/schemas/DownloadRunInterval'
+          description: Intervalo resuelto al lanzar la ejecución.
+        channels:
+          items:
+            enum:
+            - voz
+            - chat
+            type: string
+          title: Channels
+          type: array
+        counters:
+          $ref: '#/components/schemas/DownloadCounters'
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        started_by:
+          anyOf:
+          - $ref: '#/components/schemas/Person'
+          - type: 'null'
+          description: Quién la lanzó; nulo en las programadas.
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        started_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Finished At
+        duration_s:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Duration S
+      required:
+      - id
+      - flow_id
+      - origin
+      - status
+      - interval
+      - channels
+      - counters
+      - error
+      - started_by
+      - created_at
+      - started_at
+      - finished_at
+      - duration_s
+      title: DownloadRun
+      type: object
+    DownloadRunInterval:
+      additionalProperties: false
+      properties:
+        from:
+          format: date-time
+          title: From
+          type: string
+        to:
+          format: date-time
+          title: To
+          type: string
+      required:
+      - from
+      - to
+      title: DownloadRunInterval
+      type: object
+    DownloadRunList:
+      additionalProperties: false
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DownloadRun'
+          title: Items
+          type: array
+      required:
+      - items
+      title: DownloadRunList
+      type: object
+    DownloadRunRef:
+      additionalProperties: false
+      properties:
+        id:
+          description: Identificador `1RN-…`.
+          title: Id
+          type: string
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - completada
+          - completada_con_avisos
+          - error
+          title: Status
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - status
+      - created_at
+      title: DownloadRunRef
+      type: object
+    DownloadSchedule:
+      additionalProperties: false
+      properties:
+        type:
+          enum:
+          - desactivada
+          - cada_horas
+          - diaria
+          title: Type
+          type: string
+        hours:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          description: Cada cuántas horas (1–24), alineadas con la medianoche local.
+          title: Hours
+        time:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Hora local `HH:MM` de la ejecución diaria.
+          examples:
+          - 07:30
+          title: Time
+      required:
+      - type
+      title: DownloadSchedule
+      type: object
     Edge:
       additionalProperties: false
       properties:
@@ -4794,6 +5935,140 @@ components:
       - timezone
       - language
       title: GeneralConfig
+      type: object
+    GenesysConnector:
+      additionalProperties: false
+      description: Estado del conector real. Con el servicio de ingesta caído, `service` es `no_disponible` y el resto, nulo.
+      properties:
+        service:
+          enum:
+          - disponible
+          - no_disponible
+          title: Service
+          type: string
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+        credentials_configured:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          description: Si el servicio de ingesta tiene `GENESYS_*`.
+          title: Credentials Configured
+        database:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Database
+        last_test:
+          anyOf:
+          - $ref: '#/components/schemas/GenesysTest'
+          - type: 'null'
+          description: Última «Probar conexión» desde que arrancó el servicio.
+        last_download:
+          anyOf:
+          - $ref: '#/components/schemas/GenesysLastDownload'
+          - type: 'null'
+        conversations:
+          anyOf:
+          - $ref: '#/components/schemas/GenesysConversations'
+          - type: 'null'
+      required:
+      - service
+      - region
+      - credentials_configured
+      - database
+      - last_test
+      - last_download
+      - conversations
+      title: GenesysConnector
+      type: object
+    GenesysConversations:
+      additionalProperties: false
+      properties:
+        total:
+          title: Total
+          type: integer
+        by_channel:
+          additionalProperties:
+            type: integer
+          title: By Channel
+          type: object
+        by_quality:
+          additionalProperties:
+            type: integer
+          title: By Quality
+          type: object
+      required:
+      - total
+      - by_channel
+      - by_quality
+      title: GenesysConversations
+      type: object
+    GenesysLastDownload:
+      additionalProperties: false
+      properties:
+        run_id:
+          title: Run Id
+          type: string
+        flow_id:
+          title: Flow Id
+          type: string
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - completada
+          - completada_con_avisos
+          - error
+          title: Status
+          type: string
+        finished_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Finished At
+      required:
+      - run_id
+      - flow_id
+      - status
+      - finished_at
+      title: GenesysLastDownload
+      type: object
+    GenesysTest:
+      additionalProperties: false
+      properties:
+        ok:
+          title: Ok
+          type: boolean
+        at:
+          format: date-time
+          title: At
+          type: string
+        organization:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Nombre de la organización de Genesys, si la conexión funciona.
+          title: Organization
+        region:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region
+        message:
+          title: Message
+          type: string
+      required:
+      - ok
+      - at
+      - organization
+      - region
+      - message
+      title: GenesysTest
       type: object
     Graph:
       additionalProperties: false
@@ -6864,6 +8139,8 @@ tags:
   description: Flujos de insights y sus ejecuciones simuladas (FE004).
 - name: config
   description: Configuración global de la plataforma (FE005).
+- name: downloads
+  description: Flujos de descarga de conversaciones de Genesys Cloud (FE011).
 - name: users
   description: Usuarios, roles y matriz de permisos (FE006).
 security:

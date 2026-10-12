@@ -11,6 +11,7 @@ from app import auth
 from app.main import app
 from app.openapi import schemas as s
 from app.openapi.spec import OPERATIONS, _as_tuple
+from tests.ingestion_stub import ingestion_stub  # noqa: F401 (fixture)
 
 EXPORTED = Path(__file__).resolve().parents[1] / "openapi.yaml"
 ADMIN = "admin@bancohorizonte.demo"
@@ -158,7 +159,7 @@ def call(api):
     return Recorder(api)
 
 
-def test_real_responses_match_the_documented_schemas(call, api):
+def test_real_responses_match_the_documented_schemas(call, api, ingestion_stub):
     anonymous = Recorder(TestClient(app))
     anonymous("GET", "/api/health", 200)
     anonymous("GET", "/api/config/public", 200)
@@ -243,6 +244,24 @@ def test_real_responses_match_the_documented_schemas(call, api):
     copy = call("POST", f"/api/flows/{flow['id']}/duplicate", 201)
     call("DELETE", f"/api/flows/{copy['id']}", 204)
     call("GET", f"/api/flows/{copy['id']}", 404)
+
+    body = {"name": "Descarga diaria", "interval": {"type": "relativo", "unit": "ayer"}, "channels": ["voz", "chat"],
+            "schedule": {"type": "diaria", "time": "07:30"}, "active": True}
+    download = call("POST", "/api/download-flows", 201, json=body)
+    call("POST", "/api/download-flows", 422, json={**body, "name": " "})
+    call("GET", "/api/download-flows", 200)
+    call("GET", f"/api/download-flows/{download['id']}", 200)
+    call("GET", "/api/download-flows/1FL-00000000-0000-4000-8000-000000000000", 404)
+    call("PUT", f"/api/download-flows/{download['id']}", 200, json={**body, "name": "Descarga de ayer"})
+    started = call("POST", f"/api/download-flows/{download['id']}/runs", 202)
+    call("GET", f"/api/download-flows/{download['id']}/runs", 200)
+    call("GET", f"/api/download-flows/{download['id']}/runs/{started['id']}", 200)
+    call("GET", f"/api/download-flows/{download['id']}/runs/{started['id']}/log?level=aviso", 200)
+    ingestion_stub.active = True
+    call("POST", f"/api/download-flows/{download['id']}/runs", 409)
+    call("DELETE", f"/api/download-flows/{download['id']}", 204)
+    call("GET", "/api/config/connectors/genesys", 200)
+    call("POST", "/api/config/connectors/genesys/test", 200)
 
     config = call("GET", "/api/config", 200)
     call("PUT", "/api/config/general", 200, json={**config["general"], "timezone": "UTC"})

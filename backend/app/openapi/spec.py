@@ -45,7 +45,7 @@ configurada; por defecto, los 30 días que acaban el día anterior a la fecha de
 (`HTTPValidationError`, en inglés), errores por campo (`FieldErrors`), errores de consulta (`QueryErrors`), errores de
 grafo (`GraphErrors`) e incidencias de flujo (`FlowIssues`).
 
-**Persistencia.** Todo lo que se escribe vive en memoria y se pierde al reiniciar la API.
+**Persistencia.** Todo lo que se escribe vive en memoria y se pierde al reiniciar la API, salvo los flujos de descarga (FE011), que guarda el servicio de ingesta en PostgreSQL. Si ese servicio no está disponible, sus rutas responden `503`.
 
 Referencia ampliada: `vault/arquitectura/contrato-api-front-back.md`.
 """.strip()
@@ -59,6 +59,7 @@ TAGS = [
     {"name": "search", "description": "Búsqueda semántica y conversaciones similares (FE003)."},
     {"name": "flows", "description": "Flujos de insights y sus ejecuciones simuladas (FE004)."},
     {"name": "config", "description": "Configuración global de la plataforma (FE005)."},
+    {"name": "downloads", "description": "Flujos de descarga de conversaciones de Genesys Cloud (FE011)."},
     {"name": "users", "description": "Usuarios, roles y matriz de permisos (FE006)."},
 ]
 
@@ -79,6 +80,8 @@ class Op:
 
 
 NOT_FOUND = "No existe (o el identificador es de otro tipo)."
+UNAVAILABLE_503 = "El servicio de ingesta no está disponible."
+DOWNLOAD_422 = ("Un campo no es válido: nombre, intervalo (rangos, orden, 90 días, sin futuro), canales o programación (solo con intervalo relativo).")
 
 
 def _e422(description: str, models: Models) -> dict[int, tuple[str, Models]]:
@@ -217,6 +220,47 @@ OPERATIONS: dict[tuple[str, str], Op] = {
         "Ejecución", s.Run, "flows:view", "Instantánea con el estado de cada nodo y los resultados de cada Output.",
         errors={404: (NOT_FOUND, s.ErrorText)}),
 
+    # --- Flujos de descarga (FE011) ---
+    ("GET", "/api/download-flows"): Op(
+        "Flujos de descarga", s.DownloadFlowList, "flows:view",
+        "Flujos de descarga de Genesys con su última ejecución y la próxima programada, del más reciente al más antiguo.",
+        errors={503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("POST", "/api/download-flows"): Op(
+        "Crear un flujo de descarga", s.DownloadFlow, "flows:edit",
+        "La autoría es quien llama y la zona horaria, la de la plataforma: «hoy», «ayer» y la programación se calculan "
+        "en ella.", status=201, body=s.DownloadFlowIn,
+        errors={422: (DOWNLOAD_422, s.FieldErrors), 503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("GET", "/api/download-flows/{flow_id}"): Op(
+        "Flujo de descarga", s.DownloadFlow, "flows:view",
+        errors={404: (NOT_FOUND, s.ErrorText), 503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("PUT", "/api/download-flows/{flow_id}"): Op(
+        "Guardar un flujo de descarga", s.DownloadFlow, "flows:edit",
+        "Sustituye la configuración y recalcula la próxima ejecución; la autoría no cambia y la zona horaria pasa a ser "
+        "la vigente.", body=s.DownloadFlowIn,
+        errors={404: (NOT_FOUND, s.ErrorText), 422: (DOWNLOAD_422, s.FieldErrors), 503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("DELETE", "/api/download-flows/{flow_id}"): Op(
+        "Borrar un flujo de descarga", None, "flows:edit", "Borra también sus ejecuciones y sus logs.", status=204,
+        errors={404: (NOT_FOUND, s.ErrorText), 409: ("Tiene una ejecución en curso.", s.ErrorText),
+                503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("POST", "/api/download-flows/{flow_id}/runs"): Op(
+        "Descargar ahora", s.DownloadRun, "flows:edit",
+        "Resuelve el intervalo en este momento, crea la ejecución `pendiente` y la lanza en segundo plano. El progreso "
+        "se consulta con `GET /api/download-flows/{flow_id}/runs/{run_id}`.", status=202,
+        errors={404: (NOT_FOUND, s.ErrorText), 409: ("Ya hay una ejecución en curso de este flujo.", s.ErrorText),
+                503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("GET", "/api/download-flows/{flow_id}/runs"): Op(
+        "Historial de descargas", s.DownloadRunList, "flows:view",
+        "Ejecuciones del flujo, de la más reciente a la más antigua (se conservan las 200 últimas).",
+        errors={404: (NOT_FOUND, s.ErrorText), 503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("GET", "/api/download-flows/{flow_id}/runs/{run_id}"): Op(
+        "Descarga", s.DownloadRun, "flows:view", "Estado y contadores, que se actualizan tras cada conversación.",
+        errors={404: (NOT_FOUND, s.ErrorText), 503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("GET", "/api/download-flows/{flow_id}/runs/{run_id}/log"): Op(
+        "Log de una descarga", s.DownloadLog, "flows:view",
+        "Entradas a partir de `after` (cursor `id`), filtrables por `level`. Con `format=text`, el log completo como "
+        "adjunto `text/plain`. Nunca contiene el texto de los turnos ni secretos.",
+        errors={404: (NOT_FOUND, s.ErrorText), 503: (UNAVAILABLE_503, s.ErrorText)}),
+
     # --- Configuración ---
     ("GET", "/api/config/public"): Op("Configuración pública", s.PublicConfig, public=True,
                                       description="Nombre, zona horaria e idioma: los necesitan el login y todos los roles."),
@@ -233,6 +277,15 @@ OPERATIONS: dict[tuple[str, str], Op] = {
     ("POST", "/api/config/connectors/{connector_id}/sync"): Op(
         "Sincronizar un conector", s.Connector, "config:edit",
         "Simulado: actualiza la fecha de sincronización y no cambia el dataset.", errors={404: (NOT_FOUND, s.ErrorText)}),
+    ("GET", "/api/config/connectors/genesys"): Op(
+        "Conector de Genesys Cloud", s.GenesysConnector, "config:view",
+        "Estado del servicio de ingesta (FE011): región, credenciales configuradas, última prueba y última descarga, y "
+        "conversaciones guardadas por canal y por calidad de la transcripción. Si el servicio no responde, `200` con "
+        "`service: no_disponible`."),
+    ("POST", "/api/config/connectors/genesys/test"): Op(
+        "Probar la conexión con Genesys Cloud", s.GenesysTest, "config:edit",
+        "El servicio de ingesta pide un token con las credenciales del `.env` y lee la organización. Un fallo de "
+        "credenciales es `200` con `ok: false`.", errors={503: (UNAVAILABLE_503, s.ErrorText)}),
     ("GET", "/api/config/audit"): Op("Registro de cambios de la configuración", s.AuditLog, "config:view",
                                      "Entradas de las secciones de configuración, de la más reciente a la más antigua."),
     ("GET", "/api/config/taxonomy"): Op("Taxonomía", s.Taxonomy, "config:view",
@@ -315,6 +368,9 @@ EXAMPLES: dict[tuple[str, str], dict[str, Any]] = {
          "config": {"kind": "metrica", "aggregation": "porcentaje", "destination": "Motivos"}}],
         "edges": [{"source": "tmp-s", "target": "tmp-p"}, {"source": "tmp-p", "target": "tmp-o"}]},
     ("POST", "/api/users"): {"name": "Lucía Pérez", "email": "lucia.perez@bancohorizonte.demo", "role": "analista"},
+    ("POST", "/api/download-flows"): {"name": "Descarga diaria", "interval": {"type": "relativo", "unit": "ayer"},
+                                     "channels": ["voz", "chat"], "schedule": {"type": "diaria", "time": "07:30"},
+                                     "active": True},
     ("POST", "/api/roles"): {"code": "lector_flujos", "name": "Lector de flujos", "permissions": ["flows:view"]},
     ("PUT", "/api/config/kpis/{code}"): {"target": 4, "green": 4, "amber": 3.5, "dashboards": ["vision-general"]},
 }

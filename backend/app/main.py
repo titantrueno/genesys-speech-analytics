@@ -9,6 +9,7 @@ from app.openapi.spec import API_VERSION, build_openapi
 from app.routers import auth as auth_router
 from app.routers import config as config_router
 from app.routers import conversations as conversations_router
+from app.routers import downloads as downloads_router
 from app.routers import flows as flows_router
 from app.routers import metrics as metrics_router
 from app.routers import query as query_router
@@ -58,6 +59,7 @@ def create_app() -> FastAPI:
     app.include_router(query_router.router)
     app.include_router(search_router.router)
     app.include_router(flows_router.router)
+    app.include_router(downloads_router.router)
     app.include_router(config_router.router)
     app.include_router(users_router.router)
 

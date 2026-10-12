@@ -12,7 +12,7 @@ from fastapi.responses import PlainTextResponse
 from app import ids
 from ingestion import db, flows
 from ingestion.flows import FlowIn, Person
-from ingestion.genesys.client import GenesysClient
+from ingestion.genesys.client import GenesysAuthError, GenesysClient, GenesysError
 from ingestion.pipeline.analyze import Analyzer
 from ingestion.runs import LEVELS, RunAlreadyActive, get_run, list_log, list_runs
 from ingestion.scheduler import Job, launch
@@ -25,6 +25,9 @@ class Context:
     client_factory: Callable[[], GenesysClient]
     run_in_background: Callable[[Job], None]
     analyzer: Analyzer | None = None
+    region: str | None = None
+    credentials_configured: bool = False
+    last_test: dict | None = None  # última «Probar conexión»; vive en memoria del proceso
 
 
 def _not_found() -> HTTPException:
@@ -121,5 +124,49 @@ def build_router(ctx: Context) -> APIRouter:
                  + (f" ({e['genesys_id']})" if e["genesys_id"] else "") for e in entries]
         return PlainTextResponse("\n".join(lines) + "\n", headers={
             "Content-Disposition": f'attachment; filename="log-{run["id"]}.txt"'})
+
+    return router
+
+
+def build_status_router(ctx: Context) -> APIRouter:
+    router = APIRouter(prefix="/status", tags=["estado"])
+
+    @router.get("", summary="Estado del conector: región, credenciales, última prueba y descarga, y recuentos")
+    def connector_status():
+        reachable = db.ping(ctx.database_url)
+        last_download, conversations = None, None
+        if reachable:
+            with db.connect(ctx.database_url) as conn:
+                row = conn.execute("SELECT id, flow_id, status, finished_at FROM download_run "
+                                   "WHERE finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 1").fetchone()
+                if row:
+                    last_download = {"run_id": row[0], "flow_id": row[1], "status": row[2],
+                                     "finished_at": row[3].isoformat()}
+                by_channel = dict(conn.execute("SELECT channel, count(*) FROM conversation GROUP BY channel"))
+                by_quality = dict(conn.execute(
+                    "SELECT transcript_quality, count(*) FROM conversation GROUP BY transcript_quality"))
+            conversations = {"total": sum(by_channel.values()),
+                             "by_channel": {channel: by_channel.get(channel, 0) for channel in ("voz", "chat")},
+                             "by_quality": {quality: by_quality.get(quality, 0)
+                                            for quality in ("completa", "parcial", "sin_transcripcion")}}
+        return {"region": ctx.region, "credentials_configured": ctx.credentials_configured,
+                "database": "ok" if reachable else "no disponible", "last_test": ctx.last_test,
+                "last_download": last_download, "conversations": conversations}
+
+    @router.post("/test", summary="Prueba las credenciales de Genesys y lee la organización")
+    def test_connection():
+        organization, ok = None, False
+        try:
+            client = ctx.client_factory()
+            client.ensure_token()
+            organization = (client.get("/api/v2/organizations/me") or {}).get("name")
+            ok, message = True, "Conexión correcta con Genesys Cloud"
+        except GenesysAuthError as exc:
+            message = str(exc)
+        except GenesysError as exc:
+            message = str(exc)  # ya redactado por el cliente
+        ctx.last_test = {"ok": ok, "at": ctx.clock().isoformat(), "organization": organization, "region": ctx.region,
+                         "message": message}
+        return ctx.last_test
 
     return router
