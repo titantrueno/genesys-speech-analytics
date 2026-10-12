@@ -33,6 +33,12 @@ COLIMA_STARTED=0 # solo paramos Colima si lo arrancó este script
 DB_STARTED=0
 CLEANED=0
 
+# Con `set -m` cada comando en primer plano corre en su propio grupo y el SIGINT del Ctrl+C solo lo recibe él, no este
+# script (el trap nunca se ejecutaba). Por eso lo que bloquea se lanza en segundo plano y se espera con el builtin
+# `wait`, que sí se interrumpe con las señales del propio script.
+espera() { "$@" & wait $!; }
+nap() { espera sleep "$1"; }
+
 log() { printf '\033[1;36m[dev]\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31m[dev] %s\033[0m\n' "$*" >&2; exit 1; }
 
@@ -50,17 +56,17 @@ cleanup() {
     local alive=0
     for pid in ${PIDS[@]+"${PIDS[@]}"}; do kill -0 -- "-$pid" 2>/dev/null && alive=1; done
     [ "$alive" = 0 ] && break
-    sleep 0.5
+    nap 0.5
   done
   for pid in ${PIDS[@]+"${PIDS[@]}"}; do kill -KILL -- "-$pid" 2>/dev/null; done
   if [ "$WITH_DB" = 1 ] && command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
     log "Parando PostgreSQL (el volumen pgdata se conserva)"
-    docker compose stop postgres >/dev/null 2>&1
-    docker compose rm -f postgres >/dev/null 2>&1
+    espera docker compose stop postgres >/dev/null 2>&1
+    espera docker compose rm -f postgres >/dev/null 2>&1
   fi
   if [ "$COLIMA_STARTED" = 1 ]; then
     log "Parando Colima (lo arrancó este script)"
-    colima stop >/dev/null 2>&1
+    espera colima stop >/dev/null 2>&1
   fi
   local leftover=""
   for p in $API_PORT $INGESTION_PORT $WEB_PORT; do
@@ -74,9 +80,9 @@ trap cleanup EXIT
 wait_http() { # url, nombre, pid: espera a que el servidor responda a HTTP (cualquier código)
   local i
   for i in $(seq 1 120); do
-    curl -s -o /dev/null --max-time 2 "$1" && return 0
+    espera curl -s -o /dev/null --max-time 2 "$1" && return 0
     kill -0 -- "-$3" 2>/dev/null || { tail -n 20 "$LOG_DIR/$2.log" >&2; die "$2 terminó al arrancar (log: .dev-logs/$2.log)"; }
-    sleep 0.5
+    nap 0.5
   done
   die "$2 no responde en $1 (log: .dev-logs/$2.log)"
 }
@@ -84,7 +90,9 @@ wait_http() { # url, nombre, pid: espera a que el servidor responda a HTTP (cual
 start() { # nombre, directorio, comando…: lanza en segundo plano con log propio
   local name=$1 dir=$2
   shift 2
-  (cd "$dir" && exec "$@") >"$LOG_DIR/$name.log" 2>&1 &
+  # Sin stdin del terminal: con `set -m` cada servicio es un grupo en segundo plano y, si lee del tty (Vite lee atajos
+  # de teclado), recibe SIGTTIN y queda detenido; un proceso detenido no atiende SIGTERM y el script espera al SIGKILL.
+  (cd "$dir" && exec "$@") </dev/null >"$LOG_DIR/$name.log" 2>&1 &
   PIDS+=("$!")
 }
 
@@ -157,5 +165,5 @@ while true; do
   for pid in "${PIDS[@]}"; do
     kill -0 -- "-$pid" 2>/dev/null || { log "Un proceso terminó inesperadamente (mira .dev-logs/)."; exit 1; }
   done
-  sleep 1
+  nap 1
 done
