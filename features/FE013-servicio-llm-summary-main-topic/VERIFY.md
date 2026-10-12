@@ -80,7 +80,7 @@ Contra `dev.sh` completo en puertos propios (18000–18002 y 15173), sin ejecuta
 
 ## Pendiente fuera de esta fase
 
-- Los summaries y main topics inventados de las 2 conversaciones sin transcripción siguen en la base de desarrollo (`1CO-19947E2F…` y `1CO-CD1101BD…`), a la espera de la decisión de la persona usuaria.
+- **Hecho (2026-10-12, a petición de la persona usuaria):** se vaciaron el summary, el main topic y `llm_meta` de las 2 conversaciones sin transcripción de la base de desarrollo (`1CO-19947E2F…` y `1CO-CD1101BD…`), con la condición de que siguieran sin turnos. Las otras 11 conservan lo que generó el LLM.
 
 ## Gate
 
