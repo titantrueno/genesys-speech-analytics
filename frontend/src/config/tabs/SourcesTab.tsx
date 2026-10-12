@@ -157,7 +157,7 @@ function OriginCard({ origin, canEdit }: { origin: DataOrigin; canEdit: boolean 
         <legend className="sr-only">Origen de datos</legend>
         {ORIGINS.map((option) => (
           <label key={option.value} className="flex items-start gap-3 text-sm text-slate-700">
-            <input type="radio" name="data-origin" className="mt-0.5 size-4" checked={origin === option.value}
+            <input type="radio" name="data-origin" className="mt-0.5 size-4" checked={(pending ?? origin) === option.value}
               onChange={() => { change.reset(); setPending(option.value === origin ? null : option.value) }} />
             <span>
               <span className="font-medium">{option.label}</span>

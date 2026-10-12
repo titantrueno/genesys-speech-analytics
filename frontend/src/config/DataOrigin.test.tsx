@@ -92,6 +92,7 @@ describe('Configuración: origen de datos (FE012)', () => {
     await userEvent.click(within(origin).getByRole('radio', { name: /Real \(Genesys Cloud\)/ }))
     await userEvent.click(within(origin).getByRole('button', { name: 'Confirmar cambio' }))
     expect(await within(origin).findByRole('alert')).toHaveTextContent('No se ha podido cambiar el origen de datos')
+    await userEvent.click(within(origin).getByRole('button', { name: 'Cancelar' }))
     expect(within(origin).getByRole('radio', { name: /Sintético/ })).toBeChecked()
   })
 })
