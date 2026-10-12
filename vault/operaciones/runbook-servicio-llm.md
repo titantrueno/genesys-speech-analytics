@@ -18,6 +18,7 @@ Para arrancar el servicio de LLM, comprobar qué proveedores tienen clave, cambi
 
 - **`.env` en la raíz** con `LLM_TOKEN` (compartido por la API y el servicio) y la clave de cada proveedor que se use: `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`. Opcionales: `LLM_MAX_CONCURRENCY` (1–64, 4 por defecto) y, en la API, `LLM_URL` (`http://localhost:8002`). Nunca se versiona ni se copia en el vault.
 - Para guardar summary y main topic: datos reales, PostgreSQL y el servicio de ingesta ([runbook de la ingesta](runbook-ingesta-de-genesys.md)).
+- **Concurrencia:** cada nodo Prompt con LLM lanza hasta 4 llamadas a la vez. Si se baja `LLM_MAX_CONCURRENCY`, las demás esperan en el servicio; la API espera cada respuesta hasta 240 s, más que el peor caso del servicio (3 intentos de 60 s).
 
 ## Procedimiento
 

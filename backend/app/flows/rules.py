@@ -188,6 +188,10 @@ def _fields_output(node: OutputNode, graph: Graph) -> list[Issue]:
     prompt = next((graph.node(s) for s in graph.inputs(node.id) if isinstance(graph.node(s), PromptNode)), None)
     if prompt is None or prompt.config.output is None:
         return issues
+    if (prompt.config.provider or catalog.SIMULATED) == catalog.SIMULATED:
+        issues.append(Issue("simulated_values_to_real_data",
+                            "El Prompt usa el proveedor Simulado: se guardarán resultados simulados en conversaciones "
+                            "reales.", node.id, "warning"))
     if prompt.config.output.type != "json" and len(cfg.mappings) > 1:
         issues.append(Issue("invalid_mapping", "Un Prompt de texto o etiqueta solo da un valor: usa una sola "
                                                "asignación, o un Prompt JSON para varios campos.", node.id))

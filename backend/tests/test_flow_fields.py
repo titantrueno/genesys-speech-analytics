@@ -12,6 +12,7 @@ from app.flows.analysis_writer import WriterUnavailable, get_analysis_writer
 from app.flows.llm_runner import LlmPromptRunner
 from app.flows.model import OutputConfig, PromptConfig, parse_graph
 from app.flows.prompting import PromptRejected
+from app.flows.rules import validate
 from app.data.store import get_dataset
 from app.main import app
 from tests.flow_fixtures import SAMPLING, edge, graph, node
@@ -279,6 +280,6 @@ def test_simulated_prompts_can_also_feed_field_outputs(api, llm, writer, real_or
 
 def test_the_output_config_keeps_destination_optional_for_field_outputs():
     assert OutputConfig.model_validate(BOTH_OUTPUT).destination is None
-    issues = {i.code for i in __import__("app.flows.rules", fromlist=["validate"]).validate(
+    issues = {i.code for i in validate(
         parse_graph(_flow(TEXT_PROMPT, {"kind": "campo", "mappings": [{"target": "summary", "source": None}]})))}
     assert "node_unconfigured" not in issues

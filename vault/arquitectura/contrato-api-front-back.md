@@ -410,7 +410,7 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
 - **Conexiones:** solo `sampling → prompt`, `prompt → prompt` y `prompt → output`, sin ciclos. Límites: 50 nodos y 100 conexiones.
 - **Dos niveles de validación:**
   - **integridad**, siempre exigida al guardar (`422` E5: tipos, rangos, identificadores, conexiones imposibles);
-  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`; desde FE013, también `model_not_in_provider`, `provider_without_key`, `llm_unavailable`, `invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target` y `field_output_requires_real_data`.
+  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`; desde FE013, también `model_not_in_provider`, `provider_without_key`, `llm_unavailable`, `invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target` y `field_output_requires_real_data`, y el aviso (`severity: warning`) `simulated_values_to_real_data` cuando un Prompt simulado alimenta «Guardar en campos».
 
 #### Endpoints
 

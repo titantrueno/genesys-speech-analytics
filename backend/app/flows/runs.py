@@ -318,6 +318,8 @@ class FlowExecutor:
                 results: dict[str, Any]) -> None:
         """Output «Guardar en campos» (FE013, criterios 19 y 22): escribe por lotes y da el estado de cada campo."""
         cfg = node.config
+        if self.writer is None:
+            raise NodeFailure("No hay dónde guardar los campos: falta el servicio de ingesta.")
         targets = [m.target for m in cfg.mappings]
         failures = {f["conversation_id"]: f for f in run.failures.get(prompt.id, [])}
         run.update_node(node.id, total=len(conversations))

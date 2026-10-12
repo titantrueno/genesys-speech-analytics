@@ -17,7 +17,9 @@ from app.envfile import api_env
 UNAVAILABLE = "El servicio de LLM no está disponible"
 DEFAULT_URL = "http://localhost:8002"
 HEALTH_TIMEOUT_S = 3.0
-COMPLETE_TIMEOUT_S = 90.0  # el servicio espera hasta 60 s al proveedor y puede reintentar
+# Más que el peor caso del servicio (3 intentos de hasta 60 s más las esperas) y su cola por el límite de concurrencia:
+# si la API cortara antes, diagnosticaría «servicio no disponible» ante un proveedor lento (hallazgo de /review).
+COMPLETE_TIMEOUT_S = 240.0
 
 
 class LlmUnavailable(Exception):

@@ -81,7 +81,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Formato JSON (versión 1):** `{version, nodes: [{id, type, position, config}], edges: [{source, target}]}`, igual en `backend/app/flows/model.py` y `frontend/src/flows/types.ts`. Los nodos nuevos llevan una clave `tmp-<uuid>` y el backend les asigna su `1ND` al guardar (ver el [registro](../ingenieria/registro-de-identificadores.md)). Guardar y leer devuelve el mismo JSON (test de ida y vuelta).
 - **Configuración por tipo:**
   - **Sampling:** consulta de FE002 (intervalo y condiciones), método y tamaño (1–1.000);
-  - **Prompt:** plantilla con `{{transcripcion}}`, `{{summary}}`, `{{main_topic}}`, `{{metadatos}}` y `{{resultado_anterior}}`, modelo mock, temperatura y formato (texto, etiqueta o JSON con esquema);
+  - **Prompt:** plantilla con `{{transcripcion}}`, `{{summary}}`, `{{main_topic}}`, `{{metadatos}}` y `{{resultado_anterior}}`, proveedor y modelo (simulado o, desde FE013, Gemini, OpenAI o Anthropic), temperatura y formato (texto, etiqueta o JSON con esquema y, desde FE013, valores permitidos);
   - **Output:** tabla, métrica (recuento o %) o informe, con un nombre de destino.
 - **Dos niveles de validación:**
   - **integridad** (se exige al guardar): tipos, identificadores, rangos y reglas de conexión (`Sampling → Prompt`, `Prompt → Prompt`, `Prompt → Output`; una entrada por Prompt u Output; sin duplicados ni ciclos);
