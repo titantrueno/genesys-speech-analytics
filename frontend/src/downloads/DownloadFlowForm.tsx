@@ -18,6 +18,7 @@ interface Draft {
   hours: string
   time: string
   active: boolean
+  overwrite: boolean
 }
 
 function toDraft(flow: DownloadFlow): Draft {
@@ -34,6 +35,7 @@ function toDraft(flow: DownloadFlow): Draft {
     hours: schedule.hours ? String(schedule.hours) : '',
     time: schedule.time ?? '',
     active: flow.active,
+    overwrite: flow.overwrite,
   }
 }
 
@@ -46,7 +48,8 @@ function toInput(draft: Draft): DownloadFlowInput {
   const schedule = draft.scheduleType === 'cada_horas'
     ? { type: draft.scheduleType, hours: Number(draft.hours) }
     : draft.scheduleType === 'diaria' ? { type: draft.scheduleType, time: draft.time } : { type: draft.scheduleType }
-  return { name: draft.name, interval, channels: draft.channels, schedule, active: draft.active }
+  return { name: draft.name, interval, channels: draft.channels, schedule, active: draft.active,
+    overwrite: draft.overwrite }
 }
 
 /** Formulario de un flujo de descarga; los errores del backend (`422`) se muestran junto a su campo. */
@@ -157,6 +160,18 @@ export function DownloadFlowForm({ flow, canEdit, pending, error, saved, onSave 
         <input type="checkbox" checked={draft.active} disabled={disabled} onChange={(e) => set('active', e.target.checked)} />
         Activo (un flujo inactivo no se ejecuta por programación, pero sí a mano)
       </label>
+
+      <div>
+        <label className="inline-flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" checked={draft.overwrite} disabled={disabled} aria-describedby="overwrite-hint"
+            onChange={(e) => set('overwrite', e.target.checked)} />
+          Sobrescribir
+        </label>
+        <p id="overwrite-hint" className="ml-6 text-xs text-slate-500">
+          Vuelve a descargar las conversaciones que ya existen y borra su summary y main topic generados por el LLM. Sin
+          marcar, las que ya existen no se descargan.
+        </p>
+      </div>
 
       {canEdit && (
         <div className="flex items-center gap-3">

@@ -112,6 +112,19 @@ describe('Flujos de descarga: ejecución y log', () => {
     expect(polls()).toBe(settled)
   }, 12_000)
 
+  it('muestra las conversaciones ya existentes que no se descargaron y si la ejecución sobrescribe', async () => {
+    const skipping = downloadRun(1, { counters: { ...COUNTERS, downloaded: 4, inserted: 4, skipped_existing: 9 } })
+    setup({ path, runSequence: [skipping] })
+    const counters = await screen.findByRole('region', { name: 'Contadores' })
+    expect(within(counters).getByText('Ya existentes (no descargadas)').nextSibling).toHaveTextContent('9')
+    expect(screen.getByText(/omite las conversaciones que ya existen/i)).toBeInTheDocument()
+  })
+
+  it('una ejecución con «Sobrescribir» lo indica', async () => {
+    setup({ path, runSequence: [downloadRun(1, { overwrite: true })] })
+    expect(await screen.findByText(/sobrescribe las conversaciones que ya existen/i)).toBeInTheDocument()
+  })
+
   it('carga el log por tramos con `after` y lo filtra por nivel', async () => {
     const running = downloadRun(1, { status: 'en_curso', finished_at: null, duration_s: null })
     const { calls } = setup({ path, runSequence: [running, running, running, RUN] })

@@ -105,7 +105,7 @@ describe('Flujos: listado con flujos de descarga', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe(`/flujos/descargas/${fakeId('1FL', 109)}`))
     expect(calls).toEqual([{ method: 'POST', path: '/api/download-flows', body: {
       name: 'Descarga de ayer', interval: { type: 'relativo', unit: 'hoy' }, channels: ['voz', 'chat'],
-      schedule: { type: 'desactivada' }, active: true } }])
+      schedule: { type: 'desactivada' }, active: true, overwrite: false } }])
 
     await router.navigate('/flujos')
     await userEvent.click(await screen.findByRole('button', { name: /nuevo flujo/i }))
@@ -145,7 +145,7 @@ describe('Flujos de descarga: formulario', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     await waitFor(() => expect(calls).toEqual([{ method: 'PUT', path: SCHEDULED.id, body: {
       name: 'Últimas 12 horas', interval: { type: 'relativo', unit: 'horas', amount: 12 }, channels: ['voz'],
-      schedule: { type: 'diaria', time: '07:30' }, active: true } }]))
+      schedule: { type: 'diaria', time: '07:30' }, active: true, overwrite: false } }]))
     expect(await screen.findByRole('status')).toHaveTextContent(/cambios guardados/i)
   })
 
@@ -191,10 +191,23 @@ describe('Flujos de descarga: formulario', () => {
     expect(screen.getByLabelText('Nombre')).toHaveAccessibleDescription('El nombre no puede estar vacío')
   })
 
+  it('«Sobrescribir» aparece desmarcado, explica que borra lo del LLM y se envía al guardar', async () => {
+    const { calls } = setup({ path })
+    const overwrite = await screen.findByRole('checkbox', { name: /sobrescribir/i })
+    expect(overwrite).not.toBeChecked()
+    expect(screen.getByText(/vuelve a descargar las conversaciones que ya existen y borra su summary y main topic/i))
+      .toBeInTheDocument()
+    await userEvent.click(overwrite)
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+    await waitFor(() => expect(calls).toEqual([{ method: 'PUT', path: SCHEDULED.id, body: expect.objectContaining({
+      overwrite: true }) }]))
+  })
+
   it('sin flows:edit el formulario es de solo lectura y el listado no tiene acciones', async () => {
     setup({ user: USERS.lector, path })
     expect(await screen.findByLabelText('Nombre')).toBeDisabled()
     expect(screen.getByLabelText('Periodo')).toBeDisabled()
+    expect(screen.getByRole('checkbox', { name: /sobrescribir/i })).toBeDisabled()
     expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument()
   })
 })

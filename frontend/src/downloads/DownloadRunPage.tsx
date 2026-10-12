@@ -34,6 +34,7 @@ function Counters({ run }: { run: DownloadRun }) {
         <Counter label="Guardadas" value={`${formatInteger(c.inserted)} insertadas · ${formatInteger(c.updated)} actualizadas`} />
         <Counter label="Omitidas" value={`${formatInteger(c.skipped)} (${formatInteger(c.skipped_in_progress)} en curso, `
           + `${formatInteger(c.skipped_other_channel)} de otro canal)`} />
+        <Counter label="Ya existentes (no descargadas)" value={formatInteger(c.skipped_existing)} />
         <Counter label="Con error" value={formatInteger(c.errors)} />
         <Counter label="Por canal" value={split(c.by_channel, CHANNEL_LABELS)} />
         <Counter label="Calidad de la transcripción" value={split(c.by_quality, QUALITY_LABELS)} />
@@ -145,7 +146,8 @@ export function DownloadRunPage() {
         <p className="text-sm text-slate-500">
           {flow.data?.name ?? 'Flujo de descarga'} · {ORIGIN_LABELS[data.origin]}
           {data.started_by && ` · lanzada por ${data.started_by.name}`} · intervalo {formatDateTime(data.interval.from)} –{' '}
-          {formatDateTime(data.interval.to)} · {data.channels.map((c) => CHANNEL_LABELS[c]).join(' y ')}
+          {formatDateTime(data.interval.to)} · {data.channels.map((c) => CHANNEL_LABELS[c]).join(' y ')} ·{' '}
+          {data.overwrite ? 'sobrescribe las conversaciones que ya existen' : 'omite las conversaciones que ya existen'}
         </p>
       </header>
       {data.status === 'error' && data.error && (

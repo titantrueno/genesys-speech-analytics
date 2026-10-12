@@ -24,7 +24,7 @@ const KIND_LABELS: Record<FlowKind, string> = { insights: 'Insights', descarga: 
 // Un flujo de descarga nuevo descarga «hoy» de voz y chat a mano; se ajusta después en su formulario.
 const NEW_DOWNLOAD = {
   interval: { type: 'relativo' as const, unit: 'hoy' as const }, channels: ['voz' as const, 'chat' as const],
-  schedule: { type: 'desactivada' as const }, active: true,
+  schedule: { type: 'desactivada' as const }, active: true, overwrite: false,
 }
 
 function NewFlowForm({ onCancel }: { onCancel: () => void }) {

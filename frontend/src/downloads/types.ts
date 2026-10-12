@@ -25,6 +25,8 @@ export interface DownloadFlowInput {
   channels: DownloadChannel[]
   schedule: DownloadSchedule
   active: boolean
+  /** Vuelve a descargar las conversaciones existentes y borra su summary y main topic del LLM (FE013). */
+  overwrite: boolean
 }
 
 export interface DownloadFlow extends DownloadFlowInput {
@@ -45,6 +47,8 @@ export interface DownloadCounters {
   skipped: number
   errors: number
   skipped_in_progress: number
+  /** Ya estaban en la base y no se descargaron (flujo sin «Sobrescribir»). */
+  skipped_existing: number
   skipped_other_channel: number
   by_channel: Record<string, number>
   by_quality: Record<string, number>
@@ -58,6 +62,7 @@ export interface DownloadRun {
   status: DownloadRunStatus
   interval: { from: string; to: string }
   channels: DownloadChannel[]
+  overwrite: boolean
   counters: DownloadCounters
   error: string | null
   started_by: { id: string; name: string } | null
