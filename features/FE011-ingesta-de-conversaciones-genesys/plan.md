@@ -316,3 +316,32 @@
   - **Estado de la ejecución:** `completada_con_avisos` si hay algún aviso o error en el log. Con datos reales será lo habitual mientras haya transcripciones parciales, y es lo que se quiere ver.
   - **Log de etapas:** cada etapa deja un resumen al final. Cada conversación solo deja entradas si tiene un aviso o un error, para que una descarga de 1.000 conversaciones no genere miles de líneas de información.
   - **Tramos de la búsqueda:** la consulta de Genesys devuelve las conversaciones que se solapan con el tramo. Las que cruzan el límite entre dos tramos se desduplican.
+
+### T5 — Hecha (2026-10-12)
+
+- **Rojo:** `test_ingestion_schedule.py` y `test_ingestion_flows.py` fallaban en la recogida, porque no existían `ingestion.flows` ni `ingestion.scheduler`. Durante el verde se corrigieron tres tests:
+  - el del cambio de hora, que partía de una hora en la que la siguiente ejecución ya caía en invierno;
+  - la expectativa de un mensaje, después de corregir su gramática («no llevan cantidad»);
+  - el de migraciones de la T1, que esperaba exactamente una y ahora compara con todas las del directorio.
+- **Verde:** 14 tests puros de intervalos y programación y 33 `pg` de la API interna:
+  - **Intervalos:** «hoy» y «ayer» justo después de medianoche y cruzando el cambio de hora de octubre; horas, días e intervalo específico en la zona del flujo.
+  - **Programación:** «cada N horas» alineado a medianoche y «diaria» a su hora local también en invierno.
+  - **CRUD:** crear, leer, listar, editar (sin cambiar la autoría) y borrar, y `404` con identificadores inexistentes, mal formados o de otro tipo.
+  - **Validación:** 15 casos de `422` con su campo y su mensaje.
+  - **Ejecución manual:** intervalo resuelto y quién la lanza; `409` con una activa; arranque concurrente determinista con barrera (estable en 5 repeticiones).
+  - **Historial y log:** historial ordenado y última ejecución en el listado; retención de 200; log paginado, filtrado y descargable en texto; `409` al borrar con una activa.
+  - **Persistencia:** sobrevive a un reinicio, y una ejecución interrumpida por un reinicio acaba en `error`.
+  - **Programador** con reloj simulado: «cada 1 hora» lanza una vez por hora y no dos; un flujo inactivo no se lanza; si hay otra en curso, la omite y la anota en el log de la siguiente; no recupera las perdidas con el servicio parado.
+- **Mutaciones** (`python -B`): mueren las 20 (intervalos, programación, validación, próxima ejecución, recálculo e interrupción al arrancar, omitidas, retención, `409`, borrado con ejecución activa, ejecución de otro flujo, adjunto del log).
+- **Servidor real** (uvicorn y Genesys real): se crea un flujo «hoy» por la API interna y se lanza:
+  - `202` al instante (`pendiente`);
+  - una segunda petición devuelve `409`;
+  - el polling ve el progreso 0 → 2 → 5 → 9 → 12 → 13 de 13 hasta `completada_con_avisos`, en unos 14 s;
+  - el log se descarga como `log-1RN-….txt` (14 líneas);
+  - el borrado devuelve `204`, y el log del servidor no tiene errores. El flujo de prueba se borró al terminar.
+- **Decisiones:**
+  - **Migración `0002_schedule`:** añade `next_run_at`, `missed_runs` y `download_run.notes`.
+  - **Al arrancar:** el servicio interrumpe las ejecuciones que quedaron activas, porque si no bloquearían su flujo para siempre por el índice único. Además recalcula la próxima ejecución de cada flujo, así que las perdidas no se recuperan.
+  - **«Cada N horas»** se alinea con la medianoche local (cada 5 horas: 00, 05, 10, 15 y 20 h), no con el momento de guardar.
+  - **«Últimas N horas o días»** se calculan sobre tiempo real (UTC). «Hoy» y «ayer» usan días naturales en la zona del flujo.
+  - **Borrar** un flujo con una ejecución activa devuelve `409`. La spec no lo decía; evita borrar una ejecución mientras escribe.

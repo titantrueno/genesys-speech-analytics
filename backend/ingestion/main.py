@@ -2,33 +2,71 @@
 
 `uvicorn ingestion.main:app --port 8001` desde `backend/`. No declara CORS: solo la llama la API, nunca un navegador.
 Toda ruta exige el token interno salvo la documentación propia (`/openapi.json` y `/docs`).
+
+Al arrancar: aplica las migraciones, da por interrumpidas las ejecuciones que quedaron activas, recalcula la próxima
+ejecución de cada flujo programado (las perdidas no se recuperan) y arranca el programador.
 """
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 
-from ingestion import db
+from app.clock import now as real_now
+from ingestion import db, flows
+from ingestion.api import Context, build_router
+from ingestion.genesys.client import GenesysAuthError, GenesysClient
+from ingestion.pipeline.analyze import Analyzer
 from ingestion.pipeline.read import read_conversation
-from ingestion.settings import Settings, load_settings
+from ingestion.scheduler import Job, Scheduler
 from ingestion.security import internal_token_guard
+from ingestion.settings import Settings, load_settings
 
 VERSION = "0.1.0"
+MAX_PARALLEL_RUNS = 2
 
 
-def create_app(settings: Settings | None = None, migrate_on_start: bool = True) -> FastAPI:
+def genesys_client_factory(settings: Settings) -> Callable[[], GenesysClient]:
+    def factory() -> GenesysClient:
+        if not (settings.genesys_client_id and settings.genesys_client_secret and settings.genesys_region):
+            raise GenesysAuthError("Faltan las credenciales de Genesys (GENESYS_*) en el .env")
+        return GenesysClient(settings.genesys_client_id, settings.genesys_client_secret, settings.genesys_region)
+    return factory
+
+
+def create_app(settings: Settings | None = None, migrate_on_start: bool = True,
+               client_factory: Callable[[], GenesysClient] | None = None, clock: Callable[[], datetime] = real_now,
+               run_in_background: Callable[[Job], None] | None = None, scheduler: bool = True,
+               analyzer: Analyzer | None = None) -> FastAPI:
     settings = settings or load_settings()
+    client_factory = client_factory or genesys_client_factory(settings)
+    pool = None
+    if run_in_background is None:
+        pool = ThreadPoolExecutor(max_workers=MAX_PARALLEL_RUNS, thread_name_prefix="descarga")
+        run_in_background = pool.submit
+    ctx = Context(settings.database_url, clock, client_factory, run_in_background, analyzer)
+    programmer = Scheduler(settings.database_url, client_factory, clock, run_in_background, analyzer)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
         if migrate_on_start:
             with db.connect(settings.database_url) as conn:
                 db.migrate(conn)
+                flows.interrupt_active_runs(conn, clock())
+                flows.refresh_schedules(conn, clock())
+            if scheduler:
+                programmer.start()
         yield
+        programmer.stop()
+        if pool:
+            pool.shutdown(wait=False, cancel_futures=True)
 
     app = FastAPI(title="Servicio de ingesta de Genesys Cloud", version=VERSION, lifespan=lifespan,
                   dependencies=[Depends(internal_token_guard(settings.token))])
     app.state.settings = settings
+    app.state.scheduler = programmer
 
     @app.get("/health", summary="Estado del servicio y de PostgreSQL")
     def health():
@@ -44,6 +82,7 @@ def create_app(settings: Settings | None = None, migrate_on_start: bool = True) 
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
         return conversation
 
+    app.include_router(build_router(ctx))
     return app
 
 

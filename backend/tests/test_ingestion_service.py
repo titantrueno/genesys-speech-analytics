@@ -57,7 +57,8 @@ def test_migrations_create_the_whole_schema(pg_url):
         applied = db.migrate(conn)
         tables = {row[0] for row in conn.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")}
-    assert applied == ["0001_initial"]
+    assert applied == [path.stem for path in sorted(db.MIGRATIONS.glob("*.sql"))]
+    assert applied[:2] == ["0001_initial", "0002_schedule"]
     assert {"schema_migrations", "conversation", "segment", "turn", "topic_hit", "analysis", "raw_payload",
             "queue", "agent", "flow", "wrapup", "division",
             "download_flow", "download_run", "run_log"} <= tables

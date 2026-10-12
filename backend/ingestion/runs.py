@@ -40,19 +40,36 @@ def new_counters() -> dict:
             "by_quality": {"completa": 0, "parcial": 0, "sin_transcripcion": 0}, "undelivered_messages": 0}
 
 
+MAX_RUNS_PER_FLOW = 200
+
+
 def create_run(database_url: str, flow_id: str, origin: str, start: datetime, end: datetime, channels: list[str],
-               user: tuple[str, str] | None = None) -> str:
+               user: tuple[str, str] | None = None, notes: list[str] | None = None) -> str:
+    """Crea una ejecución `pendiente` (como mucho una activa por flujo) y conserva las 200 más recientes del flujo."""
     run_id = ids.new_id(ids.RUN, _rng)
     user_id, user_name = user or (None, None)
     try:
         with psycopg.connect(database_url) as conn:
             conn.execute(
                 "INSERT INTO download_run (id, flow_id, origin, status, interval_from, interval_to, channels, counters, "
-                "started_by_id, started_by_name, created_at) VALUES (%s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s)",
-                (run_id, flow_id, origin, start, end, list(channels), Jsonb(new_counters()), user_id, user_name, now()))
+                "started_by_id, started_by_name, created_at, notes) "
+                "VALUES (%s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s, %s)",
+                (run_id, flow_id, origin, start, end, list(channels), Jsonb(new_counters()), user_id, user_name, now(),
+                 Jsonb(notes or [])))
+            conn.execute(
+                "DELETE FROM download_run WHERE flow_id = %s AND status <> ALL(%s) AND id NOT IN ("
+                "SELECT id FROM download_run WHERE flow_id = %s ORDER BY created_at DESC LIMIT %s)",
+                (flow_id, list(ACTIVE), flow_id, MAX_RUNS_PER_FLOW))
     except psycopg.errors.UniqueViolation:
         raise RunAlreadyActive(flow_id) from None
     return run_id
+
+
+def list_runs(database_url: str, flow_id: str) -> list[dict]:
+    with psycopg.connect(database_url, row_factory=dict_row) as conn:
+        rows = conn.execute("SELECT * FROM download_run WHERE flow_id = %s ORDER BY created_at DESC",
+                            (flow_id,)).fetchall()
+    return [run_to_dict(row) for row in rows]
 
 
 def run_to_dict(row: dict) -> dict:
@@ -133,6 +150,8 @@ class _Execution:
                           (now(), self.run_id))
         self.log("info", "inicio", f"Ejecución {self.row['origin']} de {_iso(start)} a {_iso(end)} "
                                    f"({', '.join(channels)})")
+        for note in self.row.get("notes") or []:
+            self.log("aviso", "programación", note)
         try:
             self.client = self.x.client_factory()
             self.client.ensure_token()
