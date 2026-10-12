@@ -3,9 +3,9 @@ title: "Ciclo de entrega del harness"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [ingenieria, tdd, entrega]
+tags: [ingenieria, tdd, entrega, git, github]
 created: 2026-09-27
-updated: 2026-10-02
+updated: 2026-10-12
 ---
 
 # Ciclo de entrega del harness
@@ -48,6 +48,16 @@ updated: 2026-10-02
 | Auditoría del vault | `python3 scripts/audit_vault.py` |
 
 La primera vez hay que crear el entorno del backend (`python3 -m venv backend/.venv && backend/.venv/bin/pip install -r backend/requirements.txt`) e instalar el front (`cd frontend && npm install`).
+
+## Commits y publicación en GitHub
+
+**Decisión de la persona propietaria del proyecto (2026-10-12):** los commits, las etiquetas y los pull requests de este repositorio **no mencionan la coautoría del código**.
+
+- No llevan la línea `Co-Authored-By: …` ni ninguna otra atribución a un asistente (por ejemplo, «Generated with Claude Code» en la descripción de un PR).
+- Esta regla prevalece sobre la atribución por defecto de las herramientas de agentes.
+- **Antes de cada `git push`**, `git log origin/main..HEAD --format=%B | grep -c "^Co-Authored-By"` debe devolver `0`.
+- Si algún commit local aún sin publicar lleva la línea, se quita antes de subir. Para ello se reescribe solo el rango `origin/main..HEAD` y se deja una rama de respaldo.
+- La historia ya publicada no se reescribe: los commits anteriores a FE011 que están en `origin` conservan la línea, porque cambiarlos exigiría un `push --force` sobre `main`.
 
 ## Regla operativa
 
