@@ -5,10 +5,11 @@ Toda ruta exige el token interno salvo la documentación propia (`/openapi.json`
 """
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
 
 from ingestion import db
+from ingestion.pipeline.read import read_conversation
 from ingestion.settings import Settings, load_settings
 from ingestion.security import internal_token_guard
 
@@ -34,6 +35,14 @@ def create_app(settings: Settings | None = None, migrate_on_start: bool = True) 
         if not db.ping(settings.database_url):
             return JSONResponse({"status": "error", "database": "no disponible"}, status_code=503)
         return {"status": "ok", "database": "ok"}
+
+    @app.get("/conversations/{key}", summary="Conversación normalizada por su 1CO o su identificador de Genesys")
+    def get_conversation(key: str):
+        with db.connect(settings.database_url) as conn:
+            conversation = read_conversation(conn, key)
+        if conversation is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
+        return conversation
 
     return app
 

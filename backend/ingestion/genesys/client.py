@@ -83,6 +83,10 @@ class GenesysClient:
         self._token_expires = self._clock() + timedelta(seconds=int(body.get("expires_in", 0)))
         return self._token
 
+    def ensure_token(self) -> None:
+        """Obtiene (o reutiliza) el token: comprueba las credenciales antes de empezar una descarga."""
+        self._access_token()
+
     # Peticiones ------------------------------------------------------------------------------------------------------
 
     def get(self, path: str, params: dict | None = None) -> Any:

@@ -286,3 +286,33 @@
 - **Desviaciones:**
   - El Genesys falso usa `RawConversation`, la misma estructura que normaliza la ingesta, en lugar de su propia clase.
   - La calidad `parcial` también tiene en cuenta un bot que intervino sin frases (IVR con `tIvr > 0`, o un flujo de entrada que escribió), como dice el criterio 7.
+
+### T4 — Hecha (2026-10-12)
+
+- **Rojo:** `test_ingestion_extract.py` y `test_ingestion_runs.py` fallaban en la recogida, porque no existían `extract`, `analyze`, `load`, `read` ni `runs`. En el primer verde fallaron dos cosas:
+  - un test de búsqueda con un mínimo de consultas mal calculado, sustituido por el número exacto (páginas por tramo);
+  - la carga, que leía por posición las filas de una conexión configurada con `dict_row`. Ahora usa un cursor de tuplas.
+- **Verde:** 8 tests de extracción (sin base de datos) y 13 `pg`:
+  - un día completo;
+  - la lectura interna por `1CO` y por identificador de Genesys, con nombres de cola, agente y wrap-up;
+  - la repetición sin duplicados;
+  - una conversación que falla tras los reintentos mientras el resto se guarda;
+  - la identidad de los contadores con omitidas;
+  - `parcial` → `completa`;
+  - el log por etapas, sin texto de turnos ni secretos, con paginación `after` y filtro por nivel;
+  - credenciales malas;
+  - un `Analyzer` que rellena el análisis y una descarga posterior que no lo pisa;
+  - progreso visible con `on_step`;
+  - lecturas que responden durante una ejecución;
+  - 1.000 conversaciones en **10,4 s** (límite: 60 s).
+- **Mutaciones** (`python -B`): mueren las 20 (tramos, desduplicado, paginación, omisiones, tolerancia a `404` de STA y de transcripción, fallo de la API de mensajes, caché de nombres, borrado de hijos al recargar, protección del análisis completo, insertada o actualizada, fallo por conversación, estado con avisos, guardado del progreso, avisos de búsqueda y de normalización, redacción del log, contador de encontradas, lectura por `1CO`).
+- **Prueba de humo contra Genesys real** (solo lectura en Genesys; escribe en la base local `speech_analytics`):
+  - una ejecución «hoy» con el flujo «Prueba de humo T4» descarga **13** conversaciones (7 de voz y 6 de chat) en 13,2 s, sin errores;
+  - calidad: 9 completas, 2 parciales (`687f2225` y `762c914d`) y 2 sin transcripción (`87a83caa` y `13d5b18b`); 2 mensajes no entregados;
+  - con el servicio arrancado con uvicorn, `GET /conversations/66f0aef4…` devuelve 13 turnos del bot, 5 del cliente y 5 temas (contenida en el bot), y `762c914d…` sale `parcial` y derivada al agente.
+
+  Así queda comprobado que la API real acepta el cuerpo de la consulta (`orderBy`, `paging`), algo que el Genesys falso no valida.
+- **Decisiones:**
+  - **Estado de la ejecución:** `completada_con_avisos` si hay algún aviso o error en el log. Con datos reales será lo habitual mientras haya transcripciones parciales, y es lo que se quiere ver.
+  - **Log de etapas:** cada etapa deja un resumen al final. Cada conversación solo deja entradas si tiene un aviso o un error, para que una descarga de 1.000 conversaciones no genere miles de líneas de información.
+  - **Tramos de la búsqueda:** la consulta de Genesys devuelve las conversaciones que se solapan con el tramo. Las que cruzan el límite entre dos tramos se desduplican.
