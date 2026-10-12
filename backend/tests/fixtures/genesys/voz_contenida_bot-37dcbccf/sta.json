@@ -1,0 +1,13 @@
+{
+ "conversation": {
+  "id": "37dcbccf-2d89-424e-bc9e-9e53d8494a9a",
+  "selfUri": "/api/v2/conversations/37dcbccf-2d89-424e-bc9e-9e53d8494a9a"
+ },
+ "sentimentScore": 0.0,
+ "sentimentTrendClass": "NotCalculated",
+ "empathyScores": [],
+ "participantMetrics": {
+  "ivrDurationPercentage": 99.93,
+  "otherDurationPercentage": 0.07
+ }
+}

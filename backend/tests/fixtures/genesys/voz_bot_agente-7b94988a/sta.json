@@ -1,0 +1,23 @@
+{
+ "conversation": {
+  "id": "7b94988a-807b-4a59-8767-ed445ba9f12b",
+  "selfUri": "/api/v2/conversations/7b94988a-807b-4a59-8767-ed445ba9f12b"
+ },
+ "sentimentScore": 0.6351489523872873,
+ "sentimentTrend": 0.31757447619364365,
+ "sentimentTrendClass": "SlightlyImproving",
+ "empathyScores": [
+  {
+   "score": 100.0,
+   "userId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  }
+ ],
+ "participantMetrics": {
+  "agentDurationPercentage": 2.1,
+  "customerDurationPercentage": 3.33,
+  "silenceDurationPercentage": 11.86,
+  "ivrDurationPercentage": 78.41,
+  "acdDurationPercentage": 1.95,
+  "otherDurationPercentage": 2.35
+ }
+}

@@ -1,0 +1,305 @@
+{
+ "conversationEnd": "2026-10-12T10:26:54.400Z",
+ "conversationId": "90116482-f12f-466f-a7ba-2c7c96a975c3",
+ "conversationInitiator": "customer",
+ "conversationStart": "2026-10-12T10:26:23.098Z",
+ "customerParticipation": true,
+ "divisionIds": [
+  "3d2793da-0d9d-4b66-970c-e968516e4da3"
+ ],
+ "originatingDirection": "inbound",
+ "participants": [
+  {
+   "externalContactId": "2c5371c4-ccbe-4e64-86a7-3a18bff0cac0",
+   "participantId": "5458d3f9-d7fd-45c0-8502-6ab892b0a165",
+   "purpose": "customer",
+   "sessions": [
+    {
+     "addressFrom": "e8cba357-2897-44d2-bff7-4c0a0d95b225",
+     "addressTo": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "direction": "inbound",
+     "eligibleAgentCounts": [
+      1
+     ],
+     "journeyCustomerId": "082704df-3715-411d-93b3-0f0758206fb4",
+     "journeyCustomerIdType": "cookie",
+     "journeyCustomerSessionId": "e8cba357-2897-44d2-bff7-4c0a0d95b225",
+     "journeyCustomerSessionIdType": "web",
+     "mediaType": "message",
+     "messageType": "webmessaging",
+     "peerId": "2a5e7967-eff1-4bd7-81bc-63a816730f3b",
+     "provider": "PureCloud Messaging",
+     "requestedRoutings": [
+      "Standard"
+     ],
+     "selectedAgentId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+     "sessionId": "ca3484a4-9afa-44ae-bbdb-40992e4cd95e",
+     "usedRouting": "Standard",
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T10:26:23.098Z",
+       "name": "nConnected",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T10:26:23.098Z",
+       "name": "nConversations",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.016Z",
+       "name": "oMessageCount",
+       "value": 6
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.016Z",
+       "name": "tAverageCustomerResponseTime",
+       "value": 1404
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.016Z",
+       "name": "tConnected",
+       "value": 27918
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "disconnectType": "peer",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T10:26:51.016Z",
+       "segmentStart": "2026-10-12T10:26:23.098Z",
+       "segmentType": "interact"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "participantId": "62210132-be38-4912-b824-cfe57d61fdd7",
+   "participantName": "AIT_ChatSim_Inbound",
+   "purpose": "workflow",
+   "sessions": [
+    {
+     "addressFrom": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "addressTo": "e8cba357-2897-44d2-bff7-4c0a0d95b225",
+     "direction": "inbound",
+     "mediaType": "message",
+     "messageType": "webmessaging",
+     "peerId": "ca3484a4-9afa-44ae-bbdb-40992e4cd95e",
+     "provider": "PureCloud Messaging",
+     "remote": "Guest",
+     "sessionId": "747ae90d-ca4f-4df9-9a8f-5c59c1d2878c",
+     "flow": {
+      "endingLanguage": "es-es",
+      "entryReason": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "entryType": "direct",
+      "exitReason": "TRANSFER",
+      "flowId": "9efe4118-6e2b-4628-958e-fe1e5f12c3be",
+      "flowName": "AIT_ChatSim_Inbound",
+      "flowType": "INBOUNDSHORTMESSAGE",
+      "flowVersion": "2.0",
+      "startingLanguage": "es-es",
+      "transferTargetAddress": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+      "transferTargetName": "AIT_Transcription",
+      "transferType": "ACD"
+     },
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T10:26:23.104Z",
+       "name": "nFlow",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T10:26:26.273Z",
+       "name": "oMessageCount",
+       "value": 3
+      },
+      {
+       "emitDate": "2026-10-12T10:26:26.273Z",
+       "name": "tFlow",
+       "value": 3169
+      },
+      {
+       "emitDate": "2026-10-12T10:26:26.273Z",
+       "name": "tFlowExit",
+       "value": 3169
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "disconnectType": "transfer",
+       "segmentEnd": "2026-10-12T10:26:26.273Z",
+       "segmentStart": "2026-10-12T10:26:23.104Z",
+       "segmentType": "interact"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "participantId": "42832c47-77e0-4a64-bc49-cbe91824a062",
+   "participantName": "AIT_Transcription",
+   "purpose": "acd",
+   "sessions": [
+    {
+     "addressFrom": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "addressTo": "e8cba357-2897-44d2-bff7-4c0a0d95b225",
+     "direction": "inbound",
+     "eligibleAgentCounts": [
+      1
+     ],
+     "flowInType": "workflow",
+     "mediaType": "message",
+     "messageType": "webmessaging",
+     "peerId": "ca3484a4-9afa-44ae-bbdb-40992e4cd95e",
+     "provider": "PureCloud Messaging",
+     "remote": "Guest",
+     "requestedRoutings": [
+      "Standard"
+     ],
+     "selectedAgentId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+     "sessionId": "c1d3b744-5086-444e-a821-a6c297af0fba",
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T10:26:26.299Z",
+       "name": "nOffered",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T10:26:29.808Z",
+       "name": "tAcd",
+       "value": 3509
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "disconnectType": "transfer",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T10:26:29.808Z",
+       "segmentStart": "2026-10-12T10:26:26.299Z",
+       "segmentType": "interact"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "participantId": "510ad836-8577-4d51-949a-7c05303eba88",
+   "participantName": "Javier Del Olmo",
+   "purpose": "agent",
+   "userId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "sessions": [
+    {
+     "addressFrom": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "addressTo": "e8cba357-2897-44d2-bff7-4c0a0d95b225",
+     "direction": "inbound",
+     "eligibleAgentCounts": [
+      1
+     ],
+     "mediaType": "message",
+     "messageType": "webmessaging",
+     "peerId": "ca3484a4-9afa-44ae-bbdb-40992e4cd95e",
+     "provider": "PureCloud Messaging",
+     "remote": "Guest",
+     "requestedRoutings": [
+      "Standard"
+     ],
+     "selectedAgentId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+     "sessionId": "2a5e7967-eff1-4bd7-81bc-63a816730f3b",
+     "usedRouting": "Standard",
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T10:26:29.814Z",
+       "name": "tAlert",
+       "value": 3318
+      },
+      {
+       "emitDate": "2026-10-12T10:26:29.814Z",
+       "name": "tAnswered",
+       "value": 3509
+      },
+      {
+       "emitDate": "2026-10-12T10:26:36.789Z",
+       "name": "tFirstEngagement",
+       "value": 13691
+      },
+      {
+       "emitDate": "2026-10-12T10:26:36.789Z",
+       "name": "tFirstResponse",
+       "value": 6975
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.002Z",
+       "name": "oMessageCount",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.002Z",
+       "name": "oMessageTurn",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.002Z",
+       "name": "tAgentResponseTime",
+       "value": 27904
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.002Z",
+       "name": "tAverageAgentResponseTime",
+       "value": 6975
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.002Z",
+       "name": "tTalk",
+       "value": 21188
+      },
+      {
+       "emitDate": "2026-10-12T10:26:51.002Z",
+       "name": "tTalkComplete",
+       "value": 21188
+      },
+      {
+       "emitDate": "2026-10-12T10:26:54.400Z",
+       "name": "tAcw",
+       "value": 3398
+      },
+      {
+       "emitDate": "2026-10-12T10:26:54.400Z",
+       "name": "tHandle",
+       "value": 24586
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T10:26:29.814Z",
+       "segmentStart": "2026-10-12T10:26:26.496Z",
+       "segmentType": "alert"
+      },
+      {
+       "conference": false,
+       "disconnectType": "client",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T10:26:51.002Z",
+       "segmentStart": "2026-10-12T10:26:29.814Z",
+       "segmentType": "interact"
+      },
+      {
+       "conference": false,
+       "disconnectType": "client",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T10:26:54.400Z",
+       "segmentStart": "2026-10-12T10:26:51.002Z",
+       "segmentType": "wrapup",
+       "wrapUpCode": "7fb334b0-0e9e-11e4-9191-0800200c9a66"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,4446 @@
+{
+ "85a3cf6c-7036-4b4f-aebf-2f83bc78d363": {
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "communicationId": "85a3cf6c-7036-4b4f-aebf-2f83bc78d363",
+  "recordingId": "f7a6fb82-c46f-465e-abe4-a98194f4ff9a",
+  "transcripts": [
+   {
+    "transcriptId": "62183a65-f5ce-419c-886a-91d91bed7948",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "startTime": 1791799848267,
+    "duration": {
+     "milliseconds": 241800
+    },
+    "phrases": [
+     {
+      "text": "Buenas.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 0,
+       "chars": 0
+      },
+      "startTimeMs": 1791799848267,
+      "duration": {
+       "words": 1,
+       "chars": 7
+      },
+      "words": [
+       {
+        "word": "Buenas.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 0,
+         "chars": 0
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "2727f657c189a53b08c5a49279bfc4d9",
+      "phraseIndex": 0,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Vengo por tercera vez por el mismo cargo que no reconozco y estoy bastante harto, a ver si esta vez alguien me soluciona algo.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 1,
+       "chars": 7
+      },
+      "startTimeMs": 1791799848267,
+      "duration": {
+       "words": 24,
+       "chars": 126
+      },
+      "words": [
+       {
+        "word": "Vengo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 1,
+         "chars": 7
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "por",
+        "confidence": 1.0,
+        "offset": {
+         "words": 2,
+         "chars": 13
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "tercera",
+        "confidence": 1.0,
+        "offset": {
+         "words": 3,
+         "chars": 17
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "vez",
+        "confidence": 1.0,
+        "offset": {
+         "words": 4,
+         "chars": 25
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "por",
+        "confidence": 1.0,
+        "offset": {
+         "words": 5,
+         "chars": 29
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 6,
+         "chars": 33
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "mismo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 7,
+         "chars": 36
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 8,
+         "chars": 42
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 9,
+         "chars": 48
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 10,
+         "chars": 52
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "reconozco",
+        "confidence": 1.0,
+        "offset": {
+         "words": 11,
+         "chars": 55
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 12,
+         "chars": 65
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "estoy",
+        "confidence": 1.0,
+        "offset": {
+         "words": 13,
+         "chars": 67
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "bastante",
+        "confidence": 1.0,
+        "offset": {
+         "words": 14,
+         "chars": 73
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "harto,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 15,
+         "chars": 82
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 16,
+         "chars": 89
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "ver",
+        "confidence": 1.0,
+        "offset": {
+         "words": 17,
+         "chars": 91
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "si",
+        "confidence": 1.0,
+        "offset": {
+         "words": 18,
+         "chars": 95
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "esta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 19,
+         "chars": 98
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "vez",
+        "confidence": 1.0,
+        "offset": {
+         "words": 20,
+         "chars": 103
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "alguien",
+        "confidence": 1.0,
+        "offset": {
+         "words": 21,
+         "chars": 107
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "me",
+        "confidence": 1.0,
+        "offset": {
+         "words": 22,
+         "chars": 115
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "soluciona",
+        "confidence": 1.0,
+        "offset": {
+         "words": 23,
+         "chars": 118
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "algo.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 24,
+         "chars": 128
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "2727f657c189a53b08c5a49279bfc4d9",
+      "phraseIndex": 1,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "hola, buenos dias!",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 25,
+       "chars": 133
+      },
+      "startTimeMs": 1791799877729,
+      "duration": {
+       "words": 3,
+       "chars": 18
+      },
+      "words": [
+       {
+        "word": "hola,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 25,
+         "chars": 133
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "buenos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 26,
+         "chars": 139
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "dias!",
+        "confidence": 1.0,
+        "offset": {
+         "words": 27,
+         "chars": 146
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       }
+      ],
+      "participantPurpose": "internal",
+      "messageID": "a7dc74f2d15824915871a3367cccfbda",
+      "phraseIndex": 2,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     },
+     {
+      "text": "puede darme los datos de ese cargo?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 28,
+       "chars": 151
+      },
+      "startTimeMs": 1791799877729,
+      "duration": {
+       "words": 7,
+       "chars": 35
+      },
+      "words": [
+       {
+        "word": "puede",
+        "confidence": 1.0,
+        "offset": {
+         "words": 28,
+         "chars": 151
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "darme",
+        "confidence": 1.0,
+        "offset": {
+         "words": 29,
+         "chars": 157
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 1.0,
+        "offset": {
+         "words": 30,
+         "chars": 163
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "datos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 31,
+         "chars": 167
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 32,
+         "chars": 173
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "ese",
+        "confidence": 1.0,
+        "offset": {
+         "words": 33,
+         "chars": 176
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "cargo?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 34,
+         "chars": 180
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       }
+      ],
+      "participantPurpose": "internal",
+      "messageID": "a7dc74f2d15824915871a3367cccfbda",
+      "phraseIndex": 3,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     },
+     {
+      "text": "Otra vez los datos...",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 35,
+       "chars": 186
+      },
+      "startTimeMs": 1791799886359,
+      "duration": {
+       "words": 4,
+       "chars": 21
+      },
+      "words": [
+       {
+        "word": "Otra",
+        "confidence": 1.0,
+        "offset": {
+         "words": 35,
+         "chars": 186
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "vez",
+        "confidence": 1.0,
+        "offset": {
+         "words": 36,
+         "chars": 191
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 1.0,
+        "offset": {
+         "words": 37,
+         "chars": 195
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "datos...",
+        "confidence": 1.0,
+        "offset": {
+         "words": 38,
+         "chars": 199
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "052718f4ed688f4527a6c2abf006fe54",
+      "phraseIndex": 4,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Ya los di las dos veces anteriores.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 39,
+       "chars": 207
+      },
+      "startTimeMs": 1791799886359,
+      "duration": {
+       "words": 7,
+       "chars": 35
+      },
+      "words": [
+       {
+        "word": "Ya",
+        "confidence": 1.0,
+        "offset": {
+         "words": 39,
+         "chars": 207
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 1.0,
+        "offset": {
+         "words": 40,
+         "chars": 210
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "di",
+        "confidence": 1.0,
+        "offset": {
+         "words": 41,
+         "chars": 214
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "las",
+        "confidence": 1.0,
+        "offset": {
+         "words": 42,
+         "chars": 217
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "dos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 43,
+         "chars": 221
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "veces",
+        "confidence": 1.0,
+        "offset": {
+         "words": 44,
+         "chars": 225
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "anteriores.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 45,
+         "chars": 231
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "052718f4ed688f4527a6c2abf006fe54",
+      "phraseIndex": 5,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Son 49,99 euros de Amazon Brasil, del 8 de octubre, Visa acabada en 4821.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 46,
+       "chars": 242
+      },
+      "startTimeMs": 1791799886359,
+      "duration": {
+       "words": 14,
+       "chars": 73
+      },
+      "words": [
+       {
+        "word": "Son",
+        "confidence": 1.0,
+        "offset": {
+         "words": 46,
+         "chars": 242
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "49,99",
+        "confidence": 1.0,
+        "offset": {
+         "words": 47,
+         "chars": 246
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "euros",
+        "confidence": 1.0,
+        "offset": {
+         "words": 48,
+         "chars": 252
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 49,
+         "chars": 258
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "Amazon",
+        "confidence": 1.0,
+        "offset": {
+         "words": 50,
+         "chars": 261
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "Brasil,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 51,
+         "chars": 268
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "del",
+        "confidence": 1.0,
+        "offset": {
+         "words": 52,
+         "chars": 276
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "8",
+        "confidence": 1.0,
+        "offset": {
+         "words": 53,
+         "chars": 280
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 54,
+         "chars": 282
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "octubre,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 55,
+         "chars": 285
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "Visa",
+        "confidence": 1.0,
+        "offset": {
+         "words": 56,
+         "chars": 294
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "acabada",
+        "confidence": 1.0,
+        "offset": {
+         "words": 57,
+         "chars": 299
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 58,
+         "chars": 307
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "4821.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 59,
+         "chars": 310
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "052718f4ed688f4527a6c2abf006fe54",
+      "phraseIndex": 6,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "¿Es que no queda nada apuntado de mis llamadas anteriores?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 60,
+       "chars": 315
+      },
+      "startTimeMs": 1791799886359,
+      "duration": {
+       "words": 10,
+       "chars": 58
+      },
+      "words": [
+       {
+        "word": "¿Es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 60,
+         "chars": 315
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 61,
+         "chars": 319
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 62,
+         "chars": 323
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "queda",
+        "confidence": 1.0,
+        "offset": {
+         "words": 63,
+         "chars": 326
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "nada",
+        "confidence": 1.0,
+        "offset": {
+         "words": 64,
+         "chars": 332
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "apuntado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 65,
+         "chars": 337
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 66,
+         "chars": 346
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "mis",
+        "confidence": 1.0,
+        "offset": {
+         "words": 67,
+         "chars": 349
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "llamadas",
+        "confidence": 1.0,
+        "offset": {
+         "words": 68,
+         "chars": 353
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "anteriores?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 69,
+         "chars": 362
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "052718f4ed688f4527a6c2abf006fe54",
+      "phraseIndex": 7,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "disculpe pero es por protocolo que tengo que preguntarselo para que quede correctamente reflejado, de ese cargo, le ha dado los datos de su tarjeta a alguien?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 70,
+       "chars": 373
+      },
+      "startTimeMs": 1791799957863,
+      "duration": {
+       "words": 27,
+       "chars": 158
+      },
+      "words": [
+       {
+        "word": "disculpe",
+        "confidence": 1.0,
+        "offset": {
+         "words": 70,
+         "chars": 373
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "pero",
+        "confidence": 1.0,
+        "offset": {
+         "words": 71,
+         "chars": 382
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 72,
+         "chars": 387
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "por",
+        "confidence": 1.0,
+        "offset": {
+         "words": 73,
+         "chars": 390
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "protocolo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 74,
+         "chars": 394
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 75,
+         "chars": 404
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "tengo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 76,
+         "chars": 408
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 77,
+         "chars": 414
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "preguntarselo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 78,
+         "chars": 418
+        },
+        "duration": {
+         "words": 1,
+         "chars": 14
+        }
+       },
+       {
+        "word": "para",
+        "confidence": 1.0,
+        "offset": {
+         "words": 79,
+         "chars": 432
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 80,
+         "chars": 437
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "quede",
+        "confidence": 1.0,
+        "offset": {
+         "words": 81,
+         "chars": 441
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "correctamente",
+        "confidence": 1.0,
+        "offset": {
+         "words": 82,
+         "chars": 447
+        },
+        "duration": {
+         "words": 1,
+         "chars": 14
+        }
+       },
+       {
+        "word": "reflejado,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 83,
+         "chars": 461
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 84,
+         "chars": 472
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "ese",
+        "confidence": 1.0,
+        "offset": {
+         "words": 85,
+         "chars": 475
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "cargo,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 86,
+         "chars": 479
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "le",
+        "confidence": 1.0,
+        "offset": {
+         "words": 87,
+         "chars": 486
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "ha",
+        "confidence": 1.0,
+        "offset": {
+         "words": 88,
+         "chars": 489
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "dado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 89,
+         "chars": 492
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 1.0,
+        "offset": {
+         "words": 90,
+         "chars": 497
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "datos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 91,
+         "chars": 501
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 92,
+         "chars": 507
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "su",
+        "confidence": 1.0,
+        "offset": {
+         "words": 93,
+         "chars": 510
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 94,
+         "chars": 513
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 95,
+         "chars": 521
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "alguien?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 96,
+         "chars": 523
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       }
+      ],
+      "participantPurpose": "internal",
+      "messageID": "f0b4b3c913ec34e16576de26d0e7137d",
+      "phraseIndex": 8,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     },
+     {
+      "text": "ha probado a ponerse en contacto con el comercio?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 97,
+       "chars": 531
+      },
+      "startTimeMs": 1791799957863,
+      "duration": {
+       "words": 9,
+       "chars": 49
+      },
+      "words": [
+       {
+        "word": "ha",
+        "confidence": 1.0,
+        "offset": {
+         "words": 97,
+         "chars": 531
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "probado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 98,
+         "chars": 534
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 99,
+         "chars": 542
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "ponerse",
+        "confidence": 1.0,
+        "offset": {
+         "words": 100,
+         "chars": 544
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 101,
+         "chars": 552
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "contacto",
+        "confidence": 1.0,
+        "offset": {
+         "words": 102,
+         "chars": 555
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 103,
+         "chars": 564
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 104,
+         "chars": 568
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "comercio?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 105,
+         "chars": 571
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       }
+      ],
+      "participantPurpose": "internal",
+      "messageID": "f0b4b3c913ec34e16576de26d0e7137d",
+      "phraseIndex": 9,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     },
+     {
+      "text": "¿Contactar con el comercio?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 106,
+       "chars": 580
+      },
+      "startTimeMs": 1791799968638,
+      "duration": {
+       "words": 4,
+       "chars": 27
+      },
+      "words": [
+       {
+        "word": "¿Contactar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 106,
+         "chars": 580
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 107,
+         "chars": 591
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 108,
+         "chars": 595
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "comercio?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 109,
+         "chars": 598
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "9af74cb95bd3e90822996792bfb49eff",
+      "phraseIndex": 10,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Si ni sé quién es ese comercio, yo nunca he comprado en Brasil.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 110,
+       "chars": 607
+      },
+      "startTimeMs": 1791799968638,
+      "duration": {
+       "words": 13,
+       "chars": 63
+      },
+      "words": [
+       {
+        "word": "Si",
+        "confidence": 1.0,
+        "offset": {
+         "words": 110,
+         "chars": 607
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "ni",
+        "confidence": 1.0,
+        "offset": {
+         "words": 111,
+         "chars": 610
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "sé",
+        "confidence": 1.0,
+        "offset": {
+         "words": 112,
+         "chars": 613
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "quién",
+        "confidence": 1.0,
+        "offset": {
+         "words": 113,
+         "chars": 616
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 114,
+         "chars": 622
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "ese",
+        "confidence": 1.0,
+        "offset": {
+         "words": 115,
+         "chars": 625
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "comercio,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 116,
+         "chars": 629
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "yo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 117,
+         "chars": 639
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "nunca",
+        "confidence": 1.0,
+        "offset": {
+         "words": 118,
+         "chars": 642
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "he",
+        "confidence": 1.0,
+        "offset": {
+         "words": 119,
+         "chars": 648
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "comprado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 120,
+         "chars": 651
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 121,
+         "chars": 660
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "Brasil.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 122,
+         "chars": 663
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "9af74cb95bd3e90822996792bfb49eff",
+      "phraseIndex": 11,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Y no, no he dado mis datos a nadie.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 123,
+       "chars": 670
+      },
+      "startTimeMs": 1791799968638,
+      "duration": {
+       "words": 9,
+       "chars": 35
+      },
+      "words": [
+       {
+        "word": "Y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 123,
+         "chars": 670
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "no,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 124,
+         "chars": 672
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 125,
+         "chars": 676
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "he",
+        "confidence": 1.0,
+        "offset": {
+         "words": 126,
+         "chars": 679
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "dado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 127,
+         "chars": 682
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "mis",
+        "confidence": 1.0,
+        "offset": {
+         "words": 128,
+         "chars": 687
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "datos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 129,
+         "chars": 691
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 130,
+         "chars": 697
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "nadie.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 131,
+         "chars": 699
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "9af74cb95bd3e90822996792bfb49eff",
+      "phraseIndex": 12,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Llevo dos semanas con esto y me siguen haciendo las mismas preguntas.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 132,
+       "chars": 705
+      },
+      "startTimeMs": 1791799968638,
+      "duration": {
+       "words": 12,
+       "chars": 69
+      },
+      "words": [
+       {
+        "word": "Llevo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 132,
+         "chars": 705
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "dos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 133,
+         "chars": 711
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "semanas",
+        "confidence": 1.0,
+        "offset": {
+         "words": 134,
+         "chars": 715
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 135,
+         "chars": 723
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "esto",
+        "confidence": 1.0,
+        "offset": {
+         "words": 136,
+         "chars": 727
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 137,
+         "chars": 732
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "me",
+        "confidence": 1.0,
+        "offset": {
+         "words": 138,
+         "chars": 734
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "siguen",
+        "confidence": 1.0,
+        "offset": {
+         "words": 139,
+         "chars": 737
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "haciendo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 140,
+         "chars": 744
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "las",
+        "confidence": 1.0,
+        "offset": {
+         "words": 141,
+         "chars": 753
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "mismas",
+        "confidence": 1.0,
+        "offset": {
+         "words": 142,
+         "chars": 757
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "preguntas.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 143,
+         "chars": 764
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "9af74cb95bd3e90822996792bfb49eff",
+      "phraseIndex": 13,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Quiero que me devolváis el dinero, es lo que pido.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 144,
+       "chars": 774
+      },
+      "startTimeMs": 1791799968638,
+      "duration": {
+       "words": 10,
+       "chars": 50
+      },
+      "words": [
+       {
+        "word": "Quiero",
+        "confidence": 1.0,
+        "offset": {
+         "words": 144,
+         "chars": 774
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 145,
+         "chars": 781
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "me",
+        "confidence": 1.0,
+        "offset": {
+         "words": 146,
+         "chars": 785
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "devolváis",
+        "confidence": 1.0,
+        "offset": {
+         "words": 147,
+         "chars": 788
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 148,
+         "chars": 798
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "dinero,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 149,
+         "chars": 801
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 150,
+         "chars": 809
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "lo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 151,
+         "chars": 812
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 152,
+         "chars": 815
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "pido.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 153,
+         "chars": 819
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "9af74cb95bd3e90822996792bfb49eff",
+      "phraseIndex": 14,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "antes de generar una reclamacion necesitamos que abra una disputa con Amazon Brasil y si en 2 dias no recibe una contestacion satisfactoria, vuelva a ponerse en contacto con nosotros con la negariva de Amazon para tramitar su devolucion",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 154,
+       "chars": 824
+      },
+      "startTimeMs": 1791800040129,
+      "duration": {
+       "words": 39,
+       "chars": 236
+      },
+      "words": [
+       {
+        "word": "antes",
+        "confidence": 1.0,
+        "offset": {
+         "words": 154,
+         "chars": 824
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 155,
+         "chars": 830
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "generar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 156,
+         "chars": 833
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "una",
+        "confidence": 1.0,
+        "offset": {
+         "words": 157,
+         "chars": 841
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "reclamacion",
+        "confidence": 1.0,
+        "offset": {
+         "words": 158,
+         "chars": 845
+        },
+        "duration": {
+         "words": 1,
+         "chars": 12
+        }
+       },
+       {
+        "word": "necesitamos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 159,
+         "chars": 857
+        },
+        "duration": {
+         "words": 1,
+         "chars": 12
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 160,
+         "chars": 869
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "abra",
+        "confidence": 1.0,
+        "offset": {
+         "words": 161,
+         "chars": 873
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "una",
+        "confidence": 1.0,
+        "offset": {
+         "words": 162,
+         "chars": 878
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "disputa",
+        "confidence": 1.0,
+        "offset": {
+         "words": 163,
+         "chars": 882
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 164,
+         "chars": 890
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "Amazon",
+        "confidence": 1.0,
+        "offset": {
+         "words": 165,
+         "chars": 894
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "Brasil",
+        "confidence": 1.0,
+        "offset": {
+         "words": 166,
+         "chars": 901
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 167,
+         "chars": 908
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "si",
+        "confidence": 1.0,
+        "offset": {
+         "words": 168,
+         "chars": 910
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 169,
+         "chars": 913
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "2",
+        "confidence": 1.0,
+        "offset": {
+         "words": 170,
+         "chars": 916
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "dias",
+        "confidence": 1.0,
+        "offset": {
+         "words": 171,
+         "chars": 918
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 172,
+         "chars": 923
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "recibe",
+        "confidence": 1.0,
+        "offset": {
+         "words": 173,
+         "chars": 926
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "una",
+        "confidence": 1.0,
+        "offset": {
+         "words": 174,
+         "chars": 933
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "contestacion",
+        "confidence": 1.0,
+        "offset": {
+         "words": 175,
+         "chars": 937
+        },
+        "duration": {
+         "words": 1,
+         "chars": 13
+        }
+       },
+       {
+        "word": "satisfactoria,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 176,
+         "chars": 950
+        },
+        "duration": {
+         "words": 1,
+         "chars": 15
+        }
+       },
+       {
+        "word": "vuelva",
+        "confidence": 1.0,
+        "offset": {
+         "words": 177,
+         "chars": 965
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 178,
+         "chars": 972
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "ponerse",
+        "confidence": 1.0,
+        "offset": {
+         "words": 179,
+         "chars": 974
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 180,
+         "chars": 982
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "contacto",
+        "confidence": 1.0,
+        "offset": {
+         "words": 181,
+         "chars": 985
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 182,
+         "chars": 994
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "nosotros",
+        "confidence": 1.0,
+        "offset": {
+         "words": 183,
+         "chars": 998
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 184,
+         "chars": 1007
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "offset": {
+         "words": 185,
+         "chars": 1011
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "negariva",
+        "confidence": 1.0,
+        "offset": {
+         "words": 186,
+         "chars": 1014
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 187,
+         "chars": 1023
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "Amazon",
+        "confidence": 1.0,
+        "offset": {
+         "words": 188,
+         "chars": 1026
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "para",
+        "confidence": 1.0,
+        "offset": {
+         "words": 189,
+         "chars": 1033
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "tramitar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 190,
+         "chars": 1038
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "su",
+        "confidence": 1.0,
+        "offset": {
+         "words": 191,
+         "chars": 1047
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "devolucion",
+        "confidence": 1.0,
+        "offset": {
+         "words": 192,
+         "chars": 1050
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       }
+      ],
+      "participantPurpose": "internal",
+      "messageID": "7af8bdd96bbe36cc90e2d5471151ec1c",
+      "phraseIndex": 15,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     },
+     {
+      "text": "¿Perdona?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 193,
+       "chars": 1060
+      },
+      "startTimeMs": 1791800044896,
+      "duration": {
+       "words": 1,
+       "chars": 9
+      },
+      "words": [
+       {
+        "word": "¿Perdona?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 193,
+         "chars": 1060
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1f3259ded1b9a28a424b774f9d036a47",
+      "phraseIndex": 16,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "¿Que abra yo una disputa con Amazon Brasil?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 194,
+       "chars": 1069
+      },
+      "startTimeMs": 1791800044896,
+      "duration": {
+       "words": 8,
+       "chars": 43
+      },
+      "words": [
+       {
+        "word": "¿Que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 194,
+         "chars": 1069
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "abra",
+        "confidence": 1.0,
+        "offset": {
+         "words": 195,
+         "chars": 1074
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "yo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 196,
+         "chars": 1079
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "una",
+        "confidence": 1.0,
+        "offset": {
+         "words": 197,
+         "chars": 1082
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "disputa",
+        "confidence": 1.0,
+        "offset": {
+         "words": 198,
+         "chars": 1086
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 199,
+         "chars": 1094
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "Amazon",
+        "confidence": 1.0,
+        "offset": {
+         "words": 200,
+         "chars": 1098
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "Brasil?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 201,
+         "chars": 1105
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1f3259ded1b9a28a424b774f9d036a47",
+      "phraseIndex": 17,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Es VUESTRA tarjeta y VUESTRO sistema el que ha dejado pasar un cargo fraudulento, no es mi trabajo perseguir a una empresa al otro lado del mundo.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 202,
+       "chars": 1112
+      },
+      "startTimeMs": 1791800044896,
+      "duration": {
+       "words": 27,
+       "chars": 146
+      },
+      "words": [
+       {
+        "word": "Es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 202,
+         "chars": 1112
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "VUESTRA",
+        "confidence": 1.0,
+        "offset": {
+         "words": 203,
+         "chars": 1115
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 204,
+         "chars": 1123
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 205,
+         "chars": 1131
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "VUESTRO",
+        "confidence": 1.0,
+        "offset": {
+         "words": 206,
+         "chars": 1133
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "sistema",
+        "confidence": 1.0,
+        "offset": {
+         "words": 207,
+         "chars": 1141
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 208,
+         "chars": 1149
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 209,
+         "chars": 1152
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "ha",
+        "confidence": 1.0,
+        "offset": {
+         "words": 210,
+         "chars": 1156
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "dejado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 211,
+         "chars": 1159
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "pasar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 212,
+         "chars": 1166
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 1.0,
+        "offset": {
+         "words": 213,
+         "chars": 1172
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 214,
+         "chars": 1175
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "fraudulento,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 215,
+         "chars": 1181
+        },
+        "duration": {
+         "words": 1,
+         "chars": 13
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 216,
+         "chars": 1194
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 217,
+         "chars": 1197
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "mi",
+        "confidence": 1.0,
+        "offset": {
+         "words": 218,
+         "chars": 1200
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "trabajo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 219,
+         "chars": 1203
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "perseguir",
+        "confidence": 1.0,
+        "offset": {
+         "words": 220,
+         "chars": 1211
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 221,
+         "chars": 1221
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "una",
+        "confidence": 1.0,
+        "offset": {
+         "words": 222,
+         "chars": 1223
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "empresa",
+        "confidence": 1.0,
+        "offset": {
+         "words": 223,
+         "chars": 1227
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "al",
+        "confidence": 1.0,
+        "offset": {
+         "words": 224,
+         "chars": 1235
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "otro",
+        "confidence": 1.0,
+        "offset": {
+         "words": 225,
+         "chars": 1238
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "lado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 226,
+         "chars": 1243
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "del",
+        "confidence": 1.0,
+        "offset": {
+         "words": 227,
+         "chars": 1248
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "mundo.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 228,
+         "chars": 1252
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1f3259ded1b9a28a424b774f9d036a47",
+      "phraseIndex": 18,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Esto es inaceptable.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 229,
+       "chars": 1258
+      },
+      "startTimeMs": 1791800044896,
+      "duration": {
+       "words": 3,
+       "chars": 20
+      },
+      "words": [
+       {
+        "word": "Esto",
+        "confidence": 1.0,
+        "offset": {
+         "words": 229,
+         "chars": 1258
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 230,
+         "chars": 1263
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "inaceptable.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 231,
+         "chars": 1266
+        },
+        "duration": {
+         "words": 1,
+         "chars": 12
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1f3259ded1b9a28a424b774f9d036a47",
+      "phraseIndex": 19,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Quiero hablar con un supervisor.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 232,
+       "chars": 1278
+      },
+      "startTimeMs": 1791800044896,
+      "duration": {
+       "words": 5,
+       "chars": 32
+      },
+      "words": [
+       {
+        "word": "Quiero",
+        "confidence": 1.0,
+        "offset": {
+         "words": 232,
+         "chars": 1278
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "hablar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 233,
+         "chars": 1285
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 234,
+         "chars": 1292
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 1.0,
+        "offset": {
+         "words": 235,
+         "chars": 1296
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "supervisor.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 236,
+         "chars": 1299
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1f3259ded1b9a28a424b774f9d036a47",
+      "phraseIndex": 20,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "disculpe, pero en estos momentos no es posible, desconecto la conversacion, ya le he dado todos los datos para que continue con el proceso",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 237,
+       "chars": 1310
+      },
+      "startTimeMs": 1791800090067,
+      "duration": {
+       "words": 24,
+       "chars": 138
+      },
+      "words": [
+       {
+        "word": "disculpe,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 237,
+         "chars": 1310
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "pero",
+        "confidence": 1.0,
+        "offset": {
+         "words": 238,
+         "chars": 1320
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 239,
+         "chars": 1325
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "estos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 240,
+         "chars": 1328
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "momentos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 241,
+         "chars": 1334
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 242,
+         "chars": 1343
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 243,
+         "chars": 1346
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "posible,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 244,
+         "chars": 1349
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "desconecto",
+        "confidence": 1.0,
+        "offset": {
+         "words": 245,
+         "chars": 1358
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "offset": {
+         "words": 246,
+         "chars": 1369
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "conversacion,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 247,
+         "chars": 1372
+        },
+        "duration": {
+         "words": 1,
+         "chars": 14
+        }
+       },
+       {
+        "word": "ya",
+        "confidence": 1.0,
+        "offset": {
+         "words": 248,
+         "chars": 1386
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "le",
+        "confidence": 1.0,
+        "offset": {
+         "words": 249,
+         "chars": 1389
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "he",
+        "confidence": 1.0,
+        "offset": {
+         "words": 250,
+         "chars": 1392
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "dado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 251,
+         "chars": 1395
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "todos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 252,
+         "chars": 1400
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 1.0,
+        "offset": {
+         "words": 253,
+         "chars": 1406
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "datos",
+        "confidence": 1.0,
+        "offset": {
+         "words": 254,
+         "chars": 1410
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "para",
+        "confidence": 1.0,
+        "offset": {
+         "words": 255,
+         "chars": 1416
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 256,
+         "chars": 1421
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "continue",
+        "confidence": 1.0,
+        "offset": {
+         "words": 257,
+         "chars": 1425
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 258,
+         "chars": 1434
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 259,
+         "chars": 1438
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "proceso",
+        "confidence": 1.0,
+        "offset": {
+         "words": 260,
+         "chars": 1441
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "internal",
+      "messageID": "9c271ed525441ac5cd2165c775b0fd61",
+      "phraseIndex": 21,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     }
+    ],
+    "analytics": {
+     "sentiment": [
+      {
+       "participant": "external",
+       "phrase": "Vengo por tercera vez por el mismo cargo que no reconozco y estoy bastante harto, a ver si esta vez alguien me soluciona algo.",
+       "offset": {
+        "words": 1,
+        "chars": 7
+       },
+       "startTimeMs": 1791799848267,
+       "duration": {
+        "words": 24,
+        "chars": 126
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 1,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Si ni sé quién es ese comercio, yo nunca he comprado en Brasil.",
+       "offset": {
+        "words": 110,
+        "chars": 607
+       },
+       "startTimeMs": 1791799968638,
+       "duration": {
+        "words": 13,
+        "chars": 63
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 7,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Y no, no he dado mis datos a nadie.",
+       "offset": {
+        "words": 123,
+        "chars": 670
+       },
+       "startTimeMs": 1791799968638,
+       "duration": {
+        "words": 9,
+        "chars": 35
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 8,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Llevo dos semanas con esto y me siguen haciendo las mismas preguntas.",
+       "offset": {
+        "words": 132,
+        "chars": 705
+       },
+       "startTimeMs": 1791799968638,
+       "duration": {
+        "words": 12,
+        "chars": 69
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 9,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Quiero que me devolváis el dinero, es lo que pido.",
+       "offset": {
+        "words": 144,
+        "chars": 774
+       },
+       "startTimeMs": 1791799968638,
+       "duration": {
+        "words": 10,
+        "chars": 50
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 10,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "¿Que abra yo una disputa con Amazon Brasil?",
+       "offset": {
+        "words": 194,
+        "chars": 1069
+       },
+       "startTimeMs": 1791800044896,
+       "duration": {
+        "words": 8,
+        "chars": 43
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 12,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Es VUESTRA tarjeta y VUESTRO sistema el que ha dejado pasar un cargo fraudulento, no es mi trabajo perseguir a una empresa al otro lado del mundo.",
+       "offset": {
+        "words": 202,
+        "chars": 1112
+       },
+       "startTimeMs": 1791800044896,
+       "duration": {
+        "words": 27,
+        "chars": 146
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 13,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Esto es inaceptable.",
+       "offset": {
+        "words": 229,
+        "chars": 1258
+       },
+       "startTimeMs": 1791800044896,
+       "duration": {
+        "words": 3,
+        "chars": 20
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 14,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Quiero hablar con un supervisor.",
+       "offset": {
+        "words": 232,
+        "chars": 1278
+       },
+       "startTimeMs": 1791800044896,
+       "duration": {
+        "words": 5,
+        "chars": 32
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 15,
+       "source": "v2"
+      }
+     ],
+     "empathy": [],
+     "topics": [
+      {
+       "participant": "internal",
+       "topicId": "577bb3a1-3f9b-437b-a7ef-30f0bf4455d5",
+       "topicName": "Conexión",
+       "topicPhrase": "buenos días",
+       "transcriptPhrase": "buenos dias!",
+       "confidence": 99,
+       "startTimeMs": 1791799877729,
+       "offset": {
+        "words": 26,
+        "chars": 139
+       },
+       "duration": {
+        "words": 2,
+        "chars": 12
+       }
+      },
+      {
+       "participant": "internal",
+       "topicId": "1c617f8b-50b9-4be1-b728-c8712777756c",
+       "topicName": "Pagos atrasados",
+       "topicPhrase": "ponerse en contacto con cobros",
+       "transcriptPhrase": "ponerse en contacto con",
+       "confidence": 65,
+       "startTimeMs": 1791799957863,
+       "offset": {
+        "words": 100,
+        "chars": 544
+       },
+       "duration": {
+        "words": 4,
+        "chars": 24
+       }
+      },
+      {
+       "participant": "internal",
+       "topicId": "1c617f8b-50b9-4be1-b728-c8712777756c",
+       "topicName": "Pagos atrasados",
+       "topicPhrase": "ponerse en contacto con cobros",
+       "transcriptPhrase": "ponerse en contacto con",
+       "confidence": 65,
+       "startTimeMs": 1791800040129,
+       "offset": {
+        "words": 179,
+        "chars": 974
+       },
+       "duration": {
+        "words": 4,
+        "chars": 24
+       }
+      },
+      {
+       "participant": "external",
+       "topicId": "1d84f8bf-464e-42e8-b1c9-3117e02f9f10",
+       "topicName": "Insatisfacción",
+       "topicPhrase": "es inaceptable",
+       "transcriptPhrase": "es inaceptable.",
+       "confidence": 100,
+       "startTimeMs": 1791800044896,
+       "offset": {
+        "words": 230,
+        "chars": 1263
+       },
+       "duration": {
+        "words": 2,
+        "chars": 15
+       }
+      },
+      {
+       "participant": "external",
+       "topicId": "a331a979-e959-4773-ac67-d215754cd4f4",
+       "topicName": "Remitir a un supervisor",
+       "topicPhrase": "quiero hablar con un supervisor",
+       "transcriptPhrase": "Quiero hablar con un supervisor.",
+       "confidence": 100,
+       "startTimeMs": 1791800044896,
+       "offset": {
+        "words": 232,
+        "chars": 1278
+       },
+       "duration": {
+        "words": 5,
+        "chars": 32
+       }
+      }
+     ]
+    },
+    "messageType": "webmessaging",
+    "from": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "to": [
+     "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+    ]
+   },
+   {
+    "transcriptId": "00e95b33-c24a-49cd-93a4-1460cbe70e58",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "startTime": 1791800101088,
+    "duration": {
+     "milliseconds": 0
+    },
+    "phrases": [
+     {
+      "text": "Me parece una vergüenza.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 0,
+       "chars": 0
+      },
+      "startTimeMs": 1791800101088,
+      "duration": {
+       "words": 4,
+       "chars": 24
+      },
+      "words": [
+       {
+        "word": "Me",
+        "confidence": 1.0,
+        "offset": {
+         "words": 0,
+         "chars": 0
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "parece",
+        "confidence": 1.0,
+        "offset": {
+         "words": 1,
+         "chars": 3
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "una",
+        "confidence": 1.0,
+        "offset": {
+         "words": 2,
+         "chars": 10
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "vergüenza.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 3,
+         "chars": 14
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1cd52ddb50624a9a7eed70365aea2120",
+      "phraseIndex": 0,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Voy a presentar una queja formal y a valorar cambiar de banco.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 4,
+       "chars": 24
+      },
+      "startTimeMs": 1791800101088,
+      "duration": {
+       "words": 12,
+       "chars": 62
+      },
+      "words": [
+       {
+        "word": "Voy",
+        "confidence": 1.0,
+        "offset": {
+         "words": 4,
+         "chars": 24
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 5,
+         "chars": 28
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "presentar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 6,
+         "chars": 30
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "una",
+        "confidence": 1.0,
+        "offset": {
+         "words": 7,
+         "chars": 40
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "queja",
+        "confidence": 1.0,
+        "offset": {
+         "words": 8,
+         "chars": 44
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "formal",
+        "confidence": 1.0,
+        "offset": {
+         "words": 9,
+         "chars": 50
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 10,
+         "chars": 57
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 1.0,
+        "offset": {
+         "words": 11,
+         "chars": 59
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "valorar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 12,
+         "chars": 61
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "cambiar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 13,
+         "chars": 69
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 14,
+         "chars": 77
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "banco.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 15,
+         "chars": 80
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1cd52ddb50624a9a7eed70365aea2120",
+      "phraseIndex": 1,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     },
+     {
+      "text": "Que conste que no me habéis solucionado nada.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 16,
+       "chars": 86
+      },
+      "startTimeMs": 1791800101088,
+      "duration": {
+       "words": 8,
+       "chars": 45
+      },
+      "words": [
+       {
+        "word": "Que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 16,
+         "chars": 86
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "conste",
+        "confidence": 1.0,
+        "offset": {
+         "words": 17,
+         "chars": 90
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 18,
+         "chars": 97
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 19,
+         "chars": 101
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "me",
+        "confidence": 1.0,
+        "offset": {
+         "words": 20,
+         "chars": 104
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "habéis",
+        "confidence": 1.0,
+        "offset": {
+         "words": 21,
+         "chars": 107
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "solucionado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 22,
+         "chars": 114
+        },
+        "duration": {
+         "words": 1,
+         "chars": 12
+        }
+       },
+       {
+        "word": "nada.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 23,
+         "chars": 126
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "1cd52ddb50624a9a7eed70365aea2120",
+      "phraseIndex": 2,
+      "externalContactIds": [
+       "7ded13c7-3a1b-493a-bbe0-6698511674e2"
+      ]
+     }
+    ],
+    "analytics": {
+     "sentiment": [
+      {
+       "participant": "external",
+       "phrase": "Me parece una vergüenza.",
+       "offset": {
+        "words": 0,
+        "chars": 0
+       },
+       "startTimeMs": 1791800101088,
+       "duration": {
+        "words": 4,
+        "chars": 24
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 0,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Voy a presentar una queja formal y a valorar cambiar de banco.",
+       "offset": {
+        "words": 4,
+        "chars": 24
+       },
+       "startTimeMs": 1791800101088,
+       "duration": {
+        "words": 12,
+        "chars": 62
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 1,
+       "source": "v2"
+      },
+      {
+       "participant": "external",
+       "phrase": "Que conste que no me habéis solucionado nada.",
+       "offset": {
+        "words": 16,
+        "chars": 86
+       },
+       "startTimeMs": 1791800101088,
+       "duration": {
+        "words": 8,
+        "chars": 45
+       },
+       "sentiment": -1.0,
+       "phraseIndex": 2,
+       "source": "v2"
+      }
+     ],
+     "empathy": [],
+     "topics": [
+      {
+       "participant": "external",
+       "topicId": "d45f78ae-4ec0-40ef-a490-25d2345ec5a4",
+       "topicName": "Queja",
+       "topicPhrase": "presentar una queja",
+       "transcriptPhrase": "presentar una queja",
+       "confidence": 100,
+       "startTimeMs": 1791800101088,
+       "offset": {
+        "words": 6,
+        "chars": 30
+       },
+       "duration": {
+        "words": 3,
+        "chars": 20
+       }
+      },
+      {
+       "participant": "external",
+       "topicId": "1d84f8bf-464e-42e8-b1c9-3117e02f9f10",
+       "topicName": "Insatisfacción",
+       "topicPhrase": "presentar una queja",
+       "transcriptPhrase": "presentar una queja",
+       "confidence": 100,
+       "startTimeMs": 1791800101088,
+       "offset": {
+        "words": 6,
+        "chars": 30
+       },
+       "duration": {
+        "words": 3,
+        "chars": 20
+       }
+      }
+     ]
+    },
+    "messageType": "webmessaging",
+    "from": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "to": [
+     "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+    ]
+   }
+  ],
+  "participants": [
+   {
+    "participantPurpose": "customer",
+    "externalContactId": "7ded13c7-3a1b-493a-bbe0-6698511674e2",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "from": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799848484,
+    "endTimeMs": 1791800092799
+   },
+   {
+    "participantPurpose": "workflow",
+    "initialDirection": "inbound",
+    "flowId": "9efe4118-6e2b-4628-958e-fe1e5f12c3be",
+    "flowVersion": "1.0",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799848487,
+    "endTimeMs": 1791799848853
+   },
+   {
+    "participantPurpose": "acd",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799848874,
+    "endTimeMs": 1791799852200
+   },
+   {
+    "participantPurpose": "agent",
+    "userId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799852205,
+    "endTimeMs": 1791800092788,
+    "wrapUpCode": "7fb334b0-0e9e-11e4-9191-0800200c9a66",
+    "wrapUpNotes": ""
+   },
+   {
+    "participantPurpose": "customer",
+    "externalContactId": "7ded13c7-3a1b-493a-bbe0-6698511674e2",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "from": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791800101358,
+    "endTimeMs": 1791800130557
+   },
+   {
+    "participantPurpose": "workflow",
+    "initialDirection": "inbound",
+    "flowId": "9efe4118-6e2b-4628-958e-fe1e5f12c3be",
+    "flowVersion": "1.0",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791800101362,
+    "endTimeMs": 1791800101759
+   },
+   {
+    "participantPurpose": "acd",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791800101782,
+    "endTimeMs": 1791800106510
+   },
+   {
+    "participantPurpose": "agent",
+    "userId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791800106515,
+    "endTimeMs": 1791800130545,
+    "wrapUpCode": "7fb334b0-0e9e-11e4-9191-0800200c9a66",
+    "wrapUpNotes": ""
+   }
+  ],
+  "uri": "/transcript/v1/organizations/00000000-0000-4000-8000-000000000000/conversations/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/communications/85a3cf6c-7036-4b4f-aebf-2f83bc78d363",
+  "startTime": 1791799848484,
+  "duration": {
+   "milliseconds": 282073
+  },
+  "mediaType": "message",
+  "conversationStartTime": 1791799848484,
+  "schemaVersion": "v2",
+  "isNamedEntitiesAnalyzed": false
+ },
+ "d3daf81b-d5d8-4d52-9ed5-276abc836381": null
+}

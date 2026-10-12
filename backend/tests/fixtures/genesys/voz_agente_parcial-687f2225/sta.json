@@ -1,0 +1,17 @@
+{
+ "conversation": {
+  "id": "687f2225-6f3b-4446-bfd3-f5d2b3416814",
+  "selfUri": "/api/v2/conversations/687f2225-6f3b-4446-bfd3-f5d2b3416814"
+ },
+ "sentimentScore": 0.0,
+ "sentimentTrendClass": "NotCalculated",
+ "empathyScores": [],
+ "participantMetrics": {
+  "agentDurationPercentage": 3.76,
+  "customerDurationPercentage": 5.02,
+  "silenceDurationPercentage": 57.22,
+  "ivrDurationPercentage": 19.58,
+  "acdDurationPercentage": 5.01,
+  "otherDurationPercentage": 9.41
+ }
+}

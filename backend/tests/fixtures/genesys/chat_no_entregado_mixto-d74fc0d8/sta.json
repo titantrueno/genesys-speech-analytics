@@ -1,0 +1,9 @@
+{
+ "conversation": {
+  "id": "d74fc0d8-4ac1-47da-9a8c-d91ce49dfda2",
+  "selfUri": "/api/v2/conversations/d74fc0d8-4ac1-47da-9a8c-d91ce49dfda2"
+ },
+ "sentimentScore": 0.0,
+ "sentimentTrendClass": "NotCalculated",
+ "empathyScores": []
+}

@@ -1,0 +1,606 @@
+[
+ {
+  "id": "7d29dbceae083d6ef543685960b9f839",
+  "providerMessageId": "7d29dbceae083d6ef543685960b9f839",
+  "timestamp": "2026-10-12T10:28:42.736Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "7d29dbceae083d6ef543685960b9f839",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:28:42.736Z"
+   },
+   "type": "Text",
+   "text": "buen dia",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "7d29dbceae083d6ef543685960b9f839",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "7d29dbceae083d6ef543685960b9f839",
+     "to": {
+      "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:28:42.978Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/7d29dbceae083d6ef543685960b9f839"
+ },
+ {
+  "id": "51ff3160c4a950d2ea1cae240a2fa696",
+  "providerMessageId": "51ff3160c4a950d2ea1cae240a2fa696",
+  "timestamp": "2026-10-12T10:28:36.921Z",
+  "fromAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "51ff3160c4a950d2ea1cae240a2fa696",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "f862d07e-324e-4fd2-a8f8-2f6bb2ade844",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "externalContactId": "87133905-e3d5-4293-8246-dde714ebe13f",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:28:36.921Z"
+   },
+   "type": "Text",
+   "text": "Genial, apunto el identificador 1234567890. No necesito nada más, muchas gracias por la ayuda. ¡Buen día!",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"57f3a440-ea37-49cd-bc36-099c27c3d047\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"4e21eff2-c1af-4ce5-9d80-14064f8ec63e\",\"type\":\"web\"}}",
+    "correlationId": "58e54b82-aafe-4d44-9472-63378d59cdbe"
+   }
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/51ff3160c4a950d2ea1cae240a2fa696"
+ },
+ {
+  "id": "8146bced432229287b2b73cca9ac6c6e",
+  "providerMessageId": "8146bced432229287b2b73cca9ac6c6e",
+  "timestamp": "2026-10-12T10:28:31.662Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "8146bced432229287b2b73cca9ac6c6e",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:28:31.662Z"
+   },
+   "type": "Text",
+   "text": "la reclamacion ha sido generada, su identificador es 1234567890, le puedo ayudar en algo mas?",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "8146bced432229287b2b73cca9ac6c6e",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "8146bced432229287b2b73cca9ac6c6e",
+     "to": {
+      "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:28:31.906Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/8146bced432229287b2b73cca9ac6c6e"
+ },
+ {
+  "id": "9a5bee2831016d2b75deea1966f4ec58",
+  "providerMessageId": "9a5bee2831016d2b75deea1966f4ec58",
+  "timestamp": "2026-10-12T10:28:06.337Z",
+  "fromAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "9a5bee2831016d2b75deea1966f4ec58",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "5e69c762-472c-48e4-bd63-7fc504308e07",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "externalContactId": "87133905-e3d5-4293-8246-dde714ebe13f",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:28:06.337Z"
+   },
+   "type": "Text",
+   "text": "¿Así de rápido? Perfecto, gracias. ¿Me llegará algún justificante de la reclamación y cuánto tardan en devolverme el dinero?",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"57f3a440-ea37-49cd-bc36-099c27c3d047\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"4e21eff2-c1af-4ce5-9d80-14064f8ec63e\",\"type\":\"web\"}}",
+    "correlationId": "164c00b7-8c0d-4654-9ffa-14eb525059ca"
+   }
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/9a5bee2831016d2b75deea1966f4ec58"
+ },
+ {
+  "id": "57024befb7b07ba09b85943bc5f31426",
+  "providerMessageId": "57024befb7b07ba09b85943bc5f31426",
+  "timestamp": "2026-10-12T10:28:01.428Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "57024befb7b07ba09b85943bc5f31426",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:28:01.428Z"
+   },
+   "type": "Text",
+   "text": "ok, perfecto, tramito la reclamacion",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "57024befb7b07ba09b85943bc5f31426",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "57024befb7b07ba09b85943bc5f31426",
+     "to": {
+      "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:28:01.703Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/57024befb7b07ba09b85943bc5f31426"
+ },
+ {
+  "id": "231a33b91e35066c353831460c048172",
+  "providerMessageId": "231a33b91e35066c353831460c048172",
+  "timestamp": "2026-10-12T10:27:45.780Z",
+  "fromAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "231a33b91e35066c353831460c048172",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "fcb61e86-d2fe-4aa3-99cd-46a8d47a0da7",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "externalContactId": "87133905-e3d5-4293-8246-dde714ebe13f",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:27:45.780Z"
+   },
+   "type": "Text",
+   "text": "Sí, claro. Es de 49,99 euros del 8 de octubre en mi Visa terminada en 4821, y el comercio aparece como Amazon Brasil. Yo nunca he comprado ahí.",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"57f3a440-ea37-49cd-bc36-099c27c3d047\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"4e21eff2-c1af-4ce5-9d80-14064f8ec63e\",\"type\":\"web\"}}",
+    "correlationId": "b887cdb2-2958-4835-8e00-1dce354b08df"
+   }
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/231a33b91e35066c353831460c048172"
+ },
+ {
+  "id": "8ef1881d08e0eb63a371cfd476ce9daf",
+  "providerMessageId": "8ef1881d08e0eb63a371cfd476ce9daf",
+  "timestamp": "2026-10-12T10:27:41.614Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "8ef1881d08e0eb63a371cfd476ce9daf",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:27:41.614Z"
+   },
+   "type": "Text",
+   "text": "hola, podria darme mas detalles de ese cargo que no reconoce?",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "8ef1881d08e0eb63a371cfd476ce9daf",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "8ef1881d08e0eb63a371cfd476ce9daf",
+     "to": {
+      "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:27:41.825Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/8ef1881d08e0eb63a371cfd476ce9daf"
+ },
+ {
+  "id": "bbddfe7fa51189dd50c4e8d98731c33e",
+  "providerMessageId": "bbddfe7fa51189dd50c4e8d98731c33e",
+  "timestamp": "2026-10-12T10:27:20.327Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "bbddfe7fa51189dd50c4e8d98731c33e",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "idType": "Opaque"
+    },
+    "from": {
+     "nickname": "Sandy",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:27:20.327Z"
+   },
+   "type": "Text",
+   "text": "Le paso con un agente, que revisara su caso en unos instantes. Por favor, vaya describiendo su consulta.",
+   "originatingEntity": "Bot",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "bbddfe7fa51189dd50c4e8d98731c33e",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "bbddfe7fa51189dd50c4e8d98731c33e",
+     "to": {
+      "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+      "idType": "Opaque"
+     },
+     "from": {
+      "nickname": "Sandy",
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:27:20.510Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/bbddfe7fa51189dd50c4e8d98731c33e"
+ },
+ {
+  "id": "77d74083ed0dc175d15e0be79b91c5fe",
+  "providerMessageId": "77d74083ed0dc175d15e0be79b91c5fe",
+  "timestamp": "2026-10-12T10:27:19Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "77d74083ed0dc175d15e0be79b91c5fe",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "idType": "Opaque"
+    },
+    "from": {
+     "nickname": "Sandy",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:27:19Z"
+   },
+   "type": "Text",
+   "text": "Para dirigir su consulta, la clasificamos como: Tarjetas y cargos / Reclamaciones / Otras consultas.",
+   "originatingEntity": "Bot",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "77d74083ed0dc175d15e0be79b91c5fe",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "77d74083ed0dc175d15e0be79b91c5fe",
+     "to": {
+      "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+      "idType": "Opaque"
+     },
+     "from": {
+      "nickname": "Sandy",
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:27:19.193Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/77d74083ed0dc175d15e0be79b91c5fe"
+ },
+ {
+  "id": "9c1c5938eaf5e3cab1ed2b0bc2b51c0e",
+  "providerMessageId": "9c1c5938eaf5e3cab1ed2b0bc2b51c0e",
+  "timestamp": "2026-10-12T10:27:17.679Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "9c1c5938eaf5e3cab1ed2b0bc2b51c0e",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "idType": "Opaque"
+    },
+    "from": {
+     "nickname": "Sandy",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:27:17.679Z"
+   },
+   "type": "Text",
+   "text": "Hola, soy el asistente virtual. Gracias por contactar con nosotros.",
+   "originatingEntity": "Bot",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "9c1c5938eaf5e3cab1ed2b0bc2b51c0e",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "9c1c5938eaf5e3cab1ed2b0bc2b51c0e",
+     "to": {
+      "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+      "idType": "Opaque"
+     },
+     "from": {
+      "nickname": "Sandy",
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:27:17.881Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/9c1c5938eaf5e3cab1ed2b0bc2b51c0e"
+ },
+ {
+  "id": "71e1e253549096b6f48b8a47a3533b52",
+  "providerMessageId": "71e1e253549096b6f48b8a47a3533b52",
+  "timestamp": "2026-10-12T10:27:17.214Z",
+  "fromAddress": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "71e1e253549096b6f48b8a47a3533b52",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "6a97d361-7a6f-4078-95c0-5424a5ac9e4d",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "4e21eff2-c1af-4ce5-9d80-14064f8ec63e",
+     "externalContactId": "87133905-e3d5-4293-8246-dde714ebe13f",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:27:17.214Z"
+   },
+   "type": "Text",
+   "text": "Hola, buenas tardes. Me han cobrado 49,99 euros en mi tarjeta y no reconozco el cargo.",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"57f3a440-ea37-49cd-bc36-099c27c3d047\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"4e21eff2-c1af-4ce5-9d80-14064f8ec63e\",\"type\":\"web\"}}",
+    "correlationId": "8d394cc3-fcb5-4ddd-a2f3-7830ff7daf6e"
+   }
+  },
+  "conversationId": "f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6",
+  "selfUri": "/api/v2/conversations/messages/f7e79502-c16d-4b7a-9fd6-a9b2ae145bd6/messages/71e1e253549096b6f48b8a47a3533b52"
+ }
+]

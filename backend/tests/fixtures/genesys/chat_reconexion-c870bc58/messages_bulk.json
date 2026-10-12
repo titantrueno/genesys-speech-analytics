@@ -1,0 +1,470 @@
+[
+ {
+  "id": "1cd52ddb50624a9a7eed70365aea2120",
+  "providerMessageId": "1cd52ddb50624a9a7eed70365aea2120",
+  "timestamp": "2026-10-12T10:15:01.088Z",
+  "fromAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "1cd52ddb50624a9a7eed70365aea2120",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "20519197-4da7-4e39-941b-57d2aeccb579",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "externalContactId": "7ded13c7-3a1b-493a-bbe0-6698511674e2",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:15:01.088Z"
+   },
+   "type": "Text",
+   "text": "Me parece una vergüenza. Voy a presentar una queja formal y a valorar cambiar de banco. Que conste que no me habéis solucionado nada.",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"9da115bd-8d4f-4781-82e2-23797945f867\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"59c77f71-8a20-41c9-aabc-382b35fe1b5b\",\"type\":\"web\"}}",
+    "correlationId": "f6e4e803-a34e-4716-8caa-3628f0522064"
+   }
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/1cd52ddb50624a9a7eed70365aea2120"
+ },
+ {
+  "id": "9c271ed525441ac5cd2165c775b0fd61",
+  "providerMessageId": "9c271ed525441ac5cd2165c775b0fd61",
+  "timestamp": "2026-10-12T10:14:50.067Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "9c271ed525441ac5cd2165c775b0fd61",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:14:50.067Z"
+   },
+   "type": "Text",
+   "text": "disculpe, pero en estos momentos no es posible, desconecto la conversacion, ya le he dado todos los datos para que continue con el proceso",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "9c271ed525441ac5cd2165c775b0fd61",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "9c271ed525441ac5cd2165c775b0fd61",
+     "to": {
+      "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:14:50.512Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/9c271ed525441ac5cd2165c775b0fd61"
+ },
+ {
+  "id": "1f3259ded1b9a28a424b774f9d036a47",
+  "providerMessageId": "1f3259ded1b9a28a424b774f9d036a47",
+  "timestamp": "2026-10-12T10:14:04.896Z",
+  "fromAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "1f3259ded1b9a28a424b774f9d036a47",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "eccfb9be-b5b4-4d05-8b7f-a50a3767c03f",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "externalContactId": "7ded13c7-3a1b-493a-bbe0-6698511674e2",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:14:04.896Z"
+   },
+   "type": "Text",
+   "text": "¿Perdona? ¿Que abra yo una disputa con Amazon Brasil? Es VUESTRA tarjeta y VUESTRO sistema el que ha dejado pasar un cargo fraudulento, no es mi trabajo perseguir a una empresa al otro lado del mundo. Esto es inaceptable. Quiero hablar con un supervisor.",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"9da115bd-8d4f-4781-82e2-23797945f867\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"59c77f71-8a20-41c9-aabc-382b35fe1b5b\",\"type\":\"web\"}}",
+    "correlationId": "921e60ed-67c0-4182-9118-81b0fdd35dca"
+   }
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/1f3259ded1b9a28a424b774f9d036a47"
+ },
+ {
+  "id": "7af8bdd96bbe36cc90e2d5471151ec1c",
+  "providerMessageId": "7af8bdd96bbe36cc90e2d5471151ec1c",
+  "timestamp": "2026-10-12T10:14:00.129Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "7af8bdd96bbe36cc90e2d5471151ec1c",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:14:00.129Z"
+   },
+   "type": "Text",
+   "text": "antes de generar una reclamacion necesitamos que abra una disputa con Amazon Brasil y si en 2 dias no recibe una contestacion satisfactoria, vuelva a ponerse en contacto con nosotros con la negariva de Amazon para tramitar su devolucion",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "7af8bdd96bbe36cc90e2d5471151ec1c",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "7af8bdd96bbe36cc90e2d5471151ec1c",
+     "to": {
+      "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:14:00.392Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/7af8bdd96bbe36cc90e2d5471151ec1c"
+ },
+ {
+  "id": "9af74cb95bd3e90822996792bfb49eff",
+  "providerMessageId": "9af74cb95bd3e90822996792bfb49eff",
+  "timestamp": "2026-10-12T10:12:48.638Z",
+  "fromAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "9af74cb95bd3e90822996792bfb49eff",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "61f4d6db-76e1-45e1-a62d-21c43e88ed57",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "externalContactId": "7ded13c7-3a1b-493a-bbe0-6698511674e2",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:12:48.638Z"
+   },
+   "type": "Text",
+   "text": "¿Contactar con el comercio? Si ni sé quién es ese comercio, yo nunca he comprado en Brasil. Y no, no he dado mis datos a nadie. Llevo dos semanas con esto y me siguen haciendo las mismas preguntas. Quiero que me devolváis el dinero, es lo que pido.",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"9da115bd-8d4f-4781-82e2-23797945f867\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"59c77f71-8a20-41c9-aabc-382b35fe1b5b\",\"type\":\"web\"}}",
+    "correlationId": "ee8bf869-8cc5-47af-94b2-c70a4879b550"
+   }
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/9af74cb95bd3e90822996792bfb49eff"
+ },
+ {
+  "id": "f0b4b3c913ec34e16576de26d0e7137d",
+  "providerMessageId": "f0b4b3c913ec34e16576de26d0e7137d",
+  "timestamp": "2026-10-12T10:12:37.863Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "f0b4b3c913ec34e16576de26d0e7137d",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:12:37.863Z"
+   },
+   "type": "Text",
+   "text": "disculpe pero es por protocolo que tengo que preguntarselo para que quede correctamente reflejado, de ese cargo, le ha dado los datos de su tarjeta a alguien? ha probado a ponerse en contacto con el comercio?",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "f0b4b3c913ec34e16576de26d0e7137d",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "f0b4b3c913ec34e16576de26d0e7137d",
+     "to": {
+      "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:12:38.088Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/f0b4b3c913ec34e16576de26d0e7137d"
+ },
+ {
+  "id": "052718f4ed688f4527a6c2abf006fe54",
+  "providerMessageId": "052718f4ed688f4527a6c2abf006fe54",
+  "timestamp": "2026-10-12T10:11:26.359Z",
+  "fromAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "052718f4ed688f4527a6c2abf006fe54",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "4ba47446-369a-4ec9-96bf-4cf38cccf4da",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "externalContactId": "7ded13c7-3a1b-493a-bbe0-6698511674e2",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:11:26.359Z"
+   },
+   "type": "Text",
+   "text": "Otra vez los datos... Ya los di las dos veces anteriores. Son 49,99 euros de Amazon Brasil, del 8 de octubre, Visa acabada en 4821. ¿Es que no queda nada apuntado de mis llamadas anteriores?",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"9da115bd-8d4f-4781-82e2-23797945f867\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"59c77f71-8a20-41c9-aabc-382b35fe1b5b\",\"type\":\"web\"}}",
+    "correlationId": "1eec1814-014b-4d24-b5b1-840fec892c87"
+   }
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/052718f4ed688f4527a6c2abf006fe54"
+ },
+ {
+  "id": "a7dc74f2d15824915871a3367cccfbda",
+  "providerMessageId": "a7dc74f2d15824915871a3367cccfbda",
+  "timestamp": "2026-10-12T10:11:17.729Z",
+  "fromAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "toAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "direction": "outbound",
+  "messengerType": "webmessaging",
+  "status": "delivery-success",
+  "normalizedMessage": {
+   "id": "a7dc74f2d15824915871a3367cccfbda",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "to": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "idType": "Opaque"
+    },
+    "from": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "idType": "Opaque"
+    },
+    "time": "2026-10-12T10:11:17.729Z"
+   },
+   "type": "Text",
+   "text": "hola, buenos dias! puede darme los datos de ese cargo?",
+   "originatingEntity": "Human",
+   "direction": "Outbound"
+  },
+  "normalizedReceipts": [
+   {
+    "id": "a7dc74f2d15824915871a3367cccfbda",
+    "channel": {
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "platform": "WebMessaging",
+     "type": "Private",
+     "messageId": "a7dc74f2d15824915871a3367cccfbda",
+     "to": {
+      "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+      "idType": "Opaque"
+     },
+     "from": {
+      "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+      "idType": "Opaque"
+     },
+     "time": "2026-10-12T10:11:17.966Z",
+     "metadata": {}
+    },
+    "type": "Receipt",
+    "status": "Delivered",
+    "isFinalReceipt": false,
+    "direction": "Outbound"
+   }
+  ],
+  "createdBy": {
+   "id": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "selfUri": "/api/v2/users/915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/a7dc74f2d15824915871a3367cccfbda"
+ },
+ {
+  "id": "2727f657c189a53b08c5a49279bfc4d9",
+  "providerMessageId": "2727f657c189a53b08c5a49279bfc4d9",
+  "timestamp": "2026-10-12T10:10:48.267Z",
+  "fromAddress": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+  "toAddress": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+  "direction": "inbound",
+  "messengerType": "webmessaging",
+  "status": "received",
+  "normalizedMessage": {
+   "id": "2727f657c189a53b08c5a49279bfc4d9",
+   "channel": {
+    "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "platform": "WebMessaging",
+    "type": "Private",
+    "messageId": "3c6be24d-13cd-49b9-9b54-70f6674454ff",
+    "to": {
+     "nickname": "AIT_ChatSim",
+     "id": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+     "additionalIds": [
+      {
+       "type": "Deployment",
+       "value": "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+      }
+     ]
+    },
+    "from": {
+     "id": "59c77f71-8a20-41c9-aabc-382b35fe1b5b",
+     "externalContactId": "7ded13c7-3a1b-493a-bbe0-6698511674e2",
+     "externalContactDivisionId": "*"
+    },
+    "time": "2026-10-12T10:10:48.267Z"
+   },
+   "type": "Text",
+   "text": "Buenas. Vengo por tercera vez por el mismo cargo que no reconozco y estoy bastante harto, a ver si esta vez alguien me soluciona algo.",
+   "direction": "Inbound",
+   "metadata": {
+    "journeyContext": "{\"customer\":{\"id\":\"9da115bd-8d4f-4781-82e2-23797945f867\",\"idType\":\"cookie\"},\"customerSession\":{\"id\":\"59c77f71-8a20-41c9-aabc-382b35fe1b5b\",\"type\":\"web\"}}",
+    "correlationId": "19ffe3ee-5e48-4e70-a755-ed651d163d63"
+   }
+  },
+  "conversationId": "c870bc58-1f9d-4c89-a7d7-a86b2b32625a",
+  "selfUri": "/api/v2/conversations/messages/c870bc58-1f9d-4c89-a7d7-a86b2b32625a/messages/2727f657c189a53b08c5a49279bfc4d9"
+ }
+]

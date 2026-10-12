@@ -1,0 +1,391 @@
+{
+ "conversationEnd": "2026-10-12T08:19:10.890Z",
+ "conversationId": "687f2225-6f3b-4446-bfd3-f5d2b3416814",
+ "conversationStart": "2026-10-12T08:18:04.352Z",
+ "divisionIds": [
+  "3d2793da-0d9d-4b66-970c-e968516e4da3",
+  "21b04898-376b-41d7-984e-671ca4c9c2b3"
+ ],
+ "externalTag": "Javier Del Olmo",
+ "mediaStatsMinConversationMos": 4.394329999518358,
+ "mediaStatsMinConversationRFactor": 91.15967559814453,
+ "originatingDirection": "inbound",
+ "participants": [
+  {
+   "externalContactId": "789fca12-13c5-44fb-b93b-b16865f93a9f",
+   "participantId": "263893fd-1a6f-477a-801d-54587d0a5f15",
+   "participantName": "Mobile Number, Spain",
+   "purpose": "customer",
+   "sessions": [
+    {
+     "ani": "tel:+34675075376",
+     "direction": "inbound",
+     "dnis": "tel:+34919187266",
+     "edgeId": "20d30fcb-ab86-4cd9-9efb-965e5aa7ebed",
+     "eligibleAgentCounts": [
+      1
+     ],
+     "mediaType": "voice",
+     "protocolCallId": "167966252_128697886@62.23.19.83",
+     "provider": "Edge",
+     "recording": true,
+     "remoteNameDisplayable": "Mobile Number, Spain",
+     "requestedRoutings": [
+      "Standard"
+     ],
+     "selectedAgentId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+     "sessionDnis": "tel:+34919187266",
+     "sessionId": "3a91af2a-83b9-3389-9a7f-5ff3c43d1c2a",
+     "usedRouting": "Standard",
+     "mediaEndpointStats": [
+      {
+       "codecs": [
+        "audio/opus"
+       ],
+       "eventTime": "2026-10-12T08:18:17.500Z",
+       "maxLatencyMs": 31,
+       "minMos": 4.898366645104033,
+       "minRFactor": 93.16101837158203,
+       "receivedPackets": 651
+      },
+      {
+       "codecs": [
+        "audio/opus"
+       ],
+       "eventTime": "2026-10-12T08:18:20.956Z",
+       "maxLatencyMs": 30,
+       "minMos": 4.882801741999584,
+       "minRFactor": 92.46075439453125,
+       "receivedPackets": 165
+      },
+      {
+       "codecs": [
+        "audio/opus"
+       ],
+       "discardedPackets": 2,
+       "eventTime": "2026-10-12T08:19:06.675Z",
+       "maxLatencyMs": 69,
+       "minMos": 4.875620848974203,
+       "minRFactor": 92.15059661865234,
+       "receivedPackets": 2287
+      },
+      {
+       "codecs": [
+        "audio/PCMA"
+       ],
+       "eventTime": "2026-10-12T08:19:06.711Z",
+       "maxLatencyMs": 30,
+       "minMos": 4.394329999518358,
+       "minRFactor": 92.45144653320312,
+       "receivedPackets": 3117
+      }
+     ],
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T08:18:04.352Z",
+       "name": "nConversations",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T08:18:04.504Z",
+       "name": "nConnected",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T08:19:06.618Z",
+       "name": "tConnected",
+       "value": 62114
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "segmentEnd": "2026-10-12T08:18:04.504Z",
+       "segmentStart": "2026-10-12T08:18:04.352Z",
+       "segmentType": "system"
+      },
+      {
+       "conference": false,
+       "disconnectType": "peer",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T08:19:06.618Z",
+       "segmentStart": "2026-10-12T08:18:04.504Z",
+       "segmentType": "interact"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "participantId": "3efd81de-1f01-4a14-b301-7f6a1fefad50",
+   "participantName": "Sierra VoiceAgent",
+   "purpose": "ivr",
+   "sessions": [
+    {
+     "ani": "tel:+34675075376",
+     "direction": "inbound",
+     "dnis": "tel:+34919187266",
+     "edgeId": "dc9da3cc-9f88-43cc-ac2f-10b8000ed099",
+     "mediaType": "voice",
+     "peerId": "3a91af2a-83b9-3389-9a7f-5ff3c43d1c2a",
+     "protocolCallId": "07920c49-c555-4fba-a452-6379ff0e2985",
+     "provider": "Edge",
+     "remote": "Mobile Number, Spain",
+     "remoteNameDisplayable": "Madrid, Spain",
+     "sessionDnis": "tel:+34919187266",
+     "sessionId": "b61028ac-8493-3b30-885c-679edc8e1317",
+     "mediaEndpointStats": [
+      {
+       "codecs": [
+        "audio/opus"
+       ],
+       "eventTime": "2026-10-12T08:18:17.529Z",
+       "maxLatencyMs": 32,
+       "minMos": 4.898685420450015,
+       "minRFactor": 93.17579650878906,
+       "receivedPackets": 662
+      }
+     ],
+     "flow": {
+      "endingLanguage": "es-es",
+      "entryReason": "tel:+34919187266",
+      "entryType": "dnis",
+      "exitReason": "TRANSFER",
+      "flowId": "b0936348-3f34-4701-a439-39a74f728e8a",
+      "flowName": "Sierra VoiceAgent",
+      "flowType": "INBOUNDCALL",
+      "flowVersion": "64.0",
+      "startingLanguage": "es-es",
+      "transferTargetAddress": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+      "transferTargetName": "AIT_Transcription",
+      "transferType": "ACD"
+     },
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T08:18:04.996Z",
+       "name": "nFlow",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T08:18:17.456Z",
+       "name": "tIvr",
+       "value": 13029
+      },
+      {
+       "emitDate": "2026-10-12T08:18:17.458Z",
+       "name": "tFlow",
+       "value": 12462
+      },
+      {
+       "emitDate": "2026-10-12T08:18:17.458Z",
+       "name": "tFlowExit",
+       "value": 12462
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "segmentEnd": "2026-10-12T08:18:04.427Z",
+       "segmentStart": "2026-10-12T08:18:04.411Z",
+       "segmentType": "system"
+      },
+      {
+       "conference": false,
+       "disconnectType": "transfer",
+       "segmentEnd": "2026-10-12T08:18:17.456Z",
+       "segmentStart": "2026-10-12T08:18:04.427Z",
+       "segmentType": "ivr"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "participantId": "e6d9609d-fb74-458b-ab3e-347955524f09",
+   "participantName": "AIT_Transcription",
+   "purpose": "acd",
+   "sessions": [
+    {
+     "ani": "tel:+34675075376",
+     "destinationAddresses": [
+      "sip:javier.delolmo%40gruposantander.com@localhost"
+     ],
+     "direction": "inbound",
+     "dnis": "tel:+34919187266",
+     "edgeId": "20d30fcb-ab86-4cd9-9efb-965e5aa7ebed",
+     "eligibleAgentCounts": [
+      1
+     ],
+     "flowInType": "ivr",
+     "mediaType": "voice",
+     "peerId": "3a91af2a-83b9-3389-9a7f-5ff3c43d1c2a",
+     "protocolCallId": "f3fa3a2b-e612-4c17-86a4-76ab8cd19ea0",
+     "provider": "Edge",
+     "remote": "Mobile Number, Spain",
+     "remoteNameDisplayable": "AIT_Transcription",
+     "requestedRoutings": [
+      "Standard"
+     ],
+     "selectedAgentId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+     "sessionDnis": "tel:+34919187266",
+     "sessionId": "68695392-6db4-3420-a2f1-81cac8b57068",
+     "usedRouting": "Standard",
+     "mediaEndpointStats": [
+      {
+       "codecs": [
+        "audio/opus"
+       ],
+       "eventTime": "2026-10-12T08:18:20.901Z",
+       "maxLatencyMs": 30,
+       "minMos": 4.883230075255022,
+       "minRFactor": 92.47949981689453,
+       "receivedPackets": 165
+      }
+     ],
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T08:18:17.495Z",
+       "name": "nOffered",
+       "value": 1
+      },
+      {
+       "emitDate": "2026-10-12T08:18:20.828Z",
+       "name": "tAcd",
+       "value": 3333
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T08:18:17.495Z",
+       "segmentStart": "2026-10-12T08:18:17.468Z",
+       "segmentType": "delay"
+      },
+      {
+       "conference": false,
+       "disconnectType": "transfer",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T08:18:20.828Z",
+       "segmentStart": "2026-10-12T08:18:17.495Z",
+       "segmentType": "interact",
+       "sipResponseCodes": [
+        410
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "participantId": "7e23492c-ed95-467a-a274-706431447535",
+   "purpose": "agent",
+   "userId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+   "sessions": [
+    {
+     "ani": "tel:+34675075376",
+     "direction": "inbound",
+     "dnis": "tel:+34919187266",
+     "edgeId": "20d30fcb-ab86-4cd9-9efb-965e5aa7ebed",
+     "eligibleAgentCounts": [
+      1
+     ],
+     "mediaType": "voice",
+     "peerId": "3a91af2a-83b9-3389-9a7f-5ff3c43d1c2a",
+     "protocolCallId": "c4d5a410-0c58-4b70-81c3-387140a6f862",
+     "provider": "Edge",
+     "recording": true,
+     "remote": "Mobile Number, Spain",
+     "requestedRoutings": [
+      "Standard"
+     ],
+     "selectedAgentId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+     "sessionDnis": "sip:69f9b48672ec3ffa966832b4+sgto.orgspan.com@localhost",
+     "sessionId": "05599894-60ac-3b17-aa57-340a78987fd6",
+     "usedRouting": "Standard",
+     "mediaEndpointStats": [
+      {
+       "codecs": [
+        "audio/opus"
+       ],
+       "eventTime": "2026-10-12T08:19:06.675Z",
+       "maxLatencyMs": 35,
+       "minMos": 4.898650223006382,
+       "minRFactor": 93.17416381835938,
+       "receivedPackets": 2294
+      },
+      {
+       "codecs": [
+        "audio/opus"
+       ],
+       "discardedPackets": 12,
+       "eventTime": "2026-10-12T08:19:06.682Z",
+       "maxLatencyMs": 31,
+       "minMos": 4.85151731099217,
+       "minRFactor": 91.15967559814453,
+       "receivedPackets": 2288
+      }
+     ],
+     "metrics": [
+      {
+       "emitDate": "2026-10-12T08:18:20.863Z",
+       "name": "tAlert",
+       "value": 3000
+      },
+      {
+       "emitDate": "2026-10-12T08:18:20.863Z",
+       "name": "tAnswered",
+       "value": 3333
+      },
+      {
+       "emitDate": "2026-10-12T08:19:06.617Z",
+       "name": "tTalk",
+       "value": 45754
+      },
+      {
+       "emitDate": "2026-10-12T08:19:06.617Z",
+       "name": "tTalkComplete",
+       "value": 45754
+      },
+      {
+       "emitDate": "2026-10-12T08:19:10.890Z",
+       "name": "tAcw",
+       "value": 4273
+      },
+      {
+       "emitDate": "2026-10-12T08:19:10.890Z",
+       "name": "tHandle",
+       "value": 50027
+      }
+     ],
+     "segments": [
+      {
+       "conference": false,
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T08:18:20.863Z",
+       "segmentStart": "2026-10-12T08:18:17.863Z",
+       "segmentType": "alert"
+      },
+      {
+       "conference": false,
+       "disconnectType": "client",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T08:19:06.617Z",
+       "segmentStart": "2026-10-12T08:18:20.863Z",
+       "segmentType": "interact"
+      },
+      {
+       "conference": false,
+       "disconnectType": "client",
+       "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+       "segmentEnd": "2026-10-12T08:19:10.890Z",
+       "segmentStart": "2026-10-12T08:19:06.617Z",
+       "segmentType": "wrapup",
+       "wrapUpCode": "7fb334b0-0e9e-11e4-9191-0800200c9a66"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

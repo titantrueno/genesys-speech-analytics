@@ -250,3 +250,15 @@
 - **Gate:** `./scripts/ci.sh` termina con código 0, con 745 + 745 tests sin `pg` y 3 `pg`. Con `DOCKER_HOST` apuntando a un socket inexistente falla con código 1 y el mensaje «Docker no responde. Arranca el daemon (en local, 'colima start')…». Con `REQUIRE_PG=1` y sin `TEST_DATABASE_URL`, pytest termina con código 1.
 - **Hallazgo ajeno a FE011:** el gate fallaba en `npm audit` por un aviso «high» nuevo, `source-map-js` 1.2.1 ([GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q)), dependencia transitiva de Tailwind, Vite y jsdom. `npm audit fix`, sin `--force`, solo cambia `package-lock.json` a la 1.2.2. Va en un commit aparte. Los avisos «moderate» de `swagger-ui-react` ya existían, y el gate solo bloquea los «high».
 - **Desviación del plan:** `ingestion` puede importar también `app.envfile` (el lector del `.env` con lista blanca), además de `ids` y `clock`. El test estructural lo refleja. No se usa `psycopg_pool`: el servicio abre una conexión por operación, y se revisará en T4 si el rendimiento lo pide.
+
+### T2 — Hecha (2026-10-12)
+
+- **Rojo:** `test_genesys_client.py` fallaba en la recogida, porque no existía `ingestion.genesys`.
+- **Verde:** 27 tests del cliente y del Genesys falso, y 18 de fixtures.
+  - **Cliente:** región, caché del token con reloj simulado, `Bearer` en la API y sin él en URL firmadas, credenciales malas sin reintentos, token renovado una vez, `429` con `Retry-After`, `5xx` con 1, 2 y 4 s, fallos de red, `403`, `404` y `400` sin reintentos, y el permiso que falta en el mensaje del `403`.
+  - **Redacción:** en 6 caminos de error, ningún mensaje contiene el secreto, el token ni la URL firmada.
+- **Mutaciones:** mueren las 17 (cliente, Genesys falso y saneado). «El falso no comprueba el token» sobrevivió al principio; se añadió un test de que el falso rechaza tokens desconocidos.
+- **Fixtures:** capturadas de la cuenta real con `scripts/capture_genesys_fixtures.py`, que es solo lectura y usa el propio cliente; es la prueba del cliente contra Genesys de verdad. Son **10** conversaciones, no 7: se añaden `voz_sin_transcripcion` (`87a83caa`), `chat_bot_agente_corto` (`90116482`) y `chat_no_entregado_mixto` (`d74fc0d8`, con un mensaje entregado y otro no), que cubren casos de la tabla de la spec sin coste extra.
+  - Ocupan 952 kB, sobre todo por `words`, `decoratedWords` y `alternatives` de las frases de voz. Se conservan sin recortar para que la normalización trabaje sobre respuestas idénticas a las reales.
+  - En el repositorio no aparece el identificador real de la organización (comprobado con `grep`).
+- **Desviación:** el falso modela **un documento de transcripción por comunicación** (con varias transcripciones dentro), como la API real, y no una lista de documentos como decía la primera versión del diseño.

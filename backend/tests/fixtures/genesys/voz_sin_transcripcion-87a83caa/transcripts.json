@@ -1,0 +1,75 @@
+{
+ "8929e58d-8b4d-3010-81ff-e1849dd64ab1": {
+  "conversationId": "87a83caa-e647-4dea-9aee-762b6808b080",
+  "communicationId": "8929e58d-8b4d-3010-81ff-e1849dd64ab1",
+  "recordingId": "79d6571c-7fdb-4ace-8e95-1073e3bb76d5",
+  "transcripts": [
+   {
+    "transcriptId": "3ceec315-57f3-482d-aabd-1d257f3017cd",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "features": [],
+    "startTime": 1791791751293,
+    "phrases": [],
+    "analytics": {
+     "acoustics": [
+      {
+       "eventType": "ivr",
+       "offsetMs": 116,
+       "startTimeMs": 1791791751259,
+       "durationMs": 5690,
+       "participant": "internal"
+      }
+     ]
+    }
+   },
+   {
+    "transcriptId": "5b1f96c4-4b64-4bc5-bde8-ece922f8cdd0",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "engineId": "r2d2",
+    "engineProvider": "Genesys",
+    "features": [
+     "VOICE_TRANSCRIPTION"
+    ],
+    "startTime": 1791791752373,
+    "phrases": [],
+    "analytics": {
+     "acoustics": []
+    }
+   }
+  ],
+  "participants": [
+   {
+    "participantPurpose": "external",
+    "initialDirection": "inbound",
+    "ani": "tel:+34675075376",
+    "dnis": "tel:+34919187266",
+    "startTimeMs": 1791791751291,
+    "endTimeMs": 1791791756946
+   },
+   {
+    "participantPurpose": "ivr",
+    "initialDirection": "inbound",
+    "flowId": "b0936348-3f34-4701-a439-39a74f728e8a",
+    "flowVersion": "63.0",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "ani": "tel:+34675075376",
+    "dnis": "tel:+34919187266",
+    "startTimeMs": 1791791751259,
+    "endTimeMs": 1791791756949
+   }
+  ],
+  "uri": "/transcript/v1/organizations/00000000-0000-4000-8000-000000000000/conversations/87a83caa-e647-4dea-9aee-762b6808b080/communications/8929e58d-8b4d-3010-81ff-e1849dd64ab1",
+  "startTime": 1791791751293,
+  "duration": {
+   "milliseconds": 0
+  },
+  "mediaType": "call",
+  "conversationStartTime": 1791791751143,
+  "externalTag": "Javier Del Olmo",
+  "handleTime": "0",
+  "conversationDuration": 5806,
+  "isNamedEntitiesAnalyzed": false
+ }
+}

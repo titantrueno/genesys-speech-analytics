@@ -1,0 +1,783 @@
+{
+ "36d54910-96a1-45c3-a996-2df3c8949ac2": {
+  "conversationId": "d74fc0d8-4ac1-47da-9a8c-d91ce49dfda2",
+  "communicationId": "36d54910-96a1-45c3-a996-2df3c8949ac2",
+  "recordingId": "362ebac9-97db-45b4-808e-158dff6f7de0",
+  "transcripts": [
+   {
+    "transcriptId": "1a103bc2-3355-4f8e-bd9e-a371fb838cd2",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "startTime": 1791799475562,
+    "duration": {
+     "milliseconds": 59174
+    },
+    "phrases": [
+     {
+      "text": "Hola, buenas tardes.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 0,
+       "chars": 0
+      },
+      "startTimeMs": 1791799475562,
+      "duration": {
+       "words": 3,
+       "chars": 20
+      },
+      "words": [
+       {
+        "word": "Hola,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 0,
+         "chars": 0
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "buenas",
+        "confidence": 1.0,
+        "offset": {
+         "words": 1,
+         "chars": 6
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "tardes.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 2,
+         "chars": 13
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "cdf3636a9a7ae4e9846cbe7f4fd4f9a5",
+      "phraseIndex": 0,
+      "externalContactIds": [
+       "8194c368-c024-432b-a3d8-50377f7d5bcd"
+      ]
+     },
+     {
+      "text": "Tengo un cargo en mi tarjeta que no reconozco y quería consultarlo.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 3,
+       "chars": 20
+      },
+      "startTimeMs": 1791799475562,
+      "duration": {
+       "words": 12,
+       "chars": 67
+      },
+      "words": [
+       {
+        "word": "Tengo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 3,
+         "chars": 20
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 1.0,
+        "offset": {
+         "words": 4,
+         "chars": 26
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 5,
+         "chars": 29
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 6,
+         "chars": 35
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "mi",
+        "confidence": 1.0,
+        "offset": {
+         "words": 7,
+         "chars": 38
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 8,
+         "chars": 41
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 9,
+         "chars": 49
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 10,
+         "chars": 53
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "reconozco",
+        "confidence": 1.0,
+        "offset": {
+         "words": 11,
+         "chars": 56
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 12,
+         "chars": 66
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "quería",
+        "confidence": 1.0,
+        "offset": {
+         "words": 13,
+         "chars": 68
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "consultarlo.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 14,
+         "chars": 75
+        },
+        "duration": {
+         "words": 1,
+         "chars": 12
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "cdf3636a9a7ae4e9846cbe7f4fd4f9a5",
+      "phraseIndex": 1,
+      "externalContactIds": [
+       "8194c368-c024-432b-a3d8-50377f7d5bcd"
+      ]
+     },
+     {
+      "text": "lo estoy revinsado, puedes decirme el nombre de la tarjeta y el importe?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 15,
+       "chars": 87
+      },
+      "startTimeMs": 1791799498622,
+      "duration": {
+       "words": 13,
+       "chars": 72
+      },
+      "words": [
+       {
+        "word": "lo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 15,
+         "chars": 87
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "estoy",
+        "confidence": 1.0,
+        "offset": {
+         "words": 16,
+         "chars": 90
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "revinsado,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 17,
+         "chars": 96
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       },
+       {
+        "word": "puedes",
+        "confidence": 1.0,
+        "offset": {
+         "words": 18,
+         "chars": 107
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "decirme",
+        "confidence": 1.0,
+        "offset": {
+         "words": 19,
+         "chars": 114
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 20,
+         "chars": 122
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "nombre",
+        "confidence": 1.0,
+        "offset": {
+         "words": 21,
+         "chars": 125
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 22,
+         "chars": 132
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "offset": {
+         "words": 23,
+         "chars": 135
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 24,
+         "chars": 138
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 25,
+         "chars": 146
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 26,
+         "chars": 148
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "importe?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 27,
+         "chars": 151
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       }
+      ],
+      "participantPurpose": "internal",
+      "messageID": "cfee08c47fb29e55f35a28cc10ceff82",
+      "phraseIndex": 2,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     },
+     {
+      "text": "Claro.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 28,
+       "chars": 159
+      },
+      "startTimeMs": 1791799503132,
+      "duration": {
+       "words": 1,
+       "chars": 6
+      },
+      "words": [
+       {
+        "word": "Claro.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 28,
+         "chars": 159
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "8270c329dda094326bcb64fcc1f1e45b",
+      "phraseIndex": 3,
+      "externalContactIds": [
+       "8194c368-c024-432b-a3d8-50377f7d5bcd"
+      ]
+     },
+     {
+      "text": "Es mi tarjeta Visa terminada en 4821 y el cargo es de 49,99 euros, del 8 de octubre.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 29,
+       "chars": 165
+      },
+      "startTimeMs": 1791799503132,
+      "duration": {
+       "words": 18,
+       "chars": 84
+      },
+      "words": [
+       {
+        "word": "Es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 29,
+         "chars": 165
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "mi",
+        "confidence": 1.0,
+        "offset": {
+         "words": 30,
+         "chars": 168
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 31,
+         "chars": 171
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "Visa",
+        "confidence": 1.0,
+        "offset": {
+         "words": 32,
+         "chars": 179
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "terminada",
+        "confidence": 1.0,
+        "offset": {
+         "words": 33,
+         "chars": 184
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 34,
+         "chars": 194
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "4821",
+        "confidence": 1.0,
+        "offset": {
+         "words": 35,
+         "chars": 197
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 36,
+         "chars": 202
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 37,
+         "chars": 204
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 38,
+         "chars": 207
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "offset": {
+         "words": 39,
+         "chars": 213
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 40,
+         "chars": 216
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "49,99",
+        "confidence": 1.0,
+        "offset": {
+         "words": 41,
+         "chars": 219
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "euros,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 42,
+         "chars": 225
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "del",
+        "confidence": 1.0,
+        "offset": {
+         "words": 43,
+         "chars": 232
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "8",
+        "confidence": 1.0,
+        "offset": {
+         "words": 44,
+         "chars": 236
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 45,
+         "chars": 238
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "octubre.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 46,
+         "chars": 241
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "8270c329dda094326bcb64fcc1f1e45b",
+      "phraseIndex": 4,
+      "externalContactIds": [
+       "8194c368-c024-432b-a3d8-50377f7d5bcd"
+      ]
+     },
+     {
+      "text": "",
+      "offset": {
+       "words": 47,
+       "chars": 249
+      },
+      "startTimeMs": 1791799534736,
+      "duration": {
+       "words": 0,
+       "chars": 0
+      },
+      "words": [],
+      "participantPurpose": "internal",
+      "messageID": "af80acbbc17d7eb3f258f14296163a8e",
+      "phraseIndex": 5,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     }
+    ],
+    "analytics": {
+     "sentiment": [],
+     "empathy": [],
+     "topics": []
+    },
+    "messageType": "webmessaging",
+    "from": "1c1981c8-bc89-4823-8e71-3efdfbe23686",
+    "to": [
+     "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+    ]
+   }
+  ],
+  "participants": [
+   {
+    "participantPurpose": "customer",
+    "externalContactId": "8194c368-c024-432b-a3d8-50377f7d5bcd",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "from": "1c1981c8-bc89-4823-8e71-3efdfbe23686",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799475773,
+    "endTimeMs": 1791799550828
+   },
+   {
+    "participantPurpose": "workflow",
+    "initialDirection": "inbound",
+    "flowId": "9efe4118-6e2b-4628-958e-fe1e5f12c3be",
+    "flowVersion": "1.0",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "1c1981c8-bc89-4823-8e71-3efdfbe23686",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799475777,
+    "endTimeMs": 1791799476159
+   },
+   {
+    "participantPurpose": "acd",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "1c1981c8-bc89-4823-8e71-3efdfbe23686",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799476194,
+    "endTimeMs": 1791799479810
+   },
+   {
+    "participantPurpose": "agent",
+    "userId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "1c1981c8-bc89-4823-8e71-3efdfbe23686",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799479817,
+    "endTimeMs": 1791799550816,
+    "wrapUpCode": "7fb334b0-0e9e-11e4-9191-0800200c9a66",
+    "wrapUpNotes": ""
+   }
+  ],
+  "uri": "/transcript/v1/organizations/00000000-0000-4000-8000-000000000000/conversations/d74fc0d8-4ac1-47da-9a8c-d91ce49dfda2/communications/36d54910-96a1-45c3-a996-2df3c8949ac2",
+  "startTime": 1791799475773,
+  "duration": {
+   "milliseconds": 75055
+  },
+  "mediaType": "message",
+  "conversationStartTime": 1791799475773,
+  "schemaVersion": "v2",
+  "isNamedEntitiesAnalyzed": false
+ }
+}

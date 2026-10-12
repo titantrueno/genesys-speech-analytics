@@ -1,0 +1,19 @@
+{
+ "divisions": {
+  "21b04898-376b-41d7-984e-671ca4c9c2b3": "Home",
+  "3d2793da-0d9d-4b66-970c-e968516e4da3": "AI Transformation"
+ },
+ "organization": {
+  "id": "00000000-0000-4000-8000-000000000000",
+  "name": "SGTO"
+ },
+ "queues": {
+  "7a25d5e8-6367-4166-8b2d-39fd49a57fd9": "AIT_Transcription"
+ },
+ "users": {
+  "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d": "Javier Del Olmo"
+ },
+ "wrapups": {
+  "7fb334b0-0e9e-11e4-9191-0800200c9a66": "Default Wrap-up Code"
+ }
+}

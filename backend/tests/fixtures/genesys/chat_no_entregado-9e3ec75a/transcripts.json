@@ -1,0 +1,1266 @@
+{
+ "0e0cf68d-0053-437c-8a9b-a441b7f0b5ed": {
+  "conversationId": "9e3ec75a-11c8-4df7-9002-339916be2827",
+  "communicationId": "0e0cf68d-0053-437c-8a9b-a441b7f0b5ed",
+  "recordingId": "f40d3c2c-d749-4c3c-9760-8bf434e077ea",
+  "transcripts": [
+   {
+    "transcriptId": "fec1328a-8933-4b7e-bcce-dd6df8b3e6be",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "startTime": 1791799314665,
+    "duration": {
+     "milliseconds": 21792
+    },
+    "phrases": [
+     {
+      "text": "Hola, buenas tardes.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 0,
+       "chars": 0
+      },
+      "startTimeMs": 1791799314665,
+      "duration": {
+       "words": 3,
+       "chars": 20
+      },
+      "words": [
+       {
+        "word": "Hola,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 0,
+         "chars": 0
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "buenas",
+        "confidence": 1.0,
+        "offset": {
+         "words": 1,
+         "chars": 6
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "tardes.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 2,
+         "chars": 13
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "fd137bfc501aab35187865176402aff0",
+      "phraseIndex": 0,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "Estoy revisando mi extracto y veo un cargo de 49,99 EUR del 8 de octubre que no reconozco.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 3,
+       "chars": 20
+      },
+      "startTimeMs": 1791799317665,
+      "duration": {
+       "words": 18,
+       "chars": 90
+      },
+      "words": [
+       {
+        "word": "Estoy",
+        "confidence": 1.0,
+        "offset": {
+         "words": 3,
+         "chars": 20
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "revisando",
+        "confidence": 1.0,
+        "offset": {
+         "words": 4,
+         "chars": 26
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       },
+       {
+        "word": "mi",
+        "confidence": 1.0,
+        "offset": {
+         "words": 5,
+         "chars": 36
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "extracto",
+        "confidence": 1.0,
+        "offset": {
+         "words": 6,
+         "chars": 39
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 7,
+         "chars": 48
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "veo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 8,
+         "chars": 50
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 1.0,
+        "offset": {
+         "words": 9,
+         "chars": 54
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 10,
+         "chars": 57
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 11,
+         "chars": 63
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "49,99",
+        "confidence": 1.0,
+        "offset": {
+         "words": 12,
+         "chars": 66
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "EUR",
+        "confidence": 1.0,
+        "offset": {
+         "words": 13,
+         "chars": 72
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "del",
+        "confidence": 1.0,
+        "offset": {
+         "words": 14,
+         "chars": 76
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "8",
+        "confidence": 1.0,
+        "offset": {
+         "words": 15,
+         "chars": 80
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "offset": {
+         "words": 16,
+         "chars": 82
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "octubre",
+        "confidence": 1.0,
+        "offset": {
+         "words": 17,
+         "chars": 85
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 18,
+         "chars": 93
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 19,
+         "chars": 97
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "reconozco.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 20,
+         "chars": 100
+        },
+        "duration": {
+         "words": 1,
+         "chars": 10
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "2ae9448f639caa97965de783d7669929",
+      "phraseIndex": 1,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "El comercio aparece como 'STREAMNOW*SUB MADRID'.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 21,
+       "chars": 110
+      },
+      "startTimeMs": 1791799320677,
+      "duration": {
+       "words": 6,
+       "chars": 48
+      },
+      "words": [
+       {
+        "word": "El",
+        "confidence": 1.0,
+        "offset": {
+         "words": 21,
+         "chars": 110
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "comercio",
+        "confidence": 1.0,
+        "offset": {
+         "words": 22,
+         "chars": 113
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "aparece",
+        "confidence": 1.0,
+        "offset": {
+         "words": 23,
+         "chars": 122
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "como",
+        "confidence": 1.0,
+        "offset": {
+         "words": 24,
+         "chars": 130
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "'STREAMNOW*SUB",
+        "confidence": 1.0,
+        "offset": {
+         "words": 25,
+         "chars": 135
+        },
+        "duration": {
+         "words": 1,
+         "chars": 15
+        }
+       },
+       {
+        "word": "MADRID'.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 26,
+         "chars": 150
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "c5f4fa7d38f3b58a8a864de10c3971fb",
+      "phraseIndex": 2,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "Yo no he contratado nada con ese nombre.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 27,
+       "chars": 158
+      },
+      "startTimeMs": 1791799320677,
+      "duration": {
+       "words": 8,
+       "chars": 40
+      },
+      "words": [
+       {
+        "word": "Yo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 27,
+         "chars": 158
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 28,
+         "chars": 161
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "he",
+        "confidence": 1.0,
+        "offset": {
+         "words": 29,
+         "chars": 164
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "contratado",
+        "confidence": 1.0,
+        "offset": {
+         "words": 30,
+         "chars": 167
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       },
+       {
+        "word": "nada",
+        "confidence": 1.0,
+        "offset": {
+         "words": 31,
+         "chars": 178
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "offset": {
+         "words": 32,
+         "chars": 183
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "ese",
+        "confidence": 1.0,
+        "offset": {
+         "words": 33,
+         "chars": 187
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "nombre.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 34,
+         "chars": 191
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "c5f4fa7d38f3b58a8a864de10c3971fb",
+      "phraseIndex": 3,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "No he perdido la tarjeta y no he hecho ninguna compra online esta semana.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 35,
+       "chars": 198
+      },
+      "startTimeMs": 1791799323693,
+      "duration": {
+       "words": 14,
+       "chars": 73
+      },
+      "words": [
+       {
+        "word": "No",
+        "confidence": 1.0,
+        "offset": {
+         "words": 35,
+         "chars": 198
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "he",
+        "confidence": 1.0,
+        "offset": {
+         "words": 36,
+         "chars": 201
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "perdido",
+        "confidence": 1.0,
+        "offset": {
+         "words": 37,
+         "chars": 204
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "offset": {
+         "words": 38,
+         "chars": 212
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 39,
+         "chars": 215
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 40,
+         "chars": 223
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "offset": {
+         "words": 41,
+         "chars": 225
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "he",
+        "confidence": 1.0,
+        "offset": {
+         "words": 42,
+         "chars": 228
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "hecho",
+        "confidence": 1.0,
+        "offset": {
+         "words": 43,
+         "chars": 231
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "ninguna",
+        "confidence": 1.0,
+        "offset": {
+         "words": 44,
+         "chars": 237
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "compra",
+        "confidence": 1.0,
+        "offset": {
+         "words": 45,
+         "chars": 245
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "online",
+        "confidence": 1.0,
+        "offset": {
+         "words": 46,
+         "chars": 252
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "esta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 47,
+         "chars": 259
+        },
+        "duration": {
+         "words": 1,
+         "chars": 5
+        }
+       },
+       {
+        "word": "semana.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 48,
+         "chars": 264
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "f987af33561525da7b678f78abca7c19",
+      "phraseIndex": 4,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "¿Puede ser un fraude?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 49,
+       "chars": 271
+      },
+      "startTimeMs": 1791799323693,
+      "duration": {
+       "words": 4,
+       "chars": 21
+      },
+      "words": [
+       {
+        "word": "¿Puede",
+        "confidence": 1.0,
+        "offset": {
+         "words": 49,
+         "chars": 271
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "ser",
+        "confidence": 1.0,
+        "offset": {
+         "words": 50,
+         "chars": 278
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 1.0,
+        "offset": {
+         "words": 51,
+         "chars": 282
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "fraude?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 52,
+         "chars": 285
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "f987af33561525da7b678f78abca7c19",
+      "phraseIndex": 5,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "Me gustaría que lo investiguéis y, si procede, bloquear la tarjeta y reclamar el importe.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 53,
+       "chars": 292
+      },
+      "startTimeMs": 1791799326686,
+      "duration": {
+       "words": 15,
+       "chars": 89
+      },
+      "words": [
+       {
+        "word": "Me",
+        "confidence": 1.0,
+        "offset": {
+         "words": 53,
+         "chars": 292
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "gustaría",
+        "confidence": 1.0,
+        "offset": {
+         "words": 54,
+         "chars": 295
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "offset": {
+         "words": 55,
+         "chars": 304
+        },
+        "duration": {
+         "words": 1,
+         "chars": 4
+        }
+       },
+       {
+        "word": "lo",
+        "confidence": 1.0,
+        "offset": {
+         "words": 56,
+         "chars": 308
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "investiguéis",
+        "confidence": 1.0,
+        "offset": {
+         "words": 57,
+         "chars": 311
+        },
+        "duration": {
+         "words": 1,
+         "chars": 13
+        }
+       },
+       {
+        "word": "y,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 58,
+         "chars": 324
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "si",
+        "confidence": 1.0,
+        "offset": {
+         "words": 59,
+         "chars": 327
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "procede,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 60,
+         "chars": 330
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "bloquear",
+        "confidence": 1.0,
+        "offset": {
+         "words": 61,
+         "chars": 339
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "offset": {
+         "words": 62,
+         "chars": 348
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "offset": {
+         "words": 63,
+         "chars": 351
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 1.0,
+        "offset": {
+         "words": 64,
+         "chars": 359
+        },
+        "duration": {
+         "words": 1,
+         "chars": 2
+        }
+       },
+       {
+        "word": "reclamar",
+        "confidence": 1.0,
+        "offset": {
+         "words": 65,
+         "chars": 361
+        },
+        "duration": {
+         "words": 1,
+         "chars": 9
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "offset": {
+         "words": 66,
+         "chars": 370
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "importe.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 67,
+         "chars": 373
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "82c03432e68276c49c6fb527ff7bc969",
+      "phraseIndex": 6,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "Vale, muchas gracias.",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 68,
+       "chars": 381
+      },
+      "startTimeMs": 1791799329706,
+      "duration": {
+       "words": 3,
+       "chars": 21
+      },
+      "words": [
+       {
+        "word": "Vale,",
+        "confidence": 1.0,
+        "offset": {
+         "words": 68,
+         "chars": 381
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "muchas",
+        "confidence": 1.0,
+        "offset": {
+         "words": 69,
+         "chars": 387
+        },
+        "duration": {
+         "words": 1,
+         "chars": 7
+        }
+       },
+       {
+        "word": "gracias.",
+        "confidence": 1.0,
+        "offset": {
+         "words": 70,
+         "chars": 394
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "3813bc8d409f8f51d1c3b7019a8b51de",
+      "phraseIndex": 7,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "¿Cuánto tarda en resolverse la reclamación?",
+      "stability": 1.0,
+      "confidence": 1.0,
+      "offset": {
+       "words": 71,
+       "chars": 402
+      },
+      "startTimeMs": 1791799329706,
+      "duration": {
+       "words": 6,
+       "chars": 43
+      },
+      "words": [
+       {
+        "word": "¿Cuánto",
+        "confidence": 1.0,
+        "offset": {
+         "words": 71,
+         "chars": 402
+        },
+        "duration": {
+         "words": 1,
+         "chars": 8
+        }
+       },
+       {
+        "word": "tarda",
+        "confidence": 1.0,
+        "offset": {
+         "words": 72,
+         "chars": 410
+        },
+        "duration": {
+         "words": 1,
+         "chars": 6
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "offset": {
+         "words": 73,
+         "chars": 416
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "resolverse",
+        "confidence": 1.0,
+        "offset": {
+         "words": 74,
+         "chars": 419
+        },
+        "duration": {
+         "words": 1,
+         "chars": 11
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "offset": {
+         "words": 75,
+         "chars": 430
+        },
+        "duration": {
+         "words": 1,
+         "chars": 3
+        }
+       },
+       {
+        "word": "reclamación?",
+        "confidence": 1.0,
+        "offset": {
+         "words": 76,
+         "chars": 433
+        },
+        "duration": {
+         "words": 1,
+         "chars": 12
+        }
+       }
+      ],
+      "participantPurpose": "external",
+      "messageID": "3813bc8d409f8f51d1c3b7019a8b51de",
+      "phraseIndex": 8,
+      "externalContactIds": [
+       "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c"
+      ]
+     },
+     {
+      "text": "",
+      "offset": {
+       "words": 77,
+       "chars": 445
+      },
+      "startTimeMs": 1791799336457,
+      "duration": {
+       "words": 0,
+       "chars": 0
+      },
+      "words": [],
+      "participantPurpose": "internal",
+      "messageID": "7fc926d4cdff85651a66da481a675844",
+      "phraseIndex": 9,
+      "userIds": [
+       "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d"
+      ]
+     }
+    ],
+    "analytics": {
+     "sentiment": [
+      {
+       "participant": "external",
+       "phrase": "Vale, muchas gracias.",
+       "offset": {
+        "words": 68,
+        "chars": 381
+       },
+       "startTimeMs": 1791799329706,
+       "duration": {
+        "words": 3,
+        "chars": 21
+       },
+       "sentiment": 1.0,
+       "phraseIndex": 7,
+       "source": "v2"
+      }
+     ],
+     "empathy": [],
+     "topics": [
+      {
+       "participant": "external",
+       "topicId": "93eefd94-b8d9-43dc-9ef5-9699476e4bdc",
+       "topicName": "Satisfacción",
+       "topicPhrase": "muchas gracias",
+       "transcriptPhrase": "muchas gracias.",
+       "confidence": 100,
+       "startTimeMs": 1791799329706,
+       "offset": {
+        "words": 69,
+        "chars": 387
+       },
+       "duration": {
+        "words": 2,
+        "chars": 15
+       }
+      }
+     ]
+    },
+    "messageType": "webmessaging",
+    "from": "3c9ef8ca-3c67-46bc-afa6-51c65c6ed9e1",
+    "to": [
+     "5082516d-c84a-4e5e-af2b-b4db5a56e284"
+    ]
+   }
+  ],
+  "participants": [
+   {
+    "participantPurpose": "customer",
+    "externalContactId": "8cd9a3bc-dcd0-41e0-8304-3d740696ff8c",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "from": "3c9ef8ca-3c67-46bc-afa6-51c65c6ed9e1",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799314955,
+    "endTimeMs": 1791799462350
+   },
+   {
+    "participantPurpose": "workflow",
+    "initialDirection": "inbound",
+    "flowId": "9efe4118-6e2b-4628-958e-fe1e5f12c3be",
+    "flowVersion": "1.0",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "3c9ef8ca-3c67-46bc-afa6-51c65c6ed9e1",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799314960,
+    "endTimeMs": 1791799315346
+   },
+   {
+    "participantPurpose": "acd",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "3c9ef8ca-3c67-46bc-afa6-51c65c6ed9e1",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799315375,
+    "endTimeMs": 1791799320292
+   },
+   {
+    "participantPurpose": "agent",
+    "userId": "915451ef-0c04-4ad3-a3d3-ce2ce1668c1d",
+    "initialDirection": "inbound",
+    "queueId": "7a25d5e8-6367-4166-8b2d-39fd49a57fd9",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "to": "3c9ef8ca-3c67-46bc-afa6-51c65c6ed9e1",
+    "from": "5082516d-c84a-4e5e-af2b-b4db5a56e284",
+    "messageType": "webmessaging",
+    "startTimeMs": 1791799320298,
+    "endTimeMs": 1791799462333,
+    "wrapUpCode": "7fb334b0-0e9e-11e4-9191-0800200c9a66",
+    "wrapUpNotes": ""
+   }
+  ],
+  "uri": "/transcript/v1/organizations/00000000-0000-4000-8000-000000000000/conversations/9e3ec75a-11c8-4df7-9002-339916be2827/communications/0e0cf68d-0053-437c-8a9b-a441b7f0b5ed",
+  "startTime": 1791799314955,
+  "duration": {
+   "milliseconds": 147395
+  },
+  "mediaType": "message",
+  "conversationStartTime": 1791799314955,
+  "schemaVersion": "v2",
+  "isNamedEntitiesAnalyzed": false
+ }
+}

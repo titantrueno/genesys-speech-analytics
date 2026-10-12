@@ -1,0 +1,3126 @@
+{
+ "47dacd5c-986a-30a6-bc98-996d98f588ac": {
+  "conversationId": "37dcbccf-2d89-424e-bc9e-9e53d8494a9a",
+  "communicationId": "47dacd5c-986a-30a6-bc98-996d98f588ac",
+  "recordingId": "a6e44cf2-96bb-4ca3-9a84-6e33b55a5794",
+  "transcripts": [
+   {
+    "transcriptId": "1e4965a8-5364-4756-8ddd-f5493b8ef71b",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "features": [],
+    "startTime": 1791795322479,
+    "phrases": [],
+    "analytics": {
+     "acoustics": [
+      {
+       "eventType": "ivr",
+       "offsetMs": 57,
+       "startTimeMs": 1791795322435,
+       "durationMs": 86546,
+       "participant": "internal"
+      }
+     ]
+    }
+   },
+   {
+    "transcriptId": "4cdc7d43-be0d-491a-92ee-a101c2cb6f69",
+    "language": "es-ES",
+    "programId": "4ef34f66-dc21-4161-b8ad-582509544592",
+    "engineId": "r2d2",
+    "engineProvider": "Genesys",
+    "features": [
+     "VOICE_TRANSCRIPTION"
+    ],
+    "startTime": 1791795323419,
+    "duration": {
+     "milliseconds": 85320
+    },
+    "phrases": [
+     {
+      "text": "bienvenido",
+      "decoratedText": "Bienvenido,",
+      "stability": 1.0,
+      "confidence": 0.983,
+      "startTimeMs": 1791795323879,
+      "duration": {
+       "milliseconds": 480
+      },
+      "words": [
+       {
+        "word": "bienvenido",
+        "confidence": 0.983,
+        "startTimeMs": 1791795323879,
+        "duration": {
+         "milliseconds": 480
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Bienvenido,",
+        "confidence": 0.983,
+        "startTimeMs": 1791795323879,
+        "duration": {
+         "milliseconds": 480
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 0
+     },
+     {
+      "text": "javier del olmo",
+      "decoratedText": "Javier Del Olmo.",
+      "stability": 1.0,
+      "confidence": 0.8673333333333333,
+      "startTimeMs": 1791795325559,
+      "duration": {
+       "milliseconds": 960
+      },
+      "words": [
+       {
+        "word": "javier",
+        "confidence": 0.978,
+        "startTimeMs": 1791795325559,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "del",
+        "confidence": 0.663,
+        "startTimeMs": 1791795325959,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "olmo",
+        "confidence": 0.961,
+        "startTimeMs": 1791795326199,
+        "duration": {
+         "milliseconds": 320
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Javier",
+        "confidence": 0.978,
+        "startTimeMs": 1791795325559,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "Del",
+        "confidence": 0.663,
+        "startTimeMs": 1791795325959,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "Olmo.",
+        "confidence": 0.961,
+        "startTimeMs": 1791795326199,
+        "duration": {
+         "milliseconds": 320
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 1
+     },
+     {
+      "text": "pulsa la opción a la que quiere ser redirigido",
+      "decoratedText": "Pulsa la opción a la que quiere ser redirigido.",
+      "stability": 1.0,
+      "confidence": 0.9543333333333334,
+      "startTimeMs": 1791795327599,
+      "duration": {
+       "milliseconds": 2320
+      },
+      "words": [
+       {
+        "word": "pulsa",
+        "confidence": 1.0,
+        "startTimeMs": 1791795327599,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "startTimeMs": 1791795327999,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "opción",
+        "confidence": 0.987,
+        "startTimeMs": 1791795328079,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 0.992,
+        "startTimeMs": 1791795328399,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 0.744,
+        "startTimeMs": 1791795328479,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "startTimeMs": 1791795328639,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "quiere",
+        "confidence": 0.962,
+        "startTimeMs": 1791795328799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ser",
+        "confidence": 0.977,
+        "startTimeMs": 1791795329119,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "redirigido",
+        "confidence": 0.927,
+        "startTimeMs": 1791795329359,
+        "duration": {
+         "milliseconds": 560
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Pulsa",
+        "confidence": 1.0,
+        "startTimeMs": 1791795327599,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 1.0,
+        "startTimeMs": 1791795327999,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "opción",
+        "confidence": 0.987,
+        "startTimeMs": 1791795328079,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "a",
+        "confidence": 0.992,
+        "startTimeMs": 1791795328399,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "la",
+        "confidence": 0.744,
+        "startTimeMs": 1791795328479,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "startTimeMs": 1791795328639,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "quiere",
+        "confidence": 0.962,
+        "startTimeMs": 1791795328799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ser",
+        "confidence": 0.977,
+        "startTimeMs": 1791795329119,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "redirigido.",
+        "confidence": 0.927,
+        "startTimeMs": 1791795329359,
+        "duration": {
+         "milliseconds": 560
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 2
+     },
+     {
+      "text": "buenos días paco soy el asistente de inteligencia artificial de banco santander en qué te puedo ayudar con tus movimientos de tarjeta",
+      "decoratedText": "Buenos días, Paco. Soy el asistente de inteligencia artificial de Banco Santander. ¿En qué te puedo ayudar con tus movimientos de tarjeta?",
+      "stability": 1.0,
+      "confidence": 0.9338181818181819,
+      "startTimeMs": 1791795334079,
+      "duration": {
+       "milliseconds": 6640
+      },
+      "words": [
+       {
+        "word": "buenos",
+        "confidence": 0.978,
+        "startTimeMs": 1791795334079,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "días",
+        "confidence": 0.75,
+        "startTimeMs": 1791795334239,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "paco",
+        "confidence": 0.78,
+        "startTimeMs": 1791795334479,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "soy",
+        "confidence": 1.0,
+        "startTimeMs": 1791795334879,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.977,
+        "startTimeMs": 1791795335039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "asistente",
+        "confidence": 0.86,
+        "startTimeMs": 1791795335199,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795335679,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "inteligencia",
+        "confidence": 1.0,
+        "startTimeMs": 1791795335839,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "artificial",
+        "confidence": 0.946,
+        "startTimeMs": 1791795336399,
+        "duration": {
+         "milliseconds": 560
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.771,
+        "startTimeMs": 1791795337039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "banco",
+        "confidence": 0.99,
+        "startTimeMs": 1791795337119,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "santander",
+        "confidence": 0.792,
+        "startTimeMs": 1791795337519,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 0.992,
+        "startTimeMs": 1791795338239,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "qué",
+        "confidence": 0.753,
+        "startTimeMs": 1791795338399,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "te",
+        "confidence": 1.0,
+        "startTimeMs": 1791795338559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "puedo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795338719,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ayudar",
+        "confidence": 0.996,
+        "startTimeMs": 1791795338959,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 0.992,
+        "startTimeMs": 1791795339279,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tus",
+        "confidence": 0.996,
+        "startTimeMs": 1791795339439,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "movimientos",
+        "confidence": 0.973,
+        "startTimeMs": 1791795339679,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795340159,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 0.998,
+        "startTimeMs": 1791795340319,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Buenos",
+        "confidence": 0.978,
+        "startTimeMs": 1791795334079,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "días,",
+        "confidence": 0.75,
+        "startTimeMs": 1791795334239,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "Paco.",
+        "confidence": 0.78,
+        "startTimeMs": 1791795334479,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "Soy",
+        "confidence": 1.0,
+        "startTimeMs": 1791795334879,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.977,
+        "startTimeMs": 1791795335039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "asistente",
+        "confidence": 0.86,
+        "startTimeMs": 1791795335199,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795335679,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "inteligencia",
+        "confidence": 1.0,
+        "startTimeMs": 1791795335839,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "artificial",
+        "confidence": 0.946,
+        "startTimeMs": 1791795336399,
+        "duration": {
+         "milliseconds": 560
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.771,
+        "startTimeMs": 1791795337039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "Banco",
+        "confidence": 0.99,
+        "startTimeMs": 1791795337119,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "Santander.",
+        "confidence": 0.792,
+        "startTimeMs": 1791795337519,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "¿En",
+        "confidence": 0.992,
+        "startTimeMs": 1791795338239,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "qué",
+        "confidence": 0.753,
+        "startTimeMs": 1791795338399,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "te",
+        "confidence": 1.0,
+        "startTimeMs": 1791795338559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "puedo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795338719,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ayudar",
+        "confidence": 0.996,
+        "startTimeMs": 1791795338959,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 0.992,
+        "startTimeMs": 1791795339279,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tus",
+        "confidence": 0.996,
+        "startTimeMs": 1791795339439,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "movimientos",
+        "confidence": 0.973,
+        "startTimeMs": 1791795339679,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795340159,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta?",
+        "confidence": 0.998,
+        "startTimeMs": 1791795340319,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 3
+     },
+     {
+      "text": "hola mira si tengo un movimiento de tarjeta que no reconozco en mi tarjeta de débito",
+      "decoratedText": "Hola, mira, si tengo un movimiento de tarjeta que no reconozco en mi tarjeta de débito.",
+      "stability": 1.0,
+      "confidence": 0.9163125,
+      "startTimeMs": 1791795341919,
+      "duration": {
+       "milliseconds": 4480
+      },
+      "words": [
+       {
+        "word": "hola",
+        "confidence": 0.838,
+        "startTimeMs": 1791795341919,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "mira",
+        "confidence": 1.0,
+        "startTimeMs": 1791795342319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "si",
+        "confidence": 0.556,
+        "startTimeMs": 1791795342719,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tengo",
+        "confidence": 0.992,
+        "startTimeMs": 1791795343039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 0.633,
+        "startTimeMs": 1791795343279,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 0.982,
+        "startTimeMs": 1791795343359,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.992,
+        "startTimeMs": 1791795343759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 0.989,
+        "startTimeMs": 1791795343919,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "startTimeMs": 1791795344319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "startTimeMs": 1791795344479,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "reconozco",
+        "confidence": 1.0,
+        "startTimeMs": 1791795344719,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 0.736,
+        "startTimeMs": 1791795345199,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "mi",
+        "confidence": 1.0,
+        "startTimeMs": 1791795345359,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 0.973,
+        "startTimeMs": 1791795345439,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.992,
+        "startTimeMs": 1791795345839,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "débito",
+        "confidence": 0.978,
+        "startTimeMs": 1791795345999,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Hola,",
+        "confidence": 0.838,
+        "startTimeMs": 1791795341919,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "mira,",
+        "confidence": 1.0,
+        "startTimeMs": 1791795342319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "si",
+        "confidence": 0.556,
+        "startTimeMs": 1791795342719,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tengo",
+        "confidence": 0.992,
+        "startTimeMs": 1791795343039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 0.633,
+        "startTimeMs": 1791795343279,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 0.982,
+        "startTimeMs": 1791795343359,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.992,
+        "startTimeMs": 1791795343759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 0.989,
+        "startTimeMs": 1791795343919,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "startTimeMs": 1791795344319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "startTimeMs": 1791795344479,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "reconozco",
+        "confidence": 1.0,
+        "startTimeMs": 1791795344719,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 0.736,
+        "startTimeMs": 1791795345199,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "mi",
+        "confidence": 1.0,
+        "startTimeMs": 1791795345359,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 0.973,
+        "startTimeMs": 1791795345439,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.992,
+        "startTimeMs": 1791795345839,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "débito.",
+        "confidence": 0.978,
+        "startTimeMs": 1791795345999,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "external",
+      "phraseIndex": 4
+     },
+     {
+      "text": "te ayudo con eso podrías decirme el importe aproximado o el día en que viste ese movimiento en tu tarjeta de débito",
+      "decoratedText": "¿Te ayudo con eso. ¿Podrías decirme el importe aproximado o el día en que viste ese movimiento en tu tarjeta de débito?",
+      "stability": 1.0,
+      "confidence": 0.9484999999999999,
+      "startTimeMs": 1791795350139,
+      "duration": {
+       "milliseconds": 6960
+      },
+      "words": [
+       {
+        "word": "te",
+        "confidence": 1.0,
+        "startTimeMs": 1791795350139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ayudo",
+        "confidence": 0.905,
+        "startTimeMs": 1791795350219,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "startTimeMs": 1791795350699,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "eso",
+        "confidence": 1.0,
+        "startTimeMs": 1791795350859,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "podrías",
+        "confidence": 0.973,
+        "startTimeMs": 1791795351339,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "decirme",
+        "confidence": 0.792,
+        "startTimeMs": 1791795351819,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.977,
+        "startTimeMs": 1791795352299,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "importe",
+        "confidence": 0.933,
+        "startTimeMs": 1791795352459,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "aproximado",
+        "confidence": 0.842,
+        "startTimeMs": 1791795352939,
+        "duration": {
+         "milliseconds": 640
+        }
+       },
+       {
+        "word": "o",
+        "confidence": 0.81,
+        "startTimeMs": 1791795353739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795353979,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "día",
+        "confidence": 0.977,
+        "startTimeMs": 1791795354139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 0.962,
+        "startTimeMs": 1791795354379,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.985,
+        "startTimeMs": 1791795354459,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "viste",
+        "confidence": 0.761,
+        "startTimeMs": 1791795354699,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "ese",
+        "confidence": 0.985,
+        "startTimeMs": 1791795355099,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 1.0,
+        "startTimeMs": 1791795355339,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 0.985,
+        "startTimeMs": 1791795355819,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tu",
+        "confidence": 0.992,
+        "startTimeMs": 1791795355979,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "startTimeMs": 1791795356139,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795356539,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "débito",
+        "confidence": 0.996,
+        "startTimeMs": 1791795356699,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "¿Te",
+        "confidence": 1.0,
+        "startTimeMs": 1791795350139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ayudo",
+        "confidence": 0.905,
+        "startTimeMs": 1791795350219,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "startTimeMs": 1791795350699,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "eso.",
+        "confidence": 1.0,
+        "startTimeMs": 1791795350859,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "¿Podrías",
+        "confidence": 0.973,
+        "startTimeMs": 1791795351339,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "decirme",
+        "confidence": 0.792,
+        "startTimeMs": 1791795351819,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.977,
+        "startTimeMs": 1791795352299,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "importe",
+        "confidence": 0.933,
+        "startTimeMs": 1791795352459,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "aproximado",
+        "confidence": 0.842,
+        "startTimeMs": 1791795352939,
+        "duration": {
+         "milliseconds": 640
+        }
+       },
+       {
+        "word": "o",
+        "confidence": 0.81,
+        "startTimeMs": 1791795353739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795353979,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "día",
+        "confidence": 0.977,
+        "startTimeMs": 1791795354139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 0.962,
+        "startTimeMs": 1791795354379,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.985,
+        "startTimeMs": 1791795354459,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "viste",
+        "confidence": 0.761,
+        "startTimeMs": 1791795354699,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "ese",
+        "confidence": 0.985,
+        "startTimeMs": 1791795355099,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 1.0,
+        "startTimeMs": 1791795355339,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 0.985,
+        "startTimeMs": 1791795355819,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tu",
+        "confidence": 0.992,
+        "startTimeMs": 1791795355979,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tarjeta",
+        "confidence": 1.0,
+        "startTimeMs": 1791795356139,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795356539,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "débito?",
+        "confidence": 0.996,
+        "startTimeMs": 1791795356699,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 5
+     },
+     {
+      "text": "sí el importe es unos trescientos trescientos veinte euros y es uno de los últimos",
+      "decoratedText": "Sí, el importe es unos trescientos, €320 y es uno de los últimos.",
+      "stability": 1.0,
+      "confidence": 0.8790666666666667,
+      "startTimeMs": 1791795359539,
+      "duration": {
+       "milliseconds": 6560
+      },
+      "words": [
+       {
+        "word": "sí",
+        "confidence": 0.74,
+        "startTimeMs": 1791795359539,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.842,
+        "startTimeMs": 1791795360739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "importe",
+        "confidence": 0.99,
+        "startTimeMs": 1791795360979,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 0.948,
+        "startTimeMs": 1791795361379,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "unos",
+        "confidence": 0.885,
+        "startTimeMs": 1791795361539,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "trescientos",
+        "confidence": 0.861,
+        "startTimeMs": 1791795361939,
+        "duration": {
+         "milliseconds": 560
+        }
+       },
+       {
+        "word": "trescientos",
+        "confidence": 0.834,
+        "startTimeMs": 1791795362819,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "veinte",
+        "confidence": 0.99,
+        "startTimeMs": 1791795363379,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "euros",
+        "confidence": 1.0,
+        "startTimeMs": 1791795363779,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 0.531,
+        "startTimeMs": 1791795364739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 0.992,
+        "startTimeMs": 1791795365059,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "uno",
+        "confidence": 0.592,
+        "startTimeMs": 1791795365219,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795365459,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 0.992,
+        "startTimeMs": 1791795365539,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "últimos",
+        "confidence": 0.989,
+        "startTimeMs": 1791795365779,
+        "duration": {
+         "milliseconds": 320
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Sí,",
+        "confidence": 0.74,
+        "startTimeMs": 1791795359539,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.842,
+        "startTimeMs": 1791795360739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "importe",
+        "confidence": 0.99,
+        "startTimeMs": 1791795360979,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 0.948,
+        "startTimeMs": 1791795361379,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "unos",
+        "confidence": 0.885,
+        "startTimeMs": 1791795361539,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "trescientos,",
+        "confidence": 0.861,
+        "startTimeMs": 1791795361939,
+        "duration": {
+         "milliseconds": 560
+        }
+       },
+       {
+        "word": "€320",
+        "confidence": 0.9413333333333332,
+        "startTimeMs": 1791795362819,
+        "duration": {
+         "milliseconds": 1200
+        }
+       },
+       {
+        "word": "y",
+        "confidence": 0.531,
+        "startTimeMs": 1791795364739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 0.992,
+        "startTimeMs": 1791795365059,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "uno",
+        "confidence": 0.592,
+        "startTimeMs": 1791795365219,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795365459,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 0.992,
+        "startTimeMs": 1791795365539,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "últimos.",
+        "confidence": 0.989,
+        "startTimeMs": 1791795365779,
+        "duration": {
+         "milliseconds": 320
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "external",
+      "phraseIndex": 6
+     },
+     {
+      "text": "estoy buscando el movimiento en tus tarjetas",
+      "decoratedText": "Estoy buscando el movimiento en tus tarjetas.",
+      "stability": 1.0,
+      "confidence": 0.9852857142857143,
+      "startTimeMs": 1791795368999,
+      "duration": {
+       "milliseconds": 1760
+      },
+      "words": [
+       {
+        "word": "estoy",
+        "confidence": 1.0,
+        "startTimeMs": 1791795368999,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "buscando",
+        "confidence": 1.0,
+        "startTimeMs": 1791795369239,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795369559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 1.0,
+        "startTimeMs": 1791795369719,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "startTimeMs": 1791795370119,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tus",
+        "confidence": 0.992,
+        "startTimeMs": 1791795370199,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "tarjetas",
+        "confidence": 0.913,
+        "startTimeMs": 1791795370359,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Estoy",
+        "confidence": 1.0,
+        "startTimeMs": 1791795368999,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "buscando",
+        "confidence": 1.0,
+        "startTimeMs": 1791795369239,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795369559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 1.0,
+        "startTimeMs": 1791795369719,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "startTimeMs": 1791795370119,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "tus",
+        "confidence": 0.992,
+        "startTimeMs": 1791795370199,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "tarjetas.",
+        "confidence": 0.913,
+        "startTimeMs": 1791795370359,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 7
+     },
+     {
+      "text": "he localizado un cargo de trescientos veintinueve euros con cuarenta céntimos en iberia realizado el once de agosto de dos mil veintiséis es este el movimiento que no reconoces",
+      "decoratedText": "He localizado un cargo de €329,40 en Iberia realizado el once de agosto de dos mil veintiséis. Es este el movimiento que no reconoces?",
+      "stability": 1.0,
+      "confidence": 0.9587241379310345,
+      "startTimeMs": 1791795372919,
+      "duration": {
+       "milliseconds": 10480
+      },
+      "words": [
+       {
+        "word": "he",
+        "confidence": 0.992,
+        "startTimeMs": 1791795372919,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "localizado",
+        "confidence": 1.0,
+        "startTimeMs": 1791795373079,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 1.0,
+        "startTimeMs": 1791795373639,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795373719,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795374039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "trescientos",
+        "confidence": 0.928,
+        "startTimeMs": 1791795374199,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "veintinueve",
+        "confidence": 0.887,
+        "startTimeMs": 1791795374679,
+        "duration": {
+         "milliseconds": 720
+        }
+       },
+       {
+        "word": "euros",
+        "confidence": 1.0,
+        "startTimeMs": 1791795375479,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "con",
+        "confidence": 1.0,
+        "startTimeMs": 1791795375879,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "cuarenta",
+        "confidence": 0.885,
+        "startTimeMs": 1791795376039,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "céntimos",
+        "confidence": 0.987,
+        "startTimeMs": 1791795376599,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "startTimeMs": 1791795377159,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "iberia",
+        "confidence": 0.99,
+        "startTimeMs": 1791795377319,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "realizado",
+        "confidence": 0.952,
+        "startTimeMs": 1791795378199,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.985,
+        "startTimeMs": 1791795378759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "once",
+        "confidence": 0.982,
+        "startTimeMs": 1791795378919,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795379239,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "agosto",
+        "confidence": 1.0,
+        "startTimeMs": 1791795379399,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.674,
+        "startTimeMs": 1791795379799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "dos",
+        "confidence": 0.876,
+        "startTimeMs": 1791795379959,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "mil",
+        "confidence": 0.78,
+        "startTimeMs": 1791795380199,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "veintiséis",
+        "confidence": 0.97,
+        "startTimeMs": 1791795380439,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 1.0,
+        "startTimeMs": 1791795381559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "este",
+        "confidence": 0.941,
+        "startTimeMs": 1791795381719,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795381959,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 1.0,
+        "startTimeMs": 1791795382119,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.985,
+        "startTimeMs": 1791795382599,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "startTimeMs": 1791795382759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "reconoces",
+        "confidence": 0.997,
+        "startTimeMs": 1791795382919,
+        "duration": {
+         "milliseconds": 480
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "He",
+        "confidence": 0.992,
+        "startTimeMs": 1791795372919,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "localizado",
+        "confidence": 1.0,
+        "startTimeMs": 1791795373079,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 1.0,
+        "startTimeMs": 1791795373639,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795373719,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795374039,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "€329,40",
+        "confidence": 0.9478333333333334,
+        "startTimeMs": 1791795374199,
+        "duration": {
+         "milliseconds": 2800
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "startTimeMs": 1791795377159,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "Iberia",
+        "confidence": 0.99,
+        "startTimeMs": 1791795377319,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "realizado",
+        "confidence": 0.952,
+        "startTimeMs": 1791795378199,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.985,
+        "startTimeMs": 1791795378759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "once",
+        "confidence": 0.982,
+        "startTimeMs": 1791795378919,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795379239,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "agosto",
+        "confidence": 1.0,
+        "startTimeMs": 1791795379399,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.674,
+        "startTimeMs": 1791795379799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "dos",
+        "confidence": 0.876,
+        "startTimeMs": 1791795379959,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "mil",
+        "confidence": 0.78,
+        "startTimeMs": 1791795380199,
+        "duration": {
+         "milliseconds": 160
+        }
+       },
+       {
+        "word": "veintiséis.",
+        "confidence": 0.97,
+        "startTimeMs": 1791795380439,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "Es",
+        "confidence": 1.0,
+        "startTimeMs": 1791795381559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "este",
+        "confidence": 0.941,
+        "startTimeMs": 1791795381719,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795381959,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 1.0,
+        "startTimeMs": 1791795382119,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.985,
+        "startTimeMs": 1791795382599,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 1.0,
+        "startTimeMs": 1791795382759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "reconoces?",
+        "confidence": 0.997,
+        "startTimeMs": 1791795382919,
+        "duration": {
+         "milliseconds": 480
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 8
+     },
+     {
+      "text": "si pero ahora que dices lo de iberia me acabo de acordar ya de que es no es un movimiento no reconocido",
+      "decoratedText": "Si, pero ahora que dices lo de Iberia me acabo de acordar ya de que es, no es un movimiento no reconocido.",
+      "stability": 1.0,
+      "confidence": 0.9000454545454548,
+      "startTimeMs": 1791795387079,
+      "duration": {
+       "milliseconds": 7040
+      },
+      "words": [
+       {
+        "word": "si",
+        "confidence": 0.531,
+        "startTimeMs": 1791795387079,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "pero",
+        "confidence": 1.0,
+        "startTimeMs": 1791795387319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ahora",
+        "confidence": 0.992,
+        "startTimeMs": 1791795387559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.97,
+        "startTimeMs": 1791795387799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "dices",
+        "confidence": 0.765,
+        "startTimeMs": 1791795387959,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "lo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795388359,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795388519,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "iberia",
+        "confidence": 0.99,
+        "startTimeMs": 1791795388599,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "me",
+        "confidence": 0.531,
+        "startTimeMs": 1791795389239,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "acabo",
+        "confidence": 0.903,
+        "startTimeMs": 1791795389479,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795389799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "acordar",
+        "confidence": 0.848,
+        "startTimeMs": 1791795389879,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "ya",
+        "confidence": 0.977,
+        "startTimeMs": 1791795390679,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.992,
+        "startTimeMs": 1791795390919,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "startTimeMs": 1791795391079,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 0.643,
+        "startTimeMs": 1791795391319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 0.977,
+        "startTimeMs": 1791795392359,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 0.977,
+        "startTimeMs": 1791795392759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 0.795,
+        "startTimeMs": 1791795392919,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 0.925,
+        "startTimeMs": 1791795393079,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 0.985,
+        "startTimeMs": 1791795393559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "reconocido",
+        "confidence": 1.0,
+        "startTimeMs": 1791795393719,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Si,",
+        "confidence": 0.531,
+        "startTimeMs": 1791795387079,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "pero",
+        "confidence": 1.0,
+        "startTimeMs": 1791795387319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "ahora",
+        "confidence": 0.992,
+        "startTimeMs": 1791795387559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.97,
+        "startTimeMs": 1791795387799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "dices",
+        "confidence": 0.765,
+        "startTimeMs": 1791795387959,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "lo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795388359,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795388519,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "Iberia",
+        "confidence": 0.99,
+        "startTimeMs": 1791795388599,
+        "duration": {
+         "milliseconds": 400
+        }
+       },
+       {
+        "word": "me",
+        "confidence": 0.531,
+        "startTimeMs": 1791795389239,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "acabo",
+        "confidence": 0.903,
+        "startTimeMs": 1791795389479,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795389799,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "acordar",
+        "confidence": 0.848,
+        "startTimeMs": 1791795389879,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "ya",
+        "confidence": 0.977,
+        "startTimeMs": 1791795390679,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.992,
+        "startTimeMs": 1791795390919,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 1.0,
+        "startTimeMs": 1791795391079,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "es,",
+        "confidence": 0.643,
+        "startTimeMs": 1791795391319,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 0.977,
+        "startTimeMs": 1791795392359,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "es",
+        "confidence": 0.977,
+        "startTimeMs": 1791795392759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "un",
+        "confidence": 0.795,
+        "startTimeMs": 1791795392919,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 0.925,
+        "startTimeMs": 1791795393079,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "no",
+        "confidence": 0.985,
+        "startTimeMs": 1791795393559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "reconocido.",
+        "confidence": 1.0,
+        "startTimeMs": 1791795393719,
+        "duration": {
+         "milliseconds": 400
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "external",
+      "phraseIndex": 9
+     },
+     {
+      "text": "estoy consultando los detalles del movimiento",
+      "decoratedText": "Estoy consultando los detalles del movimiento.",
+      "stability": 1.0,
+      "confidence": 0.9651666666666667,
+      "startTimeMs": 1791795397759,
+      "duration": {
+       "milliseconds": 1840
+      },
+      "words": [
+       {
+        "word": "estoy",
+        "confidence": 0.985,
+        "startTimeMs": 1791795397759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "consultando",
+        "confidence": 0.973,
+        "startTimeMs": 1791795397999,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 1.0,
+        "startTimeMs": 1791795398559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "detalles",
+        "confidence": 0.833,
+        "startTimeMs": 1791795398719,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "del",
+        "confidence": 1.0,
+        "startTimeMs": 1791795399119,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento",
+        "confidence": 1.0,
+        "startTimeMs": 1791795399279,
+        "duration": {
+         "milliseconds": 320
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "Estoy",
+        "confidence": 0.985,
+        "startTimeMs": 1791795397759,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "consultando",
+        "confidence": 0.973,
+        "startTimeMs": 1791795397999,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "los",
+        "confidence": 1.0,
+        "startTimeMs": 1791795398559,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "detalles",
+        "confidence": 0.833,
+        "startTimeMs": 1791795398719,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "del",
+        "confidence": 1.0,
+        "startTimeMs": 1791795399119,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "movimiento.",
+        "confidence": 1.0,
+        "startTimeMs": 1791795399279,
+        "duration": {
+         "milliseconds": 320
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 10
+     },
+     {
+      "text": "el cargo fue que realizado en iberia el once de agosto de dos mil veintiséis por trescientos veintinueve euros",
+      "decoratedText": "El cargo fue que realizado en Iberia el once de agosto de dos mil veintiséis por €329",
+      "stability": 1.0,
+      "confidence": 0.8848421052631578,
+      "startTimeMs": 1791795401859,
+      "duration": {
+       "milliseconds": 6880
+      },
+      "words": [
+       {
+        "word": "el",
+        "confidence": 1.0,
+        "startTimeMs": 1791795401859,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795402019,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "fue",
+        "confidence": 0.992,
+        "startTimeMs": 1791795402339,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.231,
+        "startTimeMs": 1791795402499,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "realizado",
+        "confidence": 0.763,
+        "startTimeMs": 1791795402579,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "startTimeMs": 1791795403139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "iberia",
+        "confidence": 0.821,
+        "startTimeMs": 1791795403299,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795404099,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "once",
+        "confidence": 0.997,
+        "startTimeMs": 1791795404259,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795404579,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "agosto",
+        "confidence": 1.0,
+        "startTimeMs": 1791795404739,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.74,
+        "startTimeMs": 1791795405139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "dos",
+        "confidence": 1.0,
+        "startTimeMs": 1791795405379,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "mil",
+        "confidence": 1.0,
+        "startTimeMs": 1791795405539,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "veintiséis",
+        "confidence": 0.867,
+        "startTimeMs": 1791795405779,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "por",
+        "confidence": 0.785,
+        "startTimeMs": 1791795406739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "trescientos",
+        "confidence": 0.895,
+        "startTimeMs": 1791795406979,
+        "duration": {
+         "milliseconds": 560
+        }
+       },
+       {
+        "word": "veintinueve",
+        "confidence": 0.739,
+        "startTimeMs": 1791795407619,
+        "duration": {
+         "milliseconds": 720
+        }
+       },
+       {
+        "word": "euros",
+        "confidence": 0.99,
+        "startTimeMs": 1791795408499,
+        "duration": {
+         "milliseconds": 240
+        }
+       }
+      ],
+      "decoratedWords": [
+       {
+        "word": "El",
+        "confidence": 1.0,
+        "startTimeMs": 1791795401859,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "cargo",
+        "confidence": 1.0,
+        "startTimeMs": 1791795402019,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "fue",
+        "confidence": 0.992,
+        "startTimeMs": 1791795402339,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "que",
+        "confidence": 0.231,
+        "startTimeMs": 1791795402499,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "realizado",
+        "confidence": 0.763,
+        "startTimeMs": 1791795402579,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "en",
+        "confidence": 1.0,
+        "startTimeMs": 1791795403139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "Iberia",
+        "confidence": 0.821,
+        "startTimeMs": 1791795403299,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "el",
+        "confidence": 0.992,
+        "startTimeMs": 1791795404099,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "once",
+        "confidence": 0.997,
+        "startTimeMs": 1791795404259,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 1.0,
+        "startTimeMs": 1791795404579,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "agosto",
+        "confidence": 1.0,
+        "startTimeMs": 1791795404739,
+        "duration": {
+         "milliseconds": 320
+        }
+       },
+       {
+        "word": "de",
+        "confidence": 0.74,
+        "startTimeMs": 1791795405139,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "dos",
+        "confidence": 1.0,
+        "startTimeMs": 1791795405379,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "mil",
+        "confidence": 1.0,
+        "startTimeMs": 1791795405539,
+        "duration": {
+         "milliseconds": 240
+        }
+       },
+       {
+        "word": "veintiséis",
+        "confidence": 0.867,
+        "startTimeMs": 1791795405779,
+        "duration": {
+         "milliseconds": 480
+        }
+       },
+       {
+        "word": "por",
+        "confidence": 0.785,
+        "startTimeMs": 1791795406739,
+        "duration": {
+         "milliseconds": 80
+        }
+       },
+       {
+        "word": "€329",
+        "confidence": 0.8746666666666666,
+        "startTimeMs": 1791795406979,
+        "duration": {
+         "milliseconds": 1760
+        }
+       }
+      ],
+      "alternatives": [],
+      "participantPurpose": "internal",
+      "phraseIndex": 11
+     }
+    ],
+    "analytics": {
+     "sentiment": [],
+     "empathy": [],
+     "topics": [
+      {
+       "participant": "internal",
+       "topicId": "577bb3a1-3f9b-437b-a7ef-30f0bf4455d5",
+       "topicName": "Conexión",
+       "topicPhrase": "buenos días",
+       "transcriptPhrase": "Buenos días,",
+       "confidence": 100,
+       "startTimeMs": 1791795334079,
+       "duration": {
+        "milliseconds": 400
+       }
+      },
+      {
+       "participant": "internal",
+       "topicId": "577bb3a1-3f9b-437b-a7ef-30f0bf4455d5",
+       "topicName": "Conexión",
+       "topicPhrase": "puedo ayudarle con",
+       "transcriptPhrase": "puedo ayudar con",
+       "confidence": 99,
+       "startTimeMs": 1791795338719,
+       "duration": {
+        "milliseconds": 640
+       }
+      },
+      {
+       "participant": "internal",
+       "topicId": "739ac3df-44c1-43ac-9a79-af1165d9cbea",
+       "topicName": "Saludos",
+       "topicPhrase": "puedo ayudar en algo",
+       "transcriptPhrase": "puedo ayudar",
+       "confidence": 88,
+       "startTimeMs": 1791795338719,
+       "duration": {
+        "milliseconds": 480
+       }
+      },
+      {
+       "participant": "external",
+       "topicId": "92e3a9d5-d3f4-4dbc-ac9c-acbce8c5aea4",
+       "topicName": "Realización de pagos",
+       "topicPhrase": "usar mi tarjeta de débito",
+       "transcriptPhrase": "mi tarjeta de débito.",
+       "confidence": 65,
+       "startTimeMs": 1791795345359,
+       "duration": {
+        "milliseconds": 1040
+       }
+      }
+     ],
+     "acoustics": [
+      {
+       "eventType": "voice",
+       "offsetMs": 1240,
+       "startTimeMs": 1791795323719,
+       "durationMs": 859,
+       "participant": "internal"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 3000,
+       "startTimeMs": 1791795325479,
+       "durationMs": 1140,
+       "participant": "internal"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 5040,
+       "startTimeMs": 1791795327519,
+       "durationMs": 2560,
+       "participant": "internal"
+      },
+      {
+       "eventType": "silence",
+       "offsetMs": 7600,
+       "startTimeMs": 1791795330079,
+       "durationMs": 3920,
+       "participant": "both"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 11520,
+       "startTimeMs": 1791795333999,
+       "durationMs": 6740,
+       "participant": "internal"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 19440,
+       "startTimeMs": 1791795341919,
+       "durationMs": 4520,
+       "participant": "external"
+      },
+      {
+       "eventType": "silence",
+       "offsetMs": 23960,
+       "startTimeMs": 1791795346439,
+       "durationMs": 3620,
+       "participant": "both"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 27580,
+       "startTimeMs": 1791795350059,
+       "durationMs": 7100,
+       "participant": "internal"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 36580,
+       "startTimeMs": 1791795359059,
+       "durationMs": 7100,
+       "participant": "external"
+      },
+      {
+       "eventType": "silence",
+       "offsetMs": 43680,
+       "startTimeMs": 1791795366159,
+       "durationMs": 2759,
+       "participant": "both"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 46440,
+       "startTimeMs": 1791795368919,
+       "durationMs": 1920,
+       "participant": "internal"
+      },
+      {
+       "eventType": "silence",
+       "offsetMs": 48360,
+       "startTimeMs": 1791795370839,
+       "durationMs": 2000,
+       "participant": "both"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 50360,
+       "startTimeMs": 1791795372839,
+       "durationMs": 10739,
+       "participant": "internal"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 63080,
+       "startTimeMs": 1791795385559,
+       "durationMs": 8679,
+       "participant": "external"
+      },
+      {
+       "eventType": "silence",
+       "offsetMs": 71760,
+       "startTimeMs": 1791795394239,
+       "durationMs": 3440,
+       "participant": "both"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 75200,
+       "startTimeMs": 1791795397679,
+       "durationMs": 2099,
+       "participant": "internal"
+      },
+      {
+       "eventType": "silence",
+       "offsetMs": 77300,
+       "startTimeMs": 1791795399779,
+       "durationMs": 2000,
+       "participant": "both"
+      },
+      {
+       "eventType": "voice",
+       "offsetMs": 79300,
+       "startTimeMs": 1791795401779,
+       "durationMs": 7159,
+       "participant": "internal"
+      }
+     ]
+    }
+   }
+  ],
+  "participants": [
+   {
+    "participantPurpose": "external",
+    "initialDirection": "inbound",
+    "ani": "tel:+34675075376",
+    "dnis": "tel:+34919187266",
+    "startTimeMs": 1791795322478,
+    "endTimeMs": 1791795408980
+   },
+   {
+    "participantPurpose": "ivr",
+    "initialDirection": "inbound",
+    "flowId": "b0936348-3f34-4701-a439-39a74f728e8a",
+    "flowVersion": "67.0",
+    "divisionId": "3d2793da-0d9d-4b66-970c-e968516e4da3",
+    "ani": "tel:+34675075376",
+    "dnis": "tel:+34919187266",
+    "startTimeMs": 1791795322435,
+    "endTimeMs": 1791795408981
+   }
+  ],
+  "uri": "/transcript/v1/organizations/00000000-0000-4000-8000-000000000000/conversations/37dcbccf-2d89-424e-bc9e-9e53d8494a9a/communications/47dacd5c-986a-30a6-bc98-996d98f588ac",
+  "startTime": 1791795322479,
+  "duration": {
+   "milliseconds": 85320
+  },
+  "mediaType": "call",
+  "conversationStartTime": 1791795322378,
+  "externalTag": "Javier Del Olmo",
+  "handleTime": "0",
+  "conversationDuration": 86603,
+  "isNamedEntitiesAnalyzed": false
+ }
+}
