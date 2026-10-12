@@ -463,3 +463,13 @@
   - `README.md`, `frontend/README.md` y, en la T1 y la T6, `backend/README.md`.
 - **Sin cambios de FE011:** ADR-006, ADR-007, ADR-005, «Propósito del proyecto» y los patrones de interfaz están en la lista de conocimiento afectado de FE012, porque tratan del uso de los datos reales en la plataforma.
 - **Auditoría:** `python3 scripts/audit_vault.py` termina con código 0 (50 archivos, 0 errores). Ni el vault ni los README contienen teléfonos, nombres de la cuenta ni secretos.
+
+### `/test` (2026-10-12)
+
+- [VERIFY.md](VERIFY.md) completo: evidencia, matriz de los 28 criterios, fundamentación, registro de duda y bugs.
+- **Corregido en esta fase:**
+  - partición de los tramos que superan el tope de resultados de Genesys;
+  - insertada o actualizada sin depender de `xmax`.
+- **Tests nuevos:**
+  - ninguna fila de la base de datos contiene secretos, tokens ni URL firmadas (criterio 3);
+  - el servicio publica su OpenAPI (criterio 5).

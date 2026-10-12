@@ -49,12 +49,18 @@ def load(conn: psycopg.Connection, c: NormalizedConversation, analysis: Analysis
                              "DO UPDATE SET name = EXCLUDED.name, updated_at = now()", (genesys_id, name))
 
         columns = ", ".join(_CONVERSATION_COLUMNS)
-        updates = ", ".join(f"{name} = EXCLUDED.{name}" for name in _CONVERSATION_COLUMNS if name != "genesys_id")
-        # Cursor de tuplas: la conexión puede venir configurada con otra fábrica de filas (el ejecutor usa `dict_row`).
+        values = _conversation_values(c)
+        # Insertada o actualizada con semántica documentada: `ON CONFLICT DO NOTHING` solo devuelve (`RETURNING`) las
+        # filas que inserta; si no devuelve ninguna, ya existía y se actualiza. Cursor de tuplas: la conexión puede venir
+        # configurada con otra fábrica de filas (el ejecutor usa `dict_row`).
         inserted = conn.cursor(row_factory=tuple_row).execute(
             f"INSERT INTO conversation ({columns}) VALUES ({', '.join(['%s'] * len(_CONVERSATION_COLUMNS))}) "
-            f"ON CONFLICT (genesys_id) DO UPDATE SET {updates}, updated_at = now() RETURNING (xmax = 0)",
-            _conversation_values(c)).fetchone()[0]
+            "ON CONFLICT (genesys_id) DO NOTHING RETURNING id", values).fetchone() is not None
+        if not inserted:
+            editable = [name for name in _CONVERSATION_COLUMNS if name != "genesys_id"]
+            conn.execute(f"UPDATE conversation SET {', '.join(f'{name} = %s' for name in editable)}, updated_at = now() "
+                         "WHERE genesys_id = %s",
+                         [v for name, v in zip(_CONVERSATION_COLUMNS, values) if name != "genesys_id"] + [c.genesys_id])
 
         for table in ("segment", "turn", "topic_hit", "raw_payload"):
             conn.execute(f"DELETE FROM {table} WHERE conversation_id = %s", (c.id,))

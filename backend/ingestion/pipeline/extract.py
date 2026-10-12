@@ -8,6 +8,8 @@ from ingestion.pipeline.raw import RawConversation
 
 MAX_CHUNK = timedelta(days=7)  # la consulta de detalles de analítica rechaza intervalos más largos
 PAGE_SIZE = 100
+MAX_RESULTS = 10_000
+MIN_CHUNK = timedelta(hours=1)
 BULK_SIZE = 100
 QUERY = "/api/v2/analytics/conversations/details/query"
 TRANSCRIBED_MEDIA = {"voice", "message", "chat"}
@@ -40,16 +42,29 @@ def _channel(details: dict) -> str | None:
 
 
 def search(client: GenesysClient, start: datetime, end: datetime, channels: set[str] | list[str],
-           page_size: int = PAGE_SIZE, on_chunk=None) -> SearchResult:
+           page_size: int = PAGE_SIZE, on_chunk=None, max_results: int = MAX_RESULTS) -> SearchResult:
+    """Conversaciones del intervalo, en tramos de 7 días como máximo.
+
+    La consulta deja de paginar a partir de cierto número de resultados (10.000 según el foro de Genesys; el dato no está
+    en su referencia): un tramo con más resultados se parte en dos mitades, sin bajar de `MIN_CHUNK`, para no perder
+    conversaciones.
+    """
     result, seen = SearchResult(), set()
-    chunks = split_interval(start, end)
-    for number, (chunk_start, chunk_end) in enumerate(chunks, 1):
-        page, total, in_chunk = 1, None, 0
+    pending = split_interval(start, end)
+    done = 0
+    while pending:
+        chunk_start, chunk_end = pending.pop(0)
+        page, total, in_chunk, split = 1, None, 0, False
         while total is None or (page - 1) * page_size < total:
             body = client.post(QUERY, json={"interval": f"{_iso(chunk_start)}/{_iso(chunk_end)}", "order": "asc",
                                             "orderBy": "conversationStart",
                                             "paging": {"pageSize": page_size, "pageNumber": page}}) or {}
             total = body.get("totalHits", 0)
+            if page == 1 and total > max_results and chunk_end - chunk_start > MIN_CHUNK:
+                middle = chunk_start + (chunk_end - chunk_start) / 2
+                pending[:0] = [(chunk_start, middle), (middle, chunk_end)]
+                split = True
+                break
             rows = body.get("conversations", [])
             if not rows:
                 break
@@ -69,8 +84,11 @@ def search(client: GenesysClient, start: datetime, end: datetime, channels: set[
                 else:
                     result.found.append(details)
             page += 1
+        if split:
+            continue
+        done += 1
         if on_chunk:
-            on_chunk(number, len(chunks), chunk_start, chunk_end, in_chunk)
+            on_chunk(done, done + len(pending), chunk_start, chunk_end, in_chunk)
     return result
 
 

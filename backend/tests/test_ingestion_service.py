@@ -75,3 +75,12 @@ def test_running_the_migrations_again_keeps_the_data(pg_url):
     with psycopg.connect(pg_url) as conn:
         assert db.migrate(conn) == []
         assert conn.execute("SELECT name FROM queue").fetchall() == [("AIT_Transcription",)]
+
+
+def test_the_service_publishes_its_own_openapi_without_the_token():
+    client = _client()
+    spec = client.get("/openapi.json")
+    assert spec.status_code == 200 and spec.json()["info"]["title"] == "Servicio de ingesta de Genesys Cloud"
+    assert {"/health", "/conversations/{key}", "/download-flows", "/download-flows/{flow_id}/runs/{run_id}/log",
+            "/status", "/status/test"} <= set(spec.json()["paths"])
+    assert client.get("/docs").status_code == 200

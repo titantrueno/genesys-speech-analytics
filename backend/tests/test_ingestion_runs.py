@@ -226,3 +226,17 @@ def test_the_log_shows_instants_in_the_flow_timezone_without_microseconds(pg_url
     start = next(m for m in messages if m.startswith("Ejecución"))
     assert "12/10/2026 00:00 – 13/10/2026 00:00 (Europe/Madrid)" in start, start
     assert not any("+00:00" in m or "." in m.split("(")[0][-8:] for m in messages), messages
+
+
+def test_no_stored_row_contains_the_secret_a_token_or_a_signed_url(pg_url):
+    """Criterio 3: tampoco en la base de datos (respuestas originales, turnos, log…)."""
+    fake = make_fake()
+    run, _ = _run(pg_url, fake)
+    with psycopg.connect(pg_url) as conn:
+        tables = [r[0] for r in conn.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")]
+        dump = "\n".join(str(row[0]) for table in tables
+                         for row in conn.execute(f"SELECT row_to_json(t)::text FROM {table} t"))
+    assert run["counters"]["inserted"] == 10 and len(dump) > 100_000
+    for secret in [SECRET, *fake.issued_tokens, fake.bucket_host, "X-Amz-", "firma-"]:
+        assert secret not in dump, secret

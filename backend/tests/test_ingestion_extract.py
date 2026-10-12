@@ -1,4 +1,5 @@
 """Extracción de Genesys (FE011, T4; criterio 6): tramos de 7 días, paginación, omisiones y descarga tolerante."""
+import json
 import math
 from datetime import datetime, timedelta
 
@@ -83,3 +84,22 @@ def test_names_are_resolved_once_per_run():
     assert names.queue(queue) == names.queue(queue) == "AIT_Transcription"
     assert names.user("no-existe") is None
     assert fake.calls.count(("GET", f"/api/v2/routing/queues/{queue}")) == 1
+
+
+def test_a_chunk_over_the_result_cap_is_split_until_it_fits():
+    """Genesys deja de paginar a partir de cierto número de resultados (10.000 según su foro): un tramo que lo
+    supera se parte en dos, sin bajar de una hora, para no perder conversaciones."""
+    conversations = spread(fixtures(), 40, DAY_START, days=2)
+    fake = make_fake(conversations)
+    result = search(client_factory(fake)(), DAY_START, DAY_START + timedelta(days=2), {"voz", "chat"},
+                    page_size=5, max_results=12)
+    assert sorted(d["conversationId"] for d in result.found) == sorted(c.id for c in conversations)
+    bodies = [json.loads(r.content) for r in fake.requests if r.url.path == QUERY]
+    totals = {b["interval"]: sum(1 for c in conversations if _inside(c, b["interval"])) for b in bodies}
+    paged = {b["interval"] for b in bodies if b["paging"]["pageNumber"] > 1}
+    assert all(totals[interval] <= 12 for interval in paged)  # solo se pagina un tramo que cabe
+
+
+def _inside(conversation, interval: str) -> bool:
+    start, end = (datetime.fromisoformat(part.replace("Z", "+00:00")) for part in interval.split("/"))
+    return start <= datetime.fromisoformat(conversation.details["conversationStart"].replace("Z", "+00:00")) < end
