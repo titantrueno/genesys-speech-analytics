@@ -44,8 +44,7 @@ def followup_map(conversations: list[Conversation]) -> dict[str, bool]:
     from bisect import bisect_right
     by_customer = defaultdict(list)
     for conv in conversations:
-        if conv.customer_id is not None:
-            by_customer[conv.customer_id].append(conv.started_at)
+        by_customer[conv.customer_id].append(conv.started_at)
     for starts in by_customer.values():
         starts.sort()
     index = {}

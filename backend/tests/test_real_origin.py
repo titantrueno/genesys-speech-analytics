@@ -48,3 +48,24 @@ def test_without_postgres_data_sections_answer_503_and_configuration_keeps_worki
     assert real_api.get("/api/config").status_code == 200
     assert real_api.put("/api/config/sources", json={"origin": "sintetico"}).status_code == 200
     assert real_api.get("/api/conversations").status_code == 200
+
+
+# --- Casos límite del repositorio real (/test) ---
+
+def test_the_api_connection_to_postgres_is_read_only(real_api):
+    from app.data.real import real_repository
+    with real_repository()._connect() as conn:
+        with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
+            conn.execute("UPDATE conversation SET duration_s = 0")
+        with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
+            conn.execute("DELETE FROM turn")
+
+
+def test_a_changed_database_url_is_noticed_even_within_the_same_request(real_api, pg_url, monkeypatch):
+    from app.data.real import real_repository
+    repository = real_repository()
+    assert len(repository.conversations()) == FIXTURE_COUNT
+    monkeypatch.setenv("DATABASE_URL", "postgresql://nadie:nada@127.0.0.1:1/ninguna")
+    from app.data.repository import DataUnavailable
+    with pytest.raises(DataUnavailable):
+        repository.conversations()
