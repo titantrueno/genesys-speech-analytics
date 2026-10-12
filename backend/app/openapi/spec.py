@@ -21,7 +21,7 @@ from app.openapi import schemas as s
 from app.query.model import Query
 from app.routers.users import NewRoleIn, RoleIn, UserIn
 
-API_VERSION = "0.8.0"
+API_VERSION = "0.9.0"
 AUTH_VERSION_HEADER = "X-Auth-Version"
 
 DESCRIPTION = """

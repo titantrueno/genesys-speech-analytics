@@ -1,6 +1,6 @@
 # FE012 — Switch entre datos sintéticos y reales
 
-> Estado: **implementada** el 2026-10-12 (aprobada al pedir su implementación; pendiente de `/test`, `/review` y `/ship`). Nace de dividir la petición original de FE011. **Depende de [FE011](../FE011-ingesta-de-conversaciones-genesys/spec.md)**, que descarga y guarda las conversaciones reales, y también de FE001–FE006. Aplica FE007, FE008 y FE009.
+> Estado: **entregada** en `v0.9.0` el 2026-10-12 (aprobada al pedir su implementación). Nace de dividir la petición original de FE011. **Depende de [FE011](../FE011-ingesta-de-conversaciones-genesys/spec.md)**, que descarga y guarda las conversaciones reales, y también de FE001–FE006. Aplica FE007, FE008 y FE009.
 
 ## Objetivo
 
