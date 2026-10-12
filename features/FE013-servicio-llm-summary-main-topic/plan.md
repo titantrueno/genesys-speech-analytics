@@ -214,6 +214,14 @@
 - **Decisión:** `/api/flows/catalog` expone el origen de datos activo (`origin`), para que el editor desactive «Guardar en campos» con datos sintéticos sin pedir permisos de Configuración.
 - **Pendiente para T9:** recorrido en navegador con datos reales (necesita PostgreSQL y escribe summary y main topic en conversaciones de la base de desarrollo).
 
+## Notas de T9: recorrido en navegador con datos reales (2026-10-12)
+
+- **Hecho:** con `dev.sh` completo (puertos 18000/18001/18002/15173), origen real y la clave de Gemini: la plantilla «Generar summary y main topic» crea Sampling (2 filtros «está vacío»), Prompt (Gemini 3.5 Flash-Lite, JSON) y Output «Guardar en campos → Summary + Main topic»; «Validar» dice «El flujo es válido».
+- **Hecho:** las 13 conversaciones reales ya tenían summary y main topic (una ejecución de la persona usuaria a las 21:07 UTC). Sin filtros, con 3 conversaciones y sin «Sobrescribir»: ejecución `ok` en 2 s, 3 llamadas reales, 0 rechazadas, recuentos «0 escritos · 3 omitidos» en los dos campos, y la base sin cambios (`max(updated_at)` igual). El detalle muestra el summary y el main topic guardados con el resto del análisis pendiente.
+- **Hallazgo y corrección:** las 2 conversaciones de voz sin transcripción tenían un summary inventado. El runner las rechaza ahora sin llamar al LLM (test de regresión). Los valores inventados de la ejecución anterior siguen en la base de desarrollo.
+- **Hallazgo y corrección:** el aviso de análisis pendiente del detalle seguía diciendo que el summary y el main topic llegarían más tarde; ahora solo nombra lo que falta (test).
+- **Entorno:** la ventana de Chrome estaba oculta; el inicio de sesión y los clics se hicieron por script en la página (usuario demo local) y la ejecución terminada se recargó navegando dentro de la app ([lecciones](../../vault/aprendizaje/lecciones-construccion-plataforma.md), 47).
+
 ## Riesgos del plan
 
 - **Comportamiento de las suites:** hoy hay tests de ingesta que esperan `updated` al repetir una descarga. Con `overwrite=false` por defecto hay que cambiarlos a `overwrite=true` de forma explícita, no borrarlos (T1).
@@ -222,4 +230,4 @@
 
 ## Progreso
 
-- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [x] T6 · [x] T7 · [x] T8 · [ ] T9
+- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [x] T6 · [x] T7 · [x] T8 · [x] T9

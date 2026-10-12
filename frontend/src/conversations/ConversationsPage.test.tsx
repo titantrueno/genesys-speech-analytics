@@ -31,7 +31,7 @@ describe('listado de conversaciones', () => {
     await openList()
     const table = await screen.findByRole('table', { name: 'Conversaciones' })
     const full = fakeId('1CO', 1000)
-    const short = within(table).getByText(full.slice(0, 12))
+    const short = await within(table).findByText(full.slice(0, 12))  // las filas llegan después que la tabla
     expect(short).toHaveAttribute('title', full)
     expect(within(table).queryByText(full)).toBeNull()
   })

@@ -25,15 +25,19 @@ export function AnalysisPanel({ conversation, activeTurn, onSelectTurn }: Props)
   const a = conversation.analysis
   const checks = (catalog?.compliance_checks ?? []).filter((check) => check.code in a.compliance)
 
-  // Conversación real sin el análisis de la plataforma (FE012): solo lo que da Genesys.
+  // Conversación real sin el análisis de la plataforma (FE012): solo lo que da Genesys. Un flujo de insights puede
+  // haber escrito ya el summary y el main topic (FE013): el aviso solo nombra lo que falta.
   if (a.pending) {
+    const missing = [...(a.summary ? [] : ['el summary']), ...(a.main_topic ? [] : ['el main topic']),
+      'la resolución', 'el cumplimiento', 'las puntuaciones']
+    const sentence = `${missing.slice(0, -1).join(', ')} y ${missing.at(-1)} llegarán con el análisis de la plataforma.`
     return (
       <aside aria-label="Análisis" className="rounded-xl border border-slate-200 bg-white">
         <Section title="Resultado">
           <p className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-600">
             <PendingText className="text-sm font-medium" />
             <span className="mt-1 block">
-              El summary, el main topic, la resolución, el cumplimiento y las puntuaciones llegarán con el análisis de la plataforma.
+              {sentence.charAt(0).toUpperCase() + sentence.slice(1)}
             </span>
           </p>
           <dl className="mt-2">

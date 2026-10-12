@@ -127,8 +127,13 @@ def test_a_one_call_flow_writes_both_fields_visible_in_the_next_request(wired, l
     flow = flow_with(api, payload)
     snapshot = _finished(api, flow, run(api, flow)["id"])
     assert snapshot["status"] == "ok", snapshot["nodes"]
-    assert len(llm.requests) == 4
-    written = [row["conversation"]["id"] for row in next(iter(snapshot["outputs"].values()))["result"]["rows"]]
+    rows = next(iter(snapshot["outputs"].values()))["result"]["rows"]
+    assert len(rows) == 4
+    # Una conversación sin transcripción no se envía al LLM: queda rechazada y sin escribir (hallazgo de T9).
+    empty = [r for r in rows if r["states"]["summary"] == "rechazado"]
+    assert all("no tiene transcripción" in r["reason"] for r in empty)
+    written = [r["conversation"]["id"] for r in rows if r["states"]["summary"] == "escrito"]
+    assert len(llm.requests) == len(written) == 4 - len(empty) > 0
     listed = api.get("/api/conversations", params={**QS, "main_topic": "comisiones", "page_size": 100}).json()
     assert {item["id"] for item in listed["items"]} == set(written)
     detail = api.get(f"/api/conversations/{written[0]}").json()

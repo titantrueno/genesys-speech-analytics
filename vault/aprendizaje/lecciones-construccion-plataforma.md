@@ -60,6 +60,9 @@ Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009, FE006, FE010 y F
 42. **FE012:** una reconstrucción del índice en un hilo compite por el procesador y encarecía las peticiones medidas a la vez: el test de 500 ms falló solo al ejecutarse tras otros. Se mide en régimen estable.
 43. **FE012:** el informe de un flujo (`build_report`) asumía main topic y sentimiento en todas las conversaciones; solo lo destapó ejecutar el flujo completo sobre datos reales.
 44. En macOS, `DataUnavailable.tsx` y `dataUnavailable.ts` colisionaban al resolver imports: no nombrar dos módulos que solo difieren en mayúsculas.
+45. **FE013:** la forma REST de la guía de Gemini para pedir JSON (`responseFormat.text`) respondía `400` contra la API real; los tests con `MockTransport` solo comprobaban lo que el adaptador enviaba. Lo destapó una llamada real con la clave de la persona usuaria.
+46. **FE013:** dos conversaciones de voz sin transcripción recibieron un summary y un main topic inventados por el LLM, distintos en cada ejecución. Ningún test enviaba una conversación vacía; lo destapó comparar en el navegador el summary guardado con el recién generado.
+47. **FE013:** con la ventana de Chrome oculta (`visibilityState: hidden`), la extensión no entregaba el teclado y TanStack Query dejaba de sondear la ejecución: parecía un fallo de la aplicación. Rellenar con el `setter` nativo y navegar dentro de la app lo evitó.
 
 ## Causa
 
@@ -107,6 +110,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 
 ## Acción preventiva
 
+- FE013: el runner del LLM rechaza sin llamar al proveedor una conversación sin texto si la plantilla usa `{{transcripcion}}`; los adaptadores se validan con una llamada real cuando hay clave; en el navegador, antes de dudar de la app, comprobar `document.visibilityState`.
 - FE011: pruebas con servidores reales en puertos propios (18000 y 18001), parando cada proceso por su PID; `datetime-local` se prueba con `fireEvent.change`; las funciones que reciben una conexión fijan su propia fábrica de filas (`tuple_row`); los sondeos guardan la respuesta completa en un fichero antes de sacar conclusiones.
 - Tests de regresión añadidos para los puntos 5, 6, 7 y 9 (propiedad de 500 frases).
 - Patrón de tabla navegable en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
@@ -130,5 +134,6 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Verificación de FE010](../../features/FE010-especificacion-openapi-en-configuracion/VERIFY.md)
 - [Plan y evidencia de FE011](../../features/FE011-ingesta-de-conversaciones-genesys/plan.md)
 - [Plan y evidencia de FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/plan.md)
+- [Plan y evidencia de FE013](../../features/FE013-servicio-llm-summary-main-topic/plan.md)
 - [swagger-ui-react · README](https://github.com/swagger-api/swagger-ui/blob/master/flavors/swagger-ui-react/README.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

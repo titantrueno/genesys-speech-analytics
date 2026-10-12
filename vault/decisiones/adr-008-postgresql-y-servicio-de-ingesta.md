@@ -57,6 +57,11 @@ FE011 trae conversaciones reales de una organización de Genesys Cloud: transcri
 - Las transcripciones, los teléfonos (ANI y DNIS) y el `externalTag` se guardan en claro, por decisión de la persona usuaria para esta cuenta de laboratorio. Las fixtures de los tests los llevan. Para producción habría que revisar esta decisión, la retención y el cifrado.
 - La plataforma aún no usa las conversaciones reales. Cambiar entre datos sintéticos y reales es [FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/spec.md), que leerá con la misma estructura.
 
+## Ampliaciones
+
+- **FE013 (2026-10-12) · «Sobrescribir»:** los flujos de descarga tienen la casilla `overwrite` (migración `0003`, `false` por defecto; la ejecución copia el valor al crearse). Sin marcar, antes de descargar una conversación se comprueba si ya está en la base; si está, no se llama a Genesys ni se toca nada (contador `skipped_existing`). Marcada, se sustituye entera y su análisis vuelve a `pendiente`, también si estaba `completo`, borrando summary, main topic y su trazabilidad. **Cambio de comportamiento:** volver a descargar ya no actualiza las conversaciones existentes salvo con «Sobrescribir».
+- **FE013 · escritura del LLM:** el servicio de ingesta sigue siendo el único escritor. `POST /analysis/fields` escribe summary y main topic generados por un flujo (solo campos vacíos salvo `overwrite`), con la trazabilidad en `analysis.llm_meta` (migración `0004`) y sin cambiar el `status`. La API lee summary y main topic aunque el resto del análisis siga pendiente. Ver [ADR-009](adr-009-servicio-llm-con-proveedores-intercambiables.md).
+
 ## Fuentes
 
 - [Spec FE011](../../features/FE011-ingesta-de-conversaciones-genesys/spec.md)

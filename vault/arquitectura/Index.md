@@ -15,5 +15,5 @@ Describir la estructura técnica del proyecto, sus límites y la relación entre
 ## Estado inicial
 
 - [Arquitectura de la plataforma](arquitectura-de-la-plataforma.md)
-- [Contrato de la API entre front y back](contrato-api-front-back.md) — las 58 operaciones, autenticación, errores y consumo desde el front.
+- [Contrato de la API entre front y back](contrato-api-front-back.md) — las 72 operaciones, autenticación, errores y consumo desde el front.
 - [Arquitectura del harness](arquitectura-del-harness.md)

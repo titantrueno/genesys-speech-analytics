@@ -32,6 +32,7 @@ Atajo: `./scripts/dev.sh` ejecuta los pasos 1 a 3 (y la web) y lo para todo con 
 3. **API:** `.venv/bin/uvicorn app.main:app --port 8000`, con `INGESTION_URL` si el servicio no está en `http://localhost:8001`.
 4. **Probar la conexión:** en la web, Configuración → Fuentes de datos → «Probar conexión» (con `config:edit`).
 5. **Descargar:** en Flujos de insights, «Nuevo flujo» → «Descarga de transcripciones». Después, «Ejecutar ahora» o una programación.
+6. **Redescargar (FE013):** sin «Sobrescribir», una conversación que ya está en la base no se descarga (log «Ya existe: no se descarga», recuento «Ya existentes»). Para recoger cambios o reprocesos de Genesys, ejecuta un flujo con «Sobrescribir»: sustituye la conversación y **borra** su summary y main topic generados por el LLM.
 
 ## Verificación
 
@@ -47,7 +48,8 @@ Atajo: `./scripts/dev.sh` ejecuta los pasos 1 a 3 (y la web) y lo para todo con 
 | `error` · autenticación · «Credenciales de Genesys no válidas» | El cliente OAuth no es válido o le faltan permisos | Revisar `GENESYS_*` en el `.env` y el rol del cliente OAuth en Genesys; probar la conexión |
 | `error` · «Sin permiso en Genesys para GET …» | Al cliente OAuth le falta un permiso de esa ruta | Añadir el permiso al rol del cliente en Genesys |
 | `aviso` · «Conversación sin transcripción» | No hay frases (grabación o transcripción ausente) | Normal si la grabación falló; la conversación se guarda con su analítica |
-| `aviso` · «Transcripción parcial: intervino …» | El agente o el bot hablaron y no tienen frases | Suele deberse a incidencias de grabación; una descarga posterior la actualiza si Genesys la completa |
+| `aviso` · «Transcripción parcial: intervino …» | El agente o el bot hablaron y no tienen frases | Suele deberse a incidencias de grabación; una descarga posterior **con «Sobrescribir»** la actualiza si Genesys la completa |
+| `info` · «Ya existe: no se descarga» | La conversación ya estaba en la base y el flujo no sobrescribe | Normal; usar «Sobrescribir» solo para redescargar |
 | `aviso` · «N mensaje(s) no entregado(s)» | El agente escribió cuando el cliente ya se había ido | Informativo; el turno se guarda con su texto, marcado como no entregado |
 | `aviso` · «Omitida: en curso» | La conversación no había terminado | Se recoge en una descarga posterior |
 | `aviso` · «Ejecución programada de las HH:MM omitida…» | A esa hora seguía otra ejecución del mismo flujo | Si se repite, espaciar la programación |

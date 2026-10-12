@@ -16,3 +16,4 @@ Documentar cómo operar, observar y recuperar el proyecto en entornos reales.
 
 - [Estado operativo inicial](estado-operativo.md)
 - [Runbook de la ingesta de Genesys](runbook-ingesta-de-genesys.md) — PostgreSQL, servicio de ingesta, prueba de conexión y diagnóstico de una descarga (FE011).
+- [Runbook del servicio de LLM](runbook-servicio-llm.md) — claves de los proveedores, «Probar», summary y main topic con un flujo y diagnóstico (FE013).

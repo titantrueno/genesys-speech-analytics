@@ -30,6 +30,8 @@ python3 -m venv .venv
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Orígenes permitidos (separados por comas). |
 | `INGESTION_URL` | `http://localhost:8001` | Dónde escucha el servicio de ingesta (FE011). |
 | `INGESTION_TOKEN` | — | Token compartido con el servicio de ingesta (FE011). |
+| `LLM_URL` | `http://localhost:8002` | Dónde escucha el servicio de LLM (FE013). |
+| `LLM_TOKEN` | — | Token compartido con el servicio de LLM (FE013). |
 
 ## Servicio de ingesta
 
@@ -40,10 +42,23 @@ docker compose up -d --wait              # desde la raíz: PostgreSQL 16 en 127.
 .venv/bin/uvicorn ingestion.main:app --port 8001
 ```
 
-- Lee del `.env` de la raíz (o del entorno, que tiene prioridad) solo `DATABASE_URL`, `INGESTION_TOKEN` y `GENESYS_*`. La API lee solo `INGESTION_URL`, `INGESTION_TOKEN` y, para el origen de datos `real` (FE012, solo lectura), `DATABASE_URL` (`app/envfile.py`); nunca `GENESYS_*`.
+- Lee del `.env` de la raíz (o del entorno, que tiene prioridad) solo `DATABASE_URL`, `INGESTION_TOKEN` y `GENESYS_*`. La API lee solo `INGESTION_URL`, `INGESTION_TOKEN`, `LLM_URL`, `LLM_TOKEN` y, para el origen de datos `real` (FE012, solo lectura), `DATABASE_URL` (`app/envfile.py`); nunca `GENESYS_*` ni las claves de los proveedores de LLM.
+- `POST /analysis/fields` (FE013) escribe summary y main topic generados por un flujo de insights; es el único escritor de PostgreSQL.
 - Toda ruta exige `Authorization: Bearer <INGESTION_TOKEN>`, salvo `/docs` y `/openapi.json`. No declara CORS: solo la llama la API.
 - Al arrancar aplica las migraciones pendientes de `ingestion/migrations/` (SQL numerado, registrado en `schema_migrations`).
 - `GET /health`: `200` con PostgreSQL disponible, `503` si no.
+
+## Servicio de LLM
+
+Proceso aparte (`llm/`, FE013, [ADR-009](../vault/decisiones/adr-009-servicio-llm-con-proveedores-intercambiables.md)) que llama a Gemini, OpenAI o Anthropic. Como el de ingesta, solo importa de `app` los módulos `ids`, `clock` y `envfile`.
+
+```bash
+.venv/bin/uvicorn llm.main:app --port 8002
+```
+
+- Lee solo `LLM_TOKEN`, `LLM_MAX_CONCURRENCY` y las claves `GEMINI_API_KEY`, `OPENAI_API_KEY` y `ANTHROPIC_API_KEY`.
+- `GET /health` (sin token) dice qué proveedores tienen clave; `POST /complete` y `POST /providers/{nombre}/test` exigen `Authorization: Bearer <LLM_TOKEN>`.
+- Proveedores en `llm/providers/` (registro en `__init__.py`); los tests no usan red (`httpx.MockTransport`).
 
 ### Tests con PostgreSQL
 
@@ -135,7 +150,7 @@ app/
   services/          # filtros y cálculo de KPIs
   query/             # modelo, campos, motor, intérprete y consultas guardadas del explorador
   search/            # búsqueda semántica: interfaz SearchEngine, TF-IDF, diccionario de sinónimos (ADR-005)
-  flows/             # flujos de insights: modelo JSON, reglas, sampling, prompt simulado, outputs y ejecuciones (ADR-006)
+  flows/             # flujos de insights: modelo JSON, reglas, sampling, prompts (simulados o con LLM), outputs, plantillas y ejecuciones (ADR-006, ADR-009)
   config/            # configuración global: store, taxonomía, checks y cumplimiento efectivo, KPIs (ADR-007)
   privacy/           # enmascarado de datos personales
   routers/           # auth, metrics, conversations, query, search, flows, config, users

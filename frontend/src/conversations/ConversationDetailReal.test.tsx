@@ -13,10 +13,10 @@ beforeEach(() => {
 
 const DETAILS = [realVoiceDetail, realChatDetail, realUndeliveredDetail, realReconnectDetail]
 
-async function open(id: string) {
+async function open(id: string, details: Array<{ id: string }> = DETAILS) {
   signedInAs(USERS.viewer, {
     'GET /api/catalog': () => ({ status: 200, body: realCatalog }),
-    ...Object.fromEntries(DETAILS.map((d) => [`GET /api/conversations/${d.id}`, () => ({ status: 200, body: d })])),
+    ...Object.fromEntries(details.map((d) => [`GET /api/conversations/${d.id}`, () => ({ status: 200, body: d })])),
   })
   renderApp(`/conversaciones/${id}`)
   await screen.findByRole('heading', { level: 1, name: new RegExp(id) })
@@ -50,6 +50,15 @@ describe('detalle de una llamada real bot → agente', () => {
     expect(within(analysis).queryByText(/CSAT predicho/)).not.toBeInTheDocument()
     expect(within(analysis).queryByText(/0,0 \/ 5/)).not.toBeInTheDocument()
     expect(within(genesys()).getByText('Análisis pendiente')).toBeInTheDocument()
+  })
+
+  it('con summary y main topic de un flujo (FE013), el aviso de pendiente ya no los incluye', async () => {
+    const written = { ...realVoiceDetail, analysis: { ...realVoiceDetail.analysis, summary: 'Resumen generado por el LLM.', main_topic: 'cajeros' } }
+    await open(REAL_VOICE_ID, [written])
+    expect(screen.getByRole('region', { name: 'Resumen de la conversación' })).toHaveTextContent('Resumen generado por el LLM.')
+    const analysis = screen.getByRole('complementary', { name: 'Análisis' })
+    expect(analysis).toHaveTextContent('La resolución, el cumplimiento y las puntuaciones llegarán con el análisis de la plataforma.')
+    expect(analysis).not.toHaveTextContent(/El summary, el main topic/)
   })
 
   it('el panel de Genesys muestra teléfonos, etiqueta, recorrido, wrap-up, cierre y contención', async () => {

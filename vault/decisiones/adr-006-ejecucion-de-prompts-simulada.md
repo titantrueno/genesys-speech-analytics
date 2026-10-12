@@ -46,6 +46,7 @@ FE004 permite diseñar flujos `Sampling → Prompt → Output` y ejecutarlos. El
 ## Ampliaciones
 
 - **FE012 (2026-10-12):** con conversaciones reales sin analizar, `{{summary}}` y `{{main_topic}}` llegan vacíos y `{{metadatos}}` incluye la analítica de Genesys (ANI, DNIS, `externalTag`, wrap-up, contención, tiempos, temas). `{{transcripcion}}` usa siempre texto enmascarado e incluye los turnos del bot, con «[no entregado]» en los mensajes no entregados. La validación del flujo avisa (`analysis_pending`, severidad `warning`) sin bloquear la ejecución.
+- **FE013 (2026-10-12):** el punto de extensión se usa. Un nodo Prompt con proveedor real (Gemini, OpenAI o Anthropic) se ejecuta con `LlmPromptRunner` a través del servicio de LLM; sin proveedor o con `simulado`, sigue el `MockPromptRunner` de esta decisión. La respuesta se valida por formato, las rechazadas o fallidas se cuentan por nodo y se excluyen de los outputs, y los prompts reales corren en paralelo (4). Ver [ADR-009](adr-009-servicio-llm-con-proveedores-intercambiables.md).
 
 ## Fuentes
 

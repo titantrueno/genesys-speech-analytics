@@ -22,3 +22,4 @@ Registrar decisiones relevantes, el contexto que las motivó y sus consecuencias
 - [ADR-006 — Ejecución de prompts simulada con punto de extensión para un LLM real](adr-006-ejecucion-de-prompts-simulada.md)
 - [ADR-007 — Configuración global en memoria, leída en caliente, y enmascarado de PII por defecto](adr-007-configuracion-global-y-enmascarado.md)
 - [ADR-008 — PostgreSQL y servicio de ingesta de Genesys aparte](adr-008-postgresql-y-servicio-de-ingesta.md)
+- [ADR-009 — Servicio de LLM aparte con proveedores intercambiables](adr-009-servicio-llm-con-proveedores-intercambiables.md)

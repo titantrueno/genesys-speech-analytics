@@ -2,7 +2,7 @@
 
 Plataforma web de analítica de conversaciones para la atención al cliente de un banco. Trabaja solo sobre **transcripciones de llamadas y chats** (nunca audio): dashboards de KPIs con drill-down al listado de conversaciones y un detalle de cada conversación como chat, con su análisis.
 
-> Por defecto la plataforma muestra datos **sintéticos**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). Un servicio de ingesta aparte (FE011) descarga conversaciones **reales** de Genesys Cloud a PostgreSQL y, desde FE012, **Configuración → Fuentes de datos** cambia toda la plataforma entre los dos orígenes. Con datos reales el análisis de la plataforma (summary, main topic, CSAT…) aparece como pendiente. La API lee PostgreSQL con `DATABASE_URL` (solo lectura) y el origen vuelve a sintético al reiniciarla.
+> Por defecto la plataforma muestra datos **sintéticos**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). Un servicio de ingesta aparte (FE011) descarga conversaciones **reales** de Genesys Cloud a PostgreSQL y, desde FE012, **Configuración → Fuentes de datos** cambia toda la plataforma entre los dos orígenes. Con datos reales el análisis de la plataforma (summary, main topic, CSAT…) aparece como pendiente; desde FE013, un flujo de insights puede generar summary y main topic con un LLM (Gemini por defecto, u OpenAI o Anthropic) y guardarlos en las conversaciones. La API lee PostgreSQL con `DATABASE_URL` (solo lectura) y el origen vuelve a sintético al reiniciarla.
 
 ## Estructura
 
@@ -18,13 +18,13 @@ Plataforma web de analítica de conversaciones para la atención al cliente de u
 ## Entorno local con un solo comando
 
 ```bash
-./scripts/dev.sh             # PostgreSQL (Docker/Colima) + ingesta + API + web
+./scripts/dev.sh             # PostgreSQL (Docker/Colima) + ingesta + LLM (si hay LLM_TOKEN) + API + web
 ./scripts/dev.sh --no-db     # solo API + web, sin Docker
 ./scripts/dev.sh --reload    # uvicorn con --reload
-API_PORT=18000 INGESTION_PORT=18001 WEB_PORT=15173 ./scripts/dev.sh   # puertos propios
+API_PORT=18000 INGESTION_PORT=18001 LLM_PORT=18002 WEB_PORT=15173 ./scripts/dev.sh   # puertos propios
 ```
 
-Por defecto: web en `:5173`, API en `:8000`, ingesta en `:8001`. El script comprueba antes que los puertos (y el 5432) estén libres y, si no, aborta sin lanzar nada; arranca Colima si el daemon no responde; crea el venv y hace `npm install` si faltan; espera a que cada servicio responda y escribe sus logs en `.dev-logs/` (ignorado por git).
+Por defecto: web en `:5173`, API en `:8000`, ingesta en `:8001`, LLM en `:8002`. El script comprueba antes que los puertos (y el 5432) estén libres y, si no, aborta sin lanzar nada; arranca Colima si el daemon no responde; crea el venv y hace `npm install` si faltan; espera a que cada servicio responda y escribe sus logs en `.dev-logs/` (ignorado por git).
 
 **Ctrl+C lo para todo**: cada servicio va en su propio grupo de procesos (se mata con sus hijos), se hace `docker compose stop` + `rm` del contenedor de PostgreSQL (el volumen `pgdata` se conserva) y se ejecuta `colima stop` solo si lo arrancó el propio script. Si un servicio muere, el script para el resto. Al terminar avisa si algún puerto sigue ocupado. Los tests con PostgreSQL de `ci.sh` dejan el contenedor levantado; `dev.sh` lo para al salir.
 
@@ -61,6 +61,18 @@ cd backend
 ```
 
 El esquema se crea o actualiza al arrancar el servicio. Las descargas se crean en «Flujos de insights» (tipo «Descarga de transcripciones») y el estado del conector está en Configuración → Fuentes de datos. Ver [backend/README.md](backend/README.md#servicio-de-ingesta) y el [runbook](vault/operaciones/runbook-ingesta-de-genesys.md).
+
+### Servicio de LLM (FE013)
+
+Conecta los flujos de insights con un LLM para generar summary y main topic. Es otro proceso aparte y el único que lee las claves de los proveedores. En el `.env`: `LLM_TOKEN` y la clave de cada proveedor que uses (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
+
+```bash
+# Terminal 4 — servicio de LLM en http://localhost:8002 (/health sin token)
+cd backend
+.venv/bin/uvicorn llm.main:app --port 8002
+```
+
+El proveedor por defecto se elige en Configuración → Modelos de IA, que muestra qué proveedores tienen clave y permite «Probar». La plantilla «Generar summary y main topic» de «Nuevo flujo» obtiene los dos campos con una llamada por conversación. Ver el [runbook](vault/operaciones/runbook-servicio-llm.md).
 
 ## Verificación
 

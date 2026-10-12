@@ -45,6 +45,7 @@ FE005 hace editables la taxonomía, los checks de cumplimiento, los umbrales de 
 ## Ampliaciones
 
 - **FE012 (2026-10-12):** el **origen de datos** (`sintetico` o `real`) es una sección más (`fuentes`), global, auditada, en memoria y con `sintetico` por defecto. El ANI, el DNIS y el `externalTag` **no se enmascaran** en este desarrollo (se muestran, se buscan y se filtran); el texto de los turnos y las frases de los temas sí. Con datos reales se pueden contrastar los formatos de PII que se escapan: queda como hipótesis a validar con conversaciones de más días.
+- **FE013 (2026-10-12):** «Modelos de IA» ya no es una lista mock: proveedores Gemini (por defecto, `gemini-3.5-flash-lite`), OpenAI, Anthropic y Simulado, con el estado de las claves del servicio de LLM y «Probar» ([ADR-009](adr-009-servicio-llm-con-proveedores-intercambiables.md)). Las claves nunca están en la configuración. **Taxonomía:** borrar un main topic comprueba también las conversaciones reales de PostgreSQL, sea cual sea el origen activo (`409` con el recuento de cada origen; `503` si la base no responde), porque un flujo puede haberlo escrito en ellas. Los prompts que salen hacia un proveedor externo usan el texto enmascarado de esta decisión.
 
 ## Fuentes
 

@@ -13,6 +13,7 @@ from app.flows import catalog
 from app.flows.model import PromptConfig
 from app.flows.prompting import (MockPromptRunner, PromptFailed, PromptRejected, PromptRunner, PromptUnavailable,
                                  render_template)
+from app.flows.rules import template_variables
 from app.llm_client import UNAVAILABLE, LlmClient, LlmError, LlmUnavailable
 from app.models import Conversation
 from app.text import normalize_text
@@ -100,6 +101,9 @@ class LlmPromptRunner:
         self.client = client
 
     def run(self, config: PromptConfig, conversation: Conversation, previous: Any | None) -> Any:
+        # Sin transcripción no hay nada que resumir: el LLM inventaría la respuesta (comprobado en T9 de FE013).
+        if "transcripcion" in template_variables(config.template) and not any(t.text.strip() for t in conversation.turns):
+            raise PromptRejected("La conversación no tiene transcripción: no se envía al LLM")
         output: dict[str, Any] = {"type": config.output.type}
         if config.output.type == "etiqueta":
             output["labels"] = list(config.output.labels)

@@ -27,11 +27,12 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 | Auditoría | `backend/app/audit.py` | Registro `1AU` compartido por la configuración (FE005) y por usuarios y roles (FE006). |
 | Identificadores | `backend/app/ids.py` | `PREFIJO-UUID` (ver el [registro](../ingenieria/registro-de-identificadores.md)). |
 | Búsqueda semántica | `backend/app/search/` | Índice por fragmentos construido al arrancar, interfaz `SearchEngine`, TF-IDF y diccionario de sinónimos (ver [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md)). |
-| Flujos de insights | `backend/app/flows/` | Formato JSON del flujo, integridad y reglas de conexión, validación, sampling, prompt simulado detrás de `PromptRunner`, outputs y ejecuciones en segundo plano (ver [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)). |
+| Flujos de insights | `backend/app/flows/` | Formato JSON del flujo, integridad y reglas de conexión, validación, sampling, prompts simulados o con LLM detrás de `PromptRunner`, outputs (también «Guardar en campos»), plantillas y ejecuciones en segundo plano (ver [ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md) y [ADR-009](../decisiones/adr-009-servicio-llm-con-proveedores-intercambiables.md)). |
 | Configuración | `backend/app/config/` | Instantánea global versionada (`store.py`, audita en `app/audit.py`), secciones Pydantic (`model.py`), taxonomía, checks y cumplimiento efectivo, y KPIs (ver [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). |
 | Privacidad | `backend/app/privacy/masking.py` | Enmascarado de PII por patrones sobre una copia de cada conversación. |
 | Servicio de ingesta (FE011) | `backend/ingestion/` | Proceso aparte (`uvicorn ingestion.main:app`) y único que lee `GENESYS_*`. Descarga, normaliza y guarda conversaciones de Genesys en PostgreSQL, y ejecuta los flujos de descarga y su programador (ver [ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md)). |
-| PostgreSQL (FE011) | `docker-compose.yml`, `backend/ingestion/migrations/` | Conversaciones reales, tramos, turnos, temas, análisis pendiente, respuestas originales, flujos de descarga, ejecuciones y logs. |
+| Servicio de LLM (FE013) | `backend/llm/` | Proceso aparte (`uvicorn llm.main:app`, puerto 8002) y único que lee las claves de Gemini, OpenAI y Anthropic. Proveedores intercambiables detrás de `LlmProvider`, reintentos y límite de concurrencia (ver [ADR-009](../decisiones/adr-009-servicio-llm-con-proveedores-intercambiables.md)). |
+| PostgreSQL (FE011) | `docker-compose.yml`, `backend/ingestion/migrations/` | Conversaciones reales, tramos, turnos, temas, análisis (con summary y main topic escritos por flujos y su trazabilidad en `llm_meta`), respuestas originales, flujos de descarga, ejecuciones y logs. |
 | Front | `frontend/src/` | Sesión, navegación por permisos, dashboards, listado, detalle, explorador, búsqueda semántica, diseñador de flujos, configuración y usuarios y roles. |
 
 ### Flujo de datos
@@ -143,6 +144,15 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Análisis pendiente:** una conversación real tiene `analysis.pending = true`. Los KPIs que dependen del análisis (resolución, escalado, FCR, CSAT, esfuerzo, cumplimiento, riesgo de abandono) y el desglose por main topic salen como pendientes; volumen, AHT (`handle_s` de las atendidas por un agente), sentimiento y % de negativas se calculan con Genesys, con `based_on`.
 - **Pendiente para producción:** la API se conecta con el mismo usuario que el servicio de ingesta; la solo lectura se impone en la sesión, no con un rol de base de datos. Conviene un rol `SELECT` propio ([revisión de FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/REVIEW.md)).
 - Los cachés derivados del dataset se indexan por origen y versión (`cached_by_version`) o por identidad del objeto, nunca por identificador solo.
+
+### Servicio de LLM, summary y main topic (FE013, [ADR-009](../decisiones/adr-009-servicio-llm-con-proveedores-intercambiables.md))
+
+- **Procesos:** el front habla con la API; la API llama al servicio de LLM (`app/llm_client.py`, `LLM_TOKEN`) para los prompts y para el estado de Configuración → Modelos de IA, y al servicio de ingesta para escribir; el servicio de LLM habla con el proveedor.
+- **Prompt:** `RoutingPromptRunner` elige `MockPromptRunner` (sin proveedor o `simulado`) o `LlmPromptRunner`, que renderiza con texto enmascarado, añade las instrucciones del formato y valida la respuesta. `temperature` solo va a los modelos que la admiten.
+- **Una llamada, dos campos:** Prompt JSON con `summary` y `main_topic` (con valores permitidos = main topics activos, que el proveedor recibe como `enum`) y Output «Guardar en campos» con dos asignaciones.
+- **Escritura:** lotes de 100 a `POST /analysis/fields` del servicio de ingesta; `main_topic` por código; solo campos vacíos salvo `overwrite`; trazabilidad en `analysis.llm_meta`. `RealRepository` lee summary y main topic aunque el resto del análisis siga pendiente.
+- **Validación del editor:** proveedor sin clave, modelo ajeno y servicio no disponible (consulta `/health` una vez por validación); reglas de asignación y «solo con datos reales» (`/api/flows/catalog` expone `origin`).
+- **Plantillas:** `app/flows/templates.py` construye los tres flujos con la taxonomía activa y el proveedor por defecto.
 
 ### Rendimiento
 

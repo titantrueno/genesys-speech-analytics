@@ -220,6 +220,21 @@ def test_the_prompt_sent_to_the_llm_is_always_masked(llm):
     assert "[DNI]" in prompt and "[TELÉFONO]" in prompt
 
 
+def test_a_conversation_without_transcript_is_rejected_without_calling_the_llm(llm):
+    # Comprobado en navegador (T9): con la transcripción vacía, el LLM inventa un summary distinto en cada llamada.
+    conv = get_dataset()[0].model_copy(update={"turns": []})
+    config = PromptConfig.model_validate({**GEMINI_LABEL, "output": {"type": "texto"}})
+    with pytest.raises(PromptRejected, match="no tiene transcripción"):
+        LlmPromptRunner(llm).run(config, conv, None)
+    assert llm.requests == []
+    blank = get_dataset()[0].model_copy(update={"turns": [t.model_copy(update={"text": "  "}) for t in get_dataset()[0].turns]})
+    with pytest.raises(PromptRejected):
+        LlmPromptRunner(llm).run(config, blank, None)
+    # Sin {{transcripcion}} en la plantilla, la conversación se envía igual (puede bastar con los metadatos).
+    LlmPromptRunner(llm).run(config.model_copy(update={"template": "Resume: {{metadatos}}"}), conv, None)
+    assert len(llm.requests) == 1
+
+
 @pytest.mark.parametrize("answer, expected", [("  El cliente bloquea su tarjeta.  ", "El cliente bloquea su tarjeta."),
                                               ("   ", PromptRejected)])
 def test_text_answers_are_trimmed_and_cannot_be_empty(llm, answer, expected):

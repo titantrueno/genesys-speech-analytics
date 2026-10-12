@@ -12,7 +12,7 @@ updated: 2026-10-12
 
 ## Resumen
 
-Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.7.0` más FE011: **69 operaciones** sobre 52 rutas, en 9 dominios (más la sonda de salud). FE011 añade 11: los flujos de descarga de Genesys y el conector real. Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
+Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.7.0` más FE011, FE012 y FE013: **72 operaciones**, en 9 dominios (más la sonda de salud). FE011 añade 11: los flujos de descarga de Genesys y el conector real; FE012, el origen de datos; FE013, el estado y la prueba de los proveedores de LLM. Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
 
 Es la fuente canónica del contrato. La tabla de endpoints de [backend/README.md](../../backend/README.md) es un resumen. Las decisiones que explican el contrato están en sus ADR (enlazados en cada sección).
 
@@ -178,8 +178,10 @@ Todos los errores llevan `detail`, pero su forma depende del endpoint. El front 
 | 63–65 | `GET/PUT/DELETE /api/download-flows/{id}` | `flows:view` / `flows:edit` | `downloads/api.ts` |
 | 66–68 | `POST/GET /api/download-flows/{id}/runs`, `GET …/runs/{run_id}` | `flows:edit` / `flows:view` | `downloads/api.ts` |
 | 69 | `GET /api/download-flows/{id}/runs/{run_id}/log` | `flows:view` | `downloads/api.ts` |
+| 70 | `PUT /api/config/sources` | `config:edit` | `config/api.ts` (FE012) |
+| 71–72 | `GET /api/config/ai/status`, `POST /api/config/ai/test/{provider}` | `config:view` / `config:edit` | `config/api.ts` (FE013) |
 
-La numeración cuenta operaciones (método más ruta): son las 69 del OpenAPI.
+La numeración cuenta operaciones (método más ruta): son las 72 del OpenAPI.
 
 ### 3. Autenticación y sesión
 
@@ -399,20 +401,22 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
   - `query` con el formato del explorador.
 - **Prompt:**
   - `template` de hasta 4.000 caracteres, con variables `{{transcripcion}}`, `{{summary}}`, `{{main_topic}}`, `{{metadatos}}` y `{{resultado_anterior}}` (esta solo en prompts encadenados);
-  - `model`: `mock-rapido` o `mock-preciso`;
-  - `temperature` de 0 a 1;
-  - `output.type`: `texto`, `etiqueta` (de 2 a 20 `labels`, hasta 60 caracteres) o `json` (de 1 a 20 `fields` `{name, type: texto|numero|booleano}`).
-- **Output:** `kind` es `tabla`, `metrica` (exige un prompt de etiqueta; `aggregation`: `recuento` o `porcentaje`) o `informe`; `destination` tiene hasta 80 caracteres y es único.
+  - `provider` (FE013): `gemini`, `openai`, `anthropic` o `simulado`; sin él, el nodo es simulado (flujos anteriores);
+  - `model`: uno del proveedor (`mock-rapido` y `mock-preciso` en el simulado);
+  - `temperature` de 0 a 1; solo se envía a los modelos que la admiten (`providers[].models[].temperature` del catálogo);
+  - `output.type`: `texto`, `etiqueta` (de 2 a 20 `labels`, hasta 60 caracteres) o `json` (de 1 a 20 `fields` `{name, type: texto|numero|booleano, options?}`; `options`, hasta 100 valores permitidos de un campo de texto, que el LLM recibe como `enum`).
+- **Output:** `kind` es `tabla`, `metrica` (exige un prompt de etiqueta; `aggregation`: `recuento` o `porcentaje`), `informe` o `campo` (FE013); `destination` tiene hasta 80 caracteres y es único (no se pide en `campo`).
+  - **`campo`** («Guardar en campos de la conversación»): `mappings: [{target: summary|main_topic, source?}]` (`source`, un campo de texto del JSON del Prompt; sin él, la respuesta entera) y `overwrite` (`false` por defecto). Solo con datos reales. Un Prompt JSON con `summary` y `main_topic` y dos asignaciones guarda los dos campos con una llamada por conversación.
 - **Conexiones:** solo `sampling → prompt`, `prompt → prompt` y `prompt → output`, sin ciclos. Límites: 50 nodos y 100 conexiones.
 - **Dos niveles de validación:**
   - **integridad**, siempre exigida al guardar (`422` E5: tipos, rangos, identificadores, conexiones imposibles);
-  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`.
+  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`; desde FE013, también `model_not_in_provider`, `provider_without_key`, `llm_unavailable`, `invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target` y `field_output_requires_real_data`.
 
 #### Endpoints
 
 - **`GET /api/flows`** → `{items: [{id, name, author: {id, name}, created_at, updated_at, status: "valido"|"con_errores", last_run: {id, created_at, status} | null}]}`, del modificado más recientemente al más antiguo.
-- **`POST /api/flows`** `{name (1–80)}` → `201`, el flujo con su grafo vacío.
-- **`GET /api/flows/catalog`** → opciones con `{value, label}` de `node_types`, `sampling_methods`, `strata`, `order_keys`, `orders`, `models`, `variables`, `output_formats`, `field_types`, `output_kinds` y `aggregations`; además, `default_model` (el de Configuración, que toma un Prompt nuevo) y `limits`.
+- **`POST /api/flows`** `{name (1–80), template?}` → `201`, el flujo con su grafo vacío o, con `template` (`summary`, `main_topic`, `summary_main_topic`), ya configurado con la taxonomía activa y el proveedor por defecto (FE013).
+- **`GET /api/flows/catalog`** → opciones con `{value, label}` de `node_types`, `sampling_methods`, `strata`, `order_keys`, `orders`, `models`, `variables`, `output_formats`, `field_types`, `output_kinds`, `target_fields`, `templates` y `aggregations`; además, `providers` (con sus modelos y si admiten temperatura), `default_provider` y `default_model` (los de Configuración, que toma un Prompt nuevo), `origin` (origen de datos activo) y `limits`.
 - **`POST /api/flows/validate`** (grafo) → `{valid, issues: [{code, message, node_id}]}`. Un grafo sin integridad responde `422` E5.
 - **`POST /api/flows/sampling/estimate`** `{query, size?}` → `{available, sample_size, period}`: cuántas conversaciones cumplen los filtros y cuántas tendría la muestra.
 - **`GET /api/flows/{id}`** → el resumen más `graph`. **`PATCH`** `{name}` lo renombra. **`DELETE`** → `204` (borra también sus ejecuciones).
@@ -429,7 +433,8 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
 {"id": "1RN-…", "created_at": "…", "started_at": "…", "finished_at": "…", "duration_ms": 1,
  "status": "ok", "sample_size": 3, "user": {"id": "1US-…", "name": "Admin Demo"},
  "flow_id": "1FL-…", "seed": 1109677792, "graph": {"…": "copia del grafo ejecutado"},
- "nodes": {"1ND-…": {"status": "ok", "processed": 3, "total": 3, "message": null}},
+ "nodes": {"1ND-…": {"status": "ok", "processed": 3, "total": 3, "message": null, "rejected": 0, "failed": 0}},
+ "failures": {"1ND-…": [{"conversation_id": "1CO-…", "status": "rechazado", "reason": "…"}]},
  "outputs": {"1ND-…": {"node_id": "1ND-…", "kind": "metrica", "destination": "Motivos",
                        "result": {"aggregation": "porcentaje", "total": 3,
                                   "items": [{"label": "queja", "count": 1, "percent": 33.3}, "…"]}}}}
@@ -439,7 +444,9 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
 - **`result` según el tipo de output:**
   - `tabla`: `{rows: [{conversation: list_item, result}]}`, donde `result` es texto, etiqueta u objeto JSON según el prompt;
   - `metrica`: `{aggregation, total, items: [{label, count, percent}]}`, con porcentajes de un decimal que suman exactamente 100;
-  - `informe`: `{text}`.
+  - `informe`: `{text}`;
+  - `campo` (FE013): `{targets, rows: [{conversation, values, states, reason}], counts: {campo: {escrito, omitido, rechazado, error}}}`, con una fila por conversación que llegó al Prompt.
+- **Prompts con LLM (FE013):** `rejected` cuenta respuestas fuera de formato y `failed` conversaciones sin respuesta del proveedor; `failures` da el motivo de cada una. Se excluyen de los outputs.
 - **Progreso por *polling*:** el front pide la instantánea cada 500 ms mientras el estado es `pendiente` o `en_curso` (`RUN_POLL_MS`, `staleTime: 0`). No hay WebSocket ni SSE.
 
 ### 9. Configuración (FE005, [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md))
@@ -447,7 +454,8 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
 Toda escritura aceptada sube `version` y crea una entrada de auditoría `1AU`. Una escritura que no cambia nada no hace ninguna de las dos cosas. Todos los cuerpos rechazan campos desconocidos, con errores E3.
 
 - **`GET /api/config/public`** (público) → `{platform_name, timezone, language}`. La usan el login y todos los roles.
-- **`GET /api/config`** → `{version, general, privacy: {pii_masking}, ai: {provider, model, simulated: true}, kpis: [{code, label, unit, higher_is_better, target, green, amber, dashboards}], options: {languages, timezones, providers: [{value, label, models}], sections, dashboards}}`.
+- **`GET /api/config`** → `{version, general, sources: {origin}, privacy: {pii_masking}, ai: {provider, model, simulated} (`simulated` solo con el proveedor `simulado`), kpis: [{code, label, unit, higher_is_better, target, green, amber, dashboards}], options: {languages, timezones, providers: [{value, label, models: [{value, label, temperature}]}], sections, dashboards}}`.
+- **`GET /api/config/ai/status`** (FE013) → `{service: "disponible", providers: [{value, label, key_configured}]}`; `503` si el servicio de LLM no responde. **`POST /api/config/ai/test/{provider}`** `{model}` (`config:edit`) → `{ok, provider, model, message}`; un error del proveedor (sin clave, clave rechazada) es `200` con `ok: false`; un modelo de otro proveedor, `422`.
 - **`PUT /api/config/general`** `{platform_name (1–60), timezone (IANA), language ("es-ES")}`. **`PUT /api/config/privacy`** `{pii_masking}`. **`PUT /api/config/ai`** `{provider, model}` (el modelo debe ser del proveedor). Las tres responden con la configuración completa.
 - **`PUT /api/config/kpis/{code}`** `{target, green, amber, dashboards}`:
   - los valores deben estar dentro del rango de la unidad;
@@ -459,7 +467,7 @@ Toda escritura aceptada sube `version` y crea una entrada de auditoría `1AU`. U
   - **Crear o editar:** `POST /api/config/taxonomy/{main-topics|secondary-topics}` y `PUT …/{id}` con `{code, name (1–80), description (≤300), keywords (≤30, cada una ≤60), active}`.
   - **Código:** `snake_case` en los main topics; texto en minúsculas con espacios en los temas secundarios (`"compras online"`). Es único e inmutable: cambiarlo al editar da `422`.
   - **Nombres:** los de main topic son únicos (`422`).
-  - **Borrar:** `DELETE …/{id}` → `204`; un tema en uso da `409` (se desactiva en su lugar).
+  - **Borrar:** `DELETE …/{id}` → `204`; un tema en uso da `409` (se desactiva en su lugar). Desde FE013, un main topic se comprueba también en las conversaciones reales, sea cual sea el origen activo (el `409` da el recuento de cada origen; `503` si PostgreSQL no responde).
 - **`GET/POST /api/config/compliance-checks`**, **`PUT/DELETE …/{id}`**:
   - cuerpo `{code, name, description, phrases (1–20, cada una ≤120), channel: voz|chat|ambos, active}`;
   - la respuesta añade `id` (`1CK-…`), `evaluation` (`analisis` en los seis originales, `frases` en los nuevos) y `builtin`;
@@ -503,14 +511,14 @@ La API no guarda nada: comprueba la sesión y los permisos y delega en el servic
   - los `422` se reducen a `loc`, `msg` y `type` (E3, sin `input`);
   - si el servicio no responde, responde `401` (tokens distintos) o `5xx`, o falta el token, la API devuelve `503` con «El servicio de ingesta no está disponible».
 
-**Flujo de descarga:** `{id, name, interval, channels, schedule, active, timezone, author, created_at, updated_at, next_run_at, last_run}`.
+**Flujo de descarga:** `{id, name, interval, channels, schedule, active, overwrite, timezone, author, created_at, updated_at, next_run_at, last_run}`. `overwrite` (FE013, `false` por defecto): sin marcar, las conversaciones que ya están en la base no se descargan; marcado, se sustituyen y se borran su summary y main topic.
 
 - `interval` es relativo (`{type: "relativo", unit: "hoy"|"ayer"|"horas"|"dias", amount}`, con horas de 1 a 720 y días de 1 a 90) o específico (`{type: "especifico", from, to}`, en hora local, sin zona, como mucho 90 días y sin futuro).
 - `schedule` es `{type: "desactivada"}`, `{type: "cada_horas", hours}` (de 1 a 24, alineadas con la medianoche) o `{type: "diaria", time: "HH:MM"}`. Una programación necesita un intervalo relativo.
 
-**Ejecución:** `{id, flow_id, origin: manual|programada, status: pendiente|en_curso|completada|completada_con_avisos|error, interval: {from, to}, channels, counters, error, started_by, created_at, started_at, finished_at, duration_s}`.
+**Ejecución:** `{id, flow_id, origin: manual|programada, status: pendiente|en_curso|completada|completada_con_avisos|error, interval: {from, to}, channels, overwrite, counters, error, started_by, created_at, started_at, finished_at, duration_s}`.
 
-- `counters` lleva `found`, `downloaded`, `inserted`, `updated`, `skipped` (en curso o de otro canal), `errors`, `by_channel`, `by_quality` y `undelivered_messages`. Al terminar, `found = inserted + updated + skipped + errors`.
+- `counters` lleva `found`, `downloaded`, `inserted`, `updated`, `skipped` (en curso o de otro canal), `skipped_existing` (ya en la base, sin «Sobrescribir»; FE013), `errors`, `by_channel`, `by_quality` y `undelivered_messages`. Al terminar, `found = inserted + updated + skipped + skipped_existing + errors`.
 - `POST …/runs` devuelve `202` con la ejecución `pendiente`, o `409` si ya hay una activa. El front consulta `GET …/runs/{run_id}` cada 2 s hasta que termina.
 
 **Log:** `GET …/runs/{run_id}/log?after=&level=` devuelve `{items: [{id, at, level: info|aviso|error, stage, message, genesys_id}]}`, con `after` como cursor. Con `format=text`, devuelve el log completo como adjunto `text/plain`. Nunca contiene el texto de los turnos ni secretos.
@@ -548,7 +556,7 @@ La API no guarda nada: comprueba la sesión y los permisos y delega en el servic
 - **Mensajes en inglés:** los errores nativos de FastAPI (E2) y algunos de integridad del grafo (E5, como `"Field required"`) salen en inglés; el resto, en español.
 - **Duplicados con códigos distintos:** en Configuración, un código o nombre duplicado responde `422`; en Usuarios y roles, `409`. La UI muestra los dos junto al campo.
 - **Sin uso desde el front:** `GET /api/health` y `GET /api/query/saved/{id}`.
-- **Modelos de respuesta solo documentales:** las rutas devuelven `dict` y FastAPI no valida la salida contra `app/openapi/schemas.py`. La coherencia la garantiza el test de contrato, que recorre las 58 operaciones con respuestas reales, no el tipado de las rutas.
+- **Modelos de respuesta solo documentales:** las rutas devuelven `dict` y FastAPI no valida la salida contra `app/openapi/schemas.py`. La coherencia la garantiza el test de contrato, que recorre las 72 operaciones con respuestas reales, no el tipado de las rutas.
 - **Hipótesis no verificada:** el contrato no se ha probado con clientes que no sean el front (por ejemplo, integraciones de terceros). Varias respuestas exponen detalles pensados para la UI (`label`, `max_score`, `options`).
 - **Mantenimiento:** al añadir o cambiar una ruta, documéntala en `app/openapi/spec.py` (si no, la API no arranca su `/openapi.json` y la suite falla), regenera `backend/openapi.yaml` y actualiza este documento en el mismo cambio.
 
