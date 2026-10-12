@@ -25,7 +25,10 @@ describe('conversión entre el JSON del flujo y el lienzo', () => {
     expect(newNode('sampling', { x: 0, y: 0 }).id).not.toBe(sampling.id)
     expect(sampling).toMatchObject({ type: 'sampling', position: { x: 10, y: 20 } })
     expect(sampling.data.config).toEqual({ query: { root: { op: 'and', conditions: [] } }, method: 'aleatorio', size: 100 })
-    expect(newNode('prompt', { x: 0, y: 0 }).data.config).toEqual({ template: '', model: 'mock-rapido', temperature: 0.2, output: { type: 'texto' } })
+    expect(newNode('prompt', { x: 0, y: 0 }).data.config).toEqual({ template: '', provider: 'simulado', model: 'mock-rapido', temperature: 0.2, output: { type: 'texto' } })
+    // Un Prompt nuevo toma el proveedor y el modelo por defecto de Configuración › Modelos de IA (FE013).
+    expect(newNode('prompt', { x: 0, y: 0 }, { provider: 'gemini', model: 'gemini-3.5-flash-lite' }).data.config)
+      .toMatchObject({ provider: 'gemini', model: 'gemini-3.5-flash-lite' })
     expect(newNode('output', { x: 0, y: 0 }).data.config).toEqual({ kind: 'tabla', destination: '' })
     expect(isTemporaryId(N(1))).toBe(false)
   })

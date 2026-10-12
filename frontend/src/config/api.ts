@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError, apiRequest } from '../api/client'
 import type {
-  AuditEntry, CheckInput, GeneralConfig, ComplianceCheck, Connector, FieldIssue, PlatformConfig, SectionCode, Taxonomy, Topic, TopicInput, TopicKind,
+  AiStatus, AiTestResult, AuditEntry, CheckInput, GeneralConfig, ComplianceCheck, Connector, FieldIssue, PlatformConfig, SectionCode, Taxonomy,
+  Topic, TopicInput, TopicKind,
 } from './types'
 
 export const CONFIG_KEY = ['config']
@@ -40,6 +41,23 @@ export function useAudit(section: SectionCode | null, enabled = true) {
     queryKey: ['config-audit', section],
     queryFn: ({ signal }) => apiRequest<{ items: AuditEntry[] }>('/api/config/audit', { query: { section }, signal }),
     enabled: enabled && section !== null,
+  })
+}
+
+/** Estado del servicio de LLM: `503` si no responde. */
+export function useAiStatus() {
+  return useQuery({
+    queryKey: ['config-ai-status'],
+    queryFn: ({ signal }) => apiRequest<AiStatus>('/api/config/ai/status', { signal }),
+    retry: false,
+  })
+}
+
+/** «Probar»: una petición mínima al proveedor con ese modelo. No se invalida nada: no cambia la configuración. */
+export function useAiTest() {
+  return useMutation({
+    mutationFn: ({ provider, model }: { provider: string; model: string }) =>
+      apiRequest<AiTestResult>(`/api/config/ai/test/${provider}`, { method: 'POST', body: { model } }),
   })
 }
 

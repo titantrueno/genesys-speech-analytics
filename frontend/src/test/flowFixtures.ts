@@ -29,7 +29,15 @@ export const CATALOG: FlowCatalog = {
   strata: options([['canal', 'Canal'], ['cola', 'Cola'], ['main_topic', 'Main topic']]),
   order_keys: options([['fecha', 'Fecha'], ['duracion', 'Duración'], ['sentimiento', 'Sentimiento'], ['csat', 'CSAT predicho']]),
   orders: options([['desc', 'Descendente'], ['asc', 'Ascendente']]),
-  models: options([['mock-rapido', 'Simulado rápido'], ['mock-preciso', 'Simulado preciso']]),
+  models: options([['gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite'], ['claude-opus-5-5', 'Claude Opus 5.5'],
+    ['mock-rapido', 'Simulado rápido'], ['mock-preciso', 'Simulado preciso']]),
+  providers: [
+    { value: 'gemini', label: 'Gemini (Google)', models: [{ value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', temperature: true }] },
+    { value: 'anthropic', label: 'Anthropic (Claude)', models: [{ value: 'claude-opus-5-5', label: 'Claude Opus 5.5', temperature: false }] },
+    { value: 'simulado', label: 'Simulado (sin LLM)', models: [
+      { value: 'mock-rapido', label: 'Simulado rápido', temperature: true }, { value: 'mock-preciso', label: 'Simulado preciso', temperature: true }] },
+  ],
+  default_provider: 'simulado',
   default_model: 'mock-rapido',
   variables: options([
     ['transcripcion', 'Transcripción completa, turno a turno'], ['summary', 'Summary de la conversación'],
@@ -39,6 +47,7 @@ export const CATALOG: FlowCatalog = {
   output_formats: options([['texto', 'Texto'], ['etiqueta', 'Etiqueta de una lista'], ['json', 'JSON con esquema']]),
   field_types: options([['texto', 'Texto'], ['numero', 'Número'], ['booleano', 'Booleano']]),
   output_kinds: options([['tabla', 'Tabla de insights por conversación'], ['metrica', 'Métrica agregada'], ['informe', 'Informe resumen']]),
+  target_fields: options([['summary', 'Summary'], ['main_topic', 'Main topic']]),
   aggregations: options([['recuento', 'Recuento por etiqueta'], ['porcentaje', '% por etiqueta']]),
   limits: {
     max_sample_size: 1000, max_template: 4000, max_labels: 20, max_label: 60, max_fields: 20, max_field_name: 40,

@@ -13,13 +13,21 @@ export function platformConfig(overrides: Partial<PlatformConfig> = {}): Platfor
     general: { platform_name: 'Speech & Text Analytics', timezone: 'Europe/Madrid', language: 'es-ES' },
     sources: { origin: 'sintetico' },
     privacy: { pii_masking: true },
-    ai: { provider: 'simulado', model: 'mock-rapido', simulated: true },
+    ai: { provider: 'gemini', model: 'gemini-3.5-flash-lite', simulated: false },
     kpis: KPI_CONFIG,
     options: {
       languages: [{ value: 'es-ES', label: 'Español (España)' }],
       timezones: ['America/Los_Angeles', 'Asia/Tokyo', 'Europe/Madrid', 'UTC'],
-      providers: [{ value: 'simulado', label: 'Simulado (sin LLM)', models: [
-        { value: 'mock-rapido', label: 'Simulado rápido' }, { value: 'mock-preciso', label: 'Simulado preciso' }] }],
+      providers: [
+        { value: 'gemini', label: 'Gemini (Google)', models: [
+          { value: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', temperature: true },
+          { value: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash', temperature: true }] },
+        { value: 'anthropic', label: 'Anthropic (Claude)', models: [
+          { value: 'claude-opus-5-5', label: 'Claude Opus 5.5', temperature: false }] },
+        { value: 'simulado', label: 'Simulado (sin LLM)', models: [
+          { value: 'mock-rapido', label: 'Simulado rápido', temperature: true },
+          { value: 'mock-preciso', label: 'Simulado preciso', temperature: true }] },
+      ],
       sections: [
         { value: 'general', label: 'General' }, { value: 'fuentes', label: 'Fuentes de datos' },
         { value: 'taxonomia', label: 'Taxonomía' }, { value: 'kpis', label: 'KPIs y objetivos' },
@@ -34,6 +42,16 @@ export function platformConfig(overrides: Partial<PlatformConfig> = {}): Platfor
     },
     ...overrides,
   }
+}
+
+/** Igual que `GET /api/config/ai/status`: si cada proveedor tiene clave en el servicio de LLM (nunca la clave). */
+export const AI_STATUS = {
+  service: 'disponible',
+  providers: [
+    { value: 'gemini', label: 'Gemini (Google)', key_configured: true },
+    { value: 'anthropic', label: 'Anthropic (Claude)', key_configured: false },
+    { value: 'simulado', label: 'Simulado (sin LLM)', key_configured: true },
+  ],
 }
 
 export const CONNECTORS: Connector[] = [

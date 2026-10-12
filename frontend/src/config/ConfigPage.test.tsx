@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { auditEntry, CONNECTORS, platformConfig } from '../test/configFixtures'
+import { AI_STATUS, auditEntry, CONNECTORS, platformConfig } from '../test/configFixtures'
 import { renderApp, signedInAs, USERS } from '../test/utils'
 import type { User } from '../auth/types'
 import type { AuditEntry, Connector, PlatformConfig } from './types'
@@ -11,7 +11,7 @@ type Reply = { status: number; body?: unknown }
 
 function setup(options: {
   user?: User; path?: string; config?: PlatformConfig; configStatus?: number; configGate?: Promise<void>
-  audit?: AuditEntry[]; reply?: Partial<Record<string, (body: unknown) => Reply>>
+  audit?: AuditEntry[]; reply?: Partial<Record<string, (body: unknown) => Reply>>; aiStatus?: Reply
 } = {}) {
   let config = options.config ?? platformConfig()
   let connectors: Connector[] = [...CONNECTORS]
@@ -30,6 +30,8 @@ function setup(options: {
       return options.configStatus ? { status: options.configStatus } : { status: 200, body: config }
     },
     'GET /api/config/connectors': () => ({ status: 200, body: { items: connectors } }),
+    'GET /api/config/ai/status': () => options.aiStatus ?? { status: 200, body: AI_STATUS },
+    'POST /api/config/ai/test/gemini': write('POST', '/api/config/ai/test/gemini', () => undefined),
     'GET /api/config/audit': (init) => {
       const section = new URL(init.url, 'http://localhost').searchParams.get('section')
       return { status: 200, body: { items: (options.audit ?? []).filter((e) => e.section === section) } }
@@ -37,7 +39,7 @@ function setup(options: {
     'PUT /api/config/general': write('PUT', '/api/config/general', (body) => { config = { ...config, general: body } }),
     'PUT /api/config/privacy': write('PUT', '/api/config/privacy', (body) => { config = { ...config, privacy: body } }),
     'PUT /api/config/ai': write('PUT', '/api/config/ai', (body: { provider: string; model: string }) => {
-      config = { ...config, ai: { ...body, simulated: true } }
+      config = { ...config, ai: { ...body, simulated: body.provider === 'simulado' } }
     }),
     [`POST /api/config/connectors/${CONNECTORS[1].id}/sync`]: (init) => {
       calls.push({ method: 'POST', path: `sync ${CONNECTORS[1].id}` })
@@ -166,16 +168,59 @@ describe('Configuración: Privacidad y Modelos de IA', () => {
     await waitFor(() => expect(calls).toEqual([{ method: 'PUT', path: '/api/config/privacy', body: { pii_masking: false } }]))
   })
 
-  it('elige el modelo por defecto e indica que la ejecución es simulada', async () => {
+  it('elige proveedor y modelo; al cambiar de proveedor propone su primer modelo', async () => {
     const { calls } = setup()
     const panel = await openTab('Modelos de IA')
-    expect(panel).toHaveTextContent(/ejecución es simulada/i)
-    expect(within(panel).getByLabelText('Proveedor')).toHaveValue('simulado')
+    expect(within(panel).getByLabelText('Proveedor')).toHaveValue('gemini')
+    expect(within(panel).getByLabelText('Modelo por defecto')).toHaveValue('gemini-3.5-flash-lite')
+    expect(panel).not.toHaveTextContent(/no llaman a ningún LLM/i)
+    await userEvent.selectOptions(within(panel).getByLabelText('Proveedor'), 'simulado')
+    expect(within(panel).getByLabelText('Modelo por defecto')).toHaveValue('mock-rapido')
+    expect(panel).toHaveTextContent(/no llaman a ningún LLM/i)
     await userEvent.selectOptions(within(panel).getByLabelText('Modelo por defecto'), 'mock-preciso')
     await userEvent.click(within(panel).getByRole('button', { name: 'Guardar' }))
     await waitFor(() => expect(calls).toEqual([
       { method: 'PUT', path: '/api/config/ai', body: { provider: 'simulado', model: 'mock-preciso' } },
     ]))
+  })
+
+  it('muestra qué proveedores tienen clave en el servicio de LLM, nunca la clave', async () => {
+    setup()
+    const panel = await openTab('Modelos de IA')
+    const status = await within(panel).findByRole('region', { name: 'Estado del servicio de LLM' })
+    const rows = within(status).getAllByRole('listitem')
+    expect(rows.map((r) => r.textContent)).toEqual([
+      expect.stringMatching(/Gemini \(Google\).*Clave configurada/), expect.stringMatching(/Anthropic \(Claude\).*Sin clave/),
+      expect.stringMatching(/Simulado \(sin LLM\).*No necesita clave/),
+    ])
+    expect(status).toHaveTextContent(/\.env del servicio de LLM/)
+  })
+
+  it('«Probar» llama al proveedor con su modelo y muestra el resultado o el mensaje del proveedor', async () => {
+    const replies = [
+      { status: 200, body: { ok: true, provider: 'gemini', model: 'gemini-3.5-flash-lite', message: 'El proveedor respondió correctamente' } },
+      { status: 200, body: { ok: false, provider: 'gemini', model: 'gemini-3.5-flash-lite', message: 'El proveedor rechazó la clave' } },
+    ]
+    const { calls } = setup({ reply: { 'POST /api/config/ai/test/gemini': () => replies.shift()! } })
+    const panel = await openTab('Modelos de IA')
+    const status = await within(panel).findByRole('region', { name: 'Estado del servicio de LLM' })
+    const gemini = within(status).getAllByRole('listitem')[0]
+    await userEvent.click(within(gemini).getByRole('button', { name: 'Probar Gemini (Google)' }))
+    expect(await within(gemini).findByRole('status')).toHaveTextContent('El proveedor respondió correctamente')
+    await userEvent.click(within(gemini).getByRole('button', { name: 'Probar Gemini (Google)' }))
+    expect(await within(gemini).findByRole('alert')).toHaveTextContent('El proveedor rechazó la clave')
+    expect(calls).toEqual([
+      { method: 'POST', path: '/api/config/ai/test/gemini', body: { model: 'gemini-3.5-flash-lite' } },
+      { method: 'POST', path: '/api/config/ai/test/gemini', body: { model: 'gemini-3.5-flash-lite' } },
+    ])
+    expect(within(status).queryByRole('button', { name: 'Probar Simulado (sin LLM)' })).not.toBeInTheDocument()
+  })
+
+  it('si el servicio de LLM no responde, lo avisa', async () => {
+    setup({ aiStatus: { status: 503, body: { detail: 'El servicio de LLM no está disponible' } } })
+    const panel = await openTab('Modelos de IA')
+    expect(await within(panel).findByRole('alert')).toHaveTextContent(/servicio de LLM no está disponible/i)
+    expect(within(panel).queryByRole('button', { name: /^Probar/ })).not.toBeInTheDocument()
   })
 })
 
@@ -211,5 +256,8 @@ describe('Configuración: auditoría y solo lectura', () => {
     expect(within(panel).queryByRole('button', { name: /sincronizar/i })).not.toBeInTheDocument()
     panel = await openTab('Privacidad')
     expect(within(panel).getByRole('checkbox')).toBeDisabled()
+    panel = await openTab('Modelos de IA')
+    await within(panel).findByRole('region', { name: 'Estado del servicio de LLM' })
+    expect(within(panel).queryByRole('button', { name: /^Probar/ })).not.toBeInTheDocument()
   })
 })

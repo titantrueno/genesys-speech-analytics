@@ -203,6 +203,10 @@
 - **Hecho (T6, 2026-10-12):** Gemini acepta el esquema con `enum` de los 15 main topics activos: una llamada devuelve summary y main topic, y el main topic es uno de los valores permitidos.
 - **Pendiente para T7:** hasta que el panel del nodo Prompt envíe el proveedor, un nodo nuevo toma el modelo por defecto (`gemini-3.5-flash-lite`) sin proveedor y la validación lo marca como `model_not_in_provider`.
 
+## Notas de T7
+
+- **Pendiente para T9:** la comprobación en navegador de Configuración → Modelos de IA y del panel del Prompt. El 2026-10-12 la extensión de Chrome no hizo llegar clics ni texto a la página (la API no recibió ningún `POST /api/auth/login`, que sí funciona por `curl` a través del proxy de Vite).
+
 ## Riesgos del plan
 
 - **Comportamiento de las suites:** hoy hay tests de ingesta que esperan `updated` al repetir una descarga. Con `overwrite=false` por defecto hay que cambiarlos a `overwrite=true` de forma explícita, no borrarlos (T1).
@@ -211,4 +215,4 @@
 
 ## Progreso
 
-- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [x] T6 · [ ] T7 · [ ] T8 · [ ] T9
+- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [x] T6 · [x] T7 · [ ] T8 · [ ] T9

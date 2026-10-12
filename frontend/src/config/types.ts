@@ -13,6 +13,14 @@ export interface SourcesConfig { origin: DataOrigin }
 export interface PrivacyConfig { pii_masking: boolean }
 export interface AiConfig { provider: string; model: string }
 
+/** Modelo de un proveedor; `temperature` dice si la admite (si no, el nodo Prompt no se la envía). */
+export type ModelOption = Option & { temperature: boolean }
+export type ProviderOption = Option & { models: ModelOption[] }
+
+/** `GET /api/config/ai/status`: si cada proveedor tiene clave en el servicio de LLM (nunca la clave). */
+export interface AiStatus { service: 'disponible'; providers: Array<Option & { key_configured: boolean }> }
+export interface AiTestResult { ok: boolean; provider: string; model: string; message: string }
+
 export interface KpiConfig {
   code: KpiCode
   label: string
@@ -34,7 +42,7 @@ export interface PlatformConfig {
   options: {
     languages: Option[]
     timezones: string[]
-    providers: Array<Option & { models: Option[] }>
+    providers: ProviderOption[]
     sections: Option<SectionCode>[]
     dashboards: Option[]
   }

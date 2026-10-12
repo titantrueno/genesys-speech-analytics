@@ -128,6 +128,28 @@ describe('panel de configuración', () => {
     expect(await saveAndGetConfig(ctx, nodeId(2))).toMatchObject({ template: 'Resume: {{metadatos}}', model: 'mock-preciso', temperature: 0.7 })
   })
 
+  it('Prompt: un nodo sin proveedor es simulado; al cambiar de proveedor propone su primer modelo', async () => {
+    const ctx = setup()
+    const user = userEvent.setup()
+    const panel = await open(2, ctx)
+    expect(within(panel).getByLabelText('Proveedor')).toHaveValue('simulado')
+    expect(within(panel).getByLabelText('Modelo')).toHaveValue('mock-rapido')
+    await user.selectOptions(within(panel).getByLabelText('Proveedor'), 'gemini')
+    expect(within(panel).getByLabelText('Modelo')).toHaveValue('gemini-3.5-flash-lite')
+    expect([...within(panel).getByLabelText('Modelo').querySelectorAll('option')].map((o) => o.value)).toEqual(['gemini-3.5-flash-lite'])
+    expect(await saveAndGetConfig(ctx, nodeId(2))).toMatchObject({ provider: 'gemini', model: 'gemini-3.5-flash-lite' })
+  })
+
+  it('Prompt: con un modelo que no admite temperatura, el control se desactiva y lo explica', async () => {
+    const ctx = setup()
+    const user = userEvent.setup()
+    const panel = await open(2, ctx)
+    expect(within(panel).getByLabelText(/^Temperatura/)).toBeEnabled()
+    await user.selectOptions(within(panel).getByLabelText('Proveedor'), 'anthropic')
+    expect(within(panel).getByLabelText(/^Temperatura/)).toBeDisabled()
+    expect(panel).toHaveTextContent(/no admite temperatura/i)
+  })
+
   it('Prompt: {{resultado_anterior}} solo en un prompt encadenado', async () => {
     const ctx = setup()
     const panel = await open(3, ctx)

@@ -19,7 +19,12 @@ export interface SamplingConfig {
   size?: number
 }
 
-export interface SchemaField { name: string; type: FieldType }
+export interface SchemaField {
+  name: string
+  type: FieldType
+  /** Valores permitidos de un campo de texto (FE013): el LLM los recibe como `enum`. */
+  options?: string[]
+}
 
 export interface OutputFormat {
   type: OutputFormatType
@@ -29,6 +34,8 @@ export interface OutputFormat {
 
 export interface PromptConfig {
   template?: string
+  /** Sin proveedor, el nodo es simulado (flujos guardados antes de FE013). */
+  provider?: string
   model?: string
   temperature?: number
   output?: OutputFormat
@@ -100,12 +107,17 @@ export interface FlowCatalog {
   order_keys: Option<OrderKey>[]
   orders: Option<'asc' | 'desc'>[]
   models: Option[]
-  /** Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA). */
+  /** Proveedores con sus modelos; el primer modelo es el que se propone al elegir el proveedor (FE013). */
+  providers: Array<Option & { models: Array<Option & { temperature: boolean }> }>
+  /** Proveedor y modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA). */
+  default_provider: string
   default_model: string
   variables: Option[]
   output_formats: Option<OutputFormatType>[]
   field_types: Option<FieldType>[]
   output_kinds: Option<OutputKind>[]
+  /** Campos destino de un Output «campo» (FE013). */
+  target_fields: Option[]
   aggregations: Option<Aggregation>[]
   limits: Record<'max_sample_size' | 'max_template' | 'max_labels' | 'max_label' | 'max_fields' | 'max_field_name'
     | 'max_destination' | 'max_flow_name' | 'max_nodes' | 'max_edges', number>

@@ -191,7 +191,7 @@ function Editor({ flow }: { flow: Flow }) {
       const origin = screenToFlowPosition({ x: (rect?.left ?? 0) + (rect?.width ?? 0) / 4, y: (rect?.top ?? 0) + (rect?.height ?? 0) / 3 })
       at = freePosition(origin, nodes)
     }
-    const node = { ...newNode(type, at, catalog.default_model), selected: true }
+    const node = { ...newNode(type, at, { provider: catalog.default_provider, model: catalog.default_model }), selected: true }
     setNodes((current) => [...current.map((n) => (n.selected ? { ...n, selected: false } : n)), node])
   }
 

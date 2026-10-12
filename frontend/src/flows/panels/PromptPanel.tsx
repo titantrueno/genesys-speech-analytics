@@ -64,6 +64,10 @@ export function PromptPanel({ config, chained, onChange }: {
   const catalog = useCatalog()
   const templateRef = useRef<HTMLTextAreaElement>(null)
   const template = config.template ?? ''
+  // Un nodo sin proveedor es simulado: así se leen los flujos guardados antes de FE013.
+  const providerValue = config.provider ?? 'simulado'
+  const provider = catalog.providers.find((p) => p.value === providerValue)
+  const withTemperature = provider?.models.find((m) => m.value === config.model)?.temperature ?? true
 
   function insertVariable(name: string) {
     const textarea = templateRef.current
@@ -98,10 +102,13 @@ export function PromptPanel({ config, chained, onChange }: {
         </div>
       </Section>
       <Section title="Modelo y temperatura">
-        <Select label="Modelo" value={config.model} options={catalog.models} onChange={(model) => onChange({ ...config, model })} />
-        <Field label={`Temperatura: ${(config.temperature ?? 0).toFixed(1)}`} hint="0 = respuestas más estables; 1 = más variadas.">
-          <input type="range" className="w-full accent-brand-600" min={0} max={1} step={0.1} value={config.temperature ?? 0}
-            onChange={(e) => onChange({ ...config, temperature: Number(e.target.value) })} />
+        <Select label="Proveedor" value={providerValue} options={catalog.providers}
+          onChange={(value) => onChange({ ...config, provider: value, model: catalog.providers.find((p) => p.value === value)?.models[0]?.value })} />
+        <Select label="Modelo" value={config.model} options={provider?.models ?? []} onChange={(model) => onChange({ ...config, model })} />
+        <Field label={`Temperatura: ${(config.temperature ?? 0).toFixed(1)}`}
+          hint={withTemperature ? '0 = respuestas más estables; 1 = más variadas.' : 'Este modelo no admite temperatura: no se le envía.'}>
+          <input type="range" className="w-full accent-brand-600 disabled:opacity-50" min={0} max={1} step={0.1} value={config.temperature ?? 0}
+            disabled={!withTemperature} onChange={(e) => onChange({ ...config, temperature: Number(e.target.value) })} />
         </Field>
       </Section>
       <Section title="Formato de salida">
