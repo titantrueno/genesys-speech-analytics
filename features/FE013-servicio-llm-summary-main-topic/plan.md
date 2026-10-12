@@ -208,6 +208,12 @@
 - **Hecho (2026-10-12, Chrome):** Configuración → Modelos de IA muestra Gemini con clave, OpenAI y Anthropic sin clave y Simulado sin necesitarla; «Probar» en Gemini responde correctamente (llamada real) y en OpenAI muestra «El proveedor OpenAI no tiene clave configurada». Un Prompt nuevo toma Gemini 3.5 Flash-Lite; al pasar a Anthropic propone Claude Opus 5.5 y desactiva la temperatura con su aviso. Sin errores en la consola.
 - **Aprendizaje:** en el primer intento los clics por coordenadas no llegaban porque el marco de la captura (1568 px) no coincidía con el viewport (1920 px); con clics por referencia de elemento (`find` → `ref`) funciona.
 
+## Notas de T8
+
+- **Decisión:** las plantillas usan un Sampling sin fechas (relativo al periodo por defecto) en vez de «últimos 7 días» con fechas fijas; spec ajustada (criterio 23).
+- **Decisión:** `/api/flows/catalog` expone el origen de datos activo (`origin`), para que el editor desactive «Guardar en campos» con datos sintéticos sin pedir permisos de Configuración.
+- **Pendiente para T9:** recorrido en navegador con datos reales (necesita PostgreSQL y escribe summary y main topic en conversaciones de la base de desarrollo).
+
 ## Riesgos del plan
 
 - **Comportamiento de las suites:** hoy hay tests de ingesta que esperan `updated` al repetir una descarga. Con `overwrite=false` por defecto hay que cambiarlos a `overwrite=true` de forma explícita, no borrarlos (T1).
@@ -216,4 +222,4 @@
 
 ## Progreso
 
-- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [x] T6 · [x] T7 · [ ] T8 · [ ] T9
+- [x] T1 · [x] T2 · [x] T3 · [x] T4 · [x] T5 · [x] T6 · [x] T7 · [x] T8 · [ ] T9

@@ -46,8 +46,12 @@ export const CATALOG: FlowCatalog = {
   ]),
   output_formats: options([['texto', 'Texto'], ['etiqueta', 'Etiqueta de una lista'], ['json', 'JSON con esquema']]),
   field_types: options([['texto', 'Texto'], ['numero', 'Número'], ['booleano', 'Booleano']]),
-  output_kinds: options([['tabla', 'Tabla de insights por conversación'], ['metrica', 'Métrica agregada'], ['informe', 'Informe resumen']]),
+  output_kinds: options([['tabla', 'Tabla de insights por conversación'], ['metrica', 'Métrica agregada'], ['informe', 'Informe resumen'],
+    ['campo', 'Guardar en campos de la conversación']]),
   target_fields: options([['summary', 'Summary'], ['main_topic', 'Main topic']]),
+  templates: options([['summary', 'Generar summary'], ['main_topic', 'Generar main topic'],
+    ['summary_main_topic', 'Generar summary y main topic']]),
+  origin: 'sintetico',
   aggregations: options([['recuento', 'Recuento por etiqueta'], ['porcentaje', '% por etiqueta']]),
   limits: {
     max_sample_size: 1000, max_template: 4000, max_labels: 20, max_label: 60, max_fields: 20, max_field_name: 40,

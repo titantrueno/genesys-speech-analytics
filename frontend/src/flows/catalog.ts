@@ -38,8 +38,12 @@ export function nodeSummary(node: NodeContent, catalog: FlowCatalog): string[] {
       `${optionLabel(catalog.models, model) ?? 'Sin modelo'} · T ${temperature ?? '—'} · ${format}${detail}`,
     ]
   }
-  const { kind, aggregation, destination } = node.config
+  const { kind, aggregation, destination, mappings } = node.config
   const kindLabel = optionLabel(catalog.output_kinds, kind) ?? 'Sin tipo'
+  if (kind === 'campo') {
+    const targets = (mappings ?? []).map((m) => optionLabel(catalog.target_fields, m.target) ?? m.target)
+    return [kindLabel, targets.length ? `→ ${targets.join(' + ')}` : 'Sin campos destino']
+  }
   return [
     kind === 'metrica' && aggregation ? `${kindLabel} · ${optionLabel(catalog.aggregations, aggregation)}` : kindLabel,
     destination?.trim() ? `→ ${destination.trim()}` : 'Sin destino',

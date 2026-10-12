@@ -7,7 +7,9 @@ export type Stratum = 'canal' | 'cola' | 'main_topic'
 export type OrderKey = 'fecha' | 'duracion' | 'sentimiento' | 'csat'
 export type OutputFormatType = 'texto' | 'etiqueta' | 'json'
 export type FieldType = 'texto' | 'numero' | 'booleano'
-export type OutputKind = 'tabla' | 'metrica' | 'informe'
+export type OutputKind = 'tabla' | 'metrica' | 'informe' | 'campo'
+/** Campo del análisis que escribe un Output «campo» (FE013). */
+export type TargetField = 'summary' | 'main_topic'
 export type Aggregation = 'recuento' | 'porcentaje'
 
 export interface SamplingConfig {
@@ -41,10 +43,16 @@ export interface PromptConfig {
   output?: OutputFormat
 }
 
+/** Un campo destino y de dónde sale: la respuesta entera (sin `source`) o un campo del JSON del Prompt. */
+export interface FieldMapping { target: TargetField; source?: string }
+
 export interface OutputConfig {
   kind?: OutputKind
   aggregation?: Aggregation
   destination?: string
+  /** Solo en `campo` (FE013). */
+  mappings?: FieldMapping[]
+  overwrite?: boolean
 }
 
 interface BaseNode<T extends NodeType, C> {
@@ -117,7 +125,11 @@ export interface FlowCatalog {
   field_types: Option<FieldType>[]
   output_kinds: Option<OutputKind>[]
   /** Campos destino de un Output «campo» (FE013). */
-  target_fields: Option[]
+  target_fields: Option<TargetField>[]
+  /** Plantillas para crear un flujo ya configurado (FE013). */
+  templates: Option[]
+  /** Origen de datos activo: un Output «campo» solo se ejecuta con `real`. */
+  origin: 'sintetico' | 'real'
   aggregations: Option<Aggregation>[]
   limits: Record<'max_sample_size' | 'max_template' | 'max_labels' | 'max_label' | 'max_fields' | 'max_field_name'
     | 'max_destination' | 'max_flow_name' | 'max_nodes' | 'max_edges', number>
@@ -144,11 +156,19 @@ export interface RunSummary {
 export interface TableResult { rows: Array<{ conversation: ConversationListItem; result: unknown }> }
 export interface MetricResult { aggregation: Aggregation; total: number; items: Array<{ label: string; count: number; percent: number }> }
 export interface ReportResult { text: string }
+export type FieldState = 'escrito' | 'omitido' | 'rechazado' | 'error'
+export interface FieldsResult {
+  targets: TargetField[]
+  rows: Array<{ conversation: ConversationListItem; values: Partial<Record<TargetField, string>>
+    states: Partial<Record<TargetField, FieldState>>; reason: string | null }>
+  counts: Partial<Record<TargetField, Record<FieldState, number>>>
+}
 
 export type RunOutput =
   | { node_id: string; kind: 'tabla'; destination: string; result: TableResult }
   | { node_id: string; kind: 'metrica'; destination: string; result: MetricResult }
   | { node_id: string; kind: 'informe'; destination: string; result: ReportResult }
+  | { node_id: string; kind: 'campo'; destination: string; result: FieldsResult }
 
 export interface Run extends RunSummary {
   flow_id: string

@@ -1,5 +1,5 @@
 import { Plus, X } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useCatalog } from '../catalog'
 import type { FieldType, OutputFormat, PromptConfig } from '../types'
 import { control, Field, Section, Select } from './controls'
@@ -27,21 +27,46 @@ function LabelsEditor({ labels, onChange }: { labels: string[]; onChange: (label
   )
 }
 
+/** Valores permitidos de un campo de texto (FE013), uno por línea; el LLM los recibe como `enum`. */
+function AllowedValues({ index, options, onChange }: { index: number; options: string[]; onChange: (options: string[]) => void }) {
+  const [text, setText] = useState(options.join('\n'))
+  return (
+    <textarea aria-label={`Valores permitidos del campo ${index}`} className={`${control} h-20 py-1 text-xs`} value={text}
+      placeholder="Un valor por línea" onChange={(e) => {
+        setText(e.target.value)
+        onChange(e.target.value.split('\n').map((v) => v.trim()).filter(Boolean))
+      }} />
+  )
+}
+
 function SchemaEditor({ fields, onChange }: { fields: NonNullable<OutputFormat['fields']>; onChange: (fields: NonNullable<OutputFormat['fields']>) => void }) {
   const { limits, field_types: types } = useCatalog()
   return (
     <div role="group" aria-label="Esquema JSON" className="space-y-1.5">
       <p className="text-xs font-medium text-slate-600">Campos del JSON (de 1 a {limits.max_fields})</p>
       {fields.map((field, i) => (
-        <div key={i} className="flex items-center gap-1">
-          <input aria-label={`Nombre del campo ${i + 1}`} className={`${control} font-mono`} value={field.name} maxLength={limits.max_field_name}
-            placeholder="nombre_del_campo" onChange={(e) => onChange(fields.map((f, j) => (j === i ? { ...f, name: e.target.value } : f)))} />
-          <select aria-label={`Tipo del campo ${i + 1}`} className={`${control} w-32`} value={field.type}
-            onChange={(e) => onChange(fields.map((f, j) => (j === i ? { ...f, type: e.target.value as FieldType } : f)))}>
-            {types.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          <button type="button" aria-label={`Quitar campo ${i + 1}`} onClick={() => onChange(fields.filter((_, j) => j !== i))}
-            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X className="size-4" aria-hidden /></button>
+        <div key={i} className="space-y-1">
+          <div className="flex items-center gap-1">
+            <input aria-label={`Nombre del campo ${i + 1}`} className={`${control} font-mono`} value={field.name} maxLength={limits.max_field_name}
+              placeholder="nombre_del_campo" onChange={(e) => onChange(fields.map((f, j) => (j === i ? { ...f, name: e.target.value } : f)))} />
+            <select aria-label={`Tipo del campo ${i + 1}`} className={`${control} w-32`} value={field.type}
+              onChange={(e) => onChange(fields.map((f, j) => (j === i ? { name: f.name, type: e.target.value as FieldType } : f)))}>
+              {types.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <button type="button" aria-label={`Quitar campo ${i + 1}`} onClick={() => onChange(fields.filter((_, j) => j !== i))}
+              className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X className="size-4" aria-hidden /></button>
+          </div>
+          {field.type === 'texto' && (
+            <label className="flex items-center gap-1.5 text-xs text-slate-600">
+              <input type="checkbox" aria-label={`Limitar el campo ${i + 1} a una lista de valores`} checked={field.options !== undefined}
+                onChange={(e) => onChange(fields.map((f, j) => (j === i ? (e.target.checked ? { ...f, options: [] } : { name: f.name, type: f.type }) : f)))} />
+              Limitar a una lista de valores
+            </label>
+          )}
+          {field.type === 'texto' && field.options !== undefined && (
+            <AllowedValues index={i + 1} options={field.options}
+              onChange={(options) => onChange(fields.map((f, j) => (j === i ? { ...f, options } : f)))} />
+          )}
         </div>
       ))}
       <button type="button" className={small} disabled={fields.length >= limits.max_fields}

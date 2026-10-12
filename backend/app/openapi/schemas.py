@@ -439,6 +439,9 @@ class FlowCatalog(Doc):
     field_types: list[ValueLabel]
     output_kinds: list[ValueLabel]
     target_fields: list[ValueLabel] = Field(description="Campos destino de un Output «campo» (FE013).")
+    templates: list[ValueLabel] = Field(description="Plantillas para crear un flujo ya configurado (FE013).")
+    origin: Literal["sintetico", "real"] = Field(
+        description="Origen de datos activo: un Output «campo» solo puede ejecutarse con `real` (FE013).")
     aggregations: list[ValueLabel]
     limits: FlowLimits
 

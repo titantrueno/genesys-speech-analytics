@@ -183,8 +183,11 @@ OPERATIONS: dict[tuple[str, str], Op] = {
     # --- Flujos ---
     ("GET", "/api/flows"): Op("Flujos", s.FlowList, "flows:view",
                               "Flujos con su estado y su última ejecución, del modificado más recientemente al más antiguo."),
-    ("POST", "/api/flows"): Op("Crear un flujo", s.Flow, "flows:edit", "Crea un flujo con el grafo vacío.", status=201,
-                               errors=_e422("Nombre vacío.", s.ErrorText)),
+    ("POST", "/api/flows"): Op("Crear un flujo", s.Flow, "flows:edit",
+                               "Crea un flujo con el grafo vacío o, con `template`, ya configurado para generar summary, "
+                               "main topic o los dos en una llamada (FE013).", status=201,
+                               errors=_e422("Nombre vacío, plantilla desconocida o demasiados main topics activos "
+                                            "para la plantilla de main topic.", s.ErrorText)),
     ("GET", "/api/flows/catalog"): Op("Opciones de los nodos", s.FlowCatalog, "flows:view",
                                       "Opciones de configuración de cada tipo de nodo, modelo por defecto y límites."),
     ("POST", "/api/flows/validate"): Op(

@@ -102,6 +102,41 @@ describe('ejecución de un flujo', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Muestra: 40 conversaciones.')
   })
 
+  it('«Guardar en campos» muestra el estado de cada campo por conversación y los recuentos', async () => {
+    const fields: RunOutput = {
+      node_id: nodeId(5), kind: 'campo', destination: 'Summary + Main topic',
+      result: {
+        targets: ['summary', 'main_topic'],
+        rows: [
+          { conversation: ROW(0), values: { summary: 'El cliente pide bloquear la tarjeta.', main_topic: 'bloqueo_tarjeta' },
+            states: { summary: 'escrito', main_topic: 'omitido' }, reason: null },
+          { conversation: ROW(1), values: {}, states: { summary: 'rechazado', main_topic: 'rechazado' },
+            reason: '«Hipotecas» no es un valor permitido de main_topic' },
+        ],
+        counts: {
+          summary: { escrito: 1, omitido: 0, rechazado: 1, error: 0 },
+          main_topic: { escrito: 0, omitido: 1, rechazado: 1, error: 0 },
+        },
+      },
+    }
+    setup([{ status: 200, body: run({ outputs: { [nodeId(5)]: fields } }) }])
+    const panel = await screen.findByRole('tabpanel')
+    const counts = within(panel).getByRole('list', { name: 'Recuentos por campo' })
+    expect(within(counts).getAllByRole('listitem').map((i) => i.textContent)).toEqual([
+      'Summary: 1 escrito · 0 omitidos · 1 rechazado · 0 con error',
+      'Main topic: 0 escritos · 1 omitido · 1 rechazado · 0 con error',
+    ])
+    const table = within(panel).getByRole('table', { name: 'Campos guardados: Summary + Main topic' })
+    const rows = within(table).getAllByRole('row')
+    expect(within(rows[0]).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Fecha', 'Canal', 'Summary', 'Main topic', 'Motivo'])
+    expect(rows[1]).toHaveTextContent('El cliente pide bloquear la tarjeta.')
+    expect(rows[1]).toHaveTextContent('Escrito')
+    expect(rows[1]).toHaveTextContent('bloqueo_tarjeta')
+    expect(rows[1]).toHaveTextContent('Omitido')
+    expect(rows[2]).toHaveTextContent('Rechazado')
+    expect(rows[2]).toHaveTextContent('«Hipotecas» no es un valor permitido de main_topic')
+  })
+
   it('la métrica se ve como gráfico de barras y como tabla', async () => {
     setup([{ status: 200, body: run() }])
     const user = userEvent.setup()

@@ -65,6 +65,8 @@ function Connections({ node, nodes, edges, editable, onConnect, onDisconnect }: 
 export function NodePanel(props: Props) {
   const { node, edges, nodes, editable, onChange, onDelete, onClose } = props
   const chained = edges.some((e) => e.target === node.id && nodes.find((n) => n.id === e.source)?.type === 'prompt')
+  // El Prompt de entrada de un Output: sus campos JSON alimentan los campos destino de «Guardar en campos» (FE013).
+  const inputPrompt = nodes.find((n) => n.type === 'prompt' && edges.some((e) => e.source === n.id && e.target === node.id))
   return (
     <section aria-label={`Configuración del ${NODE_LABELS[node.type]}`} className="space-y-3 rounded-xl border border-slate-200 bg-white p-3">
       <header className="flex items-center justify-between">
@@ -86,7 +88,9 @@ export function NodePanel(props: Props) {
         <legend className="sr-only">Configuración</legend>
         {node.type === 'sampling' && <SamplingPanel config={node.data.config as SamplingConfig} onChange={onChange} />}
         {node.type === 'prompt' && <PromptPanel config={node.data.config as PromptConfig} chained={chained} onChange={onChange} />}
-        {node.type === 'output' && <OutputPanel config={node.data.config as OutputConfig} onChange={onChange} />}
+        {node.type === 'output' && (
+          <OutputPanel config={node.data.config as OutputConfig} prompt={inputPrompt?.data.config as PromptConfig | undefined} onChange={onChange} />
+        )}
       </fieldset>
       <Connections {...props} />
     </section>

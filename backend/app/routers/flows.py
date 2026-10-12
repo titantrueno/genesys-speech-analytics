@@ -1,6 +1,6 @@
 """API de flujos de insights (FE004). Lecturas con `flows:view`; escrituras y ejecuciones con `flows:edit`."""
 import copy
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from app.auth import User, require_permission
 from app.config.store import get_config
 from app.data.store import get_dataset
-from app.flows import catalog
+from app.flows import catalog, templates
 from app.flows.model import Graph, GraphError, parse_graph
 from app.flows.analysis_writer import AnalysisWriter, get_analysis_writer
 from app.flows.llm_runner import build_runner
@@ -16,7 +16,7 @@ from app.flows.prompting import PromptRunner
 from app.flows.runs import FlowExecutor, Run, get_run_store, step_delay_seconds
 from app.flows.rules import LlmKeys, blocking, validate
 from app.llm_client import LlmClient, LlmUnavailable, get_llm_client
-from app.flows.store import Flow, get_flow_store
+from app.flows.store import Flow, assign_node_ids, get_flow_store
 from app.query.engine import run_query
 from app.query.model import QueryError, parse_query
 
@@ -28,6 +28,11 @@ EDIT = require_permission("flows:edit")
 
 class FlowName(BaseModel):
     name: str = Field(min_length=1, max_length=catalog.MAX_FLOW_NAME)
+
+
+class NewFlow(FlowName):
+    # Plantilla de summary y main topic (FE013); sin ella, el flujo empieza vacío.
+    template: Literal[tuple(templates.TEMPLATES)] | None = None
 
 
 class EstimateIn(BaseModel):
@@ -84,8 +89,14 @@ def list_flows() -> dict:
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_flow(body: FlowName, user: User = Depends(EDIT)) -> dict:
-    return get_flow_store().create(user, _clean_name(body.name)).to_dict()
+def create_flow(body: NewFlow, user: User = Depends(EDIT)) -> dict:
+    graph = None
+    if body.template:
+        try:
+            graph, _ = assign_node_ids(templates.build(body.template))
+        except templates.TemplateError as exc:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from None
+    return get_flow_store().create(user, _clean_name(body.name), graph).to_dict()
 
 
 @router.get("/catalog", dependencies=[Depends(VIEW)])
@@ -106,6 +117,9 @@ def flow_catalog() -> dict:
         "field_types": catalog.as_options(catalog.FIELD_TYPES),
         "output_kinds": catalog.as_options(catalog.OUTPUT_KINDS),
         "target_fields": catalog.as_options(catalog.TARGET_FIELDS),
+        "templates": catalog.as_options(templates.TEMPLATES),
+        # Origen de datos activo: «Guardar en campos» solo funciona con datos reales (FE013).
+        "origin": get_config().sources.origin,
         "aggregations": catalog.as_options(catalog.AGGREGATIONS),
         "limits": {
             "max_sample_size": catalog.MAX_SAMPLE_SIZE, "max_template": catalog.MAX_TEMPLATE,

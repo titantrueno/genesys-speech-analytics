@@ -5,7 +5,8 @@ import { CHANNEL_LABELS } from '../conversations/labels'
 import { RankedBars } from '../dashboards/bars'
 import { ChartCard, DataTable } from '../dashboards/ChartCard'
 import { formatDateTime, formatInteger, shortId } from '../lib/format'
-import type { MetricResult, ReportResult, RunOutput, TableResult } from './types'
+import { useCatalog, optionLabel } from './catalog'
+import type { FieldsResult, FieldState, MetricResult, ReportResult, RunOutput, TableResult } from './types'
 
 const percent = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
@@ -75,6 +76,72 @@ function MetricOutput({ result, destination }: { result: MetricResult; destinati
   )
 }
 
+const FIELD_STATES: Record<FieldState, { label: string; one: string; many: string; tone: string }> = {
+  escrito: { label: 'Escrito', one: 'escrito', many: 'escritos', tone: 'bg-emerald-50 text-emerald-700' },
+  omitido: { label: 'Omitido', one: 'omitido', many: 'omitidos', tone: 'bg-slate-100 text-slate-600' },
+  rechazado: { label: 'Rechazado', one: 'rechazado', many: 'rechazados', tone: 'bg-amber-50 text-amber-800' },
+  error: { label: 'Error', one: 'con error', many: 'con error', tone: 'bg-red-50 text-red-700' },
+}
+
+function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets: FieldsResult['targets'] }) {
+  const { conversation } = row
+  const href = `/conversaciones/${conversation.id}`
+  const { onClick, onAuxClick, linkState } = useRowNavigation(href)
+  return (
+    <tr onClick={onClick} onAuxClick={onAuxClick} className="cursor-pointer border-b border-slate-100 align-top hover:bg-brand-50/60">
+      <td className="px-2.5 py-2 whitespace-nowrap">
+        <Link to={href} state={linkState} className="font-medium text-brand-700 hover:underline">{formatDateTime(conversation.started_at)}</Link>
+        <p className="font-mono text-[11px] text-slate-400" title={conversation.id}>{shortId(conversation.id)}</p>
+      </td>
+      <td className="px-2.5 py-2 whitespace-nowrap text-slate-700">{CHANNEL_LABELS[conversation.channel]}</td>
+      {targets.map((target) => {
+        const state = row.states[target]
+        return (
+          <td key={target} className="min-w-56 px-2.5 py-2 text-slate-800">
+            {state && <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-xs ${FIELD_STATES[state].tone}`}>{FIELD_STATES[state].label}</span>}
+            {row.values[target] && <p className={target === 'main_topic' ? 'font-mono text-xs' : ''}>{row.values[target]}</p>}
+          </td>
+        )
+      })}
+      <td className="px-2.5 py-2 text-xs text-slate-600">{row.reason}</td>
+    </tr>
+  )
+}
+
+/** «Guardar en campos» (FE013): qué se escribió en cada conversación, campo a campo. */
+function FieldsOutput({ result, destination }: { result: FieldsResult; destination: string }) {
+  const catalog = useCatalog()
+  const label = (target: string) => optionLabel(catalog.target_fields, target) ?? target
+  return (
+    <div className="space-y-3">
+      <ul aria-label="Recuentos por campo" className="space-y-1 text-sm text-slate-700">
+        {result.targets.map((target) => {
+          const counts = result.counts[target]
+          return (
+            <li key={target}>
+              <span className="font-medium">{label(target)}</span>:{' '}
+              {(Object.keys(FIELD_STATES) as FieldState[]).map((state) => {
+                const n = counts?.[state] ?? 0
+                return `${formatInteger(n)} ${n === 1 ? FIELD_STATES[state].one : FIELD_STATES[state].many}`
+              }).join(' · ')}
+            </li>
+          )
+        })}
+      </ul>
+      <div className="overflow-x-auto">
+        <table aria-label={`Campos guardados: ${destination}`} className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+              {['Fecha', 'Canal', ...result.targets.map(label), 'Motivo'].map((c) => <th key={c} scope="col" className="px-2.5 py-2 font-medium">{c}</th>)}
+            </tr>
+          </thead>
+          <tbody>{result.rows.map((row) => <FieldRow key={row.conversation.id} row={row} targets={result.targets} />)}</tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function ReportOutput({ result }: { result: ReportResult }) {
   return <article className="rounded-lg bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-wrap text-slate-800">{result.text}</article>
 }
@@ -112,6 +179,7 @@ export function RunOutputs({ outputs }: { outputs: RunOutput[] }) {
           {current.kind === 'tabla' && <TableOutput result={current.result} destination={current.destination} />}
           {current.kind === 'metrica' && <MetricOutput result={current.result} destination={current.destination} />}
           {current.kind === 'informe' && <ReportOutput result={current.result} />}
+          {current.kind === 'campo' && <FieldsOutput result={current.result} destination={current.destination} />}
         </div>
       )}
     </section>

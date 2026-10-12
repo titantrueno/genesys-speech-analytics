@@ -8,7 +8,7 @@ import { useDownloadFlows, useDownloadMutations } from '../downloads/api'
 import { DOWNLOAD_STATUS, describeSchedule } from '../downloads/labels'
 import type { DownloadFlow } from '../downloads/types'
 import { formatDateTime } from '../lib/format'
-import { useFlowMutations, useFlows } from './api'
+import { useFlowCatalog, useFlowMutations, useFlows } from './api'
 import { FLOW_STATUS, RUN_STATUS } from './labels'
 import { StatusBadge } from './StatusBadge'
 import type { FlowSummary } from './types'
@@ -33,12 +33,15 @@ function NewFlowForm({ onCancel }: { onCancel: () => void }) {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [kind, setKind] = useState<FlowKind>('insights')
+  const [template, setTemplate] = useState('')
+  // Plantillas de summary y main topic (FE013); si el catálogo no carga, se crea vacío como siempre.
+  const templates = useFlowCatalog().data?.templates ?? []
   const pending = create.isPending || downloads.create.isPending
 
   function submit(event: FormEvent) {
     event.preventDefault()
     if (kind === 'insights') {
-      create.mutate(name.trim(), { onSuccess: (flow) => navigate(`/flujos/${flow.id}`) })
+      create.mutate({ name: name.trim(), ...(template ? { template } : {}) }, { onSuccess: (flow) => navigate(`/flujos/${flow.id}`) })
     } else {
       downloads.create.mutate({ name: name.trim(), ...NEW_DOWNLOAD },
         { onSuccess: (flow) => navigate(`/flujos/descargas/${flow.id}`) })
@@ -62,6 +65,15 @@ function NewFlowForm({ onCancel }: { onCancel: () => void }) {
           ))}
         </div>
       </fieldset>
+      {kind === 'insights' && templates.length > 0 && (
+        <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
+          Plantilla
+          <select className={`${input} w-64`} value={template} onChange={(e) => setTemplate(e.target.value)}>
+            <option value="">Vacío</option>
+            {templates.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </label>
+      )}
       <button type="submit" disabled={!name.trim() || pending}
         className="h-8 rounded-md bg-brand-600 px-3 text-sm text-white disabled:opacity-50">Crear</button>
       <button type="button" className={`${small} h-8`} onClick={onCancel}>Cancelar</button>

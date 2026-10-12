@@ -1535,7 +1535,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FlowName'
+              $ref: '#/components/schemas/NewFlow'
         required: true
       responses:
         '201':
@@ -1564,7 +1564,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Nombre vacío. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Nombre vacío, plantilla desconocida o demasiados main topics activos para la plantilla de main topic.
+            Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
           content:
             application/json:
               schema:
@@ -1574,7 +1575,8 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Crea un flujo con el grafo vacío.'
+      description: 'Permiso: `flows:edit`. Crea un flujo con el grafo vacío o, con `template`, ya configurado para generar
+        summary, main topic o los dos en una llamada (FE013).'
   /api/flows/catalog:
     get:
       tags:
@@ -4513,6 +4515,26 @@ components:
       - access_token
       - user
       title: LoginResponse
+    NewFlow:
+      properties:
+        name:
+          type: string
+          maxLength: 80
+          minLength: 1
+          title: Name
+        template:
+          anyOf:
+          - type: string
+            enum:
+            - summary
+            - main_topic
+            - summary_main_topic
+          - type: 'null'
+          title: Template
+      type: object
+      required:
+      - name
+      title: NewFlow
     ProviderTestIn:
       properties:
         model:
@@ -6256,6 +6278,19 @@ components:
             $ref: '#/components/schemas/ValueLabel'
           title: Target Fields
           type: array
+        templates:
+          description: Plantillas para crear un flujo ya configurado (FE013).
+          items:
+            $ref: '#/components/schemas/ValueLabel'
+          title: Templates
+          type: array
+        origin:
+          description: 'Origen de datos activo: un Output «campo» solo puede ejecutarse con `real` (FE013).'
+          enum:
+          - sintetico
+          - real
+          title: Origin
+          type: string
         aggregations:
           items:
             $ref: '#/components/schemas/ValueLabel'
@@ -6278,6 +6313,8 @@ components:
       - field_types
       - output_kinds
       - target_fields
+      - templates
+      - origin
       - aggregations
       - limits
       title: FlowCatalog

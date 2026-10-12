@@ -2,6 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { fakeId } from '../test/fixtures'
+import { CATALOG } from '../test/flowFixtures'
 import { renderApp, signedInAs, USERS } from '../test/utils'
 import type { User } from '../auth/types'
 import type { Flow, FlowSummary } from './types'
@@ -27,7 +28,7 @@ const EMPTY_GRAPH = { version: 1, nodes: [], edges: [] }
 type Call = { method: string; path: string; body?: unknown }
 
 function setup(options: {
-  user?: User; items?: FlowSummary[]; listStatus?: number; createStatus?: number; listGate?: Promise<void>
+  user?: User; items?: FlowSummary[]; listStatus?: number; createStatus?: number; listGate?: Promise<void>; catalog?: boolean
 } = {}) {
   let items = [...(options.items ?? FLOWS)]
   const calls: Call[] = []
@@ -55,7 +56,7 @@ function setup(options: {
     },
     [`GET /api/flows/${fakeId('1FL', 10)}`]: () => ({ status: 200, body: asFlow(items[0]) }),
     [`GET /api/flows/${fakeId('1FL', 1)}`]: () => ({ status: 200, body: asFlow(FLOWS[0]) }),
-    'GET /api/flows/catalog': () => ({ status: 404 }),
+    'GET /api/flows/catalog': () => (options.catalog ? { status: 200, body: CATALOG } : { status: 404 }),
     'GET /api/download-flows': () => ({ status: 200, body: { items: [] } }),
   }
   for (const item of FLOWS) {
@@ -118,6 +119,22 @@ describe('listado de flujos', () => {
     await user.click(screen.getByRole('button', { name: 'Crear' }))
     await waitFor(() => expect(router.state.location.pathname).toBe(`/flujos/${fakeId('1FL', 10)}`))
     expect(calls).toContainEqual({ method: 'POST', path: '/api/flows', body: { name: 'Quejas por comisiones' } })
+  })
+
+  it('crea un flujo desde una plantilla de summary y main topic', async () => {
+    const { calls, router } = setup({ catalog: true })
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Nuevo flujo' }))
+    const template = await screen.findByLabelText('Plantilla')
+    expect(template).toHaveValue('')
+    expect([...template.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
+      'Vacío', 'Generar summary', 'Generar main topic', 'Generar summary y main topic'])
+    await user.type(screen.getByLabelText('Nombre del flujo'), 'Summary y main topic')
+    await user.selectOptions(template, 'summary_main_topic')
+    await user.click(screen.getByRole('button', { name: 'Crear' }))
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/flujos/${fakeId('1FL', 10)}`))
+    expect(calls).toContainEqual({ method: 'POST', path: '/api/flows',
+      body: { name: 'Summary y main topic', template: 'summary_main_topic' } })
   })
 
   it('avisa si no se puede crear el flujo', async () => {

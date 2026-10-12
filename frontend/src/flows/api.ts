@@ -20,7 +20,7 @@ export function useFlowMutations() {
   const refresh = () => client.invalidateQueries({ queryKey: FLOWS_KEY })
   return {
     create: useMutation({
-      mutationFn: (name: string) => apiRequest<Flow>('/api/flows', { method: 'POST', body: { name } }),
+      mutationFn: (body: { name: string; template?: string }) => apiRequest<Flow>('/api/flows', { method: 'POST', body }),
       onSuccess: refresh,
     }),
     duplicate: useMutation({
