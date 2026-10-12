@@ -10,7 +10,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.flows.model import Graph
-from app.models import Analysis, Turn
+from app.models import Analysis, GenesysInfo, Turn
 
 
 class Doc(BaseModel):
@@ -248,6 +248,7 @@ class ConversationDetail(Doc):
     analysis: Analysis = Field(description="`compliance` es el cumplimiento efectivo con los checks activos "
                                            "(`true`, `false` o `null` si no aplica).")
     main_topic_label: str
+    genesys: GenesysInfo | None = Field(None, description="Analítica de Genesys; solo con el origen `real` (FE012).")
 
 
 # --- Explorador ----------------------------------------------------------------------------------------------------
@@ -507,6 +508,11 @@ class Privacy(Doc):
     pii_masking: bool
 
 
+class Sources(Doc):
+    origin: Literal["sintetico", "real"] = Field(
+        description="`sintetico` (dataset generado) o `real` (conversaciones de Genesys guardadas por la ingesta).")
+
+
 class AiSettings(Doc):
     provider: str
     model: str
@@ -539,6 +545,7 @@ class ConfigOptions(Doc):
 class PlatformConfig(Doc):
     version: int = Field(description="Sube con cada cambio aceptado.")
     general: PublicConfig
+    sources: Sources
     privacy: Privacy
     ai: AiSettings
     kpis: list[KpiSettings]

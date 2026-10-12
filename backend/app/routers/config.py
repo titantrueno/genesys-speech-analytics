@@ -11,7 +11,7 @@ from app import ids
 from app.auth import User, require_permission
 from app.config.checks import Check, CheckIn
 from app.config.kpis import DASHBOARDS, KpiTarget, KpiTargetIn
-from app.config.model import (LANGUAGES, SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, field_errors, parse_body,
+from app.config.model import (LANGUAGES, SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, SourcesConfig, field_errors, parse_body,
                               timezones)
 from app.config.store import Config, Connector, get_config, get_config_store
 from app.config.taxonomy import (MainTopicIn, SecondaryTopicIn, Topic, main_topic_usage,
@@ -58,6 +58,7 @@ def config_body(config: Config) -> dict:
     return {
         "version": config.version,
         "general": config.general.model_dump(),
+        "sources": config.sources.model_dump(),
         "privacy": config.privacy.model_dump(),
         "ai": {**config.ai.model_dump(), "simulated": True},
         "kpis": [{"code": k.code, "label": k.label, "unit": k.unit, "higher_is_better": k.higher_is_better,
@@ -82,6 +83,15 @@ def update_general(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict
     general = parse_body(GeneralConfig, payload)
     config = get_config_store().apply_change(user, "general", SECTIONS["general"], lambda c: (
         c.general.model_dump(), general.model_dump(), {"general": general}))
+    return config_body(config)
+
+
+@router.put("/sources")
+def update_sources(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
+    """Cambia el origen de datos de toda la plataforma (FE012). No toca el repositorio real: sigue accesible sin él."""
+    sources = parse_body(SourcesConfig, payload)
+    config = get_config_store().apply_change(user, "fuentes", "Origen de datos", lambda c: (
+        c.sources.model_dump(), sources.model_dump(), {"sources": sources}))
     return config_body(config)
 
 

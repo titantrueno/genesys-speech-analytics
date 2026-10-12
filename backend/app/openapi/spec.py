@@ -14,7 +14,7 @@ from pydantic.json_schema import models_json_schema
 from app.auth import ALL_PERMISSIONS, PERMISSION_LABELS
 from app.config.checks import CheckIn
 from app.config.kpis import KpiTargetIn
-from app.config.model import AiConfig, GeneralConfig, PrivacyConfig
+from app.config.model import AiConfig, GeneralConfig, PrivacyConfig, SourcesConfig
 from app.config.taxonomy import MainTopicIn, SecondaryTopicIn
 from app.flows.model import Graph
 from app.openapi import schemas as s
@@ -268,6 +268,9 @@ OPERATIONS: dict[tuple[str, str], Op] = {
                                "Configuración completa, versión y opciones de los selectores."),
     ("PUT", "/api/config/general"): Op("Guardar General", s.PlatformConfig, "config:edit", body=GeneralConfig,
                                        errors=_e422("Errores por campo.", s.FieldErrors)),
+    ("PUT", "/api/config/sources"): Op("Guardar Origen de datos", s.PlatformConfig, "config:edit", body=SourcesConfig,
+                                       description="Cambia el origen de datos de toda la plataforma (FE012).",
+                                       errors=_e422("Origen desconocido.", s.FieldErrors)),
     ("PUT", "/api/config/privacy"): Op("Guardar Privacidad", s.PlatformConfig, "config:edit", body=PrivacyConfig,
                                        errors=_e422("Errores por campo.", s.FieldErrors)),
     ("PUT", "/api/config/ai"): Op("Guardar Modelos de IA", s.PlatformConfig, "config:edit", body=AiConfig,

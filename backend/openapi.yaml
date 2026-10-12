@@ -2934,6 +2934,55 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `config:edit`.'
+  /api/config/sources:
+    put:
+      tags:
+      - config
+      summary: Guardar Origen de datos
+      description: 'Permiso: `config:edit`. Cambia el origen de datos de toda la plataforma (FE012).'
+      operationId: update_sources_api_config_sources_put
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SourcesConfig'
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: *id012
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Falta el permiso `config:edit`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Origen desconocido. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - *id010
+                - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
   /api/config/privacy:
     put:
       tags:
@@ -4445,46 +4494,62 @@ components:
       title: AiSettings
       type: object
     Analysis:
+      description: 'Análisis de la plataforma. Con `pending`, los campos que aún no existen son `None` (FE012): quien los
+        lee los
+
+        trata como vacíos, nunca como 0.'
       properties:
         summary:
           title: Summary
           type: string
         main_topic:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Main Topic
-          type: string
         secondary_topics:
           items:
             type: string
           title: Secondary Topics
           type: array
         sentiment:
+          anyOf:
+          - type: number
+          - type: 'null'
           title: Sentiment
-          type: number
         sentiment_timeline:
           items:
             type: number
           title: Sentiment Timeline
           type: array
         resolution:
-          enum:
-          - resuelta
-          - no_resuelta
-          - escalada
+          anyOf:
+          - enum:
+            - resuelta
+            - no_resuelta
+            - escalada
+            type: string
+          - type: 'null'
           title: Resolution
-          type: string
         csat:
+          anyOf:
+          - type: number
+          - type: 'null'
           title: Csat
-          type: number
         effort:
+          anyOf:
+          - type: number
+          - type: 'null'
           title: Effort
-          type: number
         churn_risk:
-          enum:
-          - bajo
-          - medio
-          - alto
+          anyOf:
+          - enum:
+            - bajo
+            - medio
+            - alto
+            type: string
+          - type: 'null'
           title: Churn Risk
-          type: string
         compliance:
           additionalProperties:
             anyOf:
@@ -4502,6 +4567,10 @@ components:
             type: string
           title: Keywords
           type: array
+        pending:
+          default: false
+          title: Pending
+          type: boolean
       required:
       - summary
       - main_topic
@@ -5017,6 +5086,12 @@ components:
         main_topic_label:
           title: Main Topic Label
           type: string
+        genesys:
+          anyOf:
+          - $ref: '#/components/schemas/GenesysInfo'
+          - type: 'null'
+          default: null
+          description: Analítica de Genesys; solo con el origen `real` (FE012).
       required:
       - id
       - channel
@@ -6007,6 +6082,112 @@ components:
       - by_quality
       title: GenesysConversations
       type: object
+    GenesysInfo:
+      description: 'Analítica que da Genesys de una conversación real (FE011): solo existe en el origen `real`.'
+      properties:
+        genesys_id:
+          title: Genesys Id
+          type: string
+        direction:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Direction
+        ani:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Ani
+        dnis:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Dnis
+        external_tag:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: External Tag
+        transcript_quality:
+          title: Transcript Quality
+          type: string
+        disconnect_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Disconnect Type
+        transferred:
+          default: false
+          title: Transferred
+          type: boolean
+        reconnected:
+          default: false
+          title: Reconnected
+          type: boolean
+        contained_in_bot:
+          default: false
+          title: Contained In Bot
+          type: boolean
+        derived_to_agent:
+          default: false
+          title: Derived To Agent
+          type: boolean
+        abandoned_in_queue:
+          default: false
+          title: Abandoned In Queue
+          type: boolean
+        undelivered_messages:
+          default: 0
+          title: Undelivered Messages
+          type: integer
+        customer_sentiment:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Customer Sentiment
+        mos:
+          anyOf:
+          - type: number
+          - type: 'null'
+          default: null
+          title: Mos
+        metrics:
+          additionalProperties: true
+          default: {}
+          title: Metrics
+          type: object
+        segments:
+          default: []
+          items:
+            additionalProperties: true
+            type: object
+          title: Segments
+          type: array
+        topics:
+          default: []
+          items:
+            additionalProperties: true
+            type: object
+          title: Topics
+          type: array
+        divisions:
+          default: []
+          items:
+            additionalProperties: true
+            type: object
+          title: Divisions
+          type: array
+      required:
+      - genesys_id
+      - transcript_quality
+      title: GenesysInfo
+      type: object
     GenesysLastDownload:
       additionalProperties: false
       properties:
@@ -6776,6 +6957,8 @@ components:
           type: integer
         general:
           $ref: '#/components/schemas/PublicConfig'
+        sources:
+          $ref: '#/components/schemas/Sources'
         privacy:
           $ref: '#/components/schemas/Privacy'
         ai:
@@ -6790,6 +6973,7 @@ components:
       required:
       - version
       - general
+      - sources
       - privacy
       - ai
       - kpis
@@ -7737,6 +7921,34 @@ components:
       - conversation
       title: SimilarItem
       type: object
+    Sources:
+      additionalProperties: false
+      properties:
+        origin:
+          description: '`sintetico` (dataset generado) o `real` (conversaciones de Genesys guardadas por la ingesta).'
+          enum:
+          - sintetico
+          - real
+          title: Origin
+          type: string
+      required:
+      - origin
+      title: Sources
+      type: object
+    SourcesConfig:
+      additionalProperties: false
+      description: 'Origen de datos de toda la plataforma (FE012): el dataset sintético o las conversaciones reales de Genesys.'
+      properties:
+        origin:
+          enum:
+          - sintetico
+          - real
+          title: Origin
+          type: string
+      required:
+      - origin
+      title: SourcesConfig
+      type: object
     Suggestion:
       additionalProperties: false
       properties:
@@ -8046,8 +8258,14 @@ components:
           title: Offset S
           type: integer
         sentiment:
+          anyOf:
+          - type: number
+          - type: 'null'
           title: Sentiment
-          type: number
+        delivered:
+          default: true
+          title: Delivered
+          type: boolean
       required:
       - speaker
       - text

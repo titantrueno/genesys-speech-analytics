@@ -1,6 +1,6 @@
 """Modelos de cada sección de la configuración (FE005). Todas rechazan campos desconocidos."""
 from functools import cache
-from typing import Annotated, Any, TypeVar
+from typing import Annotated, Any, Literal, TypeVar
 from zoneinfo import available_timezones
 
 from fastapi import HTTPException, status
@@ -49,6 +49,11 @@ class GeneralConfig(Section):
         if value not in LANGUAGES:
             raise ValueError(f"Idioma no disponible; opciones: {', '.join(LANGUAGES)}")
         return value
+
+
+class SourcesConfig(Section):
+    """Origen de datos de toda la plataforma (FE012): el dataset sintético o las conversaciones reales de Genesys."""
+    origin: Literal["sintetico", "real"]
 
 
 class PrivacyConfig(Section):

@@ -15,7 +15,7 @@ from app.audit import AuditEntry, get_audit_log
 from app.auth import User
 from app.config.checks import Check, initial_checks
 from app.config.kpis import KpiTarget, initial_kpis
-from app.config.model import SECTIONS, AiConfig, GeneralConfig, PrivacyConfig
+from app.config.model import SECTIONS, AiConfig, GeneralConfig, PrivacyConfig, SourcesConfig
 from app.config.taxonomy import Topic, initial_main_topics, initial_secondary_topics
 from app.clock import now
 
@@ -43,6 +43,7 @@ class Config:
     """Instantánea inmutable: quien la lee no ve cambios a medias."""
     version: int = 0
     general: GeneralConfig = DEFAULT_GENERAL
+    sources: SourcesConfig = SourcesConfig(origin="sintetico")
     privacy: PrivacyConfig = PrivacyConfig(pii_masking=True)
     ai: AiConfig = AiConfig(provider="simulado", model="mock-rapido")
     connectors: dict[str, Connector] = field(default_factory=_default_connectors)
