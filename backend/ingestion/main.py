@@ -25,7 +25,7 @@ from ingestion.scheduler import Job, Scheduler
 from ingestion.security import internal_token_guard
 from ingestion.settings import Settings, load_settings
 
-VERSION = "0.9.0"  # se entrega con la plataforma
+VERSION = "0.10.0"  # se entrega con la plataforma
 MAX_PARALLEL_RUNS = 2
 
 

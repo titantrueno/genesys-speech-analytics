@@ -1,6 +1,6 @@
 # FE013 — Servicio de LLM para summary y main topic
 
-> Estado: **aprobada** el 2026-10-12, ampliada en `/plan` con la casilla «Sobrescribir» de la ingesta (criterios 26–30) y la protección de la taxonomía (criterio 31), y en `/build` de T6 con summary y main topic en una sola llamada (criterio 16). Depende de FE004 (flujos de insights), FE005 (configuración), FE011 (ingesta y PostgreSQL) y FE012 (origen de datos real). Aplica FE008 y FE009.
+> Estado: **entregada** en `v0.10.0` el 2026-10-13 ([ship](SHIP.md)). Aprobada el 2026-10-12, ampliada en `/plan` con la casilla «Sobrescribir» de la ingesta (criterios 26–30) y la protección de la taxonomía (criterio 31), y en `/build` de T6 con summary y main topic en una sola llamada (criterio 16). Depende de FE004 (flujos de insights), FE005 (configuración), FE011 (ingesta y PostgreSQL) y FE012 (origen de datos real). Aplica FE008 y FE009.
 
 ## Objetivo
 

@@ -100,3 +100,4 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE010 Especificación OpenAPI en Configuración | Entregada en `v0.7.0` |
 | FE011 Ingesta de conversaciones de Genesys | Entregada en `v0.8.0` |
 | FE012 Switch entre datos sintéticos y reales | Entregada en `v0.9.0` |
+| FE013 Servicio de LLM para summary y main topic | Entregada en `v0.10.0` |
