@@ -1,5 +1,4 @@
 from datetime import date
-from functools import cache
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -8,7 +7,9 @@ from app import ids
 from app.auth import require_permission
 from app.data.store import conversation_index, get_dataset
 from app.privacy.masking import masked, shown
+from app.models import Conversation
 from app.search.engine import Hit, SearchEngine, best_per_conversation
+from app.search.index import SearchIndex
 from app.search.text import matching_terms, tokenize
 from app.search.tfidf import TfidfEngine
 from app.services.filters import ConversationFilters, conversation_filters
@@ -20,15 +21,18 @@ MAX_QUERY = 500
 SIMILAR_COUNT = 10
 
 
-@cache
-def build_default_engine() -> SearchEngine:
+def build_engine(conversations: list[Conversation]) -> SearchEngine:
     # El índice nunca contiene datos personales, esté o no activado el enmascarado (FE005).
-    return TfidfEngine([masked(conv) for conv in get_dataset()])
+    return TfidfEngine([masked(conv) for conv in conversations])
+
+
+# Un índice por origen de datos, reconstruido en caliente cuando llegan conversaciones nuevas (FE012).
+search_index = SearchIndex(build_engine)
 
 
 def get_search_engine() -> SearchEngine:
     """Punto de sustitución del motor (ver ADR-005): la API solo conoce la interfaz `SearchEngine`."""
-    return build_default_engine()
+    return search_index.engine()
 
 
 def search_filters(
@@ -44,9 +48,9 @@ def _score(hit: Hit) -> float:
     return round(hit.score, 4)
 
 
-def _result(hit: Hit, terms: list[str]) -> dict:
+def _result(hit: Hit, conv: Conversation, terms: list[str]) -> dict:
     fragment = hit.fragment
-    conv = shown(conversation_index()[fragment.conversation_id])
+    conv = shown(conv)
     return {
         "conversation_id": conv.id,
         "start_turn": fragment.start_turn,
@@ -71,6 +75,9 @@ def semantic(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="La consulta no puede estar vacía")
     candidates = {conv.id for conv in filters.apply(get_dataset())}
     matched = engine.search(q, candidates)
+    # El índice puede ir por detrás de los datos mientras se reconstruye: solo se devuelve lo que ya existe en ambos.
+    index = conversation_index()
+    matched = [hit for hit in matched if hit.fragment.conversation_id in index]
     hits = [hit for hit in matched if _score(hit) >= min_score]
     if group == "conversation":
         hits = best_per_conversation(hits)
@@ -83,7 +90,7 @@ def semantic(
         "total": len(hits),
         # Mejor puntuación antes del umbral, para situar el control en la UI (criterio 19).
         "max_score": _score(matched[0]) if matched else None,
-        "results": [_result(hit, terms) for hit in hits[:limit]],
+        "results": [_result(hit, index[hit.fragment.conversation_id], terms) for hit in hits[:limit]],
     }
 
 
@@ -92,8 +99,9 @@ def similar(conversation_id: str, engine: SearchEngine = Depends(get_search_engi
     conv = conversation_index().get(ids.normalize(conversation_id))
     if conv is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
+    index = conversation_index()
     return {
         "conversation_id": conv.id,
-        "results": [{"conversation_id": cid, "score": round(score, 4), "conversation": list_item(conversation_index()[cid])}
-                    for cid, score in engine.similar(conv.id, SIMILAR_COUNT)],
+        "results": [{"conversation_id": cid, "score": round(score, 4), "conversation": list_item(index[cid])}
+                    for cid, score in engine.similar(conv.id, SIMILAR_COUNT) if cid in index],
     }

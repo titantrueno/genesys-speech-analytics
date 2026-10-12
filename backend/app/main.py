@@ -27,7 +27,7 @@ DATA_UNAVAILABLE = "Los datos reales no están disponibles"
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # El índice de búsqueda se construye al arrancar, no en la primera búsqueda (FE003).
-    search_router.build_default_engine()
+    search_router.search_index.engine()
     yield
 
 

@@ -43,7 +43,7 @@ _cache: dict[str, tuple[Conversation, Conversation]] = {}
 
 
 def masked(conversation: Conversation) -> Conversation:
-    """Copia de la conversación con la transcripción y el summary enmascarados; el dataset no cambia.
+    """Copia de la conversación con la transcripción, el summary y las frases de los temas enmascarados.
 
     Se cachea por identificador, comprobando que el original es el mismo objeto (los tests crean conversaciones propias).
     """
@@ -52,7 +52,14 @@ def masked(conversation: Conversation) -> Conversation:
         return cached[1]
     analysis = conversation.analysis.model_copy(update={"summary": mask(conversation.analysis.summary)})
     turns = [t.model_copy(update={"text": mask(t.text)}) for t in conversation.turns]
-    result = conversation.model_copy(update={"turns": turns, "analysis": analysis})
+    update = {"turns": turns, "analysis": analysis}
+    if conversation.genesys is not None:
+        # La frase que dio pie a un tema de Genesys es texto de la conversación; ANI, DNIS y `externalTag` no se
+        # enmascaran (decisión de FE012, ADR-007).
+        topics = [{**t, "phrase": mask(t["phrase"]) if t.get("phrase") else t.get("phrase")}
+                  for t in conversation.genesys.topics]
+        update["genesys"] = conversation.genesys.model_copy(update={"topics": topics})
+    result = conversation.model_copy(update=update)
     _cache[conversation.id] = (conversation, result)
     return result
 

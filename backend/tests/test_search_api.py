@@ -213,9 +213,9 @@ def test_api_only_depends_on_the_search_engine_interface(api):
 
 
 def test_index_is_built_at_startup_before_the_first_search():
-    search_router.build_default_engine.cache_clear()
+    search_router.search_index.reset()
     with TestClient(app):
-        assert search_router.build_default_engine.cache_info().currsize == 1
+        assert search_router.search_index.has_engine("sintetico")
 
 
 # --- Propiedad y rendimiento --------------------------------------------------------------------
