@@ -127,7 +127,7 @@ En los 6 chats, los `messageID` de las frases coinciden al 100 % con los identif
    - **Speech & Text Analytics:**
      - en voz, el porcentaje del tiempo de agente, cliente, silencio, IVR, ACD y otros;
      - los temas detectados: nombre, frase que lo activó, hablante, turno, offset y confianza;
-     - el sentimiento por turno, el sentimiento medio del cliente y la empatía, cuando los haya;
+     - el sentimiento por turno; el sentimiento del cliente en la conversación, que es el `sentimentScore` del resumen de STA (con su tendencia) o, si no lo trae, la media de los turnos del cliente; y la empatía, cuando la haya;
      - en voz, el recuento de los eventos acústicos (voz y silencio por lado) y la confianza media del reconocimiento por hablante, para detectar tramos mal transcritos como el del agente en `7b94988a`.
 
    Cada nombre (cola, agente, wrap-up, flujo y división) se resuelve con la API de Genesys, con una caché por ejecución. El nombre del agente sale de su `userId`, porque en voz el participante agente no lo trae. Si un nombre no se puede resolver, se guarda el identificador de Genesys en su lugar y se avisa en el log.
@@ -296,6 +296,7 @@ En los 6 chats, los `messageID` de las frases coinciden al 100 % con los identif
   - **STA:**
     - hay temas en voz y en chat (41 definidos, programa «General»), casi todos genéricos;
     - el sentimiento llega solo en algunas transcripciones, por frase y con valores `-1` o `1`;
+    - *(añadido en `/build` T3)* el resumen de STA trae además `sentimentScore`, `sentimentTrend` y `sentimentTrendClass` de la conversación. El `phraseIndex` de una entrada de sentimiento no es el de su frase (en `7b94988a`, «Vale, muchas gracias.» trae el 3 y la frase es la 5), así que se enlaza por lado, instante y texto;
     - la empatía, en una;
     - el reparto del tiempo por hablante y silencio solo existe en voz.
 - **Riesgo:** las transcripciones de voz incompletas pueden ser lo habitual mientras duren las incidencias de grabación. Se mitiga marcando la calidad y guardando siempre la analítica. Una descarga posterior actualiza la conversación (criterio 10), así que si Genesys completa la transcripción, se recogerá.

@@ -12,13 +12,14 @@ import itertools
 import json
 import re
 from collections import defaultdict, deque
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs
 
 import httpx
+
+from ingestion.pipeline.raw import RawConversation
 
 MAX_INTERVAL = timedelta(days=7)
 _ROUTES = [
@@ -38,26 +39,8 @@ _ROUTES = [
 ]
 
 
-@dataclass
-class FakeConversation:
-    """Respuestas de Genesys para una conversación, tal como se guardan en una carpeta de fixtures."""
-    details: dict
-    sta: dict = field(default_factory=dict)
-    # Documento de transcripción de cada comunicación (con una o varias transcripciones dentro, algunas vacías);
-    # `None` = la URL de transcripción responde `404`.
-    transcripts: dict[str, dict | None] = field(default_factory=dict)
-    messages: dict | None = None
-    messages_bulk: list[dict] | None = None
-
-    @property
-    def id(self) -> str:
-        return self.details["conversationId"]
-
-    @classmethod
-    def load(cls, folder: Path) -> "FakeConversation":
-        read = lambda name: json.loads((folder / name).read_text()) if (folder / name).exists() else None  # noqa: E731
-        return cls(details=read("details.json"), sta=read("sta.json") or {}, transcripts=read("transcripts.json") or {},
-                   messages=read("messages.json"), messages_bulk=read("messages_bulk.json"))
+# Las conversaciones del falso son las mismas respuestas crudas que normaliza la ingesta.
+FakeConversation = RawConversation
 
 
 def _parse_time(value: str) -> datetime:
@@ -83,7 +66,7 @@ class FakeGenesys:
 
     @classmethod
     def from_fixtures(cls, root: Path, **kwargs) -> "FakeGenesys":
-        conversations = [FakeConversation.load(folder) for folder in sorted(root.iterdir())
+        conversations = [RawConversation.from_folder(folder) for folder in sorted(root.iterdir())
                          if folder.is_dir() and (folder / "details.json").exists()]
         catalog = json.loads((root / "catalog.json").read_text())
         return cls(conversations=conversations, catalog=catalog, **kwargs)

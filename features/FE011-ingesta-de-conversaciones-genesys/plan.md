@@ -262,3 +262,27 @@
   - Ocupan 952 kB, sobre todo por `words`, `decoratedWords` y `alternatives` de las frases de voz. Se conservan sin recortar para que la normalización trabaje sobre respuestas idénticas a las reales.
   - En el repositorio no aparece el identificador real de la organización (comprobado con `grep`).
 - **Desviación:** el falso modela **un documento de transcripción por comunicación** (con varias transcripciones dentro), como la API real, y no una lista de documentos como decía la primera versión del diseño.
+
+### T3 — Hecha (2026-10-12)
+
+- **Rojo:** `test_ingestion_normalize.py` fallaba en la recogida, porque no existían `ingestion.pipeline.normalize` ni `ingestion.pipeline.raw`. Con la primera versión fallaron 4 tests por dos hechos de Genesys que no conocíamos (ver «Hallazgos»).
+- **Verde:** 23 tests sobre las 10 fixtures, con los valores del criterio 27, más los casos límite del plan:
+  - transcripción vacía;
+  - `404` de una comunicación ya incluida;
+  - frase `internal` sin `userIds` en el tramo del agente, y `userIds` sin tramo de agente;
+  - API de mensajes caída, con respaldo por `messageID`, textos idénticos a los de la API y el mensaje no entregado contado sin texto;
+  - sentimiento ausente frente a lista vacía, y sentimiento de STA ausente;
+  - métrica que falta, que queda vacía y no a 0;
+  - conversación sin contacto externo ni ANI;
+  - transcripción repetida en dos comunicaciones;
+  - identificadores que no colisionan con los del dataset sintético;
+  - la entrada cruda, que no se modifica.
+- **Mutaciones** (`python -B`): mueren las 16 aplicables (hablantes por `userIds`, por tramo y sin bot; autor de los mensajes de chat; calidad parcial y sin transcripción; agrupado por `messageID`; desduplicado de `transcriptId`; sentimiento neutro por defecto; offsets no negativos; respaldo del ANI; bot solo si el flujo de entrada escribe; entregado o no; espacio `genesys:` de los identificadores; sentimiento de STA). Al principio sobrevivieron tres (ignorar `userIds`, no agrupar por `messageID` y no desduplicar `transcriptId`), porque ninguna fixture distinguía el caso; se añadió un test para cada una.
+- **Resumen por fixture:** coincide con la tabla de la spec. Por ejemplo, `7b94988a` tiene 40 turnos (24 del bot, 2 del agente, 14 del cliente), 8 temas y `derivada`. `c870bc58` tiene 8 tramos (dos de cada tipo) y 9 turnos. `687f2225` queda `parcial` con el aviso «intervino agente y bot sin frases».
+- **Hallazgos** (añadidos a la spec):
+  1. El resumen de STA trae `sentimentScore`, `sentimentTrend` y `sentimentTrendClass` de la conversación. `customer_sentiment` usa `sentimentScore` y, si no está, la media de los turnos del cliente.
+  2. El `phraseIndex` de las entradas de sentimiento no es el de la frase. El sentimiento y los temas se enlazan por lado, instante y texto (`_phrase_for`).
+  3. Los mensajes del bot en la API de mensajes traen `originatingEntity: Bot` y no tienen `createdBy`. Se usa la ausencia de `createdBy`, como dice la spec; `originatingEntity` queda en la respuesta original.
+- **Desviaciones:**
+  - El Genesys falso usa `RawConversation`, la misma estructura que normaliza la ingesta, en lugar de su propia clase.
+  - La calidad `parcial` también tiene en cuenta un bot que intervino sin frases (IVR con `tIvr > 0`, o un flujo de entrada que escribió), como dice el criterio 7.
