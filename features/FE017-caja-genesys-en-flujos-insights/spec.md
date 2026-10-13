@@ -1,6 +1,6 @@
 # FE017 — Caja de descarga de Genesys en los flujos de insights
 
-> Estado: **aprobada** el 2026-10-13. Amplía FE004 (lienzo, reglas, ejecución), FE011 (descarga, programación y log) y FE015 (persistencia de flujos de insights). Aplica FE008, FE012 y ADR-010.
+> Estado: **entregada** en `v0.13.0` el 2026-10-13 ([ship](SHIP.md)). Aprobada el 2026-10-13. Amplía FE004 (lienzo, reglas, ejecución), FE011 (descarga, programación y log) y FE015 (persistencia de flujos de insights). Aplica FE008, FE012 y ADR-010.
 
 ## Objetivo
 

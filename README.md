@@ -106,3 +106,4 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE014 Análisis completo con LLM | Entregada en `v0.11.0` |
 | FE015 Persistencia de flujos y preferencias | Entregada en `v0.12.0` (sin review propio, ver [SHIP de FE016](features/FE016-idioma-ingles-de-la-interfaz/SHIP.md)) |
 | FE016 Idioma inglés de la interfaz | Entregada en `v0.12.0` |
+| FE017 Caja de descarga de Genesys en los flujos de insights | Entregada en `v0.13.0` |

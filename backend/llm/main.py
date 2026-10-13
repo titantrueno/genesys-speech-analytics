@@ -19,7 +19,7 @@ from llm.security import internal_token_guard
 from llm.service import BACKOFF_S, Completer, UnknownProvider
 from llm.settings import Settings, load_settings
 
-VERSION = "0.12.0"  # se entrega con la plataforma
+VERSION = "0.13.0"  # se entrega con la plataforma
 TIMEOUT_S = 60.0
 MODEL_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$"  # el modelo va en la URL de Gemini: nada de `/` ni `..`
 TEST_PROMPT = "Responde únicamente con la palabra: ok"

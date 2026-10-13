@@ -26,7 +26,7 @@ from ingestion.security import internal_token_guard
 from ingestion.settings import Settings, load_settings
 from ingestion.state import build_state_router
 
-VERSION = "0.12.0"  # se entrega con la plataforma
+VERSION = "0.13.0"  # se entrega con la plataforma
 MAX_PARALLEL_RUNS = 2
 
 
