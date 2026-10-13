@@ -54,7 +54,7 @@ class KeyRejected(ProviderError):
     code = "key_rejected"
 
     def __init__(self):
-        super().__init__("El proveedor rechazó la clave")
+        super().__init__("The provider rejected the key")
 
 
 class Transient(ProviderError):
@@ -103,12 +103,12 @@ class HttpProvider:
         if self.rejects_key(response):
             raise KeyRejected()
         if response.status_code in self.retryable:
-            raise Transient(f"{self.label} respondió {response.status_code}")
+            raise Transient(f"{self.label} responded {response.status_code}")
         if response.status_code >= 400:
-            raise self.failure(f"respondió {response.status_code}")
+            raise self.failure(f"responded {response.status_code}")
         try:
             return self.parse(response.json(), request)
         except ProviderError:
             raise
         except (ValueError, KeyError, TypeError, IndexError, AttributeError):
-            raise self.failure("devolvió una respuesta con forma inesperada") from None
+            raise self.failure("returned a response with an unexpected shape") from None

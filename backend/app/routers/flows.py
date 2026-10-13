@@ -43,14 +43,14 @@ class EstimateIn(BaseModel):
 def _clean_name(name: str) -> str:
     cleaned = name.strip()
     if not cleaned:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El nombre no puede estar vacío")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="The name cannot be empty")
     return cleaned
 
 
 def _flow(flow_id: str) -> Flow:
     flow = get_flow_store().get(flow_id)
     if flow is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Flujo no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Flow not found")
     return flow
 
 
@@ -193,7 +193,7 @@ def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(ED
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=[issue.to_dict() for issue in issues])
     run = get_run_store().start(flow, user)
     if run is None:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Ya hay una ejecución en curso de este flujo")
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="This flow is already running")
     snapshot = run.snapshot()
     background.add_task(FlowExecutor(runner, step_delay_seconds(), writer=writer).execute, run)
     return snapshot
@@ -202,7 +202,7 @@ def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(ED
 def _run(flow_id: str, run_id: str) -> Run:
     run = get_run_store().get(_flow(flow_id).id, run_id)
     if run is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Ejecución no encontrada")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
     return run
 
 

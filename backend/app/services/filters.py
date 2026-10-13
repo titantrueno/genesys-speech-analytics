@@ -86,7 +86,7 @@ def conversation_filters(
     date_to = date_to or default_period_end()
     date_from = date_from or date_to - timedelta(days=DEFAULT_PERIOD_DAYS - 1)
     if date_from > date_to:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="'from' debe ser anterior o igual a 'to'")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="'from' must be before or equal to 'to'")
     return ConversationFilters(date_from, date_to, channel, _entity_ids(queue, ids.QUEUE, "queue"),
                                _entity_ids(agent, ids.AGENT, "agent"), main_topic)
 
@@ -96,7 +96,7 @@ def _entity_ids(values: list[str], prefix: str, param: str) -> list[str]:
     invalid = [v for v in normalized if not ids.is_valid(v, prefix)]
     if invalid:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT,
-                            detail=f"'{param}' espera identificadores {prefix}-UUID: {', '.join(invalid)}")
+                            detail=f"'{param}' expects {prefix}-UUID identifiers: {', '.join(invalid)}")
     return normalized
 
 

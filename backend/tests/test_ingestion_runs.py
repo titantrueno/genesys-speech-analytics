@@ -135,7 +135,7 @@ def test_the_log_covers_every_stage_without_turn_text_or_secrets(pg_url):
     fake = make_fake()
     run, _ = _run(pg_url, fake)
     log = list_log(pg_url, run["id"])
-    assert {"autenticación", "búsqueda", "descarga", "normalización", "análisis", "carga"} <= {e["stage"] for e in log}
+    assert {"authentication", "search", "download", "normalization", "analysis", "load"} <= {e["stage"] for e in log}
     warned = {e["genesys_id"] for e in log if e["level"] == "aviso"}
     assert {fixture("687f2225").id, fixture("87a83caa").id, fixture("9e3ec75a").id} <= warned
     text = "\n".join(e["message"] for e in log)
@@ -150,7 +150,7 @@ def test_the_log_covers_every_stage_without_turn_text_or_secrets(pg_url):
 
 def test_wrong_credentials_end_the_run_in_error(pg_url):
     run, _ = _run(pg_url, make_fake(), secret="otro-secreto")
-    assert run["status"] == "error" and run["error"] == "Credenciales de Genesys no válidas"
+    assert run["status"] == "error" and run["error"] == "Invalid Genesys credentials"
     assert run["counters"]["found"] == 0 and table_counts(pg_url)["conversation"] == 0
     assert "otro-secreto" not in str(list_log(pg_url, run["id"]))
 
@@ -178,7 +178,7 @@ def test_progress_is_visible_while_the_run_is_going(pg_url):
     seen = []
 
     def on_step(stage: str) -> None:
-        if stage == "carga":
+        if stage == "load":
             seen.append(get_run(pg_url, run_id))
 
     RunExecutor(pg_url, client_factory(make_fake()), on_step=on_step).execute(run_id)
@@ -194,7 +194,7 @@ def test_reads_keep_answering_during_a_run(pg_url):
     inside, release = threading.Event(), threading.Event()
 
     def on_step(stage: str) -> None:
-        if stage == "carga" and not inside.is_set():
+        if stage == "load" and not inside.is_set():
             inside.set()
             release.wait(10)
 
@@ -224,8 +224,8 @@ def test_a_thousand_conversations_load_in_under_a_minute(pg_url):
 
 def test_the_log_shows_instants_in_the_flow_timezone_without_microseconds(pg_url):
     run, _ = _run(pg_url, make_fake([fixture("37dcbccf")]))
-    messages = [e["message"] for e in list_log(pg_url, run["id"]) if e["stage"] in ("inicio", "búsqueda")]
-    start = next(m for m in messages if m.startswith("Ejecución"))
+    messages = [e["message"] for e in list_log(pg_url, run["id"]) if e["stage"] in ("start", "search")]
+    start = next(m for m in messages if m.startswith("Run"))
     assert "12/10/2026 00:00 – 13/10/2026 00:00 (Europe/Madrid)" in start, start
     assert not any("+00:00" in m or "." in m.split("(")[0][-8:] for m in messages), messages
 

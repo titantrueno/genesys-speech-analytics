@@ -37,13 +37,13 @@ class Gemini(HttpProvider):
     def parse(self, body: dict[str, Any], request: CompletionRequest) -> Completion:
         blocked = (body.get("promptFeedback") or {}).get("blockReason")
         if blocked:
-            raise self.failure(f"bloqueó el prompt ({blocked})")
+            raise self.failure(f"blocked the prompt ({blocked})")
         candidate = body["candidates"][0]
         reason = candidate.get("finishReason")
         if reason == "MAX_TOKENS":
-            raise self.failure("devolvió una respuesta cortada")
+            raise self.failure("returned a truncated response")
         if reason not in (None, "STOP"):
-            raise self.failure(f"no terminó la respuesta ({reason})")
+            raise self.failure(f"did not finish the answer ({reason})")
         # Las partes de razonamiento (`thought`) no son la respuesta.
         text = "".join(p["text"] for p in candidate["content"]["parts"] if "text" in p and not p.get("thought"))
         usage = body.get("usageMetadata") or {}

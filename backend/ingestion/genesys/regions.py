@@ -32,4 +32,4 @@ def api_host(region: str) -> str:
         return REGIONS[region]
     if region in REGIONS.values():
         return region
-    raise GenesysConfigError(f"Región de Genesys desconocida: {region!r}")
+    raise GenesysConfigError(f"Unknown Genesys region: {region!r}")

@@ -75,23 +75,23 @@ def validate_answer(config: PromptConfig, text: str) -> Any:
     answer = text.strip()
     if output.type == "texto":
         if not answer:
-            raise PromptRejected("La respuesta está vacía")
+            raise PromptRejected("The answer is empty")
         return answer
     if output.type == "etiqueta":
         label = _matching(answer, output.labels)
         if label is None:
-            raise PromptRejected(f"«{answer[:80]}» no es una de las etiquetas")
+            raise PromptRejected(f"“{answer[:80]}” is not one of the labels")
         return label
     try:
         data = json.loads(answer)
     except ValueError:
-        raise PromptRejected("La respuesta no es JSON válido") from None
+        raise PromptRejected("The answer is not valid JSON") from None
     fields = {f.name: f.type for f in output.fields or []}
     if not isinstance(data, dict) or set(data) != set(fields):
-        raise PromptRejected("El JSON no tiene exactamente los campos del esquema")
+        raise PromptRejected("The JSON does not have exactly the fields of the schema")
     wrong = [name for name, field_type in fields.items() if not _is_type(data[name], field_type)]
     if wrong:
-        raise PromptRejected(f"Tipo incorrecto en: {', '.join(wrong)}")
+        raise PromptRejected(f"Wrong type in: {', '.join(wrong)}")
     result = {name: data[name] for name in fields}
     for field in output.fields or []:
         if field.options:
@@ -104,7 +104,7 @@ def validate_answer(config: PromptConfig, text: str) -> Any:
 def _allowed(value: str, field) -> str:
     option = _matching(value, field.options)
     if option is None:
-        raise PromptRejected(f"«{value[:80]}» no es un valor permitido de {field.name}")
+        raise PromptRejected(f"“{value[:80]}” is not an allowed value of {field.name}")
     return option
 
 
@@ -117,7 +117,7 @@ class LlmPromptRunner:
     def run(self, config: PromptConfig, conversation: Conversation, previous: Any | None) -> Any:
         # Sin transcripción no hay nada que resumir: el LLM inventaría la respuesta (comprobado en T9 de FE013).
         if "transcripcion" in template_variables(config.template) and not any(t.text.strip() for t in conversation.turns):
-            raise PromptRejected("La conversación no tiene transcripción: no se envía al LLM")
+            raise PromptRejected("The conversation has no transcript: it is not sent to the LLM")
         output: dict[str, Any] = {"type": config.output.type}
         if config.output.type == "etiqueta":
             output["labels"] = list(config.output.labels)

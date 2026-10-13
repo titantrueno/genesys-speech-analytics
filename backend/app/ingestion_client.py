@@ -12,7 +12,7 @@ import httpx
 
 from app.envfile import api_env
 
-UNAVAILABLE = "El servicio de ingesta no está disponible"
+UNAVAILABLE = "The ingestion service is not available"
 DEFAULT_URL = "http://localhost:8001"
 TIMEOUT_S = 5.0
 
@@ -40,7 +40,7 @@ class IngestionClient:
         except httpx.HTTPError as exc:
             raise IngestionUnavailable(type(exc).__name__) from None
         if response.status_code == 401 or response.status_code >= 500:
-            raise IngestionUnavailable(f"El servicio de ingesta respondió {response.status_code}")
+            raise IngestionUnavailable(f"The ingestion service responded {response.status_code}")
         return response
 
 

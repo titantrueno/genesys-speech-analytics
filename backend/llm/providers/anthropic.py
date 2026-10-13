@@ -37,9 +37,9 @@ class Anthropic(HttpProvider):
     def parse(self, body: dict[str, Any], request: CompletionRequest) -> Completion:
         stop = body["stop_reason"]
         if stop == "refusal":
-            raise self.failure("declinó responder")
+            raise self.failure("declined to answer")
         if stop == "max_tokens":
-            raise self.failure("devolvió una respuesta cortada")
+            raise self.failure("returned a truncated response")
         text = "".join(block["text"] for block in body["content"] if block.get("type") == "text")
         usage = body.get("usage") or {}
         return Completion(text=text, model=body.get("model") or request.model,

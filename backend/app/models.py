@@ -41,7 +41,7 @@ class Analysis(BaseModel):
 
 
 class GenesysInfo(BaseModel):
-    """Analítica que da Genesys de una conversación real (FE011): solo existe en el origen `real`."""
+    """Analytics that Genesys gives for a real conversation (FE011): it only exists in the `real` origin."""
     genesys_id: str
     direction: str | None = None
     ani: str | None = None

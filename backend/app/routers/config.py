@@ -99,7 +99,7 @@ def update_general(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict
 def update_sources(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
     """Cambia el origen de datos de toda la plataforma (FE012). No toca el repositorio real: sigue accesible sin él."""
     sources = parse_body(SourcesConfig, payload)
-    config = get_config_store().apply_change(user, "fuentes", "Origen de datos", lambda c: (
+    config = get_config_store().apply_change(user, "fuentes", "Data origin", lambda c: (
         c.sources.model_dump(), sources.model_dump(), {"sources": sources}))
     return config_body(config)
 
@@ -107,7 +107,7 @@ def update_sources(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict
 @router.put("/privacy")
 def update_privacy(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
     privacy = parse_body(PrivacyConfig, payload)
-    config = get_config_store().apply_change(user, "privacidad", "Enmascarado de PII", lambda c: (
+    config = get_config_store().apply_change(user, "privacidad", "PII masking", lambda c: (
         c.privacy.model_dump(), privacy.model_dump(), {"privacy": privacy}))
     return config_body(config)
 
@@ -115,7 +115,7 @@ def update_privacy(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict
 @router.put("/ai")
 def update_ai(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
     ai = parse_body(AiConfig, payload)
-    config = get_config_store().apply_change(user, "modelos", "Modelo por defecto", lambda c: (
+    config = get_config_store().apply_change(user, "modelos", "Default model", lambda c: (
         c.ai.model_dump(), ai.model_dump(), {"ai": ai}))
     return config_body(config)
 
@@ -140,7 +140,7 @@ def test_ai_provider(provider: Literal[tuple(PROVIDERS)], body: ProviderTestIn,
                      client: LlmClient = Depends(get_llm_client)) -> dict:
     """Petición mínima al proveedor: éxito o el mensaje del servicio de LLM; `503` si el servicio no responde."""
     if body.model not in PROVIDERS[provider]["models"]:
-        raise _unprocessable("model", "El modelo no pertenece al proveedor")
+        raise _unprocessable("model", "The model does not belong to the provider")
     try:
         return client.test_provider(provider, body.model)
     except LlmUnavailable:
@@ -180,7 +180,7 @@ def sync_connector(connector_id: str, user: User = Depends(EDIT)) -> dict:
     """Simula una sincronización: actualiza la fecha y no cambia el dataset."""
     connector_id = ids.normalize(connector_id)
     if connector_id not in get_config().connectors:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conector no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Connector not found")
     synced_at = now()
 
     def change(c: Config):
@@ -212,7 +212,7 @@ class TopicKind:
 
 TOPIC_KINDS = {
     "main-topics": TopicKind("main_topics", ids.TOPIC, MainTopicIn, "Main topic", main_topic_usage, True),
-    "secondary-topics": TopicKind("secondary_topics", ids.SECONDARY_TOPIC, SecondaryTopicIn, "Tema secundario",
+    "secondary-topics": TopicKind("secondary_topics", ids.SECONDARY_TOPIC, SecondaryTopicIn, "Secondary topic",
                                   secondary_topic_usage, False),
 }
 TopicKindParam = Literal["main-topics", "secondary-topics"]
@@ -231,23 +231,23 @@ def _find_topic(kind: TopicKind, topic_id: str) -> Topic:
     topic_id = ids.normalize(topic_id)
     topic = next((t for t in getattr(get_config(), kind.field).values() if t.id == topic_id), None)
     if topic is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{kind.label} no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{kind.label} not found")
     return topic
 
 
 def _check_unique_name(kind: TopicKind, topics: dict[str, Topic], name: str, code: str) -> None:
     if kind.unique_names and any(normalize_text(t.name) == normalize_text(name) and t.code != code
                                  for t in topics.values()):
-        raise _unprocessable("name", "Ya existe otro con ese nombre")
+        raise _unprocessable("name", "Another one with that name already exists")
 
 
 def _gone(label: str) -> HTTPException:
     """El elemento existía al buscarlo, pero otro administrador lo ha borrado antes de escribir."""
-    return HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{label} no encontrado")
+    return HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{label} not found")
 
 
 def _element(kind: TopicKind, topic: Topic) -> str:
-    return f"{kind.label} «{topic.name}»"
+    return f"{kind.label} “{topic.name}”"
 
 
 @router.get("/taxonomy", dependencies=[Depends(VIEW)])
@@ -265,7 +265,7 @@ def create_topic(kind_name: TopicKindParam, payload: Any = Body(...), user: User
     def change(c: Config):
         topics = getattr(c, kind.field)
         if topic.code in topics:
-            raise _unprocessable("code", "Ya existe un elemento con ese código")
+            raise _unprocessable("code", "An element with that code already exists")
         _check_unique_name(kind, topics, topic.name, topic.code)
         return None, topic.audit_value(), {kind.field: {**topics, topic.code: topic}}
 
@@ -280,7 +280,7 @@ def update_topic(kind_name: TopicKindParam, topic_id: str, payload: Any = Body(.
     current = _find_topic(kind, topic_id)
     data = parse_body(kind.model, payload)
     if data.code != current.code:
-        raise _unprocessable("code", "El código no se puede cambiar")
+        raise _unprocessable("code", "The code cannot be changed")
     topic = Topic.from_input(kind.prefix, data)
 
     def change(c: Config):
@@ -302,12 +302,12 @@ def _ensure_main_topic_unused(code: str) -> None:
         real_usage = real_repository().main_topic_usage_in_db()
     except DataUnavailable:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
-                            detail="No se puede comprobar el uso en los datos reales") from None
+                            detail="Usage in the real data cannot be checked") from None
     real = real_usage[code] if real_usage is not None else 0
     if synthetic or real:
-        where = f"{synthetic} conversaciones sintéticas" + (f" y {real} reales" if real_usage is not None else "")
+        where = f"{synthetic} synthetic conversations" + (f" and {real} real ones" if real_usage is not None else "")
         raise HTTPException(status.HTTP_409_CONFLICT,
-                            detail=f"Está asignado a {where}: no se puede borrar, solo desactivar")
+                            detail=f"It is assigned to {where}: it cannot be deleted, only deactivated")
 
 
 @router.delete("/taxonomy/{kind_name}/{topic_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -318,7 +318,7 @@ def delete_topic(kind_name: TopicKindParam, topic_id: str, user: User = Depends(
         _ensure_main_topic_unused(topic.code)
     elif kind.usage()[topic.code]:
         raise HTTPException(status.HTTP_409_CONFLICT,
-                            detail="Está asignado a conversaciones: no se puede borrar, solo desactivar")
+                            detail="It is assigned to conversations: it cannot be deleted, only deactivated")
 
     def change(c: Config):
         topics = dict(getattr(c, kind.field))
@@ -336,17 +336,17 @@ def delete_topic(kind_name: TopicKindParam, topic_id: str, user: User = Depends(
 def _find_check(check_id: str) -> Check:
     check = next((c for c in get_config().checks.values() if c.id == ids.normalize(check_id)), None)
     if check is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Check no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Check not found")
     return check
 
 
 def _check_unique_check_name(checks: dict[str, Check], name: str, code: str) -> None:
     if any(normalize_text(c.name) == normalize_text(name) and c.code != code for c in checks.values()):
-        raise _unprocessable("name", "Ya existe otro check con ese nombre")
+        raise _unprocessable("name", "Another check with that name already exists")
 
 
 def _check_element(check: Check) -> str:
-    return f"Check «{check.name}»"
+    return f"Check “{check.name}”"
 
 
 @router.get("/compliance-checks", dependencies=[Depends(VIEW)])
@@ -360,7 +360,7 @@ def create_check(payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
 
     def change(c: Config):
         if check.code in c.checks:
-            raise _unprocessable("code", "Ya existe un check con ese código")
+            raise _unprocessable("code", "A check with that code already exists")
         _check_unique_check_name(c.checks, check.name, check.code)
         return None, check.audit_value(), {"checks": {**c.checks, check.code: check}}
 
@@ -373,7 +373,7 @@ def update_check(check_id: str, payload: Any = Body(...), user: User = Depends(E
     current = _find_check(check_id)
     data = parse_body(CheckIn, payload)
     if data.code != current.code:
-        raise _unprocessable("code", "El código no se puede cambiar")
+        raise _unprocessable("code", "The code cannot be changed")
     check = Check.from_input(data, builtin=current.builtin)
 
     def change(c: Config):
@@ -391,7 +391,7 @@ def delete_check(check_id: str, user: User = Depends(EDIT)) -> Response:
     check = _find_check(check_id)
     if check.builtin:
         raise HTTPException(status.HTTP_409_CONFLICT,
-                            detail="Es un check del análisis: no se puede borrar, solo desactivar")
+                            detail="It is an analysis check: it cannot be deleted, only deactivated")
 
     def change(c: Config):
         checks = dict(c.checks)
@@ -410,7 +410,7 @@ def delete_check(check_id: str, user: User = Depends(EDIT)) -> Response:
 def update_kpi(code: str, payload: Any = Body(...), user: User = Depends(EDIT)) -> dict:
     kpi = next((k for k in KPI_DEFS if k.code == code), None)
     if kpi is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="KPI no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="KPI not found")
     data = parse_body(KpiTargetIn, payload)
     try:
         data.validate_for(kpi)

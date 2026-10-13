@@ -25,7 +25,7 @@ def list_conversations(
 def get_conversation(conversation_id: str) -> dict:
     conv = conversation_index().get(ids.normalize(conversation_id))
     if conv is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversation not found")
     body = shown(conv).model_dump()
     # Solo los checks con resultado; los que aún no lo tienen van aparte (FE014): la UI dice «Pendiente», no «No aplica».
     body["analysis"]["compliance"] = effective_compliance(conv)

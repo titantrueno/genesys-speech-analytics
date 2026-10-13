@@ -82,25 +82,25 @@ def test_unknown_or_malformed_ids_are_404(api, flow_id):
 
 
 @pytest.mark.parametrize("changes, field, message", [
-    ({"name": " "}, "name", "El nombre no puede estar vacío"),
+    ({"name": " "}, "name", "The name cannot be empty"),
     ({"name": "x" * 81}, "name", "at most 80"),
-    ({"interval": {"type": "relativo", "unit": "horas", "amount": 0}}, "interval", "entre 1 y 720"),
-    ({"interval": {"type": "relativo", "unit": "horas", "amount": 721}}, "interval", "entre 1 y 720"),
-    ({"interval": {"type": "relativo", "unit": "dias", "amount": 91}}, "interval", "entre 1 y 90"),
-    ({"interval": {"type": "relativo", "unit": "hoy", "amount": 3}}, "interval", "no llevan cantidad"),
+    ({"interval": {"type": "relativo", "unit": "horas", "amount": 0}}, "interval", "between 1 and 720"),
+    ({"interval": {"type": "relativo", "unit": "horas", "amount": 721}}, "interval", "between 1 and 720"),
+    ({"interval": {"type": "relativo", "unit": "dias", "amount": 91}}, "interval", "between 1 and 90"),
+    ({"interval": {"type": "relativo", "unit": "hoy", "amount": 3}}, "interval", "take no amount"),
     ({"interval": {"type": "especifico", "from": "2026-10-02T00:00", "to": "2026-10-01T00:00"}}, "interval",
-     "anterior"),
+     "before"),
     ({"interval": {"type": "especifico", "from": "2026-06-01T00:00", "to": "2026-10-01T00:00"}}, "interval",
-     "90 días"),
+     "90 days"),
     ({"interval": {"type": "especifico", "from": "2026-10-12T08:00", "to": "2026-10-13T08:00"}}, "interval",
-     "futuro"),
-    ({"channels": []}, "channels", "al menos un canal"),
+     "future"),
+    ({"channels": []}, "channels", "at least one channel"),
     ({"channels": ["voz", "email"]}, "channels", ""),
-    ({"schedule": {"type": "cada_horas", "hours": 25}}, "schedule", "entre 1 y 24"),
+    ({"schedule": {"type": "cada_horas", "hours": 25}}, "schedule", "between 1 and 24"),
     ({"schedule": {"type": "diaria", "time": "25:00"}}, "schedule", "HH:MM"),
     ({"schedule": {"type": "diaria", "time": "07:00"},
       "interval": {"type": "especifico", "from": "2026-10-01T00:00", "to": "2026-10-02T00:00"}}, "schedule",
-     "Una descarga programada necesita un intervalo relativo"),
+     "A scheduled download needs a relative interval"),
     ({"timezone": "Marte/Olimpo"}, "timezone", "Zona horaria"),
 ])
 def test_each_rule_answers_422_with_a_message_per_field(api, changes, field, message):
@@ -137,7 +137,7 @@ def test_a_second_run_while_one_is_active_is_409(api, pg_url):
     create_run(pg_url, flow["id"], "manual", datetime(2026, 10, 12, tzinfo=timezone.utc),
                datetime(2026, 10, 13, tzinfo=timezone.utc), ["voz"])
     response = api.post(f"/download-flows/{flow['id']}/runs", json={"user": USER})
-    assert response.status_code == 409 and "en curso" in response.json()["detail"]
+    assert response.status_code == 409 and "already running" in response.json()["detail"]
 
 
 def test_history_is_newest_first_and_the_flow_shows_its_last_run(api):
@@ -207,7 +207,7 @@ def test_a_run_interrupted_by_a_restart_ends_in_error(api, pg_url, clock, fake):
                                clock=clock, scheduler=False)):
         pass
     run = get_run(pg_url, run_id)
-    assert run["status"] == "error" and "reinicio" in run["error"]
+    assert run["status"] == "error" and "restart" in run["error"]
     assert api.post(f"/download-flows/{flow['id']}/runs", json={"user": USER}).status_code == 202
 
 

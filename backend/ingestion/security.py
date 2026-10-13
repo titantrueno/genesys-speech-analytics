@@ -11,6 +11,6 @@ def internal_token_guard(token: str):
         # Comparación como bytes: `compare_digest` con `str` no ASCII lanza `TypeError` (lección 7).
         received = request.headers.get("authorization", "").encode()
         if not hmac.compare_digest(received, expected):
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Token interno no válido")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid internal token")
 
     return require_internal_token

@@ -42,11 +42,11 @@ class RelativeInterval(_Strict):
     def _amount(self):
         if self.unit in ("hoy", "ayer"):
             if self.amount is not None:
-                raise _error("«hoy» y «ayer» no llevan cantidad")
+                raise _error("“hoy” and “ayer” take no amount")
         elif self.unit == "horas" and not (self.amount is not None and 1 <= self.amount <= MAX_HOURS):
-            raise _error(f"La cantidad de horas debe estar entre 1 y {MAX_HOURS}")
+            raise _error(f"The number of hours must be between 1 and {MAX_HOURS}")
         elif self.unit == "dias" and not (self.amount is not None and 1 <= self.amount <= MAX_DAYS):
-            raise _error(f"La cantidad de días debe estar entre 1 y {MAX_DAYS}")
+            raise _error(f"The number of days must be between 1 and {MAX_DAYS}")
         return self
 
 
@@ -58,9 +58,9 @@ class SpecificInterval(_Strict):
     @model_validator(mode="after")
     def _order(self):
         if self.from_ >= self.to:
-            raise _error("«Desde» debe ser anterior a «hasta»")
+            raise _error("“From” must be before “to”")
         if self.to - self.from_ > timedelta(days=MAX_SPECIFIC_DAYS):
-            raise _error(f"El intervalo no puede superar {MAX_SPECIFIC_DAYS} días")
+            raise _error(f"The interval cannot exceed {MAX_SPECIFIC_DAYS} days")
         return self
 
 
@@ -80,7 +80,7 @@ class EveryHours(_Strict):
     @classmethod
     def _range(cls, value: int) -> int:
         if not 1 <= value <= MAX_EVERY_HOURS:
-            raise _error(f"Las horas deben estar entre 1 y {MAX_EVERY_HOURS}")
+            raise _error(f"The hours must be between 1 and {MAX_EVERY_HOURS}")
         return value
 
 
@@ -92,7 +92,7 @@ class Daily(_Strict):
     @classmethod
     def _format(cls, value: str) -> str:
         if not _HHMM.match(value):
-            raise _error("La hora debe tener el formato HH:MM")
+            raise _error("The time must have the format HH:MM")
         return value
 
 
@@ -119,14 +119,14 @@ class FlowIn(_Strict):
     @classmethod
     def _name(cls, value: str) -> str:
         if not value.strip():
-            raise _error("El nombre no puede estar vacío")
+            raise _error("The name cannot be empty")
         return value.strip()
 
     @field_validator("channels")
     @classmethod
     def _channels(cls, value: list[str]) -> list[str]:
         if not value:
-            raise _error("Elige al menos un canal")
+            raise _error("Choose at least one channel")
         return sorted(set(value), key=["voz", "chat"].index)
 
     @field_validator("timezone")
@@ -146,10 +146,10 @@ def semantic_errors(flow: FlowIn, now: datetime) -> list[dict]:
     if isinstance(interval, SpecificInterval):
         if _localize(interval.to, flow.timezone) > now:
             errors.append({"type": "value_error", "loc": ["body", "interval", "to"],
-                           "msg": "El intervalo no puede terminar en el futuro"})
+                           "msg": "The interval cannot end in the future"})
         if not isinstance(flow.schedule.root, NoSchedule):
             errors.append({"type": "value_error", "loc": ["body", "schedule"],
-                           "msg": "Una descarga programada necesita un intervalo relativo"})
+                           "msg": "A scheduled download needs a relative interval"})
     return errors
 
 
@@ -292,4 +292,4 @@ def interrupt_active_runs(conn: psycopg.Connection, now: datetime) -> int:
     """Al arrancar, ninguna ejecución sigue viva: las que quedaron activas acaban en `error`."""
     return conn.execute("UPDATE download_run SET status = 'error', error = %s, finished_at = %s "
                         "WHERE status = ANY(%s)",
-                        ("Interrumpida por un reinicio del servicio de ingesta", now, list(ACTIVE))).rowcount
+                        ("Interrupted by a restart of the ingestion service", now, list(ACTIVE))).rowcount

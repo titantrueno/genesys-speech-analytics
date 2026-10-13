@@ -43,7 +43,7 @@ _ID_RE = re.compile(r"^(1[A-Z]{2})-[0-9A-F]{8}-[0-9A-F]{4}-[45][0-9A-F]{3}-[89AB
 
 def _check_prefix(prefix: str) -> None:
     if prefix not in PREFIXES:
-        raise ValueError(f"Prefijo no registrado: {prefix!r}")
+        raise ValueError(f"Unregistered prefix: {prefix!r}")
 
 
 def _format(prefix: str, value: uuid.UUID) -> str:

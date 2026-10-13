@@ -74,7 +74,7 @@ def test_rejects_node_ids_that_are_neither_nodes_nor_temporary(bad_id):
 
 def test_rejects_duplicate_node_ids():
     errors = _errors(graph([node("tmp-a", "sampling"), node("tmp-a", "prompt")], []))
-    assert errors == [{"path": "nodes[1].id", "node_id": "tmp-a", "message": "Identificador de nodo repetido: tmp-a"}]
+    assert errors == [{"path": "nodes[1].id", "node_id": "tmp-a", "message": "Repeated node identifier: tmp-a"}]
 
 
 @pytest.mark.parametrize("payload, path", [
@@ -125,7 +125,7 @@ def test_rejects_cycles_even_if_each_edge_is_admissible_on_its_own():
     nodes = [node("tmp-p1", "prompt"), node("tmp-p2", "prompt"), node("tmp-p3", "prompt")]
     errors = _errors(graph(nodes, [edge("tmp-p1", "tmp-p2"), edge("tmp-p2", "tmp-p3"), edge("tmp-p3", "tmp-p1")]))
     assert errors[-1]["path"] == "edges[2]"
-    assert "ciclo" in errors[-1]["message"]
+    assert "cycle" in errors[-1]["message"]
 
 
 def test_rejects_more_than_50_nodes_or_100_edges():

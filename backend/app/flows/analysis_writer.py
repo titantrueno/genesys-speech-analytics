@@ -38,7 +38,7 @@ class IngestionAnalysisWriter:
         except IngestionUnavailable:
             raise WriterUnavailable(UNAVAILABLE) from None
         if response.status_code != 200:
-            raise WriterUnavailable(f"El servicio de ingesta rechazó la escritura ({response.status_code})")
+            raise WriterUnavailable(f"The ingestion service rejected the write ({response.status_code})")
         return {r["conversation_id"]: {"outcomes": r["outcomes"], "reasons": r.get("reasons", {})}
                 for r in response.json()["results"]}
 

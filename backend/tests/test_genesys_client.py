@@ -92,7 +92,7 @@ def test_api_calls_carry_the_bearer_token(client, fake):
 def test_wrong_credentials_fail_at_once_with_a_clear_message(fake, clock, sleeps):
     client = GenesysClient(CLIENT_ID, "otro-secreto", "eu-west-1", transport=fake.transport, clock=clock,
                            sleep=sleeps.append)
-    with pytest.raises(GenesysAuthError, match="Credenciales de Genesys no válidas") as caught:
+    with pytest.raises(GenesysAuthError, match="Invalid Genesys credentials") as caught:
         client.get(ORG)
     assert _token_requests(fake) == 1 and sleeps == []
     assert "otro-secreto" not in _outputs(caught.value)

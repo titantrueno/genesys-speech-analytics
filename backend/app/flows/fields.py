@@ -77,13 +77,13 @@ def accepts_option(target: str, option: str) -> bool:
 
 def _text(value: Any, label: str) -> str:
     if not isinstance(value, str):
-        raise ValueRejected(f"{label}: se esperaba un texto")
+        raise ValueRejected(f"{label}: a text was expected")
     return value.strip()
 
 
 def _texts(value: Any, label: str) -> list[str]:
     if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
-        raise ValueRejected(f"{label}: se esperaba una lista de textos")
+        raise ValueRejected(f"{label}: a list of texts was expected")
     return [v.strip() for v in value]
 
 
@@ -92,10 +92,10 @@ def coerce(target: str, value: Any) -> Any:
     label = catalog.target_label(target, config.checks)
     if target in RANGES:
         if not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
-            raise ValueRejected(f"{label}: se esperaba un número")
+            raise ValueRejected(f"{label}: a number was expected")
         low, high = RANGES[target]
         if not low <= value <= high:
-            raise ValueRejected(f"{label}: {value} está fuera del rango de {low} a {high}")
+            raise ValueRejected(f"{label}: {value} is outside the range {low} to {high}")
         return float(value)
     if target in ("secondary_topics", "keywords"):
         values = _texts(value, label)
@@ -103,15 +103,15 @@ def coerce(target: str, value: Any) -> Any:
             return NO_VALUE
         if target == "keywords":
             if not all(values):
-                raise ValueRejected(f"{label}: hay una palabra clave vacía")
+                raise ValueRejected(f"{label}: there is an empty keyword")
             if any(len(v) > MAX_KEYWORD for v in values):
-                raise ValueRejected(f"{label}: una palabra clave pasa de {MAX_KEYWORD} caracteres")
+                raise ValueRejected(f"{label}: a keyword exceeds {MAX_KEYWORD} characters")
             return values[:MAX_KEYWORDS]
         codes = []
         for item in values:
             code = secondary_topic_code(item)
             if code is None:
-                raise ValueRejected(f"{label}: «{item[:80]}» no es un tema secundario activo")
+                raise ValueRejected(f"{label}: “{item[:80]}” is not an active secondary topic")
             if code not in codes:
                 codes.append(code)
         return codes
@@ -120,31 +120,31 @@ def coerce(target: str, value: Any) -> Any:
     if code is not None:
         check = config.checks.get(code)
         if check is None or not check.active:
-            raise ValueRejected(f"{label}: el check ya no existe o está desactivado")
+            raise ValueRejected(f"{label}: the check no longer exists or is disabled")
         known, answer = _check_answer(text)
         if not known:
-            raise ValueRejected(f"{label}: «{text[:80]}» no es cumple, no_cumple ni no_aplica")
+            raise ValueRejected(f"{label}: “{text[:80]}” is not cumple, no_cumple or no_aplica")
         return answer
     if target.startswith(catalog.ENTITY_PREFIX):
         if len(text) > MAX_ENTITY:
-            raise ValueRejected(f"{label}: pasa de {MAX_ENTITY} caracteres")
+            raise ValueRejected(f"{label}: exceeds {MAX_ENTITY} characters")
         return text or NO_VALUE
     if target == "summary":
         if not text:
-            raise ValueRejected(f"{label}: la respuesta está vacía")
+            raise ValueRejected(f"{label}: the answer is empty")
         return text
     if target == "main_topic":
         found = topic_code(text)
         if found is None:
-            raise ValueRejected(f"«{text[:80]}» no es un main topic activo")
+            raise ValueRejected(f"“{text[:80]}” is not an active main topic")
         return found
     if target == "resolution":
         found = _resolution(text)
         if found is None:
-            raise ValueRejected(f"{label}: «{text[:80]}» no es resuelta, no_resuelta ni escalada")
+            raise ValueRejected(f"{label}: “{text[:80]}” is not resuelta, no_resuelta or escalada")
         return found
     if target == "churn_risk":
         if _key(text) not in CHURN_RISKS:
-            raise ValueRejected(f"{label}: «{text[:80]}» no es bajo, medio ni alto")
+            raise ValueRejected(f"{label}: “{text[:80]}” is not bajo, medio or alto")
         return _key(text)
-    raise ValueRejected(f"Campo destino desconocido: {target}")
+    raise ValueRejected(f"Unknown target field: {target}")

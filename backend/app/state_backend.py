@@ -42,7 +42,7 @@ class IngestionStateBackend:
         except IngestionUnavailable:
             raise StateUnavailable() from None
         if response.status_code != expected:
-            raise StateUnavailable(f"El servicio de ingesta rechazó la operación ({response.status_code})")
+            raise StateUnavailable(f"The ingestion service rejected the operation ({response.status_code})")
         return response.json() if response.status_code != 204 else None
 
     def load_flows(self) -> list[dict]:

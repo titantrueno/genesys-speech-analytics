@@ -38,7 +38,7 @@ def _user_out(user: auth.User) -> UserOut:
 def login(body: LoginRequest) -> LoginResponse:
     user = auth.authenticate(body.email, body.password)
     if user is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Wrong credentials")
     auth.get_store().touch_login(user)
     return LoginResponse(access_token=auth.create_token(user), user=_user_out(user))
 

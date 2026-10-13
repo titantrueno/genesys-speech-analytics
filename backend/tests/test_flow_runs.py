@@ -159,7 +159,7 @@ def test_an_empty_sample_fails_the_sampling_and_leaves_its_dependants_pending(ap
     sampling, prompt, output = (by_type(flow)[t][0] for t in ("sampling", "prompt", "output"))
     assert final["status"] == "error"
     assert final["nodes"][sampling]["status"] == "error"
-    assert "vacía" in final["nodes"][sampling]["message"]
+    assert "empty" in final["nodes"][sampling]["message"]
     assert final["nodes"][prompt]["status"] == final["nodes"][output]["status"] == "pendiente"
     assert final["outputs"] == {} and final["sample_size"] == 0
 
@@ -189,7 +189,7 @@ def test_a_failing_prompt_fails_only_its_branch(api):
     first, chained = by_type(flow)["prompt"]
     assert final["status"] == "error"
     assert final["nodes"][chained] == {"status": "error", "processed": 2, "total": 40, "rejected": 0, "failed": 0,
-                                       "message": "Error al ejecutar el prompt: el proveedor no responde"}
+                                       "message": "Error running the prompt: el proveedor no responde"}
     assert final["nodes"][first]["status"] == "ok"
     for node_id in by_type(flow)["output"]:
         upstream = next(e["source"] for e in flow["graph"]["edges"] if e["target"] == node_id)

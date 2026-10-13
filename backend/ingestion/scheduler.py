@@ -33,8 +33,8 @@ def launch(database_url: str, flow_id: str, origin: str, user: tuple[str, str] |
                             (flow_id,)).fetchone()
     start, end = resolve_interval(Interval.model_validate(flow["interval"]), flow["timezone"], now)
     zone = ZoneInfo(flow["timezone"])
-    notes = [f"Ejecución programada de las {datetime.fromisoformat(missed).astimezone(zone):%H:%M} omitida: "
-             f"había otra ejecución en curso" for missed in flow["missed_runs"]]
+    notes = [f"Scheduled run at {datetime.fromisoformat(missed).astimezone(zone):%H:%M} skipped: "
+             f"another run was in progress" for missed in flow["missed_runs"]]
     run_id = create_run(database_url, flow_id, origin, start, end, flow["channels"], user, notes)
     if notes:
         with psycopg.connect(database_url) as conn:

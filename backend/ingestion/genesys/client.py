@@ -119,7 +119,7 @@ class GenesysClient:
                 response = call()
             except httpx.TransportError as exc:
                 if retries == MAX_RETRIES:
-                    raise GenesysError(self.redact(f"Sin respuesta de Genesys en {method} {path}: {exc}"),
+                    raise GenesysError(self.redact(f"No response from Genesys at {method} {path}: {exc}"),
                                        path=path) from None
                 self._sleep(float(2 ** retries))
                 retries += 1
@@ -140,16 +140,16 @@ class GenesysClient:
     def _error(self, response: httpx.Response, method: str, path: str, auth: bool) -> GenesysError:
         status = response.status_code
         if auth and status in (400, 401):
-            return GenesysAuthError("Credenciales de Genesys no válidas", status, path)
+            return GenesysAuthError("Invalid Genesys credentials", status, path)
         detail = _message(response)
         where = f"{method} {path}"
         if status == 401:
-            return GenesysAuthError(self.redact(f"Genesys rechazó el token en {where}"), status, path)
+            return GenesysAuthError(self.redact(f"Genesys rejected the token at {where}"), status, path)
         if status == 403:
-            return GenesysForbidden(self.redact(f"Sin permiso en Genesys para {where}: {detail}"), status, path)
+            return GenesysForbidden(self.redact(f"No permission in Genesys for {where}: {detail}"), status, path)
         if status == 404:
-            return GenesysNotFound(self.redact(f"No existe en Genesys: {where}"), status, path)
-        return GenesysError(self.redact(f"Genesys respondió {status} en {where}: {detail}"), status, path)
+            return GenesysNotFound(self.redact(f"Not found in Genesys: {where}"), status, path)
+        return GenesysError(self.redact(f"Genesys responded {status} at {where}: {detail}"), status, path)
 
 
 def _retry_after(response: httpx.Response, default: float) -> float:

@@ -150,7 +150,7 @@ def _walk(group: Group, path: str, depth: int, errors: list[dict]) -> None:
         node_path = f"{path}.conditions[{i}]"
         if isinstance(node, Group):
             if depth + 1 > MAX_DEPTH:
-                errors.append({"path": node_path, "message": f"Nivel de anidamiento máximo: {MAX_DEPTH}"})
+                errors.append({"path": node_path, "message": f"Maximum nesting level: {MAX_DEPTH}"})
             else:
                 _walk(node, node_path, depth + 1, errors)
         else:
@@ -179,9 +179,9 @@ def parse_query(payload: dict) -> Query:
     query.date_to = query.date_to or default_to
     errors: list[dict] = []
     if query.date_from > query.date_to:
-        errors.append({"path": "from", "message": "'from' debe ser anterior o igual a 'to'"})
+        errors.append({"path": "from", "message": "'from' must be before or equal to 'to'"})
     if _count_conditions(query.root) > MAX_CONDITIONS:
-        errors.append({"path": "root", "message": f"Una consulta admite como máximo {MAX_CONDITIONS} condiciones"})
+        errors.append({"path": "root", "message": f"A query allows at most {MAX_CONDITIONS} conditions"})
     else:
         _walk(query.root, "root", 1, errors)
     if errors:

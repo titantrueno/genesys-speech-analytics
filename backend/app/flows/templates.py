@@ -63,8 +63,8 @@ def _full(config) -> tuple[list[dict], dict, list[dict], str]:
     checks = [c for c in config.checks.values() if c.active]
     fixed = len(FULL_FIELDS) + len(LIST_FIELDS) + len(catalog.ENTITY_TYPES)
     if fixed + len(checks) > catalog.MAX_FIELDS:
-        raise TemplateError(f"Hay {len(checks)} checks activos y una llamada admite {catalog.MAX_FIELDS - fixed}: "
-                            "desactiva algunos checks o crea el flujo a mano con varios Prompts.")
+        raise TemplateError(f"There are {len(checks)} active checks and one call supports {catalog.MAX_FIELDS - fixed}: "
+                            "deactivate some checks or create the flow by hand with several Prompts.")
     options = {"main_topics": [t.name for t in config.main_topics.values() if t.active],
                "secondary_topics": [t.name for t in config.secondary_topics.values() if t.active]}
     # En el orden del catálogo de destinos: análisis, cumplimiento y entidades.
@@ -82,7 +82,7 @@ def _full(config) -> tuple[list[dict], dict, list[dict], str]:
     conditions = [_empty(f) for f in FULL_EMPTY] + [_empty(f"check:{c.code}") for c in checks]
     prompt = f"{CONTEXT}{FULL_TASK}\n{lines}"
     if len(prompt) > catalog.MAX_TEMPLATE:
-        raise TemplateError("Las instrucciones de los checks activos no caben en un prompt: acorta sus descripciones.")
+        raise TemplateError("The instructions of the active checks do not fit in a prompt: shorten their descriptions.")
     return conditions, {"type": "json", "fields": fields}, mappings, prompt
 
 
@@ -96,7 +96,7 @@ def build(template: str) -> Graph:
         prompt = f"{CONTEXT}{SUMMARY_TASK} Responde solo con el resumen."
     elif template == "main_topic":
         if len(topics) > catalog.MAX_LABELS:
-            raise TemplateError(f"Hay más de {catalog.MAX_LABELS} main topics activos: usa «Generar summary y main topic»")
+            raise TemplateError(f"There are more than {catalog.MAX_LABELS} active main topics: use “Generate summary and main topic”")
         conditions, output, mappings = [_empty("main_topic")], {"type": "etiqueta", "labels": topics}, [{"target": "main_topic"}]
         prompt = f"{CONTEXT}{TOPIC_TASK}"
     else:
@@ -117,5 +117,5 @@ def build(template: str) -> Graph:
     try:
         return parse_graph({"version": 1, "nodes": nodes, "edges": edges})
     except GraphError:  # p. ej., más temas activos que valores permitidos (hallazgo de /review de FE014)
-        raise TemplateError(f"La taxonomía activa no cabe en la plantilla: un campo admite como mucho "
-                            f"{catalog.MAX_OPTIONS} valores permitidos y hay más temas activos.") from None
+        raise TemplateError(f"The active taxonomy does not fit in the template: a field allows at most "
+                            f"{catalog.MAX_OPTIONS} allowed values and there are more active topics.") from None

@@ -62,7 +62,7 @@ class FakeLlm:
             raise LlmUnavailable("sin conexión")
         if not self.keys.get(name):
             raise LlmError(503, f"El proveedor {name} no tiene clave configurada", "missing_key")
-        return {"ok": True, "provider": name, "model": model, "message": "El proveedor respondió correctamente"}
+        return {"ok": True, "provider": name, "model": model, "message": "The provider responded correctly"}
 
 
 @pytest.fixture
@@ -224,7 +224,7 @@ def test_a_conversation_without_transcript_is_rejected_without_calling_the_llm(l
     # Comprobado en navegador (T9): con la transcripción vacía, el LLM inventa un summary distinto en cada llamada.
     conv = get_dataset()[0].model_copy(update={"turns": []})
     config = PromptConfig.model_validate({**GEMINI_LABEL, "output": {"type": "texto"}})
-    with pytest.raises(PromptRejected, match="no tiene transcripción"):
+    with pytest.raises(PromptRejected, match="has no transcript"):
         LlmPromptRunner(llm).run(config, conv, None)
     assert llm.requests == []
     blank = get_dataset()[0].model_copy(update={"turns": [t.model_copy(update={"text": "  "}) for t in get_dataset()[0].turns]})
@@ -272,8 +272,8 @@ def _check(runner, config, expected):
 @pytest.mark.parametrize("error, expected", [
     (LlmUnavailable("sin conexión"), PromptUnavailable),
     (LlmError(503, "El proveedor Gemini no tiene clave configurada", "missing_key"), PromptUnavailable),
-    (LlmError(502, "El proveedor rechazó la clave", "key_rejected"), PromptUnavailable),
-    (LlmError(502, "Gemini respondió 400", "provider_failure"), PromptFailed),
+    (LlmError(502, "The provider rejected the key", "key_rejected"), PromptUnavailable),
+    (LlmError(502, "Gemini responded 400", "provider_failure"), PromptFailed),
 ])
 def test_service_errors_are_classified(llm, error, expected):
     llm.answer = lambda body: error
@@ -308,7 +308,7 @@ def test_other_provider_failures_count_per_conversation(api, llm):
     def answer(body):
         with lock:
             n = next(calls)
-        return LlmError(502, "Gemini respondió 400", "provider_failure") if n % 4 == 0 else "Neutro"
+        return LlmError(502, "Gemini responded 400", "provider_failure") if n % 4 == 0 else "Neutro"
     llm.answer = answer
     flow = flow_with(api, _flow(GEMINI_LABEL))
     snapshot = _finished(api, flow, run(api, flow)["id"])
@@ -319,8 +319,8 @@ def test_other_provider_failures_count_per_conversation(api, llm):
 
 
 @pytest.mark.parametrize("error, message", [
-    (LlmUnavailable("sin conexión"), "El servicio de LLM no está disponible"),
-    (LlmError(502, "El proveedor rechazó la clave", "key_rejected"), "El proveedor rechazó la clave"),
+    (LlmUnavailable("sin conexión"), "The LLM service is not available"),
+    (LlmError(502, "The provider rejected the key", "key_rejected"), "The provider rejected the key"),
 ])
 def test_an_unavailable_service_or_a_rejected_key_fails_the_node(api, llm, error, message):
     llm.answer = lambda body: error
@@ -339,7 +339,7 @@ def test_if_every_answer_is_rejected_the_node_fails(api, llm):
     snapshot = _finished(api, flow, run(api, flow)["id"])
     prompt = by_type(flow)["prompt"][0]
     assert snapshot["nodes"][prompt]["status"] == "error"
-    assert "ninguna conversación" in snapshot["nodes"][prompt]["message"].lower()
+    assert "no conversation" in snapshot["nodes"][prompt]["message"].lower()
 
 
 def test_llm_prompts_run_in_parallel_and_each_row_keeps_its_own_answer(api, llm):

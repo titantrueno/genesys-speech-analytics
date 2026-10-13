@@ -30,7 +30,7 @@ def test_a_topic_used_only_in_real_data_cannot_be_deleted_from_the_synthetic_ori
     response = api.delete(f"{MAIN}/{created['id']}")
     assert response.status_code == 409
     detail = response.json()["detail"]
-    assert "0 conversaciones sintéticas" in detail and "2 reales" in detail and "desactivar" in detail
+    assert "0 synthetic conversations" in detail and "2 real" in detail and "deactivated" in detail
     assert NEW_TOPIC["code"] in _codes(api)
 
 
@@ -39,7 +39,7 @@ def test_if_postgres_does_not_answer_the_topic_is_not_deleted(api, pg_url, monke
     created = create(api)
     response = api.delete(f"{MAIN}/{created['id']}")
     assert response.status_code == 503
-    assert response.json()["detail"] == "No se puede comprobar el uso en los datos reales"
+    assert response.json()["detail"] == "Usage in the real data cannot be checked"
     assert NEW_TOPIC["code"] in _codes(api)
 
 
@@ -57,7 +57,7 @@ def test_with_the_real_origin_the_synthetic_data_still_counts(real_api, pg_url):
     assert cajeros["conversations"] == 0  # no la usa ninguna conversación real…
     response = real_api.delete(f"{MAIN}/{cajeros['id']}")
     assert response.status_code == 409  # …pero sí el dataset sintético
-    assert "0 reales" in response.json()["detail"]
+    assert "0 real" in response.json()["detail"]
 
 
 def test_a_secondary_topic_is_not_checked_against_postgres(api, pg_url, monkeypatch):

@@ -149,7 +149,7 @@ def test_connector_status_needs_config_view_and_the_test_config_edit(api, ingest
 def test_an_unreachable_service_is_503_and_insight_flows_keep_working(api, ingestion_down, method, path):
     response = api.request(method, path, json=BODY if method == "POST" else None)
     assert response.status_code == 503
-    assert response.json() == {"detail": "El servicio de ingesta no está disponible"}
+    assert response.json() == {"detail": "The ingestion service is not available"}
     assert api.get("/api/flows").status_code == 200
 
 

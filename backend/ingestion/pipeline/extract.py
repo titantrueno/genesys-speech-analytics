@@ -13,7 +13,7 @@ MIN_CHUNK = timedelta(hours=1)
 BULK_SIZE = 100
 QUERY = "/api/v2/analytics/conversations/details/query"
 TRANSCRIBED_MEDIA = {"voice", "message", "chat"}
-IN_PROGRESS, OTHER_MEDIA, OTHER_CHANNEL = "en curso", "otro medio", "otro canal"
+IN_PROGRESS, OTHER_MEDIA, OTHER_CHANNEL = "in progress", "other media", "other channel"
 
 
 def _iso(value: datetime) -> str:

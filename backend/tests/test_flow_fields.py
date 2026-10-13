@@ -44,7 +44,7 @@ class FakeWriter:
 
     def write(self, run_id, provider, model, overwrite, items):
         if self.down:
-            raise WriterUnavailable("El servicio de ingesta no está disponible")
+            raise WriterUnavailable("The ingestion service is not available")
         with self.lock:
             self.calls.append({"run_id": run_id, "provider": provider, "model": model, "overwrite": overwrite,
                                "items": items})
@@ -52,7 +52,7 @@ class FakeWriter:
         for item in items:
             current = self.existing.get(item["conversation_id"], {})
             reasons = {t: self.reasons[t] for t in item["values"] if t in self.reasons}
-            reasons |= {t: "Ya tenía valor" for t in item["values"] if t not in reasons and not overwrite
+            reasons |= {t: "Already had a value" for t in item["values"] if t not in reasons and not overwrite
                         and current.get(t)}
             outcomes[item["conversation_id"]] = {
                 "outcomes": {t: "omitido" if t in reasons else "escrito" for t in item["values"]}, "reasons": reasons}
@@ -273,7 +273,7 @@ def test_if_the_ingestion_service_is_down_the_output_fails(api, llm, writer, rea
     output = by_type(flow)["output"][0]
     assert snapshot["status"] == "error"
     assert snapshot["nodes"][output]["status"] == "error"
-    assert "servicio de ingesta" in snapshot["nodes"][output]["message"]
+    assert "ingestion service" in snapshot["nodes"][output]["message"]
 
 
 def test_simulated_prompts_can_also_feed_field_outputs(api, llm, writer, real_origin):

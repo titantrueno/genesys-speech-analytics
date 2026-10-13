@@ -241,7 +241,7 @@ class FlowExecutor:
             run.sample_size = (run.sample_size or 0) + len(sample)
         run.update_node(node.id, total=len(sample), processed=len(sample))
         if not sample:
-            raise NodeFailure("La muestra está vacía: ninguna conversación cumple los filtros.")
+            raise NodeFailure("The sample is empty: no conversation matches the filters.")
         # Los prompts y los outputs trabajan siempre con texto enmascarado, esté o no activado el interruptor (FE005).
         return [masked(conv) for conv in sample]
 
@@ -259,9 +259,9 @@ class FlowExecutor:
                 with run.lock:
                     failures.append({"conversation_id": conv.id, "status": status, "reason": str(exc)})
             except PromptUnavailable as exc:
-                raise NodeFailure(f"Error al ejecutar el prompt: {exc}") from exc
+                raise NodeFailure(f"Error running the prompt: {exc}") from exc
             except Exception as exc:  # un proveedor real puede fallar por muchas causas; se informa en el nodo
-                raise NodeFailure(f"Error al ejecutar el prompt: {exc}") from exc
+                raise NodeFailure(f"Error running the prompt: {exc}") from exc
             else:
                 with run.lock:
                     results[conv.id] = value
@@ -285,7 +285,7 @@ class FlowExecutor:
                         done_count += 1
                         self._progress(run, node.id, done_count, failures)
         if conversations and not results:
-            raise NodeFailure("Ninguna conversación obtuvo un resultado válido: revisa la plantilla y el formato.")
+            raise NodeFailure("No conversation got a valid result: check the template and the format.")
         # En el orden de la muestra, como el resto de nodos.
         order = {conv.id: i for i, conv in enumerate(conversations)}
         with run.lock:
@@ -320,7 +320,7 @@ class FlowExecutor:
         """Output «Guardar en campos» (FE013, criterios 19 y 22): escribe por lotes y da el estado de cada campo."""
         cfg = node.config
         if self.writer is None:
-            raise NodeFailure("No hay dónde guardar los campos: falta el servicio de ingesta.")
+            raise NodeFailure("There is nowhere to save the fields: the ingestion service is missing.")
         targets = [m.target for m in cfg.mappings]
         failures = {f["conversation_id"]: f for f in run.failures.get(prompt.id, [])}
         run.update_node(node.id, total=len(conversations))
@@ -329,7 +329,7 @@ class FlowExecutor:
             # `reason`: por qué falló la conversación entera; `reasons`: por qué no se guardó un campo (FE014).
             row = {"conversation": list_item(conv), "values": {}, "states": {}, "reason": None, "reasons": {}}
             if conv.id not in results:  # el Prompt la rechazó o no obtuvo respuesta
-                failure = failures.get(conv.id, {"status": "error", "reason": "Sin resultado del Prompt"})
+                failure = failures.get(conv.id, {"status": "error", "reason": "No Prompt result"})
                 row["states"] = {t: failure["status"] for t in targets}
                 row["reason"] = failure["reason"]
             else:
@@ -356,13 +356,13 @@ class FlowExecutor:
                 outcomes = self.writer.write(run.id, prompt.config.provider or catalog.SIMULATED, prompt.config.model,
                                              bool(cfg.overwrite), batch)
             except WriterUnavailable as exc:
-                raise NodeFailure(f"{exc}: se guardaron {written} de {len(items)} conversaciones.") from exc
+                raise NodeFailure(f"{exc}: {written} of {len(items)} conversations were saved.") from exc
             for conversation_id, written_fields in outcomes.items():
                 row = by_id[conversation_id]
                 for target, outcome in written_fields["outcomes"].items():
                     row["states"][target] = "error" if outcome == "no_encontrada" else outcome
                     if outcome == "no_encontrada":
-                        row["reason"] = "La conversación no está en la base de datos"
+                        row["reason"] = "The conversation is not in the database"
                 row["reasons"].update(written_fields.get("reasons", {}))
             written += len(batch)
             run.update_node(node.id, processed=min(len(conversations), written))
@@ -380,7 +380,7 @@ def _fields_destination(targets: list[str]) -> str:
     labels = [catalog.target_label(t, get_config().checks) for t in targets]
     if len(labels) <= 3:
         return " + ".join(labels)
-    return f"{' + '.join(labels[:2])} y {len(labels) - 2} campos más"
+    return f"{' + '.join(labels[:2])} and {len(labels) - 2} more fields"
 
 
 _store = RunStore()

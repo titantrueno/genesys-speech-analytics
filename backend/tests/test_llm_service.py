@@ -87,7 +87,7 @@ def test_a_rejected_key_is_502_without_retries():
     upstream = Upstream(401)
     response = _client(upstream).post("/complete", json=REQUEST)
     assert response.status_code == 502
-    assert response.json() == {"detail": "El proveedor rechazó la clave", "code": "key_rejected"}
+    assert response.json() == {"detail": "The provider rejected the key", "code": "key_rejected"}
     assert upstream.calls == 1
 
 
@@ -104,14 +104,14 @@ def test_after_two_retries_the_failure_is_502_without_provider_details():
     upstream = Upstream(503, 503, 503, 503)
     response = _client(upstream).post("/complete", json=REQUEST)
     assert response.status_code == 502
-    assert response.json()["detail"] == "OpenAI respondió 503"
+    assert response.json()["detail"] == "OpenAI responded 503"
     assert upstream.calls == 3
 
 
 def test_other_provider_errors_are_502_without_retries():
     upstream = Upstream(400)
     response = _client(upstream).post("/complete", json=REQUEST)
-    assert (response.status_code, response.json()["detail"], upstream.calls) == (502, "OpenAI respondió 400", 1)
+    assert (response.status_code, response.json()["detail"], upstream.calls) == (502, "OpenAI responded 400", 1)
 
 
 def test_an_unknown_provider_is_404_and_an_odd_model_name_is_422():
@@ -125,7 +125,7 @@ def test_the_provider_test_route_makes_a_minimal_call():
     response = _client(upstream).post("/providers/openai/test", json={"model": "gpt-6.1-sol"})
     assert response.status_code == 200
     assert response.json() == {"ok": True, "provider": "openai", "model": "gpt-6.1-sol",
-                               "message": "El proveedor respondió correctamente"}
+                               "message": "The provider responded correctly"}
     assert upstream.calls == 1
     assert _client(keys={}).post("/providers/openai/test", json={"model": "gpt-6.1-sol"}).status_code == 503
 

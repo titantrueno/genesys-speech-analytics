@@ -20,12 +20,12 @@ class Rejection:
 
 def _pair_message(source_type: str, target_type: str) -> str:
     if source_type == "output":
-        return "Un Output es el final del flujo: no tiene salidas."
+        return "An Output is the end of the flow: it has no outputs."
     if target_type == "sampling":
-        return "Un Sampling es el inicio del flujo: no admite entradas."
+        return "A Sampling is the start of the flow: it accepts no inputs."
     if source_type == "sampling":
-        return "Un Sampling solo puede conectarse a un Prompt."
-    return f"No se puede conectar un {NODE_TYPES[source_type]} a un {NODE_TYPES[target_type]}."
+        return "A Sampling can only be connected to a Prompt."
+    return f"A {NODE_TYPES[source_type]} cannot be connected to a {NODE_TYPES[target_type]}."
 
 
 def _reaches(edges: list[tuple[str, str]], start: str, goal: str) -> bool:
@@ -47,15 +47,15 @@ def _reaches(edges: list[tuple[str, str]], start: str, goal: str) -> bool:
 def connection_rejection(types: dict[str, str], edges: list[tuple[str, str]], source: str, target: str) -> Rejection | None:
     """Motivo por el que no se admite la conexión `source → target` en un grafo con esos nodos y conexiones."""
     if source not in types or target not in types:
-        return Rejection("unknown_node", "La conexión apunta a un nodo que no existe.")
+        return Rejection("unknown_node", "The connection points to a node that does not exist.")
     if source == target:
-        return Rejection("self_loop", "Un nodo no puede conectarse consigo mismo.")
+        return Rejection("self_loop", "A node cannot be connected to itself.")
     if (types[source], types[target]) not in ALLOWED:
         return Rejection("invalid_pair", _pair_message(types[source], types[target]))
     if (source, target) in edges:
-        return Rejection("duplicate", "Estos nodos ya están conectados.")
+        return Rejection("duplicate", "These nodes are already connected.")
     if types[target] in SINGLE_INPUT and any(t == target for _, t in edges):
-        return Rejection("input_taken", f"El {NODE_TYPES[types[target]]} ya tiene una entrada; desconéctala antes.")
+        return Rejection("input_taken", f"The {NODE_TYPES[types[target]]} already has an input; disconnect it first.")
     if _reaches(edges, target, source):
-        return Rejection("cycle", "La conexión crearía un ciclo.")
+        return Rejection("cycle", "The connection would create a cycle.")
     return None

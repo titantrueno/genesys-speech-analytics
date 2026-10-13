@@ -62,16 +62,16 @@ class KpiTargetIn(Section):
         for name in ("target", "green", "amber"):
             value = getattr(self, name)
             if value is not None and not low <= value <= high:
-                error(name, f"Debe estar entre {low:g} y {high:g}")
+                error(name, f"Must be between {low:g} and {high:g}")
         if (self.green is None) != (self.amber is None):
-            error("amber" if self.amber is None else "green", "Indica los dos umbrales o ninguno")
+            error("amber" if self.amber is None else "green", "Provide both thresholds or neither")
         elif self.green is not None and not errors:
             coherent = self.green > self.amber if kpi.higher_is_better else self.green < self.amber
             if not coherent:
-                error("amber", "Debe ser menor que el umbral verde (más es mejor)" if kpi.higher_is_better
-                      else "Debe ser mayor que el umbral verde (más es peor)")
+                error("amber", "Must be lower than the green threshold (more is better)" if kpi.higher_is_better
+                      else "Must be higher than the green threshold (more is worse)")
         if len(set(self.dashboards)) != len(self.dashboards):
-            error("dashboards", "Hay dashboards repetidos")
+            error("dashboards", "There are repeated dashboards")
         if errors:
             raise ValidationError.from_exception_data("KpiTargetIn", errors)
         return self

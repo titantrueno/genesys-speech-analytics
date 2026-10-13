@@ -49,7 +49,7 @@ class SchemaField(_Strict):
     @model_validator(mode="after")
     def _options_only_for_text(self) -> "SchemaField":
         if self.options is not None and self.type not in ("texto", "lista"):
-            raise ValueError("Solo un campo de texto o de lista puede tener valores permitidos")
+            raise ValueError("Only a text or list field can have allowed values")
         return self
 
 
@@ -69,7 +69,7 @@ class PromptConfig(_Strict):
 
 
 class FieldMapping(_Strict):
-    """Un campo destino y de dónde sale: la respuesta entera (`None`) o un campo del JSON del Prompt (FE013)."""
+    """A target field and where it comes from: the whole answer (`None`) or a field of the Prompt JSON (FE013)."""
     target: str = Field(max_length=catalog.MAX_FIELD_NAME + len(catalog.CHECK_PREFIX))
     source: str | None = Field(None, max_length=catalog.MAX_FIELD_NAME)
 
@@ -145,7 +145,7 @@ class _Envelope(_Strict):
 
 class GraphError(Exception):
     def __init__(self, errors: list[dict]):
-        super().__init__("grafo no válido")
+        super().__init__("invalid graph")
         self.errors = errors
 
 
@@ -187,9 +187,9 @@ def parse_graph(payload: Any) -> Graph:
             continue
         if not is_node_id(raw_id):
             errors.append({"path": f"nodes[{i}].id", "node_id": raw_id,
-                           "message": f"Identificador de nodo no válido: {raw_id!r} (se espera {ids.NODE}-UUID o tmp-…)"})
+                           "message": f"Invalid node identifier: {raw_id!r} ({ids.NODE}-UUID or tmp-… expected)"})
         elif raw_id in seen:
-            errors.append({"path": f"nodes[{i}].id", "node_id": raw_id, "message": f"Identificador de nodo repetido: {raw_id}"})
+            errors.append({"path": f"nodes[{i}].id", "node_id": raw_id, "message": f"Repeated node identifier: {raw_id}"})
         seen.add(raw_id)
         if isinstance(raw.get("type"), str) and raw["type"] in catalog.NODE_TYPES:
             types.setdefault(raw_id, raw["type"])

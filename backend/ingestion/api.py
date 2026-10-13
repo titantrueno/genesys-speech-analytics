@@ -31,11 +31,11 @@ class Context:
 
 
 def _not_found() -> HTTPException:
-    return HTTPException(status.HTTP_404_NOT_FOUND, detail="Flujo no encontrado")
+    return HTTPException(status.HTTP_404_NOT_FOUND, detail="Flow not found")
 
 
 def build_router(ctx: Context) -> APIRouter:
-    router = APIRouter(prefix="/download-flows", tags=["flujos de descarga"])
+    router = APIRouter(prefix="/download-flows", tags=["download flows"])
 
     def flow_or_404(conn, flow_id: str) -> dict:
         flow = flows.get_flow(conn, flow_id)
@@ -53,29 +53,29 @@ def build_router(ctx: Context) -> APIRouter:
         run_id = ids.normalize(run_id)
         run = get_run(ctx.database_url, run_id) if ids.is_valid(run_id, ids.RUN) else None
         if run is None or run["flow_id"] != flows.valid_flow_id(flow_id):
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Ejecución no encontrada")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
         return run
 
-    @router.get("", summary="Flujos de descarga con su última ejecución y la próxima programada")
+    @router.get("", summary="Download flows with their last run and the next scheduled one")
     def list_download_flows():
         with db.connect(ctx.database_url) as conn:
             return {"items": flows.list_flows(conn)}
 
-    @router.post("", status_code=status.HTTP_201_CREATED, summary="Crea un flujo de descarga")
+    @router.post("", status_code=status.HTTP_201_CREATED, summary="Creates a download flow")
     def create_download_flow(body: FlowIn):
         validated(body)
         if body.author is None:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT,
-                                detail=[{"type": "missing", "loc": ["body", "author"], "msg": "Falta la autoría"}])
+                                detail=[{"type": "missing", "loc": ["body", "author"], "msg": "Missing author"}])
         with db.connect(ctx.database_url) as conn:
             return flows.create_flow(conn, body, body.author, ctx.clock())
 
-    @router.get("/{flow_id}", summary="Flujo de descarga")
+    @router.get("/{flow_id}", summary="Download flow")
     def get_download_flow(flow_id: str):
         with db.connect(ctx.database_url) as conn:
             return flow_or_404(conn, flow_id)
 
-    @router.put("/{flow_id}", summary="Guarda un flujo de descarga (la autoría no cambia)")
+    @router.put("/{flow_id}", summary="Saves a download flow (the author does not change)")
     def update_download_flow(flow_id: str, body: FlowIn):
         with db.connect(ctx.database_url) as conn:
             flow = flow_or_404(conn, flow_id)
@@ -87,11 +87,11 @@ def build_router(ctx: Context) -> APIRouter:
         with db.connect(ctx.database_url) as conn:
             flow = flow_or_404(conn, flow_id)
             if flows.has_active_run(conn, flow["id"]):
-                raise HTTPException(status.HTTP_409_CONFLICT, detail="El flujo tiene una ejecución en curso")
+                raise HTTPException(status.HTTP_409_CONFLICT, detail="The flow has a run in progress")
             flows.delete_flow(conn, flow["id"])
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    @router.post("/{flow_id}/runs", status_code=status.HTTP_202_ACCEPTED, summary="Ejecuta el flujo ahora")
+    @router.post("/{flow_id}/runs", status_code=status.HTTP_202_ACCEPTED, summary="Runs the flow now")
     def start_download_run(flow_id: str, user: Person | None = Body(None, embed=True)):
         with db.connect(ctx.database_url) as conn:
             flow = flow_or_404(conn, flow_id)
@@ -99,20 +99,20 @@ def build_router(ctx: Context) -> APIRouter:
             run_id = launch(ctx.database_url, flow["id"], "manual", (user.id, user.name) if user else None,
                             ctx.clock(), ctx.client_factory, ctx.run_in_background, ctx.analyzer)
         except RunAlreadyActive:
-            raise HTTPException(status.HTTP_409_CONFLICT, detail="Ya hay una ejecución en curso de este flujo") from None
+            raise HTTPException(status.HTTP_409_CONFLICT, detail="This flow is already running") from None
         return get_run(ctx.database_url, run_id)
 
-    @router.get("/{flow_id}/runs", summary="Historial de ejecuciones (la más reciente primero)")
+    @router.get("/{flow_id}/runs", summary="Run history (most recent first)")
     def list_download_runs(flow_id: str):
         with db.connect(ctx.database_url) as conn:
             flow = flow_or_404(conn, flow_id)
         return {"items": list_runs(ctx.database_url, flow["id"])}
 
-    @router.get("/{flow_id}/runs/{run_id}", summary="Estado y contadores de una ejecución")
+    @router.get("/{flow_id}/runs/{run_id}", summary="Status and counters of a run")
     def get_download_run(flow_id: str, run_id: str):
         return run_or_404(flow_id, run_id)
 
-    @router.get("/{flow_id}/runs/{run_id}/log", summary="Log de una ejecución, paginado por `after` y filtrable")
+    @router.get("/{flow_id}/runs/{run_id}/log", summary="Log of a run, paginated by `after` and filterable")
     def get_download_run_log(flow_id: str, run_id: str, after: int = Query(0, ge=0),
                              level: str | None = Query(None, pattern=f"^({'|'.join(LEVELS)})$"),
                              format: str = Query("json", pattern="^(json|text)$")):  # noqa: A002
@@ -131,7 +131,7 @@ def build_router(ctx: Context) -> APIRouter:
 def build_status_router(ctx: Context) -> APIRouter:
     router = APIRouter(prefix="/status", tags=["estado"])
 
-    @router.get("", summary="Estado del conector: región, credenciales, última prueba y descarga, y recuentos")
+    @router.get("", summary="Connector status: region, credentials, last test and download, and counts")
     def connector_status():
         reachable = db.ping(ctx.database_url)
         last_download, conversations = None, None
@@ -150,17 +150,17 @@ def build_status_router(ctx: Context) -> APIRouter:
                              "by_quality": {quality: by_quality.get(quality, 0)
                                             for quality in ("completa", "parcial", "sin_transcripcion")}}
         return {"region": ctx.region, "credentials_configured": ctx.credentials_configured,
-                "database": "ok" if reachable else "no disponible", "last_test": ctx.last_test,
+                "database": "ok" if reachable else "unavailable", "last_test": ctx.last_test,
                 "last_download": last_download, "conversations": conversations}
 
-    @router.post("/test", summary="Prueba las credenciales de Genesys y lee la organización")
+    @router.post("/test", summary="Tests the Genesys credentials and reads the organization")
     def test_connection():
         organization, ok = None, False
         try:
             client = ctx.client_factory()
             client.ensure_token()
             organization = (client.get("/api/v2/organizations/me") or {}).get("name")
-            ok, message = True, "Conexión correcta con Genesys Cloud"
+            ok, message = True, "Connection to Genesys Cloud successful"
         except GenesysAuthError as exc:
             message = str(exc)
         except GenesysError as exc:

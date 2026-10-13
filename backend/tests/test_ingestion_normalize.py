@@ -110,7 +110,7 @@ def test_an_agent_who_spoke_without_phrases_makes_the_transcript_partial():
     c = run(raw("687f2225"))
     assert c.transcript_quality == "parcial"
     assert set(speakers(c)) == {"cliente"}
-    assert any("parcial" in warning for warning in c.warnings)
+    assert any("Partial transcript" in warning for warning in c.warnings)
     agent = next(s for s in c.segments if s.kind == "agente")
     assert c.agents[agent.agent_id][1] == AGENT_NAME and agent.wrapup_genesys_id
     assert c.metrics["talk_s"] == pytest.approx(45.754)
@@ -121,7 +121,7 @@ def test_a_call_without_phrases_has_no_transcript():
     c = run(raw("87a83caa"))
     assert c.transcript_quality == "sin_transcripcion" and c.turns == []
     assert c.contained_in_bot
-    assert any("sin transcripción" in warning for warning in c.warnings)
+    assert any("without transcript" in warning for warning in c.warnings)
 
 
 # Chat -----------------------------------------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ def test_an_undelivered_message_keeps_its_text():
     failed = [t for t in c.turns if not t.delivered]
     assert [(t.speaker, t.text) for t in failed] == [("agente", "lo estoy revisando, un segundo")]
     assert c.undelivered_messages == 1 and c.transcript_quality == "completa"
-    assert any("no entregado" in warning for warning in c.warnings)
+    assert any("undelivered" in warning for warning in c.warnings)
 
 
 def test_a_chat_with_a_delivered_and_an_undelivered_agent_message():
@@ -191,7 +191,7 @@ def test_without_the_messages_api_turns_come_from_the_transcript():
     assert len(c.turns) == 6 and set(speakers(c)) == {"cliente"}  # 6 mensajes del cliente, en su orden
     assert c.turns[0].text.startswith("Hola, buenas tardes.")
     assert c.undelivered_messages == 1  # el mensaje vacío del agente se cuenta, sin texto
-    assert any("API de mensajes" in warning for warning in c.warnings)
+    assert any("messages API" in warning for warning in c.warnings)
 
 
 def test_transcript_fallback_groups_phrases_of_the_same_message():

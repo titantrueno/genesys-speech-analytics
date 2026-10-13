@@ -27,9 +27,9 @@ class OpenAI(HttpProvider):
         choice = body["choices"][0]
         message = choice["message"]
         if message.get("refusal"):
-            raise self.failure("declinó responder")
+            raise self.failure("declined to answer")
         if choice.get("finish_reason") == "length":
-            raise self.failure("devolvió una respuesta cortada")
+            raise self.failure("returned a truncated response")
         usage = body.get("usage") or {}
         return Completion(text=message["content"], model=body.get("model") or request.model,
                           input_tokens=usage.get("prompt_tokens"), output_tokens=usage.get("completion_tokens"))

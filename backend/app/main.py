@@ -23,7 +23,7 @@ from app.state_backend import StateUnavailable
 
 
 AUTH_VERSION_HEADER = "X-Auth-Version"
-DATA_UNAVAILABLE = "Los datos reales no están disponibles"
+DATA_UNAVAILABLE = "Real data is not available"
 
 
 @asynccontextmanager

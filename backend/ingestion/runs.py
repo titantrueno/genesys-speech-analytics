@@ -140,7 +140,7 @@ def describe_error(exc: Exception) -> str:
     turno): solo se usa su mensaje principal.
     """
     if isinstance(exc, psycopg.Error):
-        return f"{type(exc).__name__}: {exc.diag.message_primary or 'error de base de datos'}"
+        return f"{type(exc).__name__}: {exc.diag.message_primary or 'database error'}"
     return str(exc) if isinstance(exc, GenesysError) else f"{type(exc).__name__}: {exc}"
 
 
@@ -184,7 +184,7 @@ class _Execution:
 
     def skip_existing(self, genesys_id: str) -> None:
         self.counters["skipped_existing"] += 1
-        self.log("info", "descarga", "Ya existe: no se descarga", genesys_id)
+        self.log("info", "download", "Already exists: not downloaded", genesys_id)
         self.save()
 
     # Ejecución ---------------------------------------------------------------------------------------------------------
@@ -193,24 +193,24 @@ class _Execution:
         start, end, channels = self.row["interval_from"], self.row["interval_to"], self.row["channels"]
         self.conn.execute("UPDATE download_run SET status = 'en_curso', started_at = %s WHERE id = %s",
                           (now(), self.run_id))
-        mode = "sobrescribe las existentes" if self.row["overwrite"] else "omite las existentes"  # nulo: anterior a FE013
-        self.log("info", "inicio", f"Ejecución {self.row['origin']}: {self.span(start, end)}, {', '.join(channels)}; "
+        mode = "overwrites the existing ones" if self.row["overwrite"] else "skips the existing ones"  # nulo: anterior a FE013
+        self.log("info", "start", f"Run {self.row['origin']}: {self.span(start, end)}, {', '.join(channels)}; "
                                    f"{mode}")
         for note in self.row.get("notes") or []:
-            self.log("aviso", "programación", note)
+            self.log("aviso", "scheduling", note)
         try:
             self.client = self.x.client_factory()
             self.client.ensure_token()
-            self.log("info", "autenticación", "Conectado con Genesys Cloud")
-            self.step("autenticación")
+            self.log("info", "authentication", "Connected to Genesys Cloud")
+            self.step("authentication")
             self.extract_and_load(start, end, channels)
         except GenesysAuthError as exc:
-            self.log("error", "autenticación", str(exc))
+            self.log("error", "authentication", str(exc))
             self.finish("error", str(exc))
             return
         except Exception as exc:  # la búsqueda no se puede completar: la ejecución no tiene qué descargar
             message = self.client.redact(describe_error(exc)) if self.client else type(exc).__name__
-            self.log("error", "búsqueda", message)
+            self.log("error", "search", message)
             self.finish("error", message)
             return
         self.finish("completada_con_avisos" if self.warnings else "completada")
@@ -219,25 +219,25 @@ class _Execution:
         c = self.counters
 
         def on_chunk(number, total, chunk_start, chunk_end, found):
-            self.log("info", "búsqueda", f"Tramo {number}/{total} ({self.span(chunk_start, chunk_end)}): "
-                                         f"{found} conversaciones")
+            self.log("info", "search", f"Chunk {number}/{total} ({self.span(chunk_start, chunk_end)}): "
+                                         f"{found} conversations")
 
         result = search(self.client, start, end, set(channels), on_chunk=on_chunk)
         c["found"] = len(result.found) + len(result.skipped)
         for genesys_id, reason in result.skipped:
             c["skipped"] += 1
             c["skipped_in_progress" if reason == IN_PROGRESS else "skipped_other_channel"] += 1
-            self.log("aviso", "búsqueda", f"Omitida: {reason}", genesys_id)
-        self.log("info", "búsqueda", f"{c['found']} encontradas, {len(result.found)} por descargar, "
-                                     f"{c['skipped']} omitidas")
-        self.step("búsqueda")
+            self.log("aviso", "search", f"Skipped: {reason}", genesys_id)
+        self.log("info", "search", f"{c['found']} found, {len(result.found)} to download, "
+                                     f"{c['skipped']} skipped")
+        self.step("search")
 
         names = GenesysNames(self.client)
         analyzed = 0
         overwrite = bool(self.row["overwrite"])
         for details in result.found:
             genesys_id = details["conversationId"]
-            stage = "descarga"
+            stage = "download"
             try:
                 # Sin «Sobrescribir», lo que ya está en la base no se descarga (FE013, criterio 26).
                 if not overwrite and self.exists(genesys_id):
@@ -245,23 +245,23 @@ class _Execution:
                     continue
                 raw = fetch(self.client, details)
                 c["downloaded"] += 1
-                self.step("descarga")
-                stage = "normalización"
+                self.step("download")
+                stage = "normalization"
                 normalized = normalize(raw, names)
                 for warning in normalized.warnings:
-                    self.log("aviso", "normalización", warning, genesys_id)
-                self.x.on_step("normalización")
-                stage = "análisis"
+                    self.log("aviso", "normalization", warning, genesys_id)
+                self.x.on_step("normalization")
+                stage = "analysis"
                 analysis = self.x.analyzer.analyze(normalized)
                 analyzed += analysis.status == "completo"
-                self.x.on_step("análisis")
-                stage = "carga"
+                self.x.on_step("analysis")
+                stage = "load"
                 outcome = load(self.conn, normalized, analysis, overwrite)
             except GenesysAuthError:
                 raise
             except Exception as exc:  # noqa: BLE001 - una conversación que falla no detiene la ejecución
                 c["errors"] += 1
-                self.log("error", stage, f"No se pudo procesar: {describe_error(exc)}", genesys_id)
+                self.log("error", stage, f"Could not be processed: {describe_error(exc)}", genesys_id)
                 self.save()
                 continue
             if outcome == OMITTED:  # otra ejecución la cargó mientras se descargaba
@@ -271,13 +271,13 @@ class _Execution:
             c["by_channel"][normalized.channel] += 1
             c["by_quality"][normalized.transcript_quality] += 1
             c["undelivered_messages"] += normalized.undelivered_messages
-            self.step("carga")
+            self.step("load")
 
-        self.log("info", "descarga", f"{c['downloaded']} descargadas, {c['errors']} con error")
-        self.log("info", "normalización", f"Calidad: {c['by_quality']['completa']} completas, "
-                                          f"{c['by_quality']['parcial']} parciales, "
-                                          f"{c['by_quality']['sin_transcripcion']} sin transcripción; "
-                                          f"{c['undelivered_messages']} mensajes no entregados")
-        self.log("info", "análisis", f"{analyzed} analizadas, {c['downloaded'] - analyzed - c['errors']} pendientes")
-        self.log("info", "carga", f"{c['inserted']} insertadas, {c['updated']} actualizadas, "
-                                  f"{c['skipped_existing']} ya existentes")
+        self.log("info", "download", f"{c['downloaded']} downloaded, {c['errors']} with errors")
+        self.log("info", "normalization", f"Quality: {c['by_quality']['completa']} complete, "
+                                          f"{c['by_quality']['parcial']} partial, "
+                                          f"{c['by_quality']['sin_transcripcion']} without transcript; "
+                                          f"{c['undelivered_messages']} undelivered messages")
+        self.log("info", "analysis", f"{analyzed} analyzed, {c['downloaded'] - analyzed - c['errors']} pending")
+        self.log("info", "load", f"{c['inserted']} inserted, {c['updated']} updated, "
+                                  f"{c['skipped_existing']} already existing")

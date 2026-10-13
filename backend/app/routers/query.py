@@ -60,11 +60,11 @@ def suggest(
 ) -> dict:
     fdef = get_fields().get(field)
     if fdef is None or fdef.type != "categorical":
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"'{field}' no es un campo categórico")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"'{field}' is not a categorical field")
     default_from, default_to = default_period()
     date_from, date_to = date_from or default_from, date_to or default_to
     if date_from > date_to:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="'from' debe ser anterior o igual a 'to'")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="'from' must be before or equal to 'to'")
     counts: Counter[str] = Counter()
     zone = current_zone()
     for conv in get_dataset():
@@ -103,14 +103,14 @@ def _canonical(payload: dict) -> dict:
 def _clean_name(name: str) -> str:
     cleaned = name.strip()
     if not cleaned:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="El nombre no puede estar vacío")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="The name cannot be empty")
     return cleaned
 
 
 def _owned(query_id: str, user: User) -> SavedQuery:
     item = get_saved_store().get(user.id, query_id)
     if item is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Consulta guardada no encontrada")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Saved query not found")
     return item
 
 

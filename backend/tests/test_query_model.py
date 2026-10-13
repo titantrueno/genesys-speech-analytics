@@ -99,8 +99,8 @@ def test_explicit_period_is_kept():
     (query(cond("channel", "is", "chat"), {"op": "and", "conditions": [cond("csat", "gte", 6)]}),
      "root.conditions[1].conditions[0]", "rango"),
     (query({"op": "or", "conditions": [{"op": "and", "conditions": [cond("channel", "is", "chat")]}]}),
-     "root.conditions[0].conditions[0]", "anidamiento"),
-    (query(**{"from": days_ago(17), "to": days_ago(26)}), "from", "anterior"),
+     "root.conditions[0].conditions[0]", "nesting"),
+    (query(**{"from": days_ago(17), "to": days_ago(26)}), "from", "before"),
     ({"root": {"op": "xor", "conditions": []}}, "root", "op"),
     ({"root": {"op": "and", "conditions": [{"valor": 1}]}}, "root.conditions[0]", ""),
     ({}, "root", ""),
@@ -123,7 +123,7 @@ def test_identifiers_in_values_are_normalized_and_validated_with_ids_module():
 
 def test_query_size_is_limited():
     too_many = query(*[cond("channel", "is", "chat") for _ in range(51)])
-    assert any("máximo" in e["message"].lower() and e["path"] == "root" for e in errors_of(too_many))
+    assert any("at most" in e["message"].lower() and e["path"] == "root" for e in errors_of(too_many))
     parse_query(query(*[cond("channel", "is", "chat") for _ in range(50)]))
     long_list = query(cond("main_topic", "in", ["cajeros"] * 201))
     assert any("200" in e["message"] for e in errors_of(long_list))

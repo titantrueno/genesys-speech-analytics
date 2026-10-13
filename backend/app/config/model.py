@@ -40,19 +40,19 @@ class GeneralConfig(Section):
     @classmethod
     def _known_timezone(cls, value: str) -> str:
         if value not in timezones():
-            raise ValueError("Zona horaria desconocida")
+            raise ValueError("Unknown time zone")
         return value
 
     @field_validator("language")
     @classmethod
     def _available_language(cls, value: str) -> str:
         if value not in LANGUAGES:
-            raise ValueError(f"Idioma no disponible; opciones: {', '.join(LANGUAGES)}")
+            raise ValueError(f"Language not available; options: {', '.join(LANGUAGES)}")
         return value
 
 
 class SourcesConfig(Section):
-    """Origen de datos de toda la plataforma (FE012): el dataset sintético o las conversaciones reales de Genesys."""
+    """Data origin of the whole platform (FE012): the synthetic dataset or the real Genesys conversations."""
     origin: Literal["sintetico", "real"]
 
 
@@ -68,7 +68,7 @@ class AiConfig(Section):
     @classmethod
     def _known_provider(cls, value: str) -> str:
         if value not in PROVIDERS:
-            raise ValueError("Proveedor desconocido")
+            raise ValueError("Unknown provider")
         return value
 
     @model_validator(mode="after")
@@ -76,24 +76,24 @@ class AiConfig(Section):
         if self.provider in PROVIDERS and self.model not in PROVIDERS[self.provider]["models"]:
             raise ValidationError.from_exception_data("AiConfig", [{
                 "type": "value_error", "loc": ("model",), "input": self.model,
-                "ctx": {"error": ValueError("El modelo no pertenece al proveedor")},
+                "ctx": {"error": ValueError("The model does not belong to the provider")},
             }])
         return self
 
 
 _MESSAGES = {
-    "missing": "Campo obligatorio",
-    "extra_forbidden": "Campo no admitido",
-    "string_type": "Debe ser un texto",
-    "bool_type": "Debe ser verdadero o falso",
-    "bool_parsing": "Debe ser verdadero o falso",
-    "int_type": "Debe ser un número entero",
-    "int_parsing": "Debe ser un número entero",
-    "float_type": "Debe ser un número",
-    "float_parsing": "Debe ser un número",
-    "list_type": "Debe ser una lista",
-    "dict_type": "Debe ser un objeto",
-    "model_type": "Debe ser un objeto",
+    "missing": "Required field",
+    "extra_forbidden": "Field not allowed",
+    "string_type": "Must be a text",
+    "bool_type": "Must be true or false",
+    "bool_parsing": "Must be true or false",
+    "int_type": "Must be an integer",
+    "int_parsing": "Must be an integer",
+    "float_type": "Must be a number",
+    "float_parsing": "Must be a number",
+    "list_type": "Must be a list",
+    "dict_type": "Must be an object",
+    "model_type": "Must be an object",
 }
 
 
@@ -103,19 +103,19 @@ def _message(err: dict) -> str:
         case "value_error":
             return str(ctx.get("error", err["msg"]))
         case "string_too_short":
-            return "No puede estar vacío" if ctx.get("min_length") == 1 else f"Mínimo {ctx['min_length']} caracteres"
+            return "Cannot be empty" if ctx.get("min_length") == 1 else f"Minimum {ctx['min_length']} characters"
         case "string_too_long":
-            return f"Máximo {ctx['max_length']} caracteres"
+            return f"Maximum {ctx['max_length']} characters"
         case "too_short":
-            return f"Mínimo {ctx['min_length']} elementos"
+            return f"Minimum {ctx['min_length']} items"
         case "too_long":
-            return f"Máximo {ctx['max_length']} elementos"
+            return f"Maximum {ctx['max_length']} items"
         case "greater_than_equal":
-            return f"Debe ser mayor o igual que {ctx['ge']}"
+            return f"Must be greater than or equal to {ctx['ge']}"
         case "less_than_equal":
-            return f"Debe ser menor o igual que {ctx['le']}"
+            return f"Must be less than or equal to {ctx['le']}"
         case "string_pattern_mismatch":
-            return "Formato no válido"
+            return "Invalid format"
         case other:
             return _MESSAGES.get(other, err["msg"])
 

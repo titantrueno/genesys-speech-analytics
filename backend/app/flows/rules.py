@@ -66,20 +66,20 @@ def _missing(pairs: list[tuple[str, bool]]) -> list[str]:
 def _sampling(node: SamplingNode) -> list[Issue]:
     cfg = node.config
     missing = _missing([
-        ("filtros", cfg.query is not None),
-        ("método", cfg.method is not None),
-        ("tamaño de muestra", cfg.size is not None),
-        ("criterio de estratificación", cfg.method != "estratificado" or cfg.stratify_by is not None),
-        ("criterio de orden", cfg.method != "primeros_n" or cfg.order_by is not None),
-        ("sentido del orden", cfg.method != "primeros_n" or cfg.order is not None),
+        ("filters", cfg.query is not None),
+        ("method", cfg.method is not None),
+        ("sample size", cfg.size is not None),
+        ("stratification criterion", cfg.method != "estratificado" or cfg.stratify_by is not None),
+        ("order criterion", cfg.method != "primeros_n" or cfg.order_by is not None),
+        ("order direction", cfg.method != "primeros_n" or cfg.order is not None),
     ])
-    issues = [Issue("node_unconfigured", f"Sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    issues = [Issue("node_unconfigured", f"Not configured: missing {', '.join(missing)}.", node.id)] if missing else []
     if cfg.query is not None:
         try:
             parse_query(copy.deepcopy(cfg.query))
         except QueryError as exc:
             detail = "; ".join(e["message"] for e in exc.errors)
-            issues.append(Issue("invalid_config", f"Los filtros del Sampling no son válidos: {detail}", node.id))
+            issues.append(Issue("invalid_config", f"The Sampling filters are not valid: {detail}", node.id))
     return issues
 
 
@@ -90,16 +90,16 @@ def _output_format(node: PromptNode) -> list[Issue]:
     if fmt.type == "etiqueta":
         labels = [_normalized(label) for label in fmt.labels or []]
         if len(labels) < 2 or "" in labels or len(set(labels)) != len(labels):
-            return [Issue("invalid_config", "El formato «etiqueta» necesita al menos 2 etiquetas distintas y no vacías.", node.id)]
+            return [Issue("invalid_config", "The \"etiqueta\" format needs at least 2 distinct, non-empty labels.", node.id)]
         return []
     names = [f.name for f in fmt.fields or []]
     if not names:
-        return [Issue("invalid_config", "El esquema JSON necesita al menos un campo.", node.id)]
+        return [Issue("invalid_config", "The JSON schema needs at least one field.", node.id)]
     invalid = [n for n in names if not FIELD_NAME.match(n)]
     if invalid:
-        return [Issue("invalid_config", f"Nombre de campo no válido: {', '.join(invalid)} (letras, números y _, sin empezar por número).", node.id)]
+        return [Issue("invalid_config", f"Invalid field name: {', '.join(invalid)} (letters, numbers and _, not starting with a number).", node.id)]
     if len({n.casefold() for n in names}) != len(names):
-        return [Issue("invalid_config", "El esquema JSON tiene campos repetidos.", node.id)]
+        return [Issue("invalid_config", "The JSON schema has repeated fields.", node.id)]
     return []
 
 
@@ -109,58 +109,58 @@ def _provider(node: PromptNode, llm_keys: LlmKeys | None) -> list[Issue]:
     spec = catalog.PROVIDERS[provider]
     if cfg.model is not None and cfg.model not in spec["models"]:
         return [Issue("model_not_in_provider",
-                      f"El modelo {catalog.MODELS[cfg.model]} no pertenece al proveedor {spec['label']}.", node.id)]
+                      f"The model {catalog.MODELS[cfg.model]} does not belong to the provider {spec['label']}.", node.id)]
     if provider == catalog.SIMULATED or llm_keys is None:
         return []
     keys = llm_keys()
     if keys is None:
         return [Issue("llm_unavailable",
-                      f"El servicio de LLM no está disponible: no se puede ejecutar con {spec['label']}.", node.id)]
+                      f"The LLM service is not available: cannot run with {spec['label']}.", node.id)]
     if not keys.get(provider):
-        return [Issue("provider_without_key", f"El proveedor {spec['label']} no tiene clave configurada.", node.id)]
+        return [Issue("provider_without_key", f"The provider {spec['label']} has no key configured.", node.id)]
     return []
 
 
 def _prompt(node: PromptNode, graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
     cfg = node.config
     template = (cfg.template or "").strip()
-    missing = _missing([("plantilla", bool(template)), ("modelo", cfg.model is not None),
-                        ("temperatura", cfg.temperature is not None), ("formato de salida", cfg.output is not None)])
-    issues = [Issue("node_unconfigured", f"Sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    missing = _missing([("template", bool(template)), ("model", cfg.model is not None),
+                        ("temperature", cfg.temperature is not None), ("output format", cfg.output is not None)])
+    issues = [Issue("node_unconfigured", f"Not configured: missing {', '.join(missing)}.", node.id)] if missing else []
     if template:
         used = template_variables(template)
         unknown = sorted({v for v in used if v not in catalog.VARIABLES})
         if unknown:
-            issues.append(Issue("unknown_variable", f"Variable desconocida: {', '.join('{{' + v + '}}' for v in unknown)}.", node.id))
+            issues.append(Issue("unknown_variable", f"Unknown variable: {', '.join('{{' + v + '}}' for v in unknown)}.", node.id))
         if not any(v in catalog.VARIABLES for v in used):
             issues.append(Issue("prompt_without_variables",
-                                "El prompt no usa ninguna variable: todas las conversaciones recibirían el mismo texto.", node.id))
+                                "The prompt uses no variable: all conversations would receive the same text.", node.id))
         pending = sorted({v for v in used if v in PENDING_VARIABLES})
         if pending and active_origin() == "real":
             issues.append(Issue(
                 "analysis_pending",
-                f"Las conversaciones reales aún no tienen análisis: {', '.join('{{' + v + '}}' for v in pending)} "
-                "llegará vacía al prompt.", node.id, "warning"))
+                f"The real conversations do not have analysis yet: {', '.join('{{' + v + '}}' for v in pending)} "
+                "will reach the prompt empty.", node.id, "warning"))
         chained = any(isinstance(graph.node(source), PromptNode) for source in graph.inputs(node.id))
         if catalog.PREVIOUS_RESULT in used and not chained:
             issues.append(Issue("previous_result_without_chain",
-                                "{{resultado_anterior}} solo está disponible en un prompt conectado a otro prompt.", node.id))
+                                "{{resultado_anterior}} is only available in a prompt connected to another prompt.", node.id))
     return issues + _provider(node, llm_keys) + _output_format(node)
 
 
 # Qué campo del JSON necesita cada destino del análisis completo (FE014, criterio 6): tipo, si exige valores permitidos
 # y cómo se dice en el mensaje. Summary y main topic siguen con sus reglas de FE013.
-_CHECK_RULE = ("texto", True, "un campo de texto con valores permitidos cumple, no_cumple y no_aplica")
+_CHECK_RULE = ("texto", True, "a text field with allowed values cumple, no_cumple and no_aplica")
 _TARGET_RULES = {
-    "resolution": ("texto", True, "un campo de texto con valores permitidos resuelta, no_resuelta y escalada"),
-    "churn_risk": ("texto", True, "un campo de texto con valores permitidos bajo, medio y alto"),
-    "csat": ("numero", False, "un campo numérico"),
-    "effort": ("numero", False, "un campo numérico"),
-    "sentiment": ("numero", False, "un campo numérico"),
-    "secondary_topics": ("lista", True, "una lista con valores permitidos que sean temas secundarios activos"),
-    "keywords": ("lista", False, "una lista"),
+    "resolution": ("texto", True, "a text field with allowed values resuelta, no_resuelta and escalada"),
+    "churn_risk": ("texto", True, "a text field with allowed values bajo, medio and alto"),
+    "csat": ("numero", False, "a numeric field"),
+    "effort": ("numero", False, "a numeric field"),
+    "sentiment": ("numero", False, "a numeric field"),
+    "secondary_topics": ("lista", True, "a list with allowed values that are active secondary topics"),
+    "keywords": ("lista", False, "a list"),
 }
-_ENTITY_RULE = ("texto", False, "un campo de texto")
+_ENTITY_RULE = ("texto", False, "a text field")
 
 
 def _target_rule(target: str) -> tuple[str, bool, str]:
@@ -174,13 +174,13 @@ def _target_rule(target: str) -> tuple[str, bool, str]:
 def _analysis_mapping(node: OutputNode, mapping, fmt, label: str) -> list[Issue]:
     field_type, needs_options, wanted = _target_rule(mapping.target)
     if fmt.type != "json":
-        return [Issue("invalid_mapping", f"{label}: un Prompt de texto o etiqueta solo puede guardar Summary o Main "
-                                         "topic; usa un Prompt JSON.", node.id)]
+        return [Issue("invalid_mapping", f"{label}: a text or label Prompt can only save Summary or Main "
+                                         "topic; use a JSON Prompt.", node.id)]
     field = next((f for f in fmt.fields or [] if f.name == mapping.source), None)
     unknown = [o for o in (field.options or []) if not accepts_option(mapping.target, o)] if field else []
     if field is None or field.type != field_type or (needs_options and not field.options) or unknown:
-        detail = f" No lo son: {', '.join(unknown)}." if unknown else ""
-        return [Issue("invalid_mapping", f"{label}: elige {wanted} del JSON del Prompt.{detail}", node.id)]
+        detail = f" Not allowed: {', '.join(unknown)}." if unknown else ""
+        return [Issue("invalid_mapping", f"{label}: choose {wanted} from the Prompt JSON.{detail}", node.id)]
     return []
 
 
@@ -193,22 +193,22 @@ def _mapping(node: OutputNode, mapping, prompt: PromptNode) -> list[Issue]:
     if fmt.type == "json":
         field = next((f for f in fmt.fields or [] if f.name == mapping.source), None)
         if field is None or field.type != "texto":
-            return [Issue("invalid_mapping", f"{label}: elige un campo de texto del JSON del Prompt.", node.id)]
+            return [Issue("invalid_mapping", f"{label}: choose a text field from the Prompt JSON.", node.id)]
         free_text, values = field.options is None, field.options
     else:
         if mapping.source is not None:
-            return [Issue("invalid_mapping", f"{label}: el Prompt no devuelve JSON, así que no hay campo de origen.",
+            return [Issue("invalid_mapping", f"{label}: the Prompt does not return JSON, so there is no source field.",
                           node.id)]
         free_text, values = fmt.type == "texto", fmt.labels if fmt.type == "etiqueta" else None
     if mapping.target == "summary" and not free_text:
-        return [Issue("summary_requires_text", "Summary necesita texto libre: un Prompt de texto o un campo de "
-                                               "texto sin valores permitidos.", node.id)]
+        return [Issue("summary_requires_text", "Summary needs free text: a text Prompt or a text field "
+                                               "with no allowed values.", node.id)]
     if mapping.target == "main_topic":
         unknown = [v for v in values or [] if topic_code(v) is None]
         if not values or unknown:
-            detail = f" No lo son: {', '.join(unknown)}." if unknown else ""
-            return [Issue("main_topic_requires_taxonomy", "Main topic necesita etiquetas o valores permitidos que sean "
-                                                          f"main topics activos de la taxonomía.{detail}", node.id)]
+            detail = f" Not allowed: {', '.join(unknown)}." if unknown else ""
+            return [Issue("main_topic_requires_taxonomy", "Main topic needs labels or allowed values that are "
+                                                          f"active main topics of the taxonomy.{detail}", node.id)]
     return []
 
 
@@ -222,27 +222,27 @@ def _unknown_checks(node: OutputNode) -> set[str]:
 def _fields_output(node: OutputNode, graph: Graph) -> list[Issue]:
     cfg = node.config
     if not cfg.mappings:
-        return [Issue("node_unconfigured", "Sin configurar: falta al menos un campo destino.", node.id)]
+        return [Issue("node_unconfigured", "Not configured: at least one target field is missing.", node.id)]
     issues = []
     if active_origin() != "real":
-        issues.append(Issue("field_output_requires_real_data", "Guardar en campos solo funciona con datos reales.",
+        issues.append(Issue("field_output_requires_real_data", "Saving to fields only works with real data.",
                             node.id))
     targets = [m.target for m in cfg.mappings]
     if len(set(targets)) != len(targets):
-        issues.append(Issue("duplicate_target", "Un campo destino solo puede aparecer una vez.", node.id))
+        issues.append(Issue("duplicate_target", "A target field can only appear once.", node.id))
     unknown = _unknown_checks(node)
-    issues += [Issue("unknown_check", f"El check «{code}» no existe o está desactivado: quita su asignación.", node.id)
+    issues += [Issue("unknown_check", f"The check “{code}” does not exist or is disabled: remove its mapping.", node.id)
                for code in sorted(unknown)]
     prompt = next((graph.node(s) for s in graph.inputs(node.id) if isinstance(graph.node(s), PromptNode)), None)
     if prompt is None or prompt.config.output is None:
         return issues
     if (prompt.config.provider or catalog.SIMULATED) == catalog.SIMULATED:
         issues.append(Issue("simulated_values_to_real_data",
-                            "El Prompt usa el proveedor Simulado: se guardarán resultados simulados en conversaciones "
-                            "reales.", node.id, "warning"))
+                            "The Prompt uses the Simulated provider: simulated results will be saved in real "
+                            "conversations.", node.id, "warning"))
     if prompt.config.output.type != "json" and len(cfg.mappings) > 1:
-        issues.append(Issue("invalid_mapping", "Un Prompt de texto o etiqueta solo da un valor: usa una sola "
-                                               "asignación, o un Prompt JSON para varios campos.", node.id))
+        issues.append(Issue("invalid_mapping", "A text or label Prompt gives a single value: use a single "
+                                               "mapping, or a JSON Prompt for several fields.", node.id))
         return issues
     for mapping in cfg.mappings:
         if catalog.check_code(mapping.target) not in unknown:
@@ -254,16 +254,16 @@ def _output(node: OutputNode, graph: Graph) -> list[Issue]:
     cfg = node.config
     if cfg.kind == "campo":
         return _fields_output(node, graph)
-    missing = _missing([("tipo", cfg.kind is not None), ("nombre de destino", bool((cfg.destination or "").strip())),
-                        ("agregación", cfg.kind != "metrica" or cfg.aggregation is not None)])
-    issues = [Issue("node_unconfigured", f"Sin configurar: falta {', '.join(missing)}.", node.id)] if missing else []
+    missing = _missing([("type", cfg.kind is not None), ("destination name", bool((cfg.destination or "").strip())),
+                        ("aggregation", cfg.kind != "metrica" or cfg.aggregation is not None)])
+    issues = [Issue("node_unconfigured", f"Not configured: missing {', '.join(missing)}.", node.id)] if missing else []
     if cfg.kind == "metrica":
         for source in graph.inputs(node.id):
             prompt = graph.node(source)
             fmt = prompt.config.output if isinstance(prompt, PromptNode) else None
             if fmt is not None and fmt.type != "etiqueta":
                 issues.append(Issue("metric_requires_labels",
-                                    "Una métrica agregada necesita un prompt con formato «etiqueta».", node.id))
+                                    "An aggregated metric needs a prompt with the \"etiqueta\" format.", node.id))
     return issues
 
 
@@ -272,9 +272,9 @@ def _disconnected(node, graph: Graph) -> Issue | None:
     loose = {"sampling": not has_output, "prompt": not (has_input and has_output), "output": not has_input}[node.type]
     if not loose:
         return None
-    needs = {"sampling": "conéctalo a un Prompt", "prompt": "necesita una entrada y al menos una salida",
-             "output": "conéctale un Prompt"}[node.type]
-    return Issue("disconnected_node", f"Nodo suelto: {needs}.", node.id)
+    needs = {"sampling": "connect it to a Prompt", "prompt": "it needs one input and at least one output",
+             "output": "connect a Prompt to it"}[node.type]
+    return Issue("disconnected_node", f"Loose node: {needs}.", node.id)
 
 
 def _once(llm_keys: LlmKeys | None) -> LlmKeys | None:
@@ -295,9 +295,9 @@ def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
     types = [n.type for n in graph.nodes]
     issues: list[Issue] = []
     if "sampling" not in types:
-        issues.append(Issue("missing_sampling", "El flujo necesita un nodo Sampling."))
+        issues.append(Issue("missing_sampling", "The flow needs a Sampling node."))
     if "output" not in types:
-        issues.append(Issue("missing_output", "El flujo necesita al menos un nodo Output."))
+        issues.append(Issue("missing_output", "The flow needs at least one Output node."))
     destinations: set[str] = set()
     targets: set[str] = set()
     for node in graph.nodes:
@@ -311,13 +311,13 @@ def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
                 own = {m.target for m in node.config.mappings or []}
                 if own & targets:
                     names = ", ".join(catalog.target_label(t, get_config().checks) for t in sorted(own & targets))
-                    issues.append(Issue("duplicate_target", f"Otro Output ya guarda en: {names}.", node.id))
+                    issues.append(Issue("duplicate_target", f"Another Output already saves to: {names}.", node.id))
                 targets |= own
             else:
                 destination = _normalized(node.config.destination or "")
                 if destination and destination in destinations:
                     issues.append(Issue("duplicate_destination",
-                                        f"Ya hay otro Output con el destino «{node.config.destination.strip()}».",
+                                        f"There is already another Output with the destination “{node.config.destination.strip()}”.",
                                         node.id))
                 destinations.add(destination)
         loose = _disconnected(node, graph)

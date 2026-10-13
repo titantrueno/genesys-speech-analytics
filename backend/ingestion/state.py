@@ -44,7 +44,7 @@ class SettingIn(BaseModel):
 def _flow_id(flow_id: str) -> str:
     flow_id = ids.normalize(flow_id)
     if not ids.is_valid(flow_id, ids.FLOW):
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Flujo no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Flow not found")
     return flow_id
 
 
@@ -57,19 +57,19 @@ def _flow(row: dict) -> dict:
 def build_state_router(database_url: str, clock: Callable[[], datetime]) -> APIRouter:
     router = APIRouter(tags=["estado de la plataforma"])
 
-    @router.get("/insight-flows", summary="Flujos de insights guardados")
+    @router.get("/insight-flows", summary="Stored insight flows")
     def list_insight_flows():
         with db.connect(database_url, row_factory=dict_row) as conn:
             rows = conn.execute("SELECT * FROM insight_flow ORDER BY updated_at DESC").fetchall()
         return {"items": [_flow(row) for row in rows]}
 
-    @router.put("/insight-flows/{flow_id}", summary="Guarda un flujo de insights (lo crea o lo sustituye entero)")
+    @router.put("/insight-flows/{flow_id}", summary="Saves an insight flow (creates it or replaces it entirely)")
     def put_insight_flow(flow_id: str, body: InsightFlowIn):
         flow_id = _flow_id(flow_id)
         if ids.normalize(body.id) != flow_id:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT,
                                 detail=[{"type": "value_error", "loc": ["body", "id"],
-                                         "msg": "No coincide con el flujo de la ruta"}])
+                                         "msg": "Does not match the flow of the path"}])
         with db.connect(database_url, row_factory=dict_row) as conn:
             row = conn.execute(
                 "INSERT INTO insight_flow (id, name, author_id, author_name, graph, created_at, updated_at) "
@@ -80,19 +80,19 @@ def build_state_router(database_url: str, clock: Callable[[], datetime]) -> APIR
         return _flow(row)
 
     @router.delete("/insight-flows/{flow_id}", status_code=status.HTTP_204_NO_CONTENT,
-                   summary="Borra un flujo de insights (si no existe, no hace nada)")
+                   summary="Deletes an insight flow (does nothing if it does not exist)")
     def delete_insight_flow(flow_id: str):
         with db.connect(database_url) as conn:
             conn.execute("DELETE FROM insight_flow WHERE id = %s", (_flow_id(flow_id),))
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    @router.get("/settings", summary="Secciones guardadas de la configuración global")
+    @router.get("/settings", summary="Stored sections of the global settings")
     def list_settings():
         with db.connect(database_url) as conn:
             rows = conn.execute("SELECT key, value FROM platform_setting ORDER BY key").fetchall()
         return {"items": dict(rows)}
 
-    @router.put("/settings/{key}", summary="Guarda una sección de la configuración global")
+    @router.put("/settings/{key}", summary="Saves a section of the global settings")
     def put_setting(body: SettingIn, key: str = Path(pattern=SETTING_KEY)):
         with db.connect(database_url) as conn:
             conn.execute("INSERT INTO platform_setting (key, value, updated_at) VALUES (%s, %s, %s) "

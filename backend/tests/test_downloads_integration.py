@@ -86,5 +86,5 @@ def test_wrong_credentials_are_reported_without_the_secret(api, pg_url):
             tested = _valid(s.GenesysTest, api.post("/api/config/connectors/genesys/test"))
         finally:
             api_app.dependency_overrides.pop(get_ingestion_client, None)
-    assert tested["ok"] is False and tested["message"] == "Credenciales de Genesys no válidas"
+    assert tested["ok"] is False and tested["message"] == "Invalid Genesys credentials"
     assert "otro-secreto" not in str(tested) and SECRET not in str(tested)

@@ -39,7 +39,7 @@ def test_the_service_is_not_exposed_to_browsers():
 def test_health_reports_an_unreachable_database_without_leaking_its_url():
     response = _client().get("/health", headers=AUTH)
     assert response.status_code == 503
-    assert response.json() == {"status": "error", "database": "no disponible"}
+    assert response.json() == {"status": "error", "database": "unavailable"}
     assert "127.0.0.1" not in response.text
 
 
@@ -80,7 +80,7 @@ def test_running_the_migrations_again_keeps_the_data(pg_url):
 def test_the_service_publishes_its_own_openapi_without_the_token():
     client = _client()
     spec = client.get("/openapi.json")
-    assert spec.status_code == 200 and spec.json()["info"]["title"] == "Servicio de ingesta de Genesys Cloud"
+    assert spec.status_code == 200 and spec.json()["info"]["title"] == "Genesys Cloud ingestion service"
     assert {"/health", "/conversations/{key}", "/download-flows", "/download-flows/{flow_id}/runs/{run_id}/log",
             "/status", "/status/test"} <= set(spec.json()["paths"])
     assert client.get("/docs").status_code == 200

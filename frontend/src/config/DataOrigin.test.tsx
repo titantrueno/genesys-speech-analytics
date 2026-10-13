@@ -99,8 +99,8 @@ describe('Configuración: origen de datos (FE012)', () => {
 
 describe('Aviso de datos no disponibles (503)', () => {
   it('explica que los datos reales no responden y ofrece volver a Configuración', () => {
-    render(<MemoryRouter><DataUnavailable error={new ApiError(503, 'Los datos reales no están disponibles')} /></MemoryRouter>)
-    expect(screen.getByRole('alert')).toHaveTextContent('Los datos reales no están disponibles')
+    render(<MemoryRouter><DataUnavailable error={new ApiError(503, 'Real data is not available')} /></MemoryRouter>)
+    expect(screen.getByRole('alert')).toHaveTextContent('Real data is not available')
     expect(screen.getByRole('link', { name: /Configuración/ })).toHaveAttribute('href', '/configuracion?tab=fuentes')
   })
 
@@ -113,8 +113,8 @@ describe('Aviso de datos no disponibles (503)', () => {
 describe('Aviso de datos no disponibles en la aplicación', () => {
   it('el aviso aparece sobre la sección y la navegación sigue funcionando', async () => {
     signedInAs(USERS.admin, {
-      'GET /api/conversations': () => ({ status: 503, body: { detail: 'Los datos reales no están disponibles' } }),
-      'GET /api/catalog': () => ({ status: 503, body: { detail: 'Los datos reales no están disponibles' } }),
+      'GET /api/conversations': () => ({ status: 503, body: { detail: 'Real data is not available' } }),
+      'GET /api/catalog': () => ({ status: 503, body: { detail: 'Real data is not available' } }),
       'GET /api/config': () => ({ status: 200, body: platformConfig({ sources: { origin: 'real' } }) }),
       'GET /api/config/connectors': () => ({ status: 200, body: { items: CONNECTORS } }),
       'GET /api/config/connectors/genesys': () => ({ status: 200, body: GENESYS }),
@@ -122,7 +122,7 @@ describe('Aviso de datos no disponibles en la aplicación', () => {
     })
     renderApp('/conversaciones')
     const alerts = await screen.findAllByRole('alert')
-    expect(alerts.some((alert) => alert.textContent?.includes('Los datos reales no están disponibles'))).toBe(true)
+    expect(alerts.some((alert) => alert.textContent?.includes('Real data is not available'))).toBe(true)
     await userEvent.click(screen.getAllByRole('link', { name: /Configuración/ })[0])
     expect(await screen.findByRole('heading', { name: 'Configuración' })).toBeInTheDocument()
   })

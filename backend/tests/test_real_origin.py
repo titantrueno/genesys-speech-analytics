@@ -44,7 +44,7 @@ def test_without_postgres_data_sections_answer_503_and_configuration_keeps_worki
     for url in ("/api/conversations", "/api/metrics/summary", "/api/catalog"):
         response = real_api.get(url)
         assert response.status_code == 503, (url, response.status_code)
-        assert "datos reales" in response.json()["detail"]
+        assert "Real data" in response.json()["detail"]
     assert real_api.get("/api/config").status_code == 200
     assert real_api.put("/api/config/sources", json={"origin": "sintetico"}).status_code == 200
     assert real_api.get("/api/conversations").status_code == 200

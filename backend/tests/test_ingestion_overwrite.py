@@ -87,7 +87,7 @@ def test_without_overwrite_existing_conversations_are_not_downloaded_nor_touched
     assert table_counts(pg_url) == before
     assert _analysis(pg_url, pending) == ("pendiente", "llm", "Resumen del LLM", "bloqueo_tarjeta")
     assert _analysis(pg_url, done) == ("completo", "llm", "Completo", "comisiones")
-    existing = [e for e in list_log(pg_url, run["id"]) if e["message"] == "Ya existe: no se descarga"]
+    existing = [e for e in list_log(pg_url, run["id"]) if e["message"] == "Already exists: not downloaded"]
     assert len(existing) == 10 and all(e["level"] == "info" for e in existing)
     assert run["status"] == "completada"  # omitir una conversación que ya existe no es un aviso
 

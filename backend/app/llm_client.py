@@ -14,7 +14,7 @@ import httpx
 
 from app.envfile import api_env
 
-UNAVAILABLE = "El servicio de LLM no está disponible"
+UNAVAILABLE = "The LLM service is not available"
 DEFAULT_URL = "http://localhost:8002"
 HEALTH_TIMEOUT_S = 3.0
 # Más que el peor caso del servicio (3 intentos de hasta 60 s más las esperas) y su cola por el límite de concurrencia:
@@ -52,7 +52,7 @@ class LlmClient:
             body = {}
         code = body.get("code") if isinstance(body, dict) else None
         if response.status_code == 401 or (response.status_code >= 500 and not code):
-            raise LlmUnavailable(f"El servicio de LLM respondió {response.status_code}")
+            raise LlmUnavailable(f"The LLM service responded {response.status_code}")
         if response.status_code >= 400:
             detail = body.get("detail") if isinstance(body.get("detail"), str) else f"Error {response.status_code}"
             raise LlmError(response.status_code, detail, code or "provider_failure")

@@ -51,7 +51,7 @@ class Failure(Exception):
     def __init__(self, exc: Exception):
         unknown = isinstance(exc, UnknownProvider)
         self.status = status.HTTP_404_NOT_FOUND if unknown else exc.status
-        self.body = {"detail": f"Proveedor desconocido: {exc}" if unknown else str(exc),
+        self.body = {"detail": f"Unknown provider: {exc}" if unknown else str(exc),
                      "code": "unknown_provider" if unknown else exc.code}
 
 
@@ -67,7 +67,7 @@ def create_app(settings: Settings | None = None, providers: dict[str, LlmProvide
     async def failure(_, exc: Failure) -> JSONResponse:
         return JSONResponse(exc.body, status_code=exc.status)
 
-    @app.get("/health", summary="Estado del servicio y proveedores con clave configurada")
+    @app.get("/health", summary="Service status and providers with a configured key")
     def health():
         return {"status": "ok", "keys": {name: completer.key_configured(name) for name in providers}}
 
@@ -79,17 +79,17 @@ def create_app(settings: Settings | None = None, providers: dict[str, LlmProvide
         except (UnknownProvider, ProviderError) as exc:
             raise Failure(exc) from None
 
-    @router.post("/complete", summary="Respuesta del modelo a un prompt, con el formato pedido")
+    @router.post("/complete", summary="Model response to a prompt, in the requested format")
     def complete(body: CompleteIn):
         output = OutputSpec(body.output.type, body.output.labels, body.output.schema_)
         result = run(body.provider, CompletionRequest(body.model, body.prompt, output, body.temperature))
         return {"text": result.text, "provider": body.provider, "model": result.model,
                 "usage": {"input_tokens": result.input_tokens, "output_tokens": result.output_tokens}}
 
-    @router.post("/providers/{name}/test", summary="Prueba un proveedor con una petición mínima")
+    @router.post("/providers/{name}/test", summary="Tests a provider with a minimal request")
     def test_provider(name: str, body: TestIn):
         run(name, CompletionRequest(body.model, TEST_PROMPT, OutputSpec("texto")))
-        return {"ok": True, "provider": name, "model": body.model, "message": "El proveedor respondió correctamente"}
+        return {"ok": True, "provider": name, "model": body.model, "message": "The provider responded correctly"}
 
     app.include_router(router)
     return app

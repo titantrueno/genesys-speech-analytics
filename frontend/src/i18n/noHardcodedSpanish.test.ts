@@ -9,9 +9,8 @@ const MIGRATED = ['layout/', 'pages/', 'auth/', 'components/', 'i18n/I18nProvide
 const SPANISH = /[áéíóúñ¿¡]|\b(de|el|la|los|las|para|con|sin|una|por|del|al|en|se|que|su)\b/i
 
 const sources = import.meta.glob(['../**/*.tsx', '../**/*.ts', '!../**/*.test.*'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>
-// `dataErrors.ts` compara con el mensaje en español que devuelve la API (FE012); la fase del backend lo sustituye (T8).
 // `kpiMeta.ts` lleva los códigos de unidad de la API (`índice`), no texto de interfaz.
-const EXCLUDED = ['../components/dataErrors.ts', '../dashboards/kpiMeta.ts']
+const EXCLUDED = ['../dashboards/kpiMeta.ts']
 const files = Object.entries(sources).filter(([path]) =>
   MIGRATED.some((entry) => path.startsWith(`../${entry}`)) && !EXCLUDED.includes(path))
 

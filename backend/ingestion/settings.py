@@ -26,7 +26,7 @@ def load_settings(path: Path = ROOT_ENV) -> Settings:
     values = read_env(KEYS, path)
     missing = [key for key in REQUIRED if key not in values]
     if missing:
-        raise SettingsError(f"Faltan {', '.join(missing)} en el entorno o en {path.name}")
+        raise SettingsError(f"Missing {', '.join(missing)} in the environment or in {path.name}")
     return Settings(
         database_url=values["DATABASE_URL"],
         token=values["INGESTION_TOKEN"],

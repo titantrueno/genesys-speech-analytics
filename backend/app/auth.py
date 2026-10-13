@@ -113,11 +113,11 @@ def _check_protections(actor: User, users: Users, roles: Roles) -> None:
         return bool(user and user.active and user.role in roles and ADMIN_PERMISSION in roles[user.role].permissions)
 
     if not can_admin(users.get(actor.id)):
-        raise ProtectionError("No puedes quitarte a ti mismo el permiso de administrar usuarios y roles")
+        raise ProtectionError("You cannot remove your own permission to manage users and roles")
     if ADMIN_PERMISSION not in roles[ADMIN_ROLE].permissions:
-        raise ProtectionError("El rol de administrador no puede perder el permiso de administrar usuarios y roles")
+        raise ProtectionError("The administrator role cannot lose the permission to manage users and roles")
     if not any(u.active and u.role == ADMIN_ROLE for u in users.values()):
-        raise ProtectionError("No se puede desactivar ni cambiar de rol al último administrador activo")
+        raise ProtectionError("The last active administrator cannot be deactivated or have their role changed")
 
 
 class UserStore:
@@ -211,15 +211,15 @@ def _user_from_token(token: str) -> User:
     try:
         payload_b64, signature = token.split(".")
         if not hmac.compare_digest(signature.encode(), _sign(payload_b64).encode()):
-            raise ValueError("firma inválida")
+            raise ValueError("invalid signature")
         payload = json.loads(_b64decode(payload_b64))
     except ValueError:
-        raise _unauthorized("Token inválido") from None
+        raise _unauthorized("Invalid token") from None
     if payload.get("exp", 0) <= time.time():
-        raise _unauthorized("Token caducado")
+        raise _unauthorized("Token expired")
     user = get_store().get(payload.get("sub", ""))
     if user is None or not user.active:
-        raise _unauthorized("Usuario no válido")
+        raise _unauthorized("Invalid user")
     return user
 
 
@@ -237,7 +237,7 @@ _bearer = HTTPBearer(auto_error=False)
 
 def current_user(credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> User:
     if credentials is None or credentials.scheme.lower() != "bearer":
-        raise _unauthorized("Falta el token")
+        raise _unauthorized("Missing token")
     return _user_from_token(credentials.credentials)
 
 
@@ -245,11 +245,11 @@ def require_permission(*permissions: str):
     """Exige al menos uno de los permisos indicados."""
     unknown = [p for p in permissions if p not in ALL_PERMISSIONS]
     if not permissions or unknown:
-        raise ValueError(f"Permisos desconocidos: {unknown}")
+        raise ValueError(f"Unknown permissions: {unknown}")
 
     def dependency(user: User = Depends(current_user)) -> User:
         if not get_store().permissions_for(user.role) & set(permissions):
-            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=f"Falta el permiso {' o '.join(permissions)}")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=f"Missing permission {' or '.join(permissions)}")
         return user
 
     dependency.permissions = permissions

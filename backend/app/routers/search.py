@@ -72,7 +72,7 @@ def semantic(
     engine: SearchEngine = Depends(get_search_engine),
 ) -> dict:
     if not q.strip():
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="La consulta no puede estar vacía")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail="The query cannot be empty")
     candidates = {conv.id for conv in filters.apply(get_dataset())}
     matched = engine.search(q, candidates)
     # El índice puede ir por detrás de los datos mientras se reconstruye: solo se devuelve lo que ya existe en ambos.
@@ -98,7 +98,7 @@ def semantic(
 def similar(conversation_id: str, engine: SearchEngine = Depends(get_search_engine)) -> dict:
     conv = conversation_index().get(ids.normalize(conversation_id))
     if conv is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversation not found")
     index = conversation_index()
     try:
         similar_ids = engine.similar(conv.id, SIMILAR_COUNT)

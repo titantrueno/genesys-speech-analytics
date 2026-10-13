@@ -20,28 +20,28 @@ class Doc(BaseModel):
 # --- Errores -------------------------------------------------------------------------------------------------------
 
 class ErrorText(Doc):
-    """E1: motivo en texto (401, 403, 404, 409 y reglas de negocio sueltas en 422)."""
-    detail: str = Field(examples=["Conversación no encontrada"])
+    """E1: reason as text (401, 403, 404, 409 and stray business rules in 422)."""
+    detail: str = Field(examples=["Conversation not found"])
 
 
 class FieldIssue(Doc):
-    loc: list[str | int] = Field(description="Ruta del campo; empieza por `body`.", examples=[["body", "email"]])
-    msg: str = Field(description="Mensaje en español para mostrar junto al campo.")
+    loc: list[str | int] = Field(description="Path of the field; starts with `body`.", examples=[["body", "email"]])
+    msg: str = Field(description="Message in English to show next to the field.")
     type: str
 
 
 class FieldErrors(Doc):
-    """E3: errores por campo de los cuerpos de configuración (422) y de usuarios y roles (422 y 409 por duplicado)."""
+    """E3: per-field errors of the settings bodies (422) and of users and roles (422, and 409 for duplicates)."""
     detail: list[FieldIssue]
 
 
 class QueryIssue(Doc):
-    path: str = Field(description="Ruta del nodo de la consulta.", examples=["root.conditions[0]"])
+    path: str = Field(description="Path of the query node.", examples=["root.conditions[0]"])
     message: str
 
 
 class QueryErrors(Doc):
-    """E4: errores de una consulta del explorador."""
+    """E4: errors of an explorer query."""
     detail: list[QueryIssue]
 
 
@@ -52,7 +52,7 @@ class GraphIssue(Doc):
 
 
 class GraphErrors(Doc):
-    """E5: errores de integridad de un grafo de flujo."""
+    """E5: integrity errors of a flow graph."""
     detail: list[GraphIssue]
 
 
@@ -74,11 +74,11 @@ class FlowIssue(Doc):
     message: str
     node_id: str | None = None
     severity: Literal["error", "warning"] = Field(
-        "error", description="`warning` avisa sin impedir la ejecución (FE012); `error` la impide.")
+        "error", description="`warning` warns without preventing the run (FE012); `error` prevents it.")
 
 
 class FlowIssues(Doc):
-    """E6: incidencias de completitud que impiden ejecutar un flujo."""
+    """E6: completeness issues that prevent running a flow."""
     detail: list[FlowIssue]
 
 
@@ -105,7 +105,7 @@ class ValueLabel(Doc):
 
 
 class TargetField(ValueLabel):
-    group: Literal["analisis", "cumplimiento", "entidades"] = Field(description="Grupo del desplegable (FE014).")
+    group: Literal["analisis", "cumplimiento", "entidades"] = Field(description="Dropdown group (FE014).")
 
 
 class Health(Doc):
@@ -136,17 +136,17 @@ class CatalogAgent(Doc):
 class CatalogTopic(Doc):
     code: str
     name: str
-    active: bool = Field(description="Los desactivados se incluyen para poner nombre a filtros antiguos.")
+    active: bool = Field(description="Deactivated ones are included to give a name to old filters.")
 
 
 class Catalog(Doc):
-    reference_date: date = Field(description="Fecha de referencia del dataset; el periodo por defecto acaba el día anterior.")
-    origin: Literal["sintetico", "real"] = Field(description="Origen de datos activo (FE012).")
+    reference_date: date = Field(description="Dataset reference date; the default period ends the day before.")
+    origin: Literal["sintetico", "real"] = Field(description="Active data origin (FE012).")
     channels: list[CodeLabel]
     queues: list[CatalogQueue]
     agents: list[CatalogAgent]
     main_topics: list[CatalogTopic]
-    compliance_checks: list[CodeLabel] = Field(description="Solo checks activos.")
+    compliance_checks: list[CodeLabel] = Field(description="Active checks only.")
     resolutions: list[CodeLabel]
     churn_risks: list[CodeLabel]
 
@@ -156,22 +156,20 @@ class SummaryKpi(Doc):
     label: str
     unit: KpiUnit
     higher_is_better: bool
-    value: Number = Field(description="`null` si no hay conversaciones aplicables.")
+    value: Number = Field(description="`null` if there are no applicable conversations.")
     previous: Number
     delta: float | None
-    delta_pct: float | None = Field(description="`null` si el anterior es 0 o nulo, o si la unidad es `índice`.")
+    delta_pct: float | None = Field(description="`null` if the previous one is 0 or null, or if the unit is `índice`.")
     target: float | None
-    status: Literal["verde", "ambar", "rojo"] | None = Field(description="Según los umbrales; `null` sin umbrales.")
-    pending: bool = Field(description="`true` si depende del análisis de la plataforma y las conversaciones reales aún "
-                                      "no lo tienen: la UI muestra «Sin datos · pendiente de análisis».")
-    based_on: int | None = Field(description="Conversaciones sobre las que se calcula, en los KPIs que pueden usar solo "
-                                             "una parte (AHT, sentimiento, primera respuesta); `null` en el resto.")
+    status: Literal["verde", "ambar", "rojo"] | None = Field(description="According to the thresholds; `null` without thresholds.")
+    pending: bool = Field(description="`true` if it depends on the platform analysis and the real conversations do not have it yet: the UI shows “No data · analysis pending”.")
+    based_on: int | None = Field(description="Conversations the value is computed on, for KPIs that can use only a part (AHT, sentiment, first response); `null` for the rest.")
 
 
 class CheckRate(Doc):
     code: str
     label: str
-    value: float | None = Field(description="% de conversaciones aplicables que cumplen.")
+    value: float | None = Field(description="% of applicable conversations that comply.")
     applicable: int
 
 
@@ -192,7 +190,7 @@ class Timeseries(Doc):
     kpi: KpiCode
     granularity: Literal["day", "week"]
     period: Period
-    pending: bool = Field(description="`true` si el KPI depende del análisis y aún está pendiente (puntos `null`).")
+    pending: bool = Field(description="`true` if the KPI depends on the analysis and is still pending (`null` points).")
     points: list[TimePoint]
 
 
@@ -213,7 +211,7 @@ class KpiValues(Doc):
 
 
 class BreakdownItem(Doc):
-    key: str = Field(description="Código o identificador del grupo.")
+    key: str = Field(description="Code or identifier of the group.")
     label: str
     kpis: KpiValues
 
@@ -221,17 +219,15 @@ class BreakdownItem(Doc):
 class Breakdown(Doc):
     dimension: Literal["main_topic", "channel", "queue", "agent"]
     period: Period
-    pending: bool = Field(description="`true` si hay conversaciones a las que les falta análisis; en el desglose por "
-                                      "main topic, solo si ninguna tiene main topic todavía (FE014).")
-    pending_kpis: list[str] = Field(description="KPIs del análisis sin el dato en ninguna conversación del periodo: "
-                                                "se muestran como pendientes (FE014).")
+    pending: bool = Field(description="`true` if some conversations lack analysis; in the breakdown by main topic, only if none has a main topic yet (FE014).")
+    pending_kpis: list[str] = Field(description="Analysis KPIs without the value in any conversation of the period: they are shown as pending (FE014).")
     items: list[BreakdownItem]
 
 
 # --- Conversaciones ------------------------------------------------------------------------------------------------
 
 class ConversationItem(Doc):
-    """Elemento de listado, compartido por conversaciones, explorador, búsqueda y outputs de flujos."""
+    """List item, shared by conversations, explorer, search and flow outputs."""
     id: str
     started_at: datetime
     channel: Literal["voz", "chat"]
@@ -241,18 +237,17 @@ class ConversationItem(Doc):
     agent: str | None
     main_topic: str | None
     main_topic_label: str | None
-    summary: str = Field(description="Enmascarado si `privacy.pii_masking` está activado; vacío si el análisis está "
-                                     "pendiente.")
+    summary: str = Field(description="Masked if `privacy.pii_masking` is enabled; empty if the analysis is pending.")
     sentiment: float | None
     resolution: Literal["resuelta", "no_resuelta", "escalada"] | None
     csat: float | None
     duration_s: int
-    analysis_pending: bool = Field(description="Conversación real cuyo análisis de la plataforma aún no existe (FE012).")
-    ani: str | None = Field(description="Teléfono de origen; solo en conversaciones reales con teléfono.")
+    analysis_pending: bool = Field(description="Real conversation whose platform analysis does not exist yet (FE012).")
+    ani: str | None = Field(description="Calling number; only in real conversations with a phone number.")
     external_tag: str | None
-    contained_in_bot: bool | None = Field(description="Solo en conversaciones reales.")
+    contained_in_bot: bool | None = Field(description="Only in real conversations.")
     transcript_quality: Literal["completa", "parcial", "sin_transcripcion"] | None = Field(
-        description="Solo en conversaciones reales.")
+        description="Only in real conversations.")
 
 
 class ConversationPage(Doc):
@@ -264,11 +259,10 @@ class ConversationPage(Doc):
 
 
 class DetailAnalysis(Analysis):
-    """Análisis del detalle: cada campo se da en cuanto existe (FE014); los que faltan son `null` o vacíos."""
+    """Detail analysis: each field is given as soon as it exists (FE014); missing ones are `null` or empty."""
     compliance: dict[str, bool | None] = Field(
-        description="Checks activos con resultado: `true` cumple, `false` no cumple, `null` no aplica. Un resultado "
-                    "guardado (de un flujo con LLM) manda sobre la evaluación por frases (FE014).")
-    compliance_pending: list[str] = Field(description="Checks activos aún sin resultado (FE014).")
+        description="Active checks with a result: `true` met, `false` not met, `null` not applicable. A stored result (from a flow with an LLM) takes precedence over the evaluation by phrases (FE014).")
+    compliance_pending: list[str] = Field(description="Active checks with no result yet (FE014).")
 
 
 class ConversationDetail(Doc):
@@ -284,7 +278,7 @@ class ConversationDetail(Doc):
     turns: list[Turn]
     analysis: "DetailAnalysis"
     main_topic_label: str | None
-    genesys: GenesysInfo | None = Field(None, description="Analítica de Genesys; solo con el origen `real` (FE012).")
+    genesys: GenesysInfo | None = Field(None, description="Genesys analytics; only with the `real` origin (FE012).")
 
 
 # --- Explorador ----------------------------------------------------------------------------------------------------
@@ -337,14 +331,14 @@ class Suggestions(Doc):
 
 
 class Interpretation(Doc):
-    query: dict[str, Any] = Field(description="Consulta editable (formato `Query`), sin ejecutar.")
-    unrecognized: list[str] = Field(description="Palabras que el intérprete no ha entendido.")
+    query: dict[str, Any] = Field(description="Editable query (`Query` format), not run.")
+    unrecognized: list[str] = Field(description="Words the interpreter did not understand.")
 
 
 class SavedQuery(Doc):
     id: str = Field(description="Identificador `1QY-…`.")
     name: str
-    query: dict[str, Any] = Field(description="Consulta canónica (formato `Query`).")
+    query: dict[str, Any] = Field(description="Canonical query (`Query` format).")
     created_at: datetime
     updated_at: datetime
 
@@ -365,7 +359,7 @@ class SearchResult(Doc):
     conversation_id: str
     start_turn: int
     end_turn: int
-    score: float = Field(ge=0, le=1, description="Similitud coseno con 4 decimales; no es una probabilidad.")
+    score: float = Field(ge=0, le=1, description="Cosine similarity with 4 decimals; it is not a probability.")
     turns: list[SearchTurn]
     highlights: list[str]
     conversation: ConversationItem
@@ -375,8 +369,8 @@ class SemanticSearch(Doc):
     query: str
     expansions: list[str]
     period: Period
-    total: int = Field(description="Resultados tras el umbral y la agrupación, antes de `limit`.")
-    max_score: float | None = Field(description="Mejor puntuación antes del umbral.")
+    total: int = Field(description="Results after the threshold and the grouping, before `limit`.")
+    max_score: float | None = Field(description="Best score before the threshold.")
     results: list[SearchResult]
 
 
@@ -437,7 +431,7 @@ class FlowLimits(Doc):
     max_label: int
     max_fields: int
     max_field_name: int
-    max_mappings: int = Field(description="Asignaciones de un Output «campo» (FE014).")
+    max_mappings: int = Field(description="Mappings of a “campo” Output (FE014).")
     max_destination: int
     max_flow_name: int
     max_nodes: int
@@ -450,20 +444,19 @@ class FlowCatalog(Doc):
     strata: list[ValueLabel]
     order_keys: list[ValueLabel]
     orders: list[ValueLabel]
-    models: list[ValueLabel] = Field(description="Todos los modelos, de todos los proveedores.")
-    providers: list["ProviderOption"] = Field(description="Proveedores con sus modelos (FE013).")
-    default_provider: str = Field(description="Proveedor que toma un nodo Prompt nuevo (Configuración › Modelos de IA).")
-    default_model: str = Field(description="Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA).")
+    models: list[ValueLabel] = Field(description="All models, from all providers.")
+    providers: list["ProviderOption"] = Field(description="Providers with their models (FE013).")
+    default_provider: str = Field(description="Provider taken by a new Prompt node (Settings › AI models).")
+    default_model: str = Field(description="Model taken by a new Prompt node (Settings › AI models).")
     variables: list[ValueLabel]
     output_formats: list[ValueLabel]
     field_types: list[ValueLabel]
     output_kinds: list[ValueLabel]
     target_fields: list["TargetField"] = Field(
-        description="Campos destino de un Output «campo» (FE013): los del análisis, un `compliance:<código>` por check "
-                    "activo y un `entity:<tipo>` por tipo de entidad (FE014).")
-    templates: list[ValueLabel] = Field(description="Plantillas para crear un flujo ya configurado (FE013).")
+        description="Target fields of a “campo” Output (FE013): the analysis ones, a `compliance:<code>` per active check and an `entity:<type>` per entity type (FE014).")
+    templates: list[ValueLabel] = Field(description="Templates to create an already configured flow (FE013).")
     origin: Literal["sintetico", "real"] = Field(
-        description="Origen de datos activo: un Output «campo» solo puede ejecutarse con `real` (FE013).")
+        description="Active data origin: a “campo” Output can only run with `real` (FE013).")
     aggregations: list[ValueLabel]
     limits: FlowLimits
 
@@ -499,19 +492,19 @@ class NodeState(Doc):
     processed: int
     total: int | None
     message: str | None
-    rejected: int = Field(description="Prompt con LLM: respuestas fuera del formato de salida (FE013).")
-    failed: int = Field(description="Prompt con LLM: conversaciones sin respuesta del proveedor (FE013).")
+    rejected: int = Field(description="Prompt with an LLM: answers outside the output format (FE013).")
+    failed: int = Field(description="Prompt with an LLM: conversations without a response from the provider (FE013).")
 
 
 class PromptFailure(Doc):
     conversation_id: str
     status: Literal["rechazado", "error"]
-    reason: str = Field(description="Motivo, sin datos de la conversación ni del proveedor.")
+    reason: str = Field(description="Reason, without conversation or provider data.")
 
 
 class TableRow(Doc):
     conversation: ConversationItem
-    result: Any = Field(description="Texto, etiqueta u objeto JSON según el formato del prompt.")
+    result: Any = Field(description="Text, label or JSON object depending on the prompt format.")
 
 
 class TableResult(Doc):
@@ -521,7 +514,7 @@ class TableResult(Doc):
 class MetricItem(Doc):
     label: str
     count: int
-    percent: float = Field(description="Un decimal; los porcentajes suman exactamente 100.")
+    percent: float = Field(description="One decimal; the percentages add up to exactly 100.")
 
 
 class MetricResult(Doc):
@@ -540,37 +533,35 @@ FieldState = Literal["escrito", "omitido", "rechazado", "sin_valor", "error"]
 class FieldRow(Doc):
     conversation: ConversationItem
     values: dict[str, str | float | bool | list[str] | None] = Field(
-        description="Valor validado que se envió a guardar, por campo destino: `main_topic` y temas secundarios por "
-                    "su código, los checks como `true`, `false` o `null` (no aplica) (FE014).")
+        description="Validated value that was sent to be saved, per target field: `main_topic` and secondary topics by their code, checks as `true`, `false` or `null` (not applicable) (FE014).")
     states: dict[str, FieldState] = Field(
-        description="Estado por campo destino; `sin_valor`: la respuesta dice que no hay nada (FE014).")
-    reason: str | None = Field(description="Motivo de un `rechazado` o `error` de la conversación entera.")
+        description="Status per target field; `sin_valor`: the answer says there is nothing (FE014).")
+    reason: str | None = Field(description="Reason for a `rechazado` or `error` of the whole conversation.")
     reasons: dict[str, str] = Field(
-        description="Motivo por campo destino (FE014): valor rechazado, ya tenía valor, Genesys ya da el sentimiento.")
+        description="Reason per target field (FE014): rejected value, already had a value, Genesys already gives the sentiment.")
 
 
 class FieldsResult(Doc):
-    targets: list[str] = Field(description="Campos destino: los del análisis, `compliance:<código>` y "
-                                           "`entity:<tipo>` (FE014).")
-    rows: list[FieldRow] = Field(description="Una fila por conversación que llegó al Prompt.")
-    counts: dict[str, dict[FieldState, int]] = Field(description="Recuento de cada estado por campo destino.")
+    targets: list[str] = Field(description="Target fields: the analysis ones, `compliance:<code>` and `entity:<type>` (FE014).")
+    rows: list[FieldRow] = Field(description="One row per conversation that reached the Prompt.")
+    counts: dict[str, dict[FieldState, int]] = Field(description="Count of each status per target field.")
 
 
 class RunOutput(Doc):
     node_id: str
     kind: Literal["tabla", "metrica", "informe", "campo"]
-    destination: str = Field(description="Nombre de destino o, en `campo`, los campos destino («Summary + Main topic»).")
+    destination: str = Field(description="Destination name or, in `campo`, the target fields (“Summary + Main topic”).")
     result: TableResult | MetricResult | ReportResult | FieldsResult
 
 
 class Run(RunSummary):
     flow_id: str
     seed: int
-    graph: Graph = Field(description="Copia del grafo ejecutado.")
-    nodes: dict[str, NodeState] = Field(description="Estado por identificador de nodo.")
-    outputs: dict[str, RunOutput] = Field(description="Resultado por identificador de nodo Output.")
+    graph: Graph = Field(description="Copy of the executed graph.")
+    nodes: dict[str, NodeState] = Field(description="Status per node identifier.")
+    outputs: dict[str, RunOutput] = Field(description="Result per Output node identifier.")
     failures: dict[str, list[PromptFailure]] = Field(
-        description="Por nodo Prompt con LLM, las conversaciones excluidas de los outputs (FE013).")
+        description="Per Prompt node with an LLM, the conversations excluded from the outputs (FE013).")
 
 
 # --- Configuración -------------------------------------------------------------------------------------------------
@@ -587,7 +578,7 @@ class Privacy(Doc):
 
 class Sources(Doc):
     origin: Literal["sintetico", "real"] = Field(
-        description="`sintetico` (dataset generado) o `real` (conversaciones de Genesys guardadas por la ingesta).")
+        description="`sintetico` (generated dataset) or `real` (Genesys conversations stored by the ingestion).")
 
 
 class AiSettings(Doc):
@@ -608,15 +599,15 @@ class KpiSettings(Doc):
 
 
 class ModelOption(ValueLabel):
-    temperature: bool = Field(description="Si el modelo admite `temperature`; si no, no se le envía (FE013).")
+    temperature: bool = Field(description="Whether the model supports `temperature`; if not, it is not sent (FE013).")
 
 
 class ProviderOption(ValueLabel):
-    models: list[ModelOption] = Field(description="El primero es el que se propone al elegir el proveedor.")
+    models: list[ModelOption] = Field(description="The first one is proposed when the provider is chosen.")
 
 
 class AiProviderStatus(ValueLabel):
-    key_configured: bool = Field(description="Si el servicio de LLM tiene su clave; nunca la clave.")
+    key_configured: bool = Field(description="Whether the LLM service has its key; never the key.")
 
 
 class AiStatus(Doc):
@@ -632,7 +623,7 @@ class AiTestResult(Doc):
     ok: bool
     provider: str
     model: str
-    message: str = Field(description="«El proveedor respondió correctamente» o el error del proveedor.")
+    message: str = Field(description="“The provider responded correctly” or the provider's error.")
 
 
 class ConfigOptions(Doc):
@@ -644,7 +635,7 @@ class ConfigOptions(Doc):
 
 
 class PlatformConfig(Doc):
-    version: int = Field(description="Sube con cada cambio aceptado.")
+    version: int = Field(description="Increases with each accepted change.")
     general: PublicConfig
     sources: Sources
     privacy: Privacy
@@ -670,10 +661,10 @@ class AuditEntry(Doc):
     id: str = Field(description="Identificador `1AU-…`.")
     user: Person
     at: datetime
-    section: str = Field(description="Sección de configuración o `usuarios`.")
+    section: str = Field(description="Settings section or `usuarios`.")
     element: str
-    before: Any = Field(description="`null` en altas.")
-    after: Any = Field(description="`null` en bajas.")
+    before: Any = Field(description="`null` on creation.")
+    after: Any = Field(description="`null` on deletion.")
 
 
 class AuditLog(Doc):
@@ -681,7 +672,7 @@ class AuditLog(Doc):
 
 
 class TaxonomyTopic(Doc):
-    id: str = Field(description="Identificador `1TP-…` (main topic) o `1TS-…` (tema secundario).")
+    id: str = Field(description="Identifier `1TP-…` (main topic) or `1TS-…` (secondary topic).")
     code: str
     name: str
     description: str
@@ -717,7 +708,7 @@ class ManagedUser(Doc):
     id: str = Field(description="Identificador `1US-…`.")
     name: str
     email: str
-    role: str = Field(description="Código del rol.")
+    role: str = Field(description="Role code.")
     role_name: str
     active: bool
     last_login: datetime | None
@@ -728,17 +719,17 @@ class ManagedUsers(Doc):
 
 
 class RoleItem(Doc):
-    id: str = Field(description="Identificador `1RO-…`, derivado del código.")
+    id: str = Field(description="Identifier `1RO-…`, derived from the code.")
     code: str
     name: str
     builtin: bool
-    permissions: list[str] = Field(description="En el orden del catálogo de permisos.")
+    permissions: list[str] = Field(description="In the order of the permission catalog.")
     users: int
 
 
 class Roles(Doc):
     items: list[RoleItem]
-    permissions: list[ValueLabel] = Field(description="Catálogo de los 9 permisos con su etiqueta.")
+    permissions: list[ValueLabel] = Field(description="Catalog of the 9 permissions with their label.")
 
 
 # --- Flujos de descarga de Genesys Cloud (FE011) -------------------------------------------------------------------
@@ -748,30 +739,29 @@ DownloadChannel = Literal["voz", "chat"]
 
 
 class DownloadInterval(Doc):
-    """Relativo (`hoy`, `ayer`, últimas N `horas` o `dias`) o específico (`from`–`to` en la zona horaria del flujo)."""
+    """Relative (`hoy`, `ayer`, last N `horas` or `dias`) or specific (`from`–`to` in the flow time zone)."""
     type: Literal["relativo", "especifico"]
-    unit: Literal["hoy", "ayer", "horas", "dias"] | None = Field(None, description="Solo en un intervalo relativo.")
-    amount: int | None = Field(None, description="Horas (1–720) o días (1–90); nulo en `hoy` y `ayer`.")
-    from_: str | None = Field(None, alias="from", description="Solo en uno específico: fecha y hora local.",
+    unit: Literal["hoy", "ayer", "horas", "dias"] | None = Field(None, description="Only in a relative interval.")
+    amount: int | None = Field(None, description="Hours (1–720) or days (1–90); null in `hoy` and `ayer`.")
+    from_: str | None = Field(None, alias="from", description="Only in a specific one: local date and time.",
                               examples=["2026-10-01T08:00:00"])
-    to: str | None = Field(None, description="Solo en uno específico; como mucho 90 días después de `from`.")
+    to: str | None = Field(None, description="Only in a specific one; at most 90 days after `from`.")
 
 
 class DownloadSchedule(Doc):
     type: Literal["desactivada", "cada_horas", "diaria"]
-    hours: int | None = Field(None, description="Cada cuántas horas (1–24), alineadas con la medianoche local.")
-    time: str | None = Field(None, description="Hora local `HH:MM` de la ejecución diaria.", examples=["07:30"])
+    hours: int | None = Field(None, description="Every how many hours (1–24), aligned with local midnight.")
+    time: str | None = Field(None, description="Local time `HH:MM` of the daily run.", examples=["07:30"])
 
 
 class DownloadFlowIn(Doc):
-    """Cuerpo para crear o guardar un flujo de descarga. La API añade la autoría y la zona horaria vigente."""
+    """Body to create or save a download flow. The API adds the author and the current time zone."""
     name: str = Field(max_length=80)
     interval: DownloadInterval
     channels: list[DownloadChannel] = Field(min_length=1)
-    schedule: DownloadSchedule = Field(description="Una descarga programada necesita un intervalo relativo.")
-    active: bool = Field(True, description="Un flujo inactivo no se ejecuta por programación, pero sí a mano.")
-    overwrite: bool = Field(False, description="Sobrescribir: vuelve a descargar las conversaciones que ya existen y borra su summary y "
-                                         "main topic del LLM. Sin marcar, las existentes no se descargan.")
+    schedule: DownloadSchedule = Field(description="A scheduled download needs a relative interval.")
+    active: bool = Field(True, description="An inactive flow does not run on schedule, but it does run manually.")
+    overwrite: bool = Field(False, description="Overwrite: downloads again the conversations that already exist and deletes their LLM summary and main topic. Unchecked, the existing ones are not downloaded.")
 
 
 class DownloadRunRef(Doc):
@@ -788,11 +778,11 @@ class DownloadFlow(Doc):
     schedule: DownloadSchedule
     active: bool
     overwrite: bool
-    timezone: str = Field(description="Zona horaria de la plataforma cuando se guardó el flujo.")
+    timezone: str = Field(description="Platform time zone when the flow was saved.")
     author: Person
     created_at: datetime
     updated_at: datetime
-    next_run_at: datetime | None = Field(description="Próxima ejecución programada; nula si no está programado o activo.")
+    next_run_at: datetime | None = Field(description="Next scheduled run; null if it is not scheduled or active.")
     last_run: DownloadRunRef | None
 
 
@@ -801,18 +791,17 @@ class DownloadFlowList(Doc):
 
 
 class DownloadCounters(Doc):
-    found: int = Field(description="Encontradas = insertadas + actualizadas + omitidas + ya existentes + con error, al "
-                                   "terminar.")
+    found: int = Field(description="Found = inserted + updated + skipped + already existing + with errors, when finished.")
     downloaded: int
     inserted: int
     updated: int
     skipped: int
     errors: int
     skipped_in_progress: int
-    skipped_existing: int = Field(description="Ya estaban en la base y no se descargaron (flujo sin «Sobrescribir»).")
-    skipped_other_channel: int = Field(description="De otro canal o de un medio no soportado.")
+    skipped_existing: int = Field(description="They were already in the database and were not downloaded (flow without “Overwrite”).")
+    skipped_other_channel: int = Field(description="From another channel or from an unsupported media.")
     by_channel: dict[str, int]
-    by_quality: dict[str, int] = Field(description="`completa`, `parcial` y `sin_transcripcion`.")
+    by_quality: dict[str, int] = Field(description="`completa`, `parcial` and `sin_transcripcion`.")
     undelivered_messages: int
 
 
@@ -826,13 +815,12 @@ class DownloadRun(Doc):
     flow_id: str
     origin: Literal["manual", "programada"]
     status: DownloadRunStatus
-    interval: DownloadRunInterval = Field(description="Intervalo resuelto al lanzar la ejecución.")
+    interval: DownloadRunInterval = Field(description="Interval resolved when the run was started.")
     channels: list[DownloadChannel]
-    overwrite: bool | None = Field(description="Valor de «Sobrescribir» del flujo cuando se creó la ejecución; nulo en "
-                                             "las ejecuciones anteriores a FE013, cuyo modo no se conoce.")
+    overwrite: bool | None = Field(description="Value of “Overwrite” of the flow when the run was created; null in runs prior to FE013, whose mode is unknown.")
     counters: DownloadCounters
     error: str | None
-    started_by: Person | None = Field(description="Quién la lanzó; nulo en las programadas.")
+    started_by: Person | None = Field(description="Who started it; null in scheduled ones.")
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
@@ -844,12 +832,12 @@ class DownloadRunList(Doc):
 
 
 class DownloadLogEntry(Doc):
-    id: int = Field(description="Creciente; sirve de cursor para `after`.")
+    id: int = Field(description="Increasing; serves as the cursor for `after`.")
     at: datetime
     level: Literal["info", "aviso", "error"]
-    stage: str = Field(examples=["normalización"])
-    message: str = Field(description="Identificadores, recuentos y motivos; nunca el texto de los turnos.")
-    genesys_id: str | None = Field(description="Conversación de Genesys afectada, si la hay.")
+    stage: str = Field(examples=["normalization"])
+    message: str = Field(description="Identifiers, counts and reasons; never the text of the turns.")
+    genesys_id: str | None = Field(description="Affected Genesys conversation, if any.")
 
 
 class DownloadLog(Doc):
@@ -859,7 +847,7 @@ class DownloadLog(Doc):
 class GenesysTest(Doc):
     ok: bool
     at: datetime
-    organization: str | None = Field(description="Nombre de la organización de Genesys, si la conexión funciona.")
+    organization: str | None = Field(description="Name of the Genesys organization, if the connection works.")
     region: str | None
     message: str
 
@@ -878,11 +866,11 @@ class GenesysConversations(Doc):
 
 
 class GenesysConnector(Doc):
-    """Estado del conector real. Con el servicio de ingesta caído, `service` es `no_disponible` y el resto, nulo."""
+    """Status of the real connector. With the ingestion service down, `service` is `no_disponible` and the rest is null."""
     service: Literal["disponible", "no_disponible"]
     region: str | None
-    credentials_configured: bool | None = Field(description="Si el servicio de ingesta tiene `GENESYS_*`.")
+    credentials_configured: bool | None = Field(description="Whether the ingestion service has `GENESYS_*`.")
     database: str | None
-    last_test: GenesysTest | None = Field(description="Última «Probar conexión» desde que arrancó el servicio.")
+    last_test: GenesysTest | None = Field(description="Last “Test connection” since the service started.")
     last_download: GenesysLastDownload | None
     conversations: GenesysConversations | None

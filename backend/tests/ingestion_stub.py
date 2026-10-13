@@ -114,16 +114,16 @@ class Stub:
         @app.get("/download-flows/{flow_id}/runs/{run_id}")
         def run(flow_id: str, run_id: str):
             if run_id not in stub.runs:
-                raise HTTPException(404, detail="Ejecución no encontrada")
+                raise HTTPException(404, detail="Run not found")
             return {**stub.runs[run_id], "status": "completada_con_avisos", "started_at": _now(),
                     "finished_at": _now(), "duration_s": 12.5}
 
         @app.get("/download-flows/{flow_id}/runs/{run_id}/log")
         def log(flow_id: str, run_id: str, after: int = 0, level: str | None = None, format: str = "json"):  # noqa: A002
-            entries = [{"id": 1, "at": _now(), "level": "info", "stage": "búsqueda", "message": "2 encontradas",
+            entries = [{"id": 1, "at": _now(), "level": "info", "stage": "search", "message": "2 found",
                         "genesys_id": None},
-                       {"id": 2, "at": _now(), "level": "aviso", "stage": "normalización",
-                        "message": "Transcripción parcial", "genesys_id": "687f2225-6f3b-4446-bfd3-f5d2b3416814"}]
+                       {"id": 2, "at": _now(), "level": "aviso", "stage": "normalization",
+                        "message": "Partial transcript", "genesys_id": "687f2225-6f3b-4446-bfd3-f5d2b3416814"}]
             entries = [e for e in entries if e["id"] > after and (level is None or e["level"] == level)]
             if format == "text":
                 return PlainTextResponse("".join(f"{e['at']} [{e['level']}] {e['message']}\n" for e in entries),
@@ -142,7 +142,7 @@ class Stub:
         @app.post("/status/test")
         def test():
             return {"ok": True, "at": _now(), "organization": "SGTO", "region": "eu-west-1",
-                    "message": "Conexión correcta con Genesys Cloud"}
+                    "message": "Connection to Genesys Cloud successful"}
 
         return app
 

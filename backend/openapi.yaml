@@ -2,48 +2,49 @@
 openapi: 3.1.0
 info:
   title: Speech & Text Analytics API
-  description: 'API de la plataforma de Speech & Text Analytics de Banco Horizonte (datos mock). La consume el front React.
+  description: 'API of the Banco Horizonte Speech & Text Analytics platform (mock data). It is consumed by the React front
+    end.
 
 
-    **Autenticación.** `POST /api/auth/login` devuelve un token que se envía como `Authorization: Bearer <token>`. El
+    **Authentication.** `POST /api/auth/login` returns a token that is sent as `Authorization: Bearer <token>`. The
 
-    usuario y los permisos de su rol se releen en cada petición. Sin token o con un token no válido: `401`. Sin el
+    user and the permissions of their role are re-read on every request. Without a token or with an invalid token: `401`.
 
-    permiso de la operación: `403`. Cada operación indica su permiso en la descripción.
-
-
-    **`X-Auth-Version`.** Toda respuesta a una petición con sesión lleva esta cabecera: un entero que sube con cada cambio
-
-    de usuarios o roles. Si cambia, el front vuelve a pedir `/api/auth/me`.
+    Without the operation''s permission: `403`. Each operation states its permission in the description.
 
 
-    **Identificadores.** `PREFIJO-UUID` en mayúsculas (`1CO` conversación, `1QU` cola, `1AG` agente, `1US` usuario,
+    **`X-Auth-Version`.** Every response to a request with a session carries this header: an integer that increases with
 
-    `1RO` rol, `1FL` flujo, `1ND` nodo, `1RN` ejecución, `1QY` consulta guardada, `1TP`/`1TS` temas, `1CK` check, `1CN`
-
-    conector, `1AU` auditoría). En las rutas se aceptan en minúsculas.
+    each change to users or roles. If it changes, the front end requests `/api/auth/me` again.
 
 
-    **Fechas.** Instantes en ISO 8601 con desfase. `from` y `to` son días (`YYYY-MM-DD`, incluidos) en la zona horaria
+    **Identifiers.** `PREFIX-UUID` in uppercase (`1CO` conversation, `1QU` queue, `1AG` agent, `1US` user,
 
-    configurada; por defecto, los 30 días que acaban el día anterior a la fecha de referencia del dataset.
+    `1RO` role, `1FL` flow, `1ND` node, `1RN` run, `1QY` saved query, `1TP`/`1TS` topics, `1CK` check, `1CN`
 
-
-    **Errores.** Siempre con `detail`, en seis formas según la operación: texto (`ErrorText`), validación nativa de FastAPI
-
-    (`HTTPValidationError`, en inglés), errores por campo (`FieldErrors`), errores de consulta (`QueryErrors`), errores de
-
-    grafo (`GraphErrors`) e incidencias de flujo (`FlowIssues`).
+    connector, `1AU` audit). In paths they are accepted in lowercase.
 
 
-    **Persistencia.** El servicio de ingesta guarda en PostgreSQL los flujos de descarga (FE011), los flujos de insights y
-    las secciones General, Origen de datos, Privacidad y Modelos de IA de la configuración (FE015), que sobreviven a un reinicio.
-    Si ese servicio no está disponible, sus rutas responden `503` y el cambio no se aplica. El resto (ejecuciones de flujos
-    de insights, taxonomía, checks, KPIs, usuarios, consultas guardadas y auditoría) vive en memoria y se pierde al reiniciar
-    la API.
+    **Dates.** Instants in ISO 8601 with offset. `from` and `to` are days (`YYYY-MM-DD`, inclusive) in the configured
+
+    time zone; by default, the 30 days ending the day before the dataset''s reference date.
 
 
-    Referencia ampliada: `vault/arquitectura/contrato-api-front-back.md`.'
+    **Errors.** Always with `detail`, in six shapes depending on the operation: text (`ErrorText`), native FastAPI
+
+    validation (`HTTPValidationError`), per-field errors (`FieldErrors`), query errors (`QueryErrors`), graph errors
+
+    (`GraphErrors`) and flow issues (`FlowIssues`). All messages are in English, whatever the language configured for the
+    interface.
+
+
+    **Persistence.** The ingestion service stores in PostgreSQL the download flows (FE011), the insight flows and the General,
+    Data origin, Privacy and AI models sections of the settings (FE015), which survive a restart. If that service is not available,
+    its routes respond `503` and the change is not applied. The rest (insight flow runs, taxonomy, checks, KPIs, users, saved
+    queries and audit log) lives in memory and is lost when the API restarts.
+
+
+    Extended reference: `vault/arquitectura/contrato-api-front-back.md`.'
   version: 0.11.0
   x-permissions:
   - value: dashboards:view
@@ -67,7 +68,7 @@ info:
 paths:
   /api/health:
     get:
-      summary: Sonda de salud
+      summary: Health probe
       operationId: health_api_health_get
       responses:
         '200':
@@ -76,13 +77,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Health'
-      description: Público. Responde cuando la API ha terminado de arrancar (índice de búsqueda construido).
+      description: Public. Responds when the API has finished starting (search index built).
       security: []
   /api/auth/login:
     post:
       tags:
       - auth
-      summary: Iniciar sesión
+      summary: Sign in
       operationId: login_api_auth_login_post
       requestBody:
         content:
@@ -101,19 +102,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
-          description: Credenciales incorrectas, usuario inexistente o desactivado (misma respuesta).
+          description: Wrong credentials, non-existent or deactivated user (same response).
           content:
             application/json:
               schema: &id001
                 $ref: '#/components/schemas/ErrorText'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-      description: Público. Devuelve el token Bearer (caduca a las 8 h) y el usuario con sus permisos. Anota el último acceso.
-        El email no distingue mayúsculas.
+      description: Public. Returns the Bearer token (expires after 8 h) and the user with their permissions. Records the last
+        sign-in. The email is case-insensitive.
       security: []
   /api/auth/me:
     get:
@@ -132,22 +133,22 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: Requiere sesión. Usuario de la sesión, nombre de su rol y permisos vigentes.
+      description: Requires a session. Session user, name of their role and current permissions.
   /api/metrics/summary:
     get:
       tags:
       - metrics
-      summary: Resumen de KPIs
-      description: 'Permiso: `dashboards:view`. Los 13 KPIs del periodo con el periodo anterior (misma longitud), variación,
-        objetivo y estado según los umbrales de Configuración. Con `dashboard`, solo los KPIs configurados para ese dashboard.
-        Incluye el cumplimiento por check activo.'
+      summary: KPI summary
+      description: 'Permission: `dashboards:view`. The 13 KPIs of the period with the previous period (same length), variation,
+        target and status according to the thresholds in Settings. With `dashboard`, only the KPIs configured for that dashboard.
+        Includes compliance by active check.'
       operationId: summary_api_metrics_summary_get
       parameters:
       - name: dashboard
@@ -226,7 +227,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -234,7 +235,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `dashboards:view`.
+          description: Missing permission `dashboards:view`.
           content:
             application/json:
               schema: *id001
@@ -242,8 +243,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
-            o de tipo devuelven el error nativo de FastAPI.'
+          description: '`from` after `to`, or a malformed queue or agent identifier. Out-of-range or wrongly typed parameters
+            return the native FastAPI error.'
           content:
             application/json:
               schema:
@@ -257,7 +258,7 @@ paths:
     get:
       tags:
       - metrics
-      summary: Serie temporal de un KPI
+      summary: KPI time series
       operationId: timeseries_api_metrics_timeseries_get
       parameters:
       - name: kpi
@@ -354,7 +355,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -362,7 +363,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `dashboards:view`.
+          description: Missing permission `dashboards:view`.
           content:
             application/json:
               schema: *id001
@@ -370,8 +371,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
-            o de tipo devuelven el error nativo de FastAPI.'
+          description: '`from` after `to`, or a malformed queue or agent identifier. Out-of-range or wrongly typed parameters
+            return the native FastAPI error.'
           content:
             application/json:
               schema:
@@ -381,13 +382,13 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `dashboards:view`. Un punto por día o por semana (lunes a domingo, recortada al periodo), en
-        la zona horaria configurada.'
+      description: 'Permission: `dashboards:view`. One point per day or per week (Monday to Sunday, trimmed to the period),
+        in the configured time zone.'
   /api/metrics/breakdown:
     get:
       tags:
       - metrics
-      summary: KPIs por dimensión
+      summary: KPIs by dimension
       operationId: breakdown_api_metrics_breakdown_get
       parameters:
       - name: dimension
@@ -465,7 +466,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -473,7 +474,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `dashboards:view`.
+          description: Missing permission `dashboards:view`.
           content:
             application/json:
               schema: *id001
@@ -481,8 +482,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
-            o de tipo devuelven el error nativo de FastAPI.'
+          description: '`from` after `to`, or a malformed queue or agent identifier. Out-of-range or wrongly typed parameters
+            return the native FastAPI error.'
           content:
             application/json:
               schema:
@@ -492,12 +493,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `dashboards:view`. Los 13 KPIs por main topic, canal, cola o agente, ordenados por volumen.'
+      description: 'Permission: `dashboards:view`. The 13 KPIs by main topic, channel, queue or agent, sorted by volume.'
   /api/conversations:
     get:
       tags:
       - conversations
-      summary: Listado de conversaciones
+      summary: Conversation list
       operationId: list_conversations_api_conversations_get
       parameters:
       - name: resolution
@@ -670,7 +671,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -678,7 +679,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `conversations:view`.
+          description: Missing permission `conversations:view`.
           content:
             application/json:
               schema: *id001
@@ -686,8 +687,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: '`from` posterior a `to` o identificador de cola o agente mal formado. Los parámetros fuera de rango
-            o de tipo devuelven el error nativo de FastAPI.'
+          description: '`from` after `to`, or a malformed queue or agent identifier. Out-of-range or wrongly typed parameters
+            return the native FastAPI error.'
           content:
             application/json:
               schema:
@@ -697,14 +698,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `conversations:view`. Listado filtrado, paginado y ordenado. Los filtros `resolution`, `churn_risk`,
-        `sentiment_lt`, `compliant` y `repeat_contact` son los del drill-down: seleccionan el numerador de cada KPI. `phone`
-        (ANI, con o sin +34) y `external_tag` buscan de forma exacta en las conversaciones reales (FE012).'
+      description: 'Permission: `conversations:view`. Filtered, paginated and sorted list. The `resolution`, `churn_risk`,
+        `sentiment_lt`, `compliant` and `repeat_contact` filters are the drill-down ones: they select the numerator of each
+        KPI. `phone` (ANI, with or without +34) and `external_tag` search exactly in the real conversations (FE012).'
   /api/conversations/{conversation_id}:
     get:
       tags:
       - conversations
-      summary: Detalle de una conversación
+      summary: Conversation detail
       operationId: get_conversation_api_conversations__conversation_id__get
       parameters:
       - name: conversation_id
@@ -724,7 +725,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -732,7 +733,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `conversations:view`.
+          description: Missing permission `conversations:view`.
           content:
             application/json:
               schema: *id001
@@ -740,7 +741,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -748,7 +749,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -756,13 +757,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `conversations:view`. Turnos y análisis completo. Texto enmascarado si el enmascarado de PII
-        está activado.'
+      description: 'Permission: `conversations:view`. Turns and full analysis. Masked text if PII masking is enabled.'
   /api/catalog:
     get:
       tags:
       - conversations
-      summary: Catálogo de filtros
+      summary: Filter catalog
       operationId: catalog_api_catalog_get
       responses:
         '200':
@@ -775,7 +775,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -783,20 +783,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `dashboards:view` o `conversations:view`.
+          description: Missing permission `dashboards:view` o `conversations:view`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `dashboards:view` o `conversations:view`. Canales, colas, agentes, main topics (también desactivados),
-        checks activos, resoluciones, riesgos y fecha de referencia.'
+      description: 'Permission: `dashboards:view` o `conversations:view`. Channels, queues, agents, main topics (including
+        deactivated ones), active checks, resolutions, risks and the reference date.'
   /api/query/schema:
     get:
       tags:
       - query
-      summary: Campos del explorador
+      summary: Explorer fields
       operationId: schema_api_query_schema_get
       responses:
         '200':
@@ -809,7 +809,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -817,20 +817,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use` o `flows:view`.
+          description: Missing permission `explorer:use` o `flows:view`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use` o `flows:view`. Campos con su tipo, operadores, valores y rangos, más la fecha
-        de referencia y el periodo por defecto.'
+      description: 'Permission: `explorer:use` o `flows:view`. Fields with their type, operators, values and ranges, plus
+        the reference date and the default period.'
   /api/query/run:
     post:
       tags:
       - query
-      summary: Ejecutar una consulta
+      summary: Run a query
       operationId: run_api_query_run_post
       parameters:
       - name: page
@@ -908,7 +908,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -916,7 +916,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use`.
+          description: Missing permission `explorer:use`.
           content:
             application/json:
               schema: *id001
@@ -924,8 +924,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Consulta no válida (por condición) o parámetros fuera de rango. Los parámetros fuera de rango o de
-            tipo devuelven el error nativo de FastAPI.
+          description: Invalid query (per condition) or out-of-range parameters. Out-of-range or wrongly typed parameters
+            return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -936,13 +936,13 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use`. Ejecuta una consulta (`Query`) y devuelve el total, los 13 KPIs del resultado
-        y una página del listado. Máximo 50 condiciones, 2 niveles de grupos y 200 valores por lista.'
+      description: 'Permission: `explorer:use`. Runs a query (`Query`) and returns the total, the 13 KPIs of the result and
+        a page of the list. Maximum 50 conditions, 2 group levels and 200 values per list.'
   /api/query/suggest:
     get:
       tags:
       - query
-      summary: Valores de un campo
+      summary: Field values
       operationId: suggest_api_query_suggest_get
       parameters:
       - name: field
@@ -980,7 +980,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -988,7 +988,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use` o `flows:view`.
+          description: Missing permission `explorer:use` o `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -996,8 +996,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Campo no categórico o `from` posterior a `to`. Los parámetros fuera de rango o de tipo devuelven el
-            error nativo de FastAPI.
+          description: Non-categorical field or `from` after `to`. Out-of-range or wrongly typed parameters return the native
+            FastAPI error.
           content:
             application/json:
               schema:
@@ -1007,7 +1007,7 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use` o `flows:view`. Valores de un campo categórico en el intervalo, con su recuento.'
+      description: 'Permission: `explorer:use` o `flows:view`. Values of a categorical field in the interval, with their count.'
   /api/query/saved:
     get:
       tags:
@@ -1025,7 +1025,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1033,18 +1033,18 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use`.
+          description: Missing permission `explorer:use`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use`. Consultas privadas del usuario, de la más reciente a la más antigua.'
+      description: 'Permission: `explorer:use`. The user''s private queries, from the most recent to the oldest.'
     post:
       tags:
       - query
-      summary: Guardar una consulta
+      summary: Save a query
       operationId: create_saved_api_query_saved_post
       requestBody:
         content:
@@ -1063,7 +1063,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1071,7 +1071,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use`.
+          description: Missing permission `explorer:use`.
           content:
             application/json:
               schema: *id001
@@ -1079,8 +1079,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Nombre vacío o consulta no válida. Los parámetros fuera de rango o de tipo devuelven el error nativo
-            de FastAPI.
+          description: Empty name or invalid query. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -1091,8 +1090,8 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use`. Guarda la consulta en forma canónica. Sin `from`/`to`, sigue siendo relativa
-        al periodo por defecto.'
+      description: 'Permission: `explorer:use`. Saves the query in canonical form. Without `from`/`to`, it remains relative
+        to the default period.'
   /api/query/saved/{query_id}:
     get:
       tags:
@@ -1116,7 +1115,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1124,7 +1123,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use`.
+          description: Missing permission `explorer:use`.
           content:
             application/json:
               schema: *id001
@@ -1132,7 +1131,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe o es de otro usuario.
+          description: It does not exist or belongs to another user.
           content:
             application/json:
               schema: *id001
@@ -1140,7 +1139,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -1148,11 +1147,11 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use`.'
+      description: 'Permission: `explorer:use`.'
     patch:
       tags:
       - query
-      summary: Renombrar o cambiar una consulta guardada
+      summary: Rename or change a saved query
       operationId: update_saved_api_query_saved__query_id__patch
       parameters:
       - name: query_id
@@ -1177,7 +1176,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1185,7 +1184,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use`.
+          description: Missing permission `explorer:use`.
           content:
             application/json:
               schema: *id001
@@ -1193,7 +1192,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe o es de otro usuario.
+          description: It does not exist or belongs to another user.
           content:
             application/json:
               schema: *id001
@@ -1201,8 +1200,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Nombre vacío o consulta no válida. Los parámetros fuera de rango o de tipo devuelven el error nativo
-            de FastAPI.
+          description: Empty name or invalid query. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -1213,11 +1211,11 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use`.'
+      description: 'Permission: `explorer:use`.'
     delete:
       tags:
       - query
-      summary: Borrar una consulta guardada
+      summary: Delete a saved query
       operationId: delete_saved_api_query_saved__query_id__delete
       parameters:
       - name: query_id
@@ -1228,12 +1226,12 @@ paths:
           title: Query Id
       responses:
         '204':
-          description: Hecho, sin cuerpo.
+          description: Done, no body.
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1241,7 +1239,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use`.
+          description: Missing permission `explorer:use`.
           content:
             application/json:
               schema: *id001
@@ -1249,7 +1247,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe o es de otro usuario.
+          description: It does not exist or belongs to another user.
           content:
             application/json:
               schema: *id001
@@ -1257,7 +1255,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -1265,12 +1263,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use`.'
+      description: 'Permission: `explorer:use`.'
   /api/query/interpret:
     post:
       tags:
       - query
-      summary: Interpretar una frase
+      summary: Interpret a sentence
       operationId: interpret_text_api_query_interpret_post
       requestBody:
         content:
@@ -1289,7 +1287,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1297,7 +1295,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `explorer:use`.
+          description: Missing permission `explorer:use`.
           content:
             application/json:
               schema: *id001
@@ -1305,8 +1303,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Frase vacía o demasiado larga. Los parámetros fuera de rango o de tipo devuelven el error nativo de
-            FastAPI.
+          description: Empty or too long sentence. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -1316,13 +1313,13 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `explorer:use`. Convierte una frase en español (1–500 caracteres) en una consulta editable. No
-        la ejecuta.'
+      description: 'Permission: `explorer:use`. Converts a sentence in Spanish (1–500 characters) into an editable query.
+        It does not run it.'
   /api/search/semantic:
     get:
       tags:
       - search
-      summary: Búsqueda semántica
+      summary: Semantic search
       operationId: semantic_api_search_semantic_get
       parameters:
       - name: q
@@ -1409,7 +1406,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1417,7 +1414,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `search:use`.
+          description: Missing permission `search:use`.
           content:
             application/json:
               schema: *id001
@@ -1425,8 +1422,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Consulta vacía o parámetros fuera de rango. Los parámetros fuera de rango o de tipo devuelven el error
-            nativo de FastAPI.
+          description: Empty query or out-of-range parameters. Out-of-range or wrongly typed parameters return the native
+            FastAPI error.
           content:
             application/json:
               schema:
@@ -1436,8 +1433,8 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `search:use`. Busca fragmentos de 3 turnos por significado (TF-IDF con sinónimos, ADR-005). Con
-        `group=conversation`, el mejor fragmento por conversación.'
+      description: 'Permission: `search:use`. Searches 3-turn fragments by meaning (TF-IDF with synonyms, ADR-005). With `group=conversation`,
+        the best fragment per conversation.'
   /api/search/similar/{conversation_id}:
     get:
       tags:
@@ -1462,7 +1459,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1470,7 +1467,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `search:use`.
+          description: Missing permission `search:use`.
           content:
             application/json:
               schema: *id001
@@ -1478,7 +1475,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -1486,7 +1483,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -1494,7 +1491,7 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `search:use`. Las 10 conversaciones más parecidas.'
+      description: 'Permission: `search:use`. The 10 most similar conversations.'
   /api/flows:
     get:
       tags:
@@ -1512,7 +1509,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1520,7 +1517,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -1528,19 +1525,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Flujos con su estado y su última ejecución, del modificado más recientemente al
-        más antiguo.'
+      description: 'Permission: `flows:view`. Flows with their status and last run, from the most recently modified to the
+        oldest.'
     post:
       tags:
       - flows
-      summary: Crear un flujo
+      summary: Create a flow
       operationId: create_flow_api_flows_post
       requestBody:
         content:
@@ -1559,7 +1556,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1567,7 +1564,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -1575,8 +1572,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Nombre vacío, plantilla desconocida o demasiados main topics activos para la plantilla de main topic.
-            Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Empty name, unknown template or too many active main topics for the main topic template. Out-of-range
+            or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -1587,20 +1584,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Crea un flujo con el grafo vacío o, con `template`, ya configurado para generar
-        summary, main topic o los dos en una llamada (FE013).'
+      description: 'Permission: `flows:edit`. Creates a flow with an empty graph or, with `template`, already configured to
+        generate summary, main topic or both in one call (FE013).'
   /api/flows/catalog:
     get:
       tags:
       - flows
-      summary: Opciones de los nodos
+      summary: Node options
       operationId: flow_catalog_api_flows_catalog_get
       responses:
         '200':
@@ -1613,7 +1610,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1621,19 +1618,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Opciones de configuración de cada tipo de nodo, modelo por defecto y límites.'
+      description: 'Permission: `flows:view`. Configuration options of each node type, default model and limits.'
   /api/flows/validate:
     post:
       tags:
       - flows
-      summary: Validar un grafo
+      summary: Validate a graph
       operationId: validate_graph_api_flows_validate_post
       requestBody:
         required: true
@@ -1652,7 +1649,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1660,7 +1657,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -1668,7 +1665,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Grafo sin integridad. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Graph without integrity. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -1679,13 +1676,13 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Comprueba la completitud de un grafo sin guardarlo. Un grafo sin integridad responde
-        `422`.'
+      description: 'Permission: `flows:view`. Checks the completeness of a graph without saving it. A graph without integrity
+        responds `422`.'
   /api/flows/sampling/estimate:
     post:
       tags:
       - flows
-      summary: Estimar una muestra
+      summary: Estimate a sample
       operationId: estimate_api_flows_sampling_estimate_post
       requestBody:
         content:
@@ -1704,7 +1701,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1712,7 +1709,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -1720,7 +1717,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Consulta no válida. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Invalid query. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -1730,8 +1727,8 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Cuántas conversaciones cumplen los filtros de un Sampling y cuántas tendría la
-        muestra.'
+      description: 'Permission: `flows:view`. How many conversations match the filters of a Sampling and how many the sample
+        would have.'
   /api/flows/{flow_id}:
     get:
       tags:
@@ -1755,7 +1752,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1763,7 +1760,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -1771,7 +1768,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -1779,7 +1776,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -1788,18 +1785,18 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`.'
+      description: 'Permission: `flows:view`.'
     patch:
       tags:
       - flows
-      summary: Renombrar un flujo
+      summary: Rename a flow
       operationId: rename_flow_api_flows__flow_id__patch
       parameters:
       - name: flow_id
@@ -1824,7 +1821,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1832,7 +1829,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -1840,7 +1837,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -1848,7 +1845,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Nombre vacío. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Empty name. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -1859,18 +1856,18 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`.'
+      description: 'Permission: `flows:edit`.'
     delete:
       tags:
       - flows
-      summary: Borrar un flujo
+      summary: Delete a flow
       operationId: delete_flow_api_flows__flow_id__delete
       parameters:
       - name: flow_id
@@ -1881,12 +1878,12 @@ paths:
           title: Flow Id
       responses:
         '204':
-          description: Hecho, sin cuerpo.
+          description: Done, no body.
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -1894,7 +1891,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -1902,7 +1899,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -1910,7 +1907,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -1919,19 +1916,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Borra también sus ejecuciones.'
+      description: 'Permission: `flows:edit`. It also deletes its runs.'
   /api/flows/{flow_id}/graph:
     put:
       tags:
       - flows
-      summary: Guardar el grafo
+      summary: Save the graph
       operationId: save_graph_api_flows__flow_id__graph_put
       parameters:
       - name: flow_id
@@ -1999,7 +1996,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2007,7 +2004,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -2015,7 +2012,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2023,7 +2020,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Grafo sin integridad. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Graph without integrity. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -2034,20 +2031,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Reemplaza el grafo. Asigna un identificador `1ND` a cada nodo temporal (`tmp-…`)
-        y devuelve la correspondencia en `id_map`. Exige integridad, no completitud.'
+      description: 'Permission: `flows:edit`. Replaces the graph. Assigns a `1ND` identifier to each temporary node (`tmp-…`)
+        and returns the mapping in `id_map`. Requires integrity, not completeness.'
   /api/flows/{flow_id}/duplicate:
     post:
       tags:
       - flows
-      summary: Duplicar un flujo
+      summary: Duplicate a flow
       operationId: duplicate_flow_api_flows__flow_id__duplicate_post
       parameters:
       - name: flow_id
@@ -2066,7 +2063,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2074,7 +2071,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -2082,7 +2079,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2090,7 +2087,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2099,19 +2096,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Crea «Copia de …» con nodos nuevos.'
+      description: 'Permission: `flows:edit`. Creates “Copia de …” with new nodes.'
   /api/flows/{flow_id}/runs:
     post:
       tags:
       - flows
-      summary: Ejecutar un flujo
+      summary: Run a flow
       operationId: start_run_api_flows__flow_id__runs_post
       parameters:
       - name: flow_id
@@ -2122,7 +2119,7 @@ paths:
           title: Flow Id
       responses:
         '202':
-          description: 'Ejecución aceptada (`status: pendiente`).'
+          description: 'Run accepted (`status: pendiente`).'
           content:
             application/json:
               schema: &id007
@@ -2131,7 +2128,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2139,7 +2136,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -2147,7 +2144,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2155,7 +2152,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: Ya hay una ejecución en curso de este flujo.
+          description: This flow is already running.
           content:
             application/json:
               schema: *id001
@@ -2163,7 +2160,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: El flujo no es válido. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: The flow is not valid. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -2174,19 +2171,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Acepta la ejecución y la procesa en segundo plano. El progreso se consulta con
-        `GET /api/flows/{flow_id}/runs/{run_id}` (el front lo hace cada 500 ms mientras está activa).'
+      description: 'Permission: `flows:edit`. Accepts the run and processes it in the background. Progress is queried with
+        `GET /api/flows/{flow_id}/runs/{run_id}` (the front end does it every 500 ms while it is active).'
     get:
       tags:
       - flows
-      summary: Ejecuciones de un flujo
+      summary: Runs of a flow
       operationId: list_runs_api_flows__flow_id__runs_get
       parameters:
       - name: flow_id
@@ -2206,7 +2203,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2214,7 +2211,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -2222,7 +2219,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2230,7 +2227,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2239,19 +2236,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Las 50 últimas, de la más reciente a la más antigua.'
+      description: 'Permission: `flows:view`. The last 50, from the most recent to the oldest.'
   /api/flows/{flow_id}/runs/{run_id}:
     get:
       tags:
       - flows
-      summary: Ejecución
+      summary: Run
       operationId: get_run_api_flows__flow_id__runs__run_id__get
       parameters:
       - name: flow_id
@@ -2276,7 +2273,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2284,7 +2281,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -2292,7 +2289,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2300,7 +2297,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2309,19 +2306,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          description: 'The insight flows cannot be read or saved: the ingestion service is not available (FE015).'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Instantánea con el estado de cada nodo y los resultados de cada Output.'
+      description: 'Permission: `flows:view`. Snapshot with the status of each node and the results of each Output.'
   /api/download-flows:
     get:
       tags:
       - downloads
-      summary: Flujos de descarga
+      summary: Download flows
       operationId: list_download_flows_api_download_flows_get
       responses:
         '200':
@@ -2334,7 +2331,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2342,7 +2339,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -2350,19 +2347,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Flujos de descarga de Genesys con su última ejecución y la próxima programada,
-        del más reciente al más antiguo.'
+      description: 'Permission: `flows:view`. Genesys download flows with their last run and the next scheduled one, from
+        the most recent to the oldest.'
     post:
       tags:
       - downloads
-      summary: Crear un flujo de descarga
+      summary: Create a download flow
       operationId: create_download_flow_api_download_flows_post
       requestBody:
         required: true
@@ -2393,7 +2390,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2401,7 +2398,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -2409,8 +2406,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: 'Un campo no es válido: nombre, intervalo (rangos, orden, 90 días, sin futuro), canales o programación
-            (solo con intervalo relativo). Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.'
+          description: 'A field is not valid: name, interval (ranges, order, 90 days, not in the future), channels or schedule
+            (only with a relative interval). Out-of-range or wrongly typed parameters return the native FastAPI error.'
           content:
             application/json:
               schema:
@@ -2422,20 +2419,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. La autoría es quien llama y la zona horaria, la de la plataforma: «hoy», «ayer»
-        y la programación se calculan en ella.'
+      description: 'Permission: `flows:edit`. The author is the caller and the time zone is the platform''s: “hoy”, “ayer”
+        and the schedule are calculated in it.'
   /api/download-flows/{flow_id}:
     get:
       tags:
       - downloads
-      summary: Flujo de descarga
+      summary: Download flow
       operationId: get_download_flow_api_download_flows__flow_id__get
       parameters:
       - name: flow_id
@@ -2454,7 +2451,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2462,7 +2459,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -2470,7 +2467,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2478,7 +2475,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2487,18 +2484,18 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`.'
+      description: 'Permission: `flows:view`.'
     put:
       tags:
       - downloads
-      summary: Guardar un flujo de descarga
+      summary: Save a download flow
       operationId: update_download_flow_api_download_flows__flow_id__put
       parameters:
       - name: flow_id
@@ -2522,7 +2519,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2530,7 +2527,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -2538,7 +2535,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2546,8 +2543,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: 'Un campo no es válido: nombre, intervalo (rangos, orden, 90 días, sin futuro), canales o programación
-            (solo con intervalo relativo). Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.'
+          description: 'A field is not valid: name, interval (ranges, order, 90 days, not in the future), channels or schedule
+            (only with a relative interval). Out-of-range or wrongly typed parameters return the native FastAPI error.'
           content:
             application/json:
               schema:
@@ -2558,19 +2555,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Sustituye la configuración y recalcula la próxima ejecución; la autoría no cambia
-        y la zona horaria pasa a ser la vigente.'
+      description: 'Permission: `flows:edit`. Replaces the configuration and recalculates the next run; the author does not
+        change and the time zone becomes the current one.'
     delete:
       tags:
       - downloads
-      summary: Borrar un flujo de descarga
+      summary: Delete a download flow
       operationId: delete_download_flow_api_download_flows__flow_id__delete
       parameters:
       - name: flow_id
@@ -2581,12 +2578,12 @@ paths:
           title: Flow Id
       responses:
         '204':
-          description: Hecho, sin cuerpo.
+          description: Done, no body.
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2594,7 +2591,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -2602,7 +2599,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2610,7 +2607,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: Tiene una ejecución en curso.
+          description: It has a run in progress.
           content:
             application/json:
               schema: *id001
@@ -2618,7 +2615,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2627,14 +2624,14 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Borra también sus ejecuciones y sus logs.'
+      description: 'Permission: `flows:edit`. It also deletes its runs and its logs.'
   /api/download-flows/{flow_id}/runs:
     post:
       tags:
@@ -2659,7 +2656,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2667,7 +2664,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:edit`.
+          description: Missing permission `flows:edit`.
           content:
             application/json:
               schema: *id001
@@ -2675,7 +2672,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2683,7 +2680,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: Ya hay una ejecución en curso de este flujo.
+          description: This flow is already running.
           content:
             application/json:
               schema: *id001
@@ -2691,7 +2688,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2700,19 +2697,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:edit`. Resuelve el intervalo en este momento, crea la ejecución `pendiente` y la lanza
-        en segundo plano. El progreso se consulta con `GET /api/download-flows/{flow_id}/runs/{run_id}`.'
+      description: 'Permission: `flows:edit`. Resolves the interval at this moment, creates the `pendiente` run and starts
+        it in the background. Progress is queried with `GET /api/download-flows/{flow_id}/runs/{run_id}`.'
     get:
       tags:
       - downloads
-      summary: Historial de descargas
+      summary: Download history
       operationId: list_download_runs_api_download_flows__flow_id__runs_get
       parameters:
       - name: flow_id
@@ -2732,7 +2729,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2740,7 +2737,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -2748,7 +2745,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2756,7 +2753,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2765,15 +2762,14 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Ejecuciones del flujo, de la más reciente a la más antigua (se conservan las 200
-        últimas).'
+      description: 'Permission: `flows:view`. Runs of the flow, from the most recent to the oldest (the last 200 are kept).'
   /api/download-flows/{flow_id}/runs/{run_id}:
     get:
       tags:
@@ -2803,7 +2799,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2811,7 +2807,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -2819,7 +2815,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2827,7 +2823,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2836,19 +2832,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Estado y contadores, que se actualizan tras cada conversación.'
+      description: 'Permission: `flows:view`. Status and counters, updated after each conversation.'
   /api/download-flows/{flow_id}/runs/{run_id}/log:
     get:
       tags:
       - downloads
-      summary: Log de una descarga
+      summary: Download log
       operationId: get_download_run_log_api_download_flows__flow_id__runs__run_id__log_get
       parameters:
       - name: flow_id
@@ -2899,7 +2895,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2907,7 +2903,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `flows:view`.
+          description: Missing permission `flows:view`.
           content:
             application/json:
               schema: *id001
@@ -2915,7 +2911,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -2923,7 +2919,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -2932,21 +2928,21 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `flows:view`. Entradas a partir de `after` (cursor `id`), filtrables por `level`. Con `format=text`,
-        el log completo como adjunto `text/plain`. Nunca contiene el texto de los turnos ni secretos.'
+      description: 'Permission: `flows:view`. Entries from `after` (`id` cursor), filterable by `level`. With `format=text`,
+        the full log as a `text/plain` attachment. It never contains the text of the turns or secrets.'
   /api/config/public:
     get:
       tags:
       - config
-      summary: Configuración pública
-      description: 'Público. Nombre, zona horaria e idioma: los necesitan el login y todos los roles.'
+      summary: Public settings
+      description: 'Public. Name, time zone and language: the login and all roles need them.'
       operationId: public_config_api_config_public_get
       responses:
         '200':
@@ -2960,7 +2956,7 @@ paths:
     get:
       tags:
       - config
-      summary: Configuración
+      summary: Settings
       operationId: read_config_api_config_get
       responses:
         '200':
@@ -2973,7 +2969,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -2981,14 +2977,14 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:view`.
+          description: Missing permission `config:view`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:view`. Configuración completa, versión y opciones de los selectores.'
+      description: 'Permission: `config:view`. Full settings, version and options of the selectors.'
   /api/config/general:
     put:
       tags:
@@ -3011,7 +3007,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3019,7 +3015,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3027,7 +3023,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Per-field errors. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3038,20 +3034,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          description: 'The section cannot be saved: the ingestion service is not available (FE015). It is not applied.'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`.'
+      description: 'Permission: `config:edit`.'
   /api/config/sources:
     put:
       tags:
       - config
-      summary: Guardar Origen de datos
-      description: 'Permiso: `config:edit`. Cambia el origen de datos de toda la plataforma (FE012).'
+      summary: Save Data origin
+      description: 'Permission: `config:edit`. Changes the data origin of the whole platform (FE012).'
       operationId: update_sources_api_config_sources_put
       requestBody:
         required: true
@@ -3069,7 +3065,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3077,7 +3073,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3085,7 +3081,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Origen desconocido. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Origen desconocido. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3096,7 +3092,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          description: 'The section cannot be saved: the ingestion service is not available (FE015). It is not applied.'
           content:
             application/json:
               schema: *id001
@@ -3125,7 +3121,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3133,7 +3129,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3141,7 +3137,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Per-field errors. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3152,19 +3148,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          description: 'The section cannot be saved: the ingestion service is not available (FE015). It is not applied.'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`.'
+      description: 'Permission: `config:edit`.'
   /api/config/ai:
     put:
       tags:
       - config
-      summary: Guardar Modelos de IA
+      summary: Save AI models
       operationId: update_ai_api_config_ai_put
       requestBody:
         required: true
@@ -3182,7 +3178,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3190,7 +3186,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3198,8 +3194,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Proveedor o modelo desconocidos. Los parámetros fuera de rango o de tipo devuelven el error nativo
-            de FastAPI.
+          description: Unknown provider or model. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3210,20 +3205,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          description: 'The section cannot be saved: the ingestion service is not available (FE015). It is not applied.'
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`.'
+      description: 'Permission: `config:edit`.'
   /api/config/ai/status:
     get:
       tags:
       - config
-      summary: Estado del servicio de LLM
-      description: 'Permiso: `config:view`. Qué proveedores tienen clave en el servicio de LLM (sí o no, nunca la clave).'
+      summary: LLM service status
+      description: 'Permission: `config:view`. Which providers have a key in the LLM service (yes or no, never the key).'
       operationId: ai_status_api_config_ai_status_get
       responses:
         '200':
@@ -3236,7 +3231,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3244,7 +3239,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:view`.
+          description: Missing permission `config:view`.
           content:
             application/json:
               schema: *id001
@@ -3252,7 +3247,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de LLM no está disponible.
+          description: The LLM service is not available.
           content:
             application/json:
               schema: *id001
@@ -3263,9 +3258,9 @@ paths:
     post:
       tags:
       - config
-      summary: Probar un proveedor de LLM
-      description: 'Permiso: `config:edit`. Hace una petición mínima con el modelo indicado. Un error del proveedor (sin clave,
-        clave rechazada…) responde `200` con `ok: false` y su mensaje.'
+      summary: Test an LLM provider
+      description: 'Permission: `config:edit`. Makes a minimal request with the given model. A provider error (no key, rejected
+        key…) responds `200` with `ok: false` and its message.'
       operationId: test_ai_provider_api_config_ai_test__provider__post
       parameters:
       - name: provider
@@ -3296,7 +3291,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3304,7 +3299,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3312,8 +3307,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Proveedor desconocido o modelo de otro proveedor. Los parámetros fuera de rango o de tipo devuelven
-            el error nativo de FastAPI.
+          description: Unknown provider or model of another provider. Out-of-range or wrongly typed parameters return the
+            native FastAPI error.
           content:
             application/json:
               schema:
@@ -3324,7 +3319,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de LLM no está disponible.
+          description: The LLM service is not available.
           content:
             application/json:
               schema: *id001
@@ -3348,7 +3343,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3356,22 +3351,22 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:view`.
+          description: Missing permission `config:view`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:view`. Conectores mock de Genesys con su volumen de conversaciones.'
+      description: 'Permission: `config:view`. Mock Genesys connectors with their conversation volume.'
   /api/config/connectors/genesys:
     get:
       tags:
       - config
-      summary: Conector de Genesys Cloud
-      description: 'Permiso: `config:view`. Estado del servicio de ingesta (FE011): región, credenciales configuradas, última
-        prueba y última descarga, y conversaciones guardadas por canal y por calidad de la transcripción. Si el servicio no
-        responde, `200` con `service: no_disponible`.'
+      summary: Genesys Cloud connector
+      description: 'Permission: `config:view`. Status of the ingestion service (FE011): region, configured credentials, last
+        test and last download, and stored conversations by channel and by transcript quality. If the service does not respond,
+        `200` with `service: no_disponible`.'
       operationId: genesys_connector_api_config_connectors_genesys_get
       responses:
         '200':
@@ -3384,7 +3379,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3392,7 +3387,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:view`.
+          description: Missing permission `config:view`.
           content:
             application/json:
               schema: *id001
@@ -3403,9 +3398,9 @@ paths:
     post:
       tags:
       - config
-      summary: Probar la conexión con Genesys Cloud
-      description: 'Permiso: `config:edit`. El servicio de ingesta pide un token con las credenciales del `.env` y lee la
-        organización. Un fallo de credenciales es `200` con `ok: false`.'
+      summary: Test the connection with Genesys Cloud
+      description: 'Permission: `config:edit`. The ingestion service requests a token with the `.env` credentials and reads
+        the organization. A credentials failure is `200` with `ok: false`.'
       operationId: test_genesys_connector_api_config_connectors_genesys_test_post
       responses:
         '200':
@@ -3418,7 +3413,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3426,7 +3421,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3434,7 +3429,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: El servicio de ingesta no está disponible.
+          description: The ingestion service is not available.
           content:
             application/json:
               schema: *id001
@@ -3445,8 +3440,8 @@ paths:
     post:
       tags:
       - config
-      summary: Sincronizar un conector
-      description: 'Permiso: `config:edit`. Simulado: actualiza la fecha de sincronización y no cambia el dataset.'
+      summary: Sync a connector
+      description: 'Permission: `config:edit`. Simulated: updates the sync date and does not change the dataset.'
       operationId: sync_connector_api_config_connectors__connector_id__sync_post
       parameters:
       - name: connector_id
@@ -3466,7 +3461,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3474,7 +3469,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3482,7 +3477,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -3490,7 +3485,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -3502,7 +3497,7 @@ paths:
     get:
       tags:
       - config
-      summary: Registro de cambios de la configuración
+      summary: Settings change log
       operationId: list_audit_api_config_audit_get
       parameters:
       - name: section
@@ -3532,7 +3527,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3540,7 +3535,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:view`.
+          description: Missing permission `config:view`.
           content:
             application/json:
               schema: *id001
@@ -3548,7 +3543,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -3556,12 +3551,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:view`. Entradas de las secciones de configuración, de la más reciente a la más antigua.'
+      description: 'Permission: `config:view`. Entries of the settings sections, from the most recent to the oldest.'
   /api/config/taxonomy:
     get:
       tags:
       - config
-      summary: Taxonomía
+      summary: Taxonomy
       operationId: read_taxonomy_api_config_taxonomy_get
       responses:
         '200':
@@ -3574,7 +3569,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3582,19 +3577,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:view`.
+          description: Missing permission `config:view`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:view`. Main topics y temas secundarios con su número de conversaciones.'
+      description: 'Permission: `config:view`. Main topics and secondary topics with their number of conversations.'
   /api/config/taxonomy/{kind_name}:
     post:
       tags:
       - config
-      summary: Crear un tema
+      summary: Create a topic
       operationId: create_topic_api_config_taxonomy__kind_name__post
       parameters:
       - name: kind_name
@@ -3627,7 +3622,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3635,7 +3630,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3643,8 +3638,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo (incluido código o nombre duplicado). Los parámetros fuera de rango o de tipo devuelven
-            el error nativo de FastAPI.
+          description: Per-field errors (including duplicate code or name). Out-of-range or wrongly typed parameters return
+            the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3654,12 +3649,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`. `MainTopicIn` para `main-topics`; `SecondaryTopicIn` para `secondary-topics`.'
+      description: 'Permission: `config:edit`. `MainTopicIn` for `main-topics`; `SecondaryTopicIn` for `secondary-topics`.'
   /api/config/taxonomy/{kind_name}/{topic_id}:
     put:
       tags:
       - config
-      summary: Editar un tema
+      summary: Edit a topic
       operationId: update_topic_api_config_taxonomy__kind_name___topic_id__put
       parameters:
       - name: kind_name
@@ -3695,7 +3690,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3703,7 +3698,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3711,7 +3706,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -3719,7 +3714,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Per-field errors. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3729,11 +3724,11 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`. El código no se puede cambiar.'
+      description: 'Permission: `config:edit`. The code cannot be changed.'
     delete:
       tags:
       - config
-      summary: Borrar un tema
+      summary: Delete a topic
       operationId: delete_topic_api_config_taxonomy__kind_name___topic_id__delete
       parameters:
       - name: kind_name
@@ -3753,12 +3748,12 @@ paths:
           title: Topic Id
       responses:
         '204':
-          description: Hecho, sin cuerpo.
+          description: Done, no body.
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3766,7 +3761,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3774,7 +3769,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -3782,8 +3777,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: 'Está asignado a conversaciones (el mensaje da el recuento de cada origen): no se puede borrar, solo
-            desactivar.'
+          description: 'It is assigned to conversations (the message gives the count of each origin): it cannot be deleted,
+            only deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3791,7 +3786,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -3800,20 +3795,20 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '503':
-          description: No se puede comprobar el uso en los datos reales (PostgreSQL no responde).
+          description: Usage in the real data cannot be checked (PostgreSQL does not respond).
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`. Un main topic se comprueba en el dataset sintético y en las conversaciones reales
-        de PostgreSQL, sea cual sea el origen activo.'
+      description: 'Permission: `config:edit`. A main topic is checked in the synthetic dataset and in the real PostgreSQL
+        conversations, whichever origin is active.'
   /api/config/compliance-checks:
     get:
       tags:
       - config
-      summary: Checks de cumplimiento
+      summary: Compliance checks
       operationId: list_checks_api_config_compliance_checks_get
       responses:
         '200':
@@ -3826,7 +3821,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3834,18 +3829,18 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:view`.
+          description: Missing permission `config:view`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:view`.'
+      description: 'Permission: `config:view`.'
     post:
       tags:
       - config
-      summary: Crear un check
+      summary: Create a check
       operationId: create_check_api_config_compliance_checks_post
       requestBody:
         required: true
@@ -3864,7 +3859,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3872,7 +3867,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3880,8 +3875,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo (incluido código o nombre duplicado). Los parámetros fuera de rango o de tipo devuelven
-            el error nativo de FastAPI.
+          description: Per-field errors (including duplicate code or name). Out-of-range or wrongly typed parameters return
+            the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3891,12 +3886,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`. Se evalúa por frases dichas por el agente.'
+      description: 'Permission: `config:edit`. It is evaluated by phrases said by the agent.'
   /api/config/compliance-checks/{check_id}:
     put:
       tags:
       - config
-      summary: Editar un check
+      summary: Edit a check
       operationId: update_check_api_config_compliance_checks__check_id__put
       parameters:
       - name: check_id
@@ -3920,7 +3915,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3928,7 +3923,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3936,7 +3931,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -3944,7 +3939,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Per-field errors. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -3954,11 +3949,11 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`. El código no se puede cambiar.'
+      description: 'Permission: `config:edit`. The code cannot be changed.'
     delete:
       tags:
       - config
-      summary: Borrar un check
+      summary: Delete a check
       operationId: delete_check_api_config_compliance_checks__check_id__delete
       parameters:
       - name: check_id
@@ -3969,12 +3964,12 @@ paths:
           title: Check Id
       responses:
         '204':
-          description: Hecho, sin cuerpo.
+          description: Done, no body.
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -3982,7 +3977,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -3990,7 +3985,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -3998,7 +3993,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: 'Es un check del análisis: solo se puede desactivar.'
+          description: 'It is an analysis check: it can only be deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4006,7 +4001,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -4014,12 +4009,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`.'
+      description: 'Permission: `config:edit`.'
   /api/config/kpis/{code}:
     put:
       tags:
       - config
-      summary: Objetivo y umbrales de un KPI
+      summary: Target and thresholds of a KPI
       operationId: update_kpi_api_config_kpis__code__put
       parameters:
       - name: code
@@ -4050,7 +4045,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4058,7 +4053,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `config:edit`.
+          description: Missing permission `config:edit`.
           content:
             application/json:
               schema: *id001
@@ -4074,7 +4069,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Per-field errors. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -4084,8 +4079,8 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `config:edit`. Umbrales verde y ámbar (los dos o ninguno), coherentes con el sentido del KPI
-        y dentro del rango de su unidad.'
+      description: 'Permission: `config:edit`. Green and amber thresholds (both or neither), consistent with the direction
+        of the KPI and within the range of its unit.'
   /api/users:
     get:
       tags:
@@ -4128,7 +4123,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4136,7 +4131,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
@@ -4144,7 +4139,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -4152,11 +4147,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`. Búsqueda por nombre o email (sin tildes ni mayúsculas) y filtros por rol y estado.'
+      description: 'Permission: `users:admin`. Search by name or email (accent- and case-insensitive) and filters by role
+        and status.'
     post:
       tags:
       - users
-      summary: Crear un usuario
+      summary: Create a user
       operationId: create_user_api_users_post
       requestBody:
         required: true
@@ -4179,7 +4175,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4187,7 +4183,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
@@ -4195,7 +4191,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: Email duplicado (en el campo `email`).
+          description: Duplicate email (in the `email` field).
           content:
             application/json:
               schema: *id010
@@ -4203,8 +4199,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo (rol desconocido incluido). Los parámetros fuera de rango o de tipo devuelven el
-            error nativo de FastAPI.
+          description: Per-field errors (including unknown role). Out-of-range or wrongly typed parameters return the native
+            FastAPI error.
           content:
             application/json:
               schema:
@@ -4214,13 +4210,13 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`. Email normalizado (sin espacios, en minúsculas) y único. El usuario entra con
-        la contraseña demo.'
+      description: 'Permission: `users:admin`. Normalized email (no spaces, lowercase) and unique. The user signs in with
+        the demo password.'
   /api/users/{user_id}:
     put:
       tags:
       - users
-      summary: Editar, desactivar o reactivar un usuario
+      summary: Edit, deactivate or reactivate a user
       operationId: update_user_api_users__user_id__put
       parameters:
       - name: user_id
@@ -4244,7 +4240,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4252,7 +4248,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
@@ -4260,7 +4256,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -4268,8 +4264,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: 'Email duplicado (`FieldErrors`) o protección de administración (`ErrorText`): quitarse a uno mismo
-            `users:admin` o dejar sin ningún `admin` activo.'
+          description: 'Duplicate email (`FieldErrors`) or administration protection (`ErrorText`): removing `users:admin`
+            from oneself or leaving no active `admin`.'
           content:
             application/json:
               schema:
@@ -4280,7 +4276,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Per-field errors. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -4290,13 +4286,13 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`. Cuerpo completo; `active: false` desactiva al usuario e invalida su sesión en
-        la siguiente petición.'
+      description: 'Permission: `users:admin`. Full body; `active: false` deactivates the user and invalidates their session
+        on the next request.'
   /api/users/audit:
     get:
       tags:
       - users
-      summary: Registro de cambios de usuarios y roles
+      summary: Users and roles change log
       operationId: list_audit_api_users_audit_get
       responses:
         '200':
@@ -4308,7 +4304,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4316,19 +4312,19 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`.'
+      description: 'Permission: `users:admin`.'
   /api/roles:
     get:
       tags:
       - users
-      summary: Roles y catálogo de permisos
+      summary: Roles and permission catalog
       operationId: list_roles_api_roles_get
       responses:
         '200':
@@ -4341,7 +4337,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4349,18 +4345,18 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`. Roles con su número de usuarios y el catálogo de permisos para la matriz.'
+      description: 'Permission: `users:admin`. Roles with their number of users and the permission catalog for the matrix.'
     post:
       tags:
       - users
-      summary: Crear un rol personalizado
+      summary: Create a custom role
       operationId: create_role_api_roles_post
       requestBody:
         required: true
@@ -4384,7 +4380,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4392,7 +4388,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
@@ -4400,7 +4396,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: Código o nombre duplicados (por campo).
+          description: Duplicate code or name (per field).
           content:
             application/json:
               schema: *id010
@@ -4408,8 +4404,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo (permiso desconocido incluido). Los parámetros fuera de rango o de tipo devuelven
-            el error nativo de FastAPI.
+          description: Per-field errors (including unknown permission). Out-of-range or wrongly typed parameters return the
+            native FastAPI error.
           content:
             application/json:
               schema:
@@ -4419,12 +4415,12 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`.'
+      description: 'Permission: `users:admin`.'
   /api/roles/{role_id}:
     put:
       tags:
       - users
-      summary: Cambiar nombre y permisos de un rol
+      summary: Change the name and permissions of a role
       operationId: update_role_api_roles__role_id__put
       parameters:
       - name: role_id
@@ -4449,7 +4445,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4457,7 +4453,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
@@ -4465,7 +4461,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -4473,8 +4469,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: 'Protección de administración: quitarse a uno mismo `users:admin`, dejar sin ningún `admin` activo
-            o quitar `users:admin` al rol `admin`.'
+          description: 'Administration protection: removing `users:admin` from oneself, leaving no active `admin`, or removing
+            `users:admin` from the `admin` role.'
           content:
             application/json:
               schema: *id001
@@ -4482,7 +4478,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Errores por campo. Los parámetros fuera de rango o de tipo devuelven el error nativo de FastAPI.
+          description: Per-field errors. Out-of-range or wrongly typed parameters return the native FastAPI error.
           content:
             application/json:
               schema:
@@ -4492,11 +4488,11 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`. Lista completa de permisos. Los roles base no se renombran.'
+      description: 'Permission: `users:admin`. Full list of permissions. Built-in roles cannot be renamed.'
     delete:
       tags:
       - users
-      summary: Borrar un rol personalizado
+      summary: Delete a custom role
       operationId: delete_role_api_roles__role_id__delete
       parameters:
       - name: role_id
@@ -4507,12 +4503,12 @@ paths:
           title: Role Id
       responses:
         '204':
-          description: Hecho, sin cuerpo.
+          description: Done, no body.
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '401':
-          description: 'Sin sesión válida: falta el token, está manipulado o caducado, o el usuario está desactivado.'
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
           content:
             application/json:
               schema: *id001
@@ -4520,7 +4516,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '403':
-          description: Falta el permiso `users:admin`.
+          description: Missing permission `users:admin`.
           content:
             application/json:
               schema: *id001
@@ -4528,7 +4524,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '404':
-          description: No existe (o el identificador es de otro tipo).
+          description: It does not exist (or the identifier is of another type).
           content:
             application/json:
               schema: *id001
@@ -4536,7 +4532,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '409':
-          description: Rol base o con usuarios asignados.
+          description: Built-in role or with assigned users.
           content:
             application/json:
               schema: *id001
@@ -4544,7 +4540,7 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
         '422':
-          description: Parámetros no válidos.
+          description: Invalid parameters.
           content:
             application/json:
               schema:
@@ -4552,7 +4548,7 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
-      description: 'Permiso: `users:admin`.'
+      description: 'Permission: `users:admin`.'
 components:
   schemas:
     EstimateIn:
@@ -4774,7 +4770,7 @@ components:
           title: Label
           type: string
         key_configured:
-          description: Si el servicio de LLM tiene su clave; nunca la clave.
+          description: Whether the LLM service has its key; never the key.
           title: Key Configured
           type: boolean
       required:
@@ -4841,7 +4837,7 @@ components:
           title: Model
           type: string
         message:
-          description: «El proveedor respondió correctamente» o el error del proveedor.
+          description: “The provider responded correctly” or the provider's error.
           title: Message
           type: string
       required:
@@ -4865,17 +4861,17 @@ components:
           title: At
           type: string
         section:
-          description: Sección de configuración o `usuarios`.
+          description: Settings section or `usuarios`.
           title: Section
           type: string
         element:
           title: Element
           type: string
         before:
-          description: '`null` en altas.'
+          description: '`null` on creation.'
           title: Before
         after:
-          description: '`null` en bajas.'
+          description: '`null` on deletion.'
           title: After
       required:
       - id
@@ -4913,12 +4909,12 @@ components:
         period:
           $ref: '#/components/schemas/Period'
         pending:
-          description: '`true` si hay conversaciones a las que les falta análisis; en el desglose por main topic, solo si
-            ninguna tiene main topic todavía (FE014).'
+          description: '`true` if some conversations lack analysis; in the breakdown by main topic, only if none has a main
+            topic yet (FE014).'
           title: Pending
           type: boolean
         pending_kpis:
-          description: 'KPIs del análisis sin el dato en ninguna conversación del periodo: se muestran como pendientes (FE014).'
+          description: 'Analysis KPIs without the value in any conversation of the period: they are shown as pending (FE014).'
           items:
             type: string
           title: Pending Kpis
@@ -4940,7 +4936,7 @@ components:
       additionalProperties: false
       properties:
         key:
-          description: Código o identificador del grupo.
+          description: Code or identifier of the group.
           title: Key
           type: string
         label:
@@ -4958,12 +4954,12 @@ components:
       additionalProperties: false
       properties:
         reference_date:
-          description: Fecha de referencia del dataset; el periodo por defecto acaba el día anterior.
+          description: Dataset reference date; the default period ends the day before.
           format: date
           title: Reference Date
           type: string
         origin:
-          description: Origen de datos activo (FE012).
+          description: Active data origin (FE012).
           enum:
           - sintetico
           - real
@@ -4990,7 +4986,7 @@ components:
           title: Main Topics
           type: array
         compliance_checks:
-          description: Solo checks activos.
+          description: Active checks only.
           items:
             $ref: '#/components/schemas/CodeLabel'
           title: Compliance Checks
@@ -5065,7 +5061,7 @@ components:
           title: Name
           type: string
         active:
-          description: Los desactivados se incluyen para poner nombre a filtros antiguos.
+          description: Deactivated ones are included to give a name to old filters.
           title: Active
           type: boolean
       required:
@@ -5131,7 +5127,7 @@ components:
           anyOf:
           - type: number
           - type: 'null'
-          description: '% de conversaciones aplicables que cumplen.'
+          description: '% of applicable conversations that comply.'
           title: Value
         applicable:
           title: Applicable
@@ -5388,7 +5384,7 @@ components:
           - $ref: '#/components/schemas/GenesysInfo'
           - type: 'null'
           default: null
-          description: Analítica de Genesys; solo con el origen `real` (FE012).
+          description: Genesys analytics; only with the `real` origin (FE012).
       required:
       - id
       - channel
@@ -5406,7 +5402,7 @@ components:
       type: object
     ConversationItem:
       additionalProperties: false
-      description: Elemento de listado, compartido por conversaciones, explorador, búsqueda y outputs de flujos.
+      description: List item, shared by conversations, explorer, search and flow outputs.
       properties:
         id:
           title: Id
@@ -5452,7 +5448,7 @@ components:
           - type: 'null'
           title: Main Topic Label
         summary:
-          description: Enmascarado si `privacy.pii_masking` está activado; vacío si el análisis está pendiente.
+          description: Masked if `privacy.pii_masking` is enabled; empty if the analysis is pending.
           title: Summary
           type: string
         sentiment:
@@ -5478,14 +5474,14 @@ components:
           title: Duration S
           type: integer
         analysis_pending:
-          description: Conversación real cuyo análisis de la plataforma aún no existe (FE012).
+          description: Real conversation whose platform analysis does not exist yet (FE012).
           title: Analysis Pending
           type: boolean
         ani:
           anyOf:
           - type: string
           - type: 'null'
-          description: Teléfono de origen; solo en conversaciones reales con teléfono.
+          description: Calling number; only in real conversations with a phone number.
           title: Ani
         external_tag:
           anyOf:
@@ -5496,7 +5492,7 @@ components:
           anyOf:
           - type: boolean
           - type: 'null'
-          description: Solo en conversaciones reales.
+          description: Only in real conversations.
           title: Contained In Bot
         transcript_quality:
           anyOf:
@@ -5506,7 +5502,7 @@ components:
             - sin_transcripcion
             type: string
           - type: 'null'
-          description: Solo en conversaciones reales.
+          description: Only in real conversations.
           title: Transcript Quality
       required:
       - id
@@ -5559,7 +5555,7 @@ components:
       title: ConversationPage
       type: object
     DetailAnalysis:
-      description: 'Análisis del detalle: cada campo se da en cuanto existe (FE014); los que faltan son `null` o vacíos.'
+      description: 'Detail analysis: each field is given as soon as it exists (FE014); missing ones are `null` or empty.'
       properties:
         summary:
           title: Summary
@@ -5617,8 +5613,8 @@ components:
             anyOf:
             - type: boolean
             - type: 'null'
-          description: 'Checks activos con resultado: `true` cumple, `false` no cumple, `null` no aplica. Un resultado guardado
-            (de un flujo con LLM) manda sobre la evaluación por frases (FE014).'
+          description: 'Active checks with a result: `true` met, `false` not met, `null` not applicable. A stored result (from
+            a flow with an LLM) takes precedence over the evaluation by phrases (FE014).'
           title: Compliance
           type: object
         entities:
@@ -5636,7 +5632,7 @@ components:
           title: Pending
           type: boolean
         compliance_pending:
-          description: Checks activos aún sin resultado (FE014).
+          description: Active checks with no result yet (FE014).
           items:
             type: string
           title: Compliance Pending
@@ -5661,7 +5657,7 @@ components:
       additionalProperties: false
       properties:
         found:
-          description: Encontradas = insertadas + actualizadas + omitidas + ya existentes + con error, al terminar.
+          description: Found = inserted + updated + skipped + already existing + with errors, when finished.
           title: Found
           type: integer
         downloaded:
@@ -5683,11 +5679,11 @@ components:
           title: Skipped In Progress
           type: integer
         skipped_existing:
-          description: Ya estaban en la base y no se descargaron (flujo sin «Sobrescribir»).
+          description: They were already in the database and were not downloaded (flow without “Overwrite”).
           title: Skipped Existing
           type: integer
         skipped_other_channel:
-          description: De otro canal o de un medio no soportado.
+          description: From another channel or from an unsupported media.
           title: Skipped Other Channel
           type: integer
         by_channel:
@@ -5698,7 +5694,7 @@ components:
         by_quality:
           additionalProperties:
             type: integer
-          description: '`completa`, `parcial` y `sin_transcripcion`.'
+          description: '`completa`, `parcial` and `sin_transcripcion`.'
           title: By Quality
           type: object
         undelivered_messages:
@@ -5748,7 +5744,7 @@ components:
           title: Overwrite
           type: boolean
         timezone:
-          description: Zona horaria de la plataforma cuando se guardó el flujo.
+          description: Platform time zone when the flow was saved.
           title: Timezone
           type: string
         author:
@@ -5766,7 +5762,7 @@ components:
           - format: date-time
             type: string
           - type: 'null'
-          description: Próxima ejecución programada; nula si no está programado o activo.
+          description: Next scheduled run; null if it is not scheduled or active.
           title: Next Run At
         last_run:
           anyOf:
@@ -5790,7 +5786,7 @@ components:
       type: object
     DownloadFlowIn:
       additionalProperties: false
-      description: Cuerpo para crear o guardar un flujo de descarga. La API añade la autoría y la zona horaria vigente.
+      description: Body to create or save a download flow. The API adds the author and the current time zone.
       properties:
         name:
           maxLength: 80
@@ -5809,16 +5805,16 @@ components:
           type: array
         schedule:
           $ref: '#/components/schemas/DownloadSchedule'
-          description: Una descarga programada necesita un intervalo relativo.
+          description: A scheduled download needs a relative interval.
         active:
           default: true
-          description: Un flujo inactivo no se ejecuta por programación, pero sí a mano.
+          description: An inactive flow does not run on schedule, but it does run manually.
           title: Active
           type: boolean
         overwrite:
           default: false
-          description: 'Sobrescribir: vuelve a descargar las conversaciones que ya existen y borra su summary y main topic
-            del LLM. Sin marcar, las existentes no se descargan.'
+          description: 'Overwrite: downloads again the conversations that already exist and deletes their LLM summary and
+            main topic. Unchecked, the existing ones are not downloaded.'
           title: Overwrite
           type: boolean
       required:
@@ -5842,7 +5838,7 @@ components:
       type: object
     DownloadInterval:
       additionalProperties: false
-      description: Relativo (`hoy`, `ayer`, últimas N `horas` o `dias`) o específico (`from`–`to` en la zona horaria del flujo).
+      description: Relative (`hoy`, `ayer`, last N `horas` or `dias`) or specific (`from`–`to` in the flow time zone).
       properties:
         type:
           enum:
@@ -5860,21 +5856,21 @@ components:
             type: string
           - type: 'null'
           default: null
-          description: Solo en un intervalo relativo.
+          description: Only in a relative interval.
           title: Unit
         amount:
           anyOf:
           - type: integer
           - type: 'null'
           default: null
-          description: Horas (1–720) o días (1–90); nulo en `hoy` y `ayer`.
+          description: Hours (1–720) or days (1–90); null in `hoy` and `ayer`.
           title: Amount
         from:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          description: 'Solo en uno específico: fecha y hora local.'
+          description: 'Only in a specific one: local date and time.'
           examples:
           - '2026-10-01T08:00:00'
           title: From
@@ -5883,7 +5879,7 @@ components:
           - type: string
           - type: 'null'
           default: null
-          description: Solo en uno específico; como mucho 90 días después de `from`.
+          description: Only in a specific one; at most 90 days after `from`.
           title: To
       required:
       - type
@@ -5905,7 +5901,7 @@ components:
       additionalProperties: false
       properties:
         id:
-          description: Creciente; sirve de cursor para `after`.
+          description: Increasing; serves as the cursor for `after`.
           title: Id
           type: integer
         at:
@@ -5921,18 +5917,18 @@ components:
           type: string
         stage:
           examples:
-          - normalización
+          - normalization
           title: Stage
           type: string
         message:
-          description: Identificadores, recuentos y motivos; nunca el texto de los turnos.
+          description: Identifiers, counts and reasons; never the text of the turns.
           title: Message
           type: string
         genesys_id:
           anyOf:
           - type: string
           - type: 'null'
-          description: Conversación de Genesys afectada, si la hay.
+          description: Affected Genesys conversation, if any.
           title: Genesys Id
       required:
       - id
@@ -5970,7 +5966,7 @@ components:
           type: string
         interval:
           $ref: '#/components/schemas/DownloadRunInterval'
-          description: Intervalo resuelto al lanzar la ejecución.
+          description: Interval resolved when the run was started.
         channels:
           items:
             enum:
@@ -5983,8 +5979,8 @@ components:
           anyOf:
           - type: boolean
           - type: 'null'
-          description: Valor de «Sobrescribir» del flujo cuando se creó la ejecución; nulo en las ejecuciones anteriores a
-            FE013, cuyo modo no se conoce.
+          description: Value of “Overwrite” of the flow when the run was created; null in runs prior to FE013, whose mode
+            is unknown.
           title: Overwrite
         counters:
           $ref: '#/components/schemas/DownloadCounters'
@@ -5997,7 +5993,7 @@ components:
           anyOf:
           - $ref: '#/components/schemas/Person'
           - type: 'null'
-          description: Quién la lanzó; nulo en las programadas.
+          description: Who started it; null in scheduled ones.
         created_at:
           format: date-time
           title: Created At
@@ -6105,14 +6101,14 @@ components:
           - type: integer
           - type: 'null'
           default: null
-          description: Cada cuántas horas (1–24), alineadas con la medianoche local.
+          description: Every how many hours (1–24), aligned with local midnight.
           title: Hours
         time:
           anyOf:
           - type: string
           - type: 'null'
           default: null
-          description: Hora local `HH:MM` de la ejecución diaria.
+          description: Local time `HH:MM` of the daily run.
           examples:
           - 07:30
           title: Time
@@ -6154,11 +6150,11 @@ components:
       type: object
     ErrorText:
       additionalProperties: false
-      description: 'E1: motivo en texto (401, 403, 404, 409 y reglas de negocio sueltas en 422).'
+      description: 'E1: reason as text (401, 403, 404, 409 and stray business rules in 422).'
       properties:
         detail:
           examples:
-          - Conversación no encontrada
+          - Conversation not found
           title: Detail
           type: string
       required:
@@ -6167,7 +6163,7 @@ components:
       type: object
     FieldErrors:
       additionalProperties: false
-      description: 'E3: errores por campo de los cuerpos de configuración (422) y de usuarios y roles (422 y 409 por duplicado).'
+      description: 'E3: per-field errors of the settings bodies (422) and of users and roles (422, and 409 for duplicates).'
       properties:
         detail:
           items:
@@ -6182,7 +6178,7 @@ components:
       additionalProperties: false
       properties:
         loc:
-          description: Ruta del campo; empieza por `body`.
+          description: Path of the field; starts with `body`.
           examples:
           - - body
             - email
@@ -6193,7 +6189,7 @@ components:
           title: Loc
           type: array
         msg:
-          description: Mensaje en español para mostrar junto al campo.
+          description: Message in English to show next to the field.
           title: Msg
           type: string
         type:
@@ -6207,7 +6203,7 @@ components:
       type: object
     FieldMapping:
       additionalProperties: false
-      description: 'Un campo destino y de dónde sale: la respuesta entera (`None`) o un campo del JSON del Prompt (FE013).'
+      description: 'A target field and where it comes from: the whole answer (`None`) or a field of the Prompt JSON (FE013).'
       properties:
         target:
           maxLength: 51
@@ -6239,8 +6235,8 @@ components:
                 type: string
               type: array
             - type: 'null'
-          description: 'Valor validado que se envió a guardar, por campo destino: `main_topic` y temas secundarios por su
-            código, los checks como `true`, `false` o `null` (no aplica) (FE014).'
+          description: 'Validated value that was sent to be saved, per target field: `main_topic` and secondary topics by
+            their code, checks as `true`, `false` or `null` (not applicable) (FE014).'
           title: Values
           type: object
         states:
@@ -6252,19 +6248,19 @@ components:
             - sin_valor
             - error
             type: string
-          description: 'Estado por campo destino; `sin_valor`: la respuesta dice que no hay nada (FE014).'
+          description: 'Status per target field; `sin_valor`: the answer says there is nothing (FE014).'
           title: States
           type: object
         reason:
           anyOf:
           - type: string
           - type: 'null'
-          description: Motivo de un `rechazado` o `error` de la conversación entera.
+          description: Reason for a `rechazado` or `error` of the whole conversation.
           title: Reason
         reasons:
           additionalProperties:
             type: string
-          description: 'Motivo por campo destino (FE014): valor rechazado, ya tenía valor, Genesys ya da el sentimiento.'
+          description: 'Reason per target field (FE014): rejected value, already had a value, Genesys already gives the sentiment.'
           title: Reasons
           type: object
       required:
@@ -6279,13 +6275,13 @@ components:
       additionalProperties: false
       properties:
         targets:
-          description: 'Campos destino: los del análisis, `compliance:<código>` y `entity:<tipo>` (FE014).'
+          description: 'Target fields: the analysis ones, `compliance:<code>` and `entity:<type>` (FE014).'
           items:
             type: string
           title: Targets
           type: array
         rows:
-          description: Una fila por conversación que llegó al Prompt.
+          description: One row per conversation that reached the Prompt.
           items:
             $ref: '#/components/schemas/FieldRow'
           title: Rows
@@ -6302,7 +6298,7 @@ components:
               - sin_valor
               - error
             type: object
-          description: Recuento de cada estado por campo destino.
+          description: Count of each status per target field.
           title: Counts
           type: object
       required:
@@ -6377,23 +6373,23 @@ components:
           title: Orders
           type: array
         models:
-          description: Todos los modelos, de todos los proveedores.
+          description: All models, from all providers.
           items:
             $ref: '#/components/schemas/ValueLabel'
           title: Models
           type: array
         providers:
-          description: Proveedores con sus modelos (FE013).
+          description: Providers with their models (FE013).
           items:
             $ref: '#/components/schemas/ProviderOption'
           title: Providers
           type: array
         default_provider:
-          description: Proveedor que toma un nodo Prompt nuevo (Configuración › Modelos de IA).
+          description: Provider taken by a new Prompt node (Settings › AI models).
           title: Default Provider
           type: string
         default_model:
-          description: Modelo que toma un nodo Prompt nuevo (Configuración › Modelos de IA).
+          description: Model taken by a new Prompt node (Settings › AI models).
           title: Default Model
           type: string
         variables:
@@ -6417,20 +6413,20 @@ components:
           title: Output Kinds
           type: array
         target_fields:
-          description: 'Campos destino de un Output «campo» (FE013): los del análisis, un `compliance:<código>` por check
-            activo y un `entity:<tipo>` por tipo de entidad (FE014).'
+          description: 'Target fields of a “campo” Output (FE013): the analysis ones, a `compliance:<code>` per active check
+            and an `entity:<type>` per entity type (FE014).'
           items:
             $ref: '#/components/schemas/TargetField'
           title: Target Fields
           type: array
         templates:
-          description: Plantillas para crear un flujo ya configurado (FE013).
+          description: Templates to create an already configured flow (FE013).
           items:
             $ref: '#/components/schemas/ValueLabel'
           title: Templates
           type: array
         origin:
-          description: 'Origen de datos activo: un Output «campo» solo puede ejecutarse con `real` (FE013).'
+          description: 'Active data origin: a “campo” Output can only run with `real` (FE013).'
           enum:
           - sintetico
           - real
@@ -6503,7 +6499,7 @@ components:
           title: Node Id
         severity:
           default: error
-          description: '`warning` avisa sin impedir la ejecución (FE012); `error` la impide.'
+          description: '`warning` warns without preventing the run (FE012); `error` prevents it.'
           enum:
           - error
           - warning
@@ -6516,7 +6512,7 @@ components:
       type: object
     FlowIssues:
       additionalProperties: false
-      description: 'E6: incidencias de completitud que impiden ejecutar un flujo.'
+      description: 'E6: completeness issues that prevent running a flow.'
       properties:
         detail:
           items:
@@ -6549,7 +6545,7 @@ components:
           title: Max Field Name
           type: integer
         max_mappings:
-          description: Asignaciones de un Output «campo» (FE014).
+          description: Mappings of a “campo” Output (FE014).
           title: Max Mappings
           type: integer
         max_destination:
@@ -6652,7 +6648,8 @@ components:
       type: object
     GenesysConnector:
       additionalProperties: false
-      description: Estado del conector real. Con el servicio de ingesta caído, `service` es `no_disponible` y el resto, nulo.
+      description: Status of the real connector. With the ingestion service down, `service` is `no_disponible` and the rest
+        is null.
       properties:
         service:
           enum:
@@ -6669,7 +6666,7 @@ components:
           anyOf:
           - type: boolean
           - type: 'null'
-          description: Si el servicio de ingesta tiene `GENESYS_*`.
+          description: Whether the ingestion service has `GENESYS_*`.
           title: Credentials Configured
         database:
           anyOf:
@@ -6680,7 +6677,7 @@ components:
           anyOf:
           - $ref: '#/components/schemas/GenesysTest'
           - type: 'null'
-          description: Última «Probar conexión» desde que arrancó el servicio.
+          description: Last “Test connection” since the service started.
         last_download:
           anyOf:
           - $ref: '#/components/schemas/GenesysLastDownload'
@@ -6722,7 +6719,7 @@ components:
       title: GenesysConversations
       type: object
     GenesysInfo:
-      description: 'Analítica que da Genesys de una conversación real (FE011): solo existe en el origen `real`.'
+      description: 'Analytics that Genesys gives for a real conversation (FE011): it only exists in the `real` origin.'
       properties:
         genesys_id:
           title: Genesys Id
@@ -6872,7 +6869,7 @@ components:
           anyOf:
           - type: string
           - type: 'null'
-          description: Nombre de la organización de Genesys, si la conexión funciona.
+          description: Name of the Genesys organization, if the connection works.
           title: Organization
         region:
           anyOf:
@@ -6923,7 +6920,7 @@ components:
       type: object
     GraphErrors:
       additionalProperties: false
-      description: 'E5: errores de integridad de un grafo de flujo.'
+      description: 'E5: integrity errors of a flow graph.'
       properties:
         detail:
           items:
@@ -6993,11 +6990,11 @@ components:
       properties:
         query:
           additionalProperties: true
-          description: Consulta editable (formato `Query`), sin ejecutar.
+          description: Editable query (`Query` format), not run.
           title: Query
           type: object
         unrecognized:
-          description: Palabras que el intérprete no ha entendido.
+          description: Words the interpreter did not understand.
           items:
             type: string
           title: Unrecognized
@@ -7322,7 +7319,7 @@ components:
           title: Email
           type: string
         role:
-          description: Código del rol.
+          description: Role code.
           title: Role
           type: string
         role_name:
@@ -7369,7 +7366,7 @@ components:
           title: Count
           type: integer
         percent:
-          description: Un decimal; los porcentajes suman exactamente 100.
+          description: One decimal; the percentages add up to exactly 100.
           title: Percent
           type: number
       required:
@@ -7411,7 +7408,7 @@ components:
           title: Label
           type: string
         temperature:
-          description: Si el modelo admite `temperature`; si no, no se le envía (FE013).
+          description: Whether the model supports `temperature`; if not, it is not sent (FE013).
           title: Temperature
           type: boolean
       required:
@@ -7468,11 +7465,11 @@ components:
           - type: 'null'
           title: Message
         rejected:
-          description: 'Prompt con LLM: respuestas fuera del formato de salida (FE013).'
+          description: 'Prompt with an LLM: answers outside the output format (FE013).'
           title: Rejected
           type: integer
         failed:
-          description: 'Prompt con LLM: conversaciones sin respuesta del proveedor (FE013).'
+          description: 'Prompt with an LLM: conversations without a response from the provider (FE013).'
           title: Failed
           type: integer
       required:
@@ -7638,7 +7635,7 @@ components:
       additionalProperties: false
       properties:
         version:
-          description: Sube con cada cambio aceptado.
+          description: Increases with each accepted change.
           title: Version
           type: integer
         general:
@@ -7766,7 +7763,7 @@ components:
           title: Status
           type: string
         reason:
-          description: Motivo, sin datos de la conversación ni del proveedor.
+          description: Reason, without conversation or provider data.
           title: Reason
           type: string
       required:
@@ -7811,7 +7808,7 @@ components:
           title: Label
           type: string
         models:
-          description: El primero es el que se propone al elegir el proveedor.
+          description: The first one is proposed when the provider is chosen.
           items:
             $ref: '#/components/schemas/ModelOption'
           title: Models
@@ -7870,7 +7867,7 @@ components:
       type: object
     QueryErrors:
       additionalProperties: false
-      description: 'E4: errores de una consulta del explorador.'
+      description: 'E4: errors of an explorer query.'
       properties:
         detail:
           items:
@@ -7946,7 +7943,7 @@ components:
       additionalProperties: false
       properties:
         path:
-          description: Ruta del nodo de la consulta.
+          description: Path of the query node.
           examples:
           - root.conditions[0]
           title: Path
@@ -8048,7 +8045,7 @@ components:
       additionalProperties: false
       properties:
         id:
-          description: Identificador `1RO-…`, derivado del código.
+          description: Identifier `1RO-…`, derived from the code.
           title: Id
           type: string
         code:
@@ -8061,7 +8058,7 @@ components:
           title: Builtin
           type: boolean
         permissions:
-          description: En el orden del catálogo de permisos.
+          description: In the order of the permission catalog.
           items:
             type: string
           title: Permissions
@@ -8087,7 +8084,7 @@ components:
           title: Items
           type: array
         permissions:
-          description: Catálogo de los 9 permisos con su etiqueta.
+          description: Catalog of the 9 permissions with their label.
           items:
             $ref: '#/components/schemas/ValueLabel'
           title: Permissions
@@ -8148,17 +8145,17 @@ components:
           type: integer
         graph:
           $ref: '#/components/schemas/Graph'
-          description: Copia del grafo ejecutado.
+          description: Copy of the executed graph.
         nodes:
           additionalProperties:
             $ref: '#/components/schemas/NodeState'
-          description: Estado por identificador de nodo.
+          description: Status per node identifier.
           title: Nodes
           type: object
         outputs:
           additionalProperties:
             $ref: '#/components/schemas/RunOutput'
-          description: Resultado por identificador de nodo Output.
+          description: Result per Output node identifier.
           title: Outputs
           type: object
         failures:
@@ -8166,7 +8163,7 @@ components:
             items:
               $ref: '#/components/schemas/PromptFailure'
             type: array
-          description: Por nodo Prompt con LLM, las conversaciones excluidas de los outputs (FE013).
+          description: Per Prompt node with an LLM, the conversations excluded from the outputs (FE013).
           title: Failures
           type: object
       required:
@@ -8213,7 +8210,7 @@ components:
           title: Kind
           type: string
         destination:
-          description: Nombre de destino o, en `campo`, los campos destino («Summary + Main topic»).
+          description: Destination name or, in `campo`, the target fields (“Summary + Main topic”).
           title: Destination
           type: string
         result:
@@ -8458,7 +8455,7 @@ components:
           type: string
         query:
           additionalProperties: true
-          description: Consulta canónica (formato `Query`).
+          description: Canonical query (`Query` format).
           title: Query
           type: object
         created_at:
@@ -8520,7 +8517,7 @@ components:
           title: End Turn
           type: integer
         score:
-          description: Similitud coseno con 4 decimales; no es una probabilidad.
+          description: Cosine similarity with 4 decimals; it is not a probability.
           maximum: 1
           minimum: 0
           title: Score
@@ -8618,14 +8615,14 @@ components:
         period:
           $ref: '#/components/schemas/Period'
         total:
-          description: Resultados tras el umbral y la agrupación, antes de `limit`.
+          description: Results after the threshold and the grouping, before `limit`.
           title: Total
           type: integer
         max_score:
           anyOf:
           - type: number
           - type: 'null'
-          description: Mejor puntuación antes del umbral.
+          description: Best score before the threshold.
           title: Max Score
         results:
           items:
@@ -8678,7 +8675,7 @@ components:
       additionalProperties: false
       properties:
         origin:
-          description: '`sintetico` (dataset generado) o `real` (conversaciones de Genesys guardadas por la ingesta).'
+          description: '`sintetico` (generated dataset) or `real` (Genesys conversations stored by the ingestion).'
           enum:
           - sintetico
           - real
@@ -8690,7 +8687,7 @@ components:
       type: object
     SourcesConfig:
       additionalProperties: false
-      description: 'Origen de datos de toda la plataforma (FE012): el dataset sintético o las conversaciones reales de Genesys.'
+      description: 'Data origin of the whole platform (FE012): the synthetic dataset or the real Genesys conversations.'
       properties:
         origin:
           enum:
@@ -8804,7 +8801,7 @@ components:
           - type: number
           - type: integer
           - type: 'null'
-          description: '`null` si no hay conversaciones aplicables.'
+          description: '`null` if there are no applicable conversations.'
           title: Value
         previous:
           anyOf:
@@ -8821,7 +8818,7 @@ components:
           anyOf:
           - type: number
           - type: 'null'
-          description: '`null` si el anterior es 0 o nulo, o si la unidad es `índice`.'
+          description: '`null` if the previous one is 0 or null, or if the unit is `índice`.'
           title: Delta Pct
         target:
           anyOf:
@@ -8836,19 +8833,19 @@ components:
             - rojo
             type: string
           - type: 'null'
-          description: Según los umbrales; `null` sin umbrales.
+          description: According to the thresholds; `null` without thresholds.
           title: Status
         pending:
-          description: '`true` si depende del análisis de la plataforma y las conversaciones reales aún no lo tienen: la UI
-            muestra «Sin datos · pendiente de análisis».'
+          description: '`true` if it depends on the platform analysis and the real conversations do not have it yet: the UI
+            shows “No data · analysis pending”.'
           title: Pending
           type: boolean
         based_on:
           anyOf:
           - type: integer
           - type: 'null'
-          description: Conversaciones sobre las que se calcula, en los KPIs que pueden usar solo una parte (AHT, sentimiento,
-            primera respuesta); `null` en el resto.
+          description: Conversations the value is computed on, for KPIs that can use only a part (AHT, sentiment, first response);
+            `null` for the rest.
           title: Based On
       required:
       - code
@@ -8883,7 +8880,7 @@ components:
         conversation:
           $ref: '#/components/schemas/ConversationItem'
         result:
-          description: Texto, etiqueta u objeto JSON según el formato del prompt.
+          description: Text, label or JSON object depending on the prompt format.
           title: Result
       required:
       - conversation
@@ -8900,7 +8897,7 @@ components:
           title: Label
           type: string
         group:
-          description: Grupo del desplegable (FE014).
+          description: Dropdown group (FE014).
           enum:
           - analisis
           - cumplimiento
@@ -8935,7 +8932,7 @@ components:
       additionalProperties: false
       properties:
         id:
-          description: Identificador `1TP-…` (main topic) o `1TS-…` (tema secundario).
+          description: Identifier `1TP-…` (main topic) or `1TS-…` (secondary topic).
           title: Id
           type: string
         code:
@@ -9020,7 +9017,7 @@ components:
         period:
           $ref: '#/components/schemas/Period'
         pending:
-          description: '`true` si el KPI depende del análisis y aún está pendiente (puntos `null`).'
+          description: '`true` if the KPI depends on the analysis and is still pending (`null` points).'
           title: Pending
           type: boolean
         points:
@@ -9128,33 +9125,33 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: Token de `POST /api/auth/login`. Caduca a las 8 h (`AUTH_TOKEN_TTL_SECONDS`).
+      description: Token from `POST /api/auth/login`. Expires after 8 h (`AUTH_TOKEN_TTL_SECONDS`).
   headers:
     XAuthVersion:
-      description: Versión de usuarios y roles; si cambia, hay que volver a pedir `/api/auth/me` (FE006).
+      description: Users and roles version; if it changes, `/api/auth/me` must be requested again (FE006).
       schema:
         type: integer
         minimum: 0
 tags:
 - name: health
-  description: Sonda de salud.
+  description: Health probe.
 - name: auth
-  description: Inicio de sesión y usuario actual.
+  description: Sign-in and current user.
 - name: metrics
-  description: KPIs de los dashboards (FE001, FE005).
+  description: Dashboard KPIs (FE001, FE005).
 - name: conversations
-  description: Listado, detalle y catálogo de filtros (FE001).
+  description: List, detail and filter catalog (FE001).
 - name: query
-  description: Explorador de consultas asistidas y consultas guardadas (FE002).
+  description: Assisted query explorer and saved queries (FE002).
 - name: search
-  description: Búsqueda semántica y conversaciones similares (FE003).
+  description: Semantic search and similar conversations (FE003).
 - name: flows
-  description: Flujos de insights y sus ejecuciones simuladas (FE004).
+  description: Insight flows and their simulated runs (FE004).
 - name: config
-  description: Configuración global de la plataforma (FE005).
+  description: Global platform settings (FE005).
 - name: downloads
-  description: Flujos de descarga de conversaciones de Genesys Cloud (FE011).
+  description: Genesys Cloud conversation download flows (FE011).
 - name: users
-  description: Usuarios, roles y matriz de permisos (FE006).
+  description: Users, roles and permission matrix (FE006).
 security:
 - bearerAuth: []

@@ -70,7 +70,7 @@ def test_each_field_is_written_kept_and_overwritten(service, pg_url, cid, target
         "provider": "gemini", "model": "gemini-3.5-flash-lite", "run_id": RUN_ID}
     kept = _write(service, cid, {target: other})
     assert kept["outcomes"] == {target: "omitido"}
-    assert kept["reasons"] == {target: "Ya tenía valor"}
+    assert kept["reasons"] == {target: "Already had a value"}
     assert _row(pg_url, cid)[column] == stored
     assert _write(service, cid, {target: other}, overwrite=True)["outcomes"] == {target: "escrito"}
     assert _row(pg_url, cid)[column] == (pytest.approx(other) if isinstance(other, float) else other)
@@ -108,7 +108,7 @@ def test_sentiment_is_not_written_when_genesys_gives_it(service, pg_url, cid):
     for overwrite in (False, True):
         result = _write(service, cid, {"sentiment": -0.8, "resolution": "resuelta"}, overwrite)
         assert result["outcomes"]["sentiment"] == "omitido"
-        assert result["reasons"] == {"sentiment": "Genesys ya da el sentimiento"}
+        assert result["reasons"] == {"sentiment": "Genesys already gives the sentiment"}
     row = _row(pg_url, cid)
     assert row["sentiment"] is None and "sentiment" not in row["llm_meta"]
     assert row["resolution"] == "resuelta"

@@ -40,7 +40,7 @@ class RoleIn(BaseModel):
     def _known_permissions(cls, value: list[str]) -> list[str]:
         unknown = [p for p in value if p not in ALL_PERMISSIONS]
         if unknown:
-            raise ValueError(f"Permiso desconocido: {', '.join(unknown)}")
+            raise ValueError(f"Unknown permission: {', '.join(unknown)}")
         return value
 
 
@@ -78,28 +78,28 @@ def _role_body(role: Role) -> dict:
 
 def _validated_user(data: UserIn, user_id: str, users: auth.Users, roles: auth.Roles) -> None:
     if data.role not in roles:
-        raise _field_error(status.HTTP_422_UNPROCESSABLE_CONTENT, "role", "Rol desconocido")
+        raise _field_error(status.HTTP_422_UNPROCESSABLE_CONTENT, "role", "Unknown role")
     if any(u.email.lower() == data.email and u.id != user_id for u in users.values()):
-        raise _field_error(status.HTTP_409_CONFLICT, "email", "Ya existe un usuario con ese email")
+        raise _field_error(status.HTTP_409_CONFLICT, "email", "A user with that email already exists")
 
 
 def _find_user(user_id: str) -> User:
     user = auth.get_store().get(ids.normalize(user_id))
     if user is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
 
 def _find_role(role_id: str) -> Role:
     role = next((r for r in auth.get_store().roles.values() if r.id == ids.normalize(role_id)), None)
     if role is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Rol no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Role not found")
     return role
 
 
 def _gone(label: str) -> HTTPException:
     """Existía al buscarlo, pero otra persona lo ha borrado antes de escribir."""
-    return HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{label} no encontrado")
+    return HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{label} not found")
 
 
 # --- Usuarios ---
@@ -122,7 +122,7 @@ def create_user(payload: Any = Body(...), actor: User = Depends(ADMIN)) -> dict:
         _validated_user(data, user.id, users, roles)
         return None, user.audit_value(), {**users, user.id: user}, roles
 
-    _apply(actor, f"Usuario «{user.name}»", change)
+    _apply(actor, f"User “{user.name}”", change)
     return _user_body(user)
 
 
@@ -133,13 +133,13 @@ def update_user(user_id: str, payload: Any = Body(...), actor: User = Depends(AD
 
     def change(users: auth.Users, roles: auth.Roles):
         if current.id not in users:
-            raise _gone("Usuario")
+            raise _gone("User")
         _validated_user(data, current.id, users, roles)
         old = users[current.id]
         new = replace(old, name=data.name, email=data.email, role=data.role, active=data.active)
         return old.audit_value(), new.audit_value(), {**users, new.id: new}, roles
 
-    _apply(actor, f"Usuario «{current.name}»", change)
+    _apply(actor, f"User “{current.name}”", change)
     return _user_body(auth.get_store().users[current.id])
 
 
@@ -152,7 +152,7 @@ def list_audit() -> dict:
 
 def _check_unique_role_name(roles: auth.Roles, name: str, code: str) -> None:
     if any(normalize_text(r.name) == normalize_text(name) and r.code != code for r in roles.values()):
-        raise _field_error(status.HTTP_409_CONFLICT, "name", "Ya existe un rol con ese nombre")
+        raise _field_error(status.HTTP_409_CONFLICT, "name", "A role with that name already exists")
 
 
 @router.get("/roles", dependencies=[Depends(ADMIN)])
@@ -168,11 +168,11 @@ def create_role(payload: Any = Body(...), actor: User = Depends(ADMIN)) -> dict:
 
     def change(users: auth.Users, roles: auth.Roles):
         if role.code in roles:
-            raise _field_error(status.HTTP_409_CONFLICT, "code", "Ya existe un rol con ese código")
+            raise _field_error(status.HTTP_409_CONFLICT, "code", "A role with that code already exists")
         _check_unique_role_name(roles, role.name, role.code)
         return None, role.audit_value(), users, {**roles, role.code: role}
 
-    _apply(actor, f"Rol «{role.name}»", change)
+    _apply(actor, f"Role “{role.name}”", change)
     return _role_body(role)
 
 
@@ -181,17 +181,17 @@ def update_role(role_id: str, payload: Any = Body(...), actor: User = Depends(AD
     current = _find_role(role_id)
     data = parse_body(RoleIn, payload)
     if current.builtin and data.name != current.name:
-        raise _field_error(status.HTTP_422_UNPROCESSABLE_CONTENT, "name", "El nombre de un rol base no se puede cambiar")
+        raise _field_error(status.HTTP_422_UNPROCESSABLE_CONTENT, "name", "The name of a built-in role cannot be changed")
 
     def change(users: auth.Users, roles: auth.Roles):
         if current.code not in roles:
-            raise _gone("Rol")
+            raise _gone("Role")
         _check_unique_role_name(roles, data.name, current.code)
         old = roles[current.code]
         new = replace(old, name=data.name, permissions=frozenset(data.permissions))
         return old.audit_value(), new.audit_value(), users, {**roles, new.code: new}
 
-    _apply(actor, f"Rol «{current.name}»", change)
+    _apply(actor, f"Role “{current.name}”", change)
     return _role_body(auth.get_store().roles[current.code])
 
 
@@ -199,16 +199,16 @@ def update_role(role_id: str, payload: Any = Body(...), actor: User = Depends(AD
 def delete_role(role_id: str, actor: User = Depends(ADMIN)) -> Response:
     role = _find_role(role_id)
     if role.builtin:
-        raise _conflict("Es un rol base: no se puede borrar")
+        raise _conflict("It is a built-in role: it cannot be deleted")
 
     def change(users: auth.Users, roles: auth.Roles):
         if role.code not in roles:
-            raise _gone("Rol")
+            raise _gone("Role")
         if any(u.role == role.code for u in users.values()):
-            raise _conflict("Tiene usuarios asignados: cámbialos de rol antes de borrarlo")
+            raise _conflict("It has assigned users: change their role before deleting it")
         remaining = dict(roles)
         removed = remaining.pop(role.code)
         return removed.audit_value(), None, users, remaining
 
-    _apply(actor, f"Rol «{role.name}»", change)
+    _apply(actor, f"Role “{role.name}”", change)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

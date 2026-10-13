@@ -33,7 +33,7 @@ MAX_PARALLEL_RUNS = 2
 def genesys_client_factory(settings: Settings) -> Callable[[], GenesysClient]:
     def factory() -> GenesysClient:
         if not (settings.genesys_client_id and settings.genesys_client_secret and settings.genesys_region):
-            raise GenesysAuthError("Faltan las credenciales de Genesys (GENESYS_*) en el .env")
+            raise GenesysAuthError("Genesys credentials (GENESYS_*) are missing in the .env")
         return GenesysClient(settings.genesys_client_id, settings.genesys_client_secret, settings.genesys_region)
     return factory
 
@@ -67,23 +67,23 @@ def create_app(settings: Settings | None = None, migrate_on_start: bool = True,
         if pool:
             pool.shutdown(wait=False, cancel_futures=True)
 
-    app = FastAPI(title="Servicio de ingesta de Genesys Cloud", version=VERSION, lifespan=lifespan,
+    app = FastAPI(title="Genesys Cloud ingestion service", version=VERSION, lifespan=lifespan,
                   dependencies=[Depends(internal_token_guard(settings.token))])
     app.state.settings = settings
     app.state.scheduler = programmer
 
-    @app.get("/health", summary="Estado del servicio y de PostgreSQL")
+    @app.get("/health", summary="Status of the service and of PostgreSQL")
     def health():
         if not db.ping(settings.database_url):
-            return JSONResponse({"status": "error", "database": "no disponible"}, status_code=503)
+            return JSONResponse({"status": "error", "database": "unavailable"}, status_code=503)
         return {"status": "ok", "database": "ok"}
 
-    @app.get("/conversations/{key}", summary="Conversación normalizada por su 1CO o su identificador de Genesys")
+    @app.get("/conversations/{key}", summary="Normalized conversation by its 1CO or its Genesys identifier")
     def get_conversation(key: str):
         with db.connect(settings.database_url) as conn:
             conversation = read_conversation(conn, key)
         if conversation is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversation not found")
         return conversation
 
     app.include_router(build_router(ctx))

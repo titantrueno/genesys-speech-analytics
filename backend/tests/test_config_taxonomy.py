@@ -134,7 +134,7 @@ def test_edit_is_audited_with_before_and_after(api):
     item = topic(api, "cajeros")
     api.put(f"{MAIN}/{item['id']}", json={**editable(item), "keywords": ["cajero", "atm"]})
     entry = audit(api, "taxonomia")[0]
-    assert entry["element"] == "Main topic «Incidencia en cajero»"
+    assert entry["element"] == "Main topic “Incidencia en cajero”"
     assert entry["before"]["keywords"] == ["cajero"]
     assert entry["after"]["keywords"] == ["cajero", "atm"]
 
@@ -146,7 +146,7 @@ def test_a_topic_in_use_cannot_be_deleted(api):
     assert item["conversations"] > 0
     response = api.delete(f"{MAIN}/{item['id']}")
     assert response.status_code == 409
-    assert "desactivar" in response.json()["detail"].lower()
+    assert "deactivated" in response.json()["detail"].lower()
     assert topic(api, "cajeros")
     assert audit(api) == []
 

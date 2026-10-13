@@ -33,14 +33,14 @@ def test_a_non_finite_number_passes_the_format_but_is_rejected_by_its_target():
         {"name": "csat", "type": "numero"}]}})
     for raw in ("NaN", "Infinity", "-Infinity"):
         value = validate_answer(config, f'{{"csat": {raw}}}')["csat"]
-        with pytest.raises(ValueRejected, match="número"):
+        with pytest.raises(ValueRejected, match="number"):
             coerce("csat", value)
 
 
 def test_a_check_deactivated_during_the_run_is_rejected(monkeypatch):
     check = _active_check()
     monkeypatch.setitem(get_config().checks, check.code, replace(check, active=False))
-    with pytest.raises(ValueRejected, match="desactivado"):
+    with pytest.raises(ValueRejected, match="disabled"):
         coerce(f"compliance:{check.code}", "cumple")
 
 
@@ -172,4 +172,4 @@ def test_a_taxonomy_too_large_for_the_template_is_explained(api, monkeypatch):
         monkeypatch.setitem(topics, f"tema_{i}", replace(model, code=f"tema_{i}", name=f"Tema {i}", active=True))
     response = api.post("/api/flows", json={"name": "x", "template": "analisis_completo"})
     assert response.status_code == 422
-    assert "temas" in response.json()["detail"]
+    assert "topics" in response.json()["detail"]

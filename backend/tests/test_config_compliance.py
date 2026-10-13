@@ -177,12 +177,12 @@ def test_deactivating_removes_the_check_from_detail_kpi_catalog_and_explorer(api
 def test_builtin_checks_cannot_be_deleted_but_new_ones_can(api):
     builtin = check(api, "saludo")
     response = api.delete(f"{CHECKS}/{builtin['id']}")
-    assert response.status_code == 409 and "desactivar" in response.json()["detail"].lower()
+    assert response.status_code == 409 and "deactivated" in response.json()["detail"].lower()
     created = create(api)
     assert api.delete(f"{CHECKS}/{created['id']}").status_code == 204
     assert "oferta_encuesta" not in {c["code"] for c in checks(api)}
     entry = audit(api, "cumplimiento")[0]
-    assert entry["element"] == "Check «Ofrecimiento de encuesta»" and entry["after"] is None
+    assert entry["element"] == "Check “Ofrecimiento de encuesta”" and entry["after"] is None
 
 
 @pytest.mark.parametrize("check_id", [ids.stable_id(ids.CHECK, "no_existe"), "basura",

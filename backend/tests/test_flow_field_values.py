@@ -237,12 +237,12 @@ def test_one_invalid_field_is_rejected_and_the_rest_are_written(api, llm, writer
 
 def test_skipped_fields_carry_the_reason_from_the_writer(api, llm, writer, real_origin):
     llm.answer = lambda body: _answer()
-    writer.reasons = {"sentiment": "Genesys ya da el sentimiento"}
+    writer.reasons = {"sentiment": "Genesys already gives the sentiment"}
     flow = flow_with(api, _flow(_full_prompt(), _output()))
     snapshot = _finished(api, flow, run(api, flow)["id"])
     row = next(iter(snapshot["outputs"].values()))["result"]["rows"][0]
     assert row["states"]["sentiment"] == "omitido"
-    assert row["reasons"]["sentiment"] == "Genesys ya da el sentimiento"
+    assert row["reasons"]["sentiment"] == "Genesys already gives the sentiment"
 
 
 def test_a_long_list_of_targets_gets_a_short_destination(api, llm, writer, real_origin):
@@ -250,4 +250,4 @@ def test_a_long_list_of_targets_gets_a_short_destination(api, llm, writer, real_
     llm.answer = lambda body: _answer()
     flow = flow_with(api, _flow(_full_prompt(), _output()))
     output = next(iter(_finished(api, flow, run(api, flow)["id"])["outputs"].values()))
-    assert output["destination"] == f"Resolución + Riesgo de abandono y {len(FULL_MAPPINGS) - 2} campos más"
+    assert output["destination"] == f"Resolución + Riesgo de abandono and {len(FULL_MAPPINGS) - 2} more fields"

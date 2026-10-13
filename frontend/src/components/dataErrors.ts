@@ -1,6 +1,6 @@
 import { ApiError } from '../api/client'
 
-const MESSAGE = 'Los datos reales no están disponibles'
+const MESSAGE = 'Real data is not available'
 
 /** El origen real no responde (FE012): la API contesta `503` con este mensaje. El `503` del servicio de ingesta es otro. */
 export function isDataUnavailable(error: unknown): error is ApiError {

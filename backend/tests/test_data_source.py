@@ -21,7 +21,7 @@ def test_switching_is_audited_under_data_sources(api):
     assert response.json()["sources"] == {"origin": "real"}
     entry = audit(api, "fuentes")[0]
     assert (entry["before"], entry["after"]) == ({"origin": "sintetico"}, {"origin": "real"})
-    assert entry["element"] == "Origen de datos"
+    assert entry["element"] == "Data origin"
 
 
 def test_an_unknown_origin_is_rejected(api):

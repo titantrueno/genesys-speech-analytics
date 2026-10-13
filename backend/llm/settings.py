@@ -27,13 +27,13 @@ def _concurrency(value: str | None) -> int:
     if value is None:
         return DEFAULT_CONCURRENCY
     if not value.isdigit() or not 1 <= int(value) <= MAX_CONCURRENCY:
-        raise SettingsError(f"LLM_MAX_CONCURRENCY debe ser un entero entre 1 y {MAX_CONCURRENCY}")
+        raise SettingsError(f"LLM_MAX_CONCURRENCY must be an integer between 1 and {MAX_CONCURRENCY}")
     return int(value)
 
 
 def load_settings(path: Path = ROOT_ENV) -> Settings:
     values = read_env(LLM_KEYS, path)
     if "LLM_TOKEN" not in values:
-        raise SettingsError(f"Falta LLM_TOKEN en el entorno o en {path.name}")
+        raise SettingsError(f"Missing LLM_TOKEN in the environment or in {path.name}")
     return Settings(token=values["LLM_TOKEN"], api_keys={k: values[k] for k in PROVIDER_KEYS if k in values},
                     max_concurrency=_concurrency(values.get("LLM_MAX_CONCURRENCY")))

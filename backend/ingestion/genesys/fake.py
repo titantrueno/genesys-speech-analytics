@@ -95,12 +95,12 @@ class FakeGenesys:
             key = request.url.path.lstrip("/")
             return self._json(self.documents[key]) if key in self.documents else self._json({}, 404)
         if request.url.path != "/oauth/token" and not self._authorized(request):
-            return self._json({"message": "Token no válido"}, 401)
+            return self._json({"message": "Invalid token"}, 401)
         for method, pattern, handler in _ROUTES:
             match = pattern.match(request.url.path)
             if method == request.method and match:
                 return getattr(self, handler)(request, **match.groupdict())
-        return self._json({"message": f"Ruta no simulada: {request.method} {request.url.path}"}, 404)
+        return self._json({"message": f"Route not simulated: {request.method} {request.url.path}"}, 404)
 
     def _authorized(self, request: httpx.Request) -> bool:
         return request.headers.get("authorization", "") in {f"Bearer {t}" for t in self.issued_tokens}

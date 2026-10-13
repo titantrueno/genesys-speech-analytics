@@ -84,8 +84,8 @@ def test_gemini_asks_for_json_with_the_schema_and_omits_an_unsupported_temperatu
 
 
 @pytest.mark.parametrize("body, message", [
-    ({"promptFeedback": {"blockReason": "SAFETY"}}, "bloqueó el prompt"),
-    ({"candidates": [{"content": {"parts": [{"text": "a medias"}]}, "finishReason": "MAX_TOKENS"}]}, "cortada"),
+    ({"promptFeedback": {"blockReason": "SAFETY"}}, "blocked the prompt"),
+    ({"candidates": [{"content": {"parts": [{"text": "a medias"}]}, "finishReason": "MAX_TOKENS"}]}, "truncated"),
     ({"candidates": [{"finishReason": "SAFETY"}]}, "SAFETY"),
 ])
 def test_gemini_blocked_or_cut_answers_are_failures(body, message):
@@ -123,8 +123,8 @@ def test_openai_asks_for_strict_json_schema_and_omits_an_unsupported_temperature
 
 
 @pytest.mark.parametrize("change, message", [
-    ({"message": {"role": "assistant", "content": None, "refusal": "No puedo ayudar con eso."}}, "declinó"),
-    ({"finish_reason": "length"}, "cortada"),
+    ({"message": {"role": "assistant", "content": None, "refusal": "No puedo ayudar con eso."}}, "declined"),
+    ({"finish_reason": "length"}, "truncated"),
 ])
 def test_openai_refusals_and_cut_answers_are_failures(change, message):
     body = {**OPENAI_RESPONSE, "choices": [{**OPENAI_RESPONSE["choices"][0], **change}]}
@@ -156,7 +156,7 @@ def test_anthropic_haiku_has_no_server_side_fallback_and_json_uses_output_config
     assert recorder.sent["output_config"] == {"format": {"type": "json_schema", "schema": SCHEMA}}
 
 
-@pytest.mark.parametrize("stop_reason, message", [("refusal", "declinó"), ("max_tokens", "cortada")])
+@pytest.mark.parametrize("stop_reason, message", [("refusal", "declined"), ("max_tokens", "truncated")])
 def test_anthropic_refusals_and_cut_answers_are_failures(stop_reason, message):
     with pytest.raises(ProviderFailure, match=message):
         _complete("anthropic", Recorder({**ANTHROPIC_RESPONSE, "stop_reason": stop_reason}), "claude-opus-5-5")
@@ -182,7 +182,7 @@ def test_anthropic_overloaded_529_is_transient():
 @pytest.mark.parametrize("name, model", [("gemini", "gemini-3.8-flash"), ("openai", "gpt-6.1-sol"),
                                          ("anthropic", "claude-opus-5-5")])
 def test_an_unexpected_body_is_a_failure(name, model):
-    with pytest.raises(ProviderFailure, match="forma inesperada"):
+    with pytest.raises(ProviderFailure, match="unexpected shape"):
         _complete(name, Recorder({"nada": "útil"}), model)
 
 

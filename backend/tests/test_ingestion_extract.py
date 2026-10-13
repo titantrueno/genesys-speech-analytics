@@ -42,7 +42,7 @@ def test_search_skips_conversations_in_progress_of_other_media_or_channels():
     fake = make_fake([voice, chat, running, email])
     result = search(client_factory(fake)(), DAY_START, DAY_END, {"voz"})
     assert [d["conversationId"] for d in result.found] == [voice.id]
-    assert dict(result.skipped) == {running.id: "en curso", email.id: "otro medio", chat.id: "otro canal"}
+    assert dict(result.skipped) == {running.id: "in progress", email.id: "other media", chat.id: "other channel"}
 
 
 def test_fetch_tolerates_a_404_of_a_communication_already_included():

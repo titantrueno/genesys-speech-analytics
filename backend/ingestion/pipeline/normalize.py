@@ -218,7 +218,7 @@ class _Builder:
     def _named(self, kind: str, genesys_id: str, fallback: str | None = None) -> str:
         name = getattr(self.names, kind)(genesys_id) or fallback
         if not name:
-            self.warnings.append(f"Nombre no resuelto ({kind}): se usa el identificador de Genesys {genesys_id}")
+            self.warnings.append(f"Name not resolved ({kind}): the Genesys identifier {genesys_id} is used")
         return name or genesys_id
 
     def queue_id(self, genesys_id: str, fallback: str | None = None) -> str:
@@ -428,7 +428,7 @@ def normalize(raw: RawConversation, names: Names) -> NormalizedConversation:
                                   offset_s=_offset(_ms(_time(entity["timestamp"])), b.start_ms),
                                   message_id=entity.get("id"), sentiment=message_sentiment(entity.get("id"))))
         else:
-            b.warnings.append("La API de mensajes no respondió: turnos construidos con la transcripción")
+            b.warnings.append("The messages API did not respond: turns built from the transcript")
             groups = sorted(by_message.items(), key=lambda item: min((p.start_ms, p.order) for p in item[1]))
             for message_id, group in groups:
                 group.sort(key=lambda p: (p.start_ms, p.order))
@@ -551,15 +551,15 @@ def normalize(raw: RawConversation, names: Names) -> NormalizedConversation:
     bot_spoke = any((sum(b.metrics_of(s).get("tIvr", [])) > 0) if s.kind == "ivr" else True for s in bots)
     if not turns:
         quality = "sin_transcripcion"
-        b.warnings.append("Conversación sin transcripción")
+        b.warnings.append("Conversation without transcript")
     elif (agent_spoke and "agente" not in speaker_set) or (bot_spoke and "bot" not in speaker_set):
         quality = "parcial"
         missing = [who for who, spoke in (("agente", agent_spoke), ("bot", bot_spoke)) if spoke and who not in speaker_set]
-        b.warnings.append(f"Transcripción parcial: intervino {' y '.join(missing)} sin frases")
+        b.warnings.append(f"Partial transcript: {' and '.join(missing)} took part without phrases")
     else:
         quality = "completa"
     if undelivered:
-        b.warnings.append(f"{undelivered} mensaje(s) no entregado(s)")
+        b.warnings.append(f"{undelivered} undelivered message(s)")
     customer_values = [t.sentiment for t in turns if t.speaker == "cliente" and t.sentiment is not None]
     customer_sentiment = sta.get("sentimentScore")
     if customer_sentiment is None and customer_values:

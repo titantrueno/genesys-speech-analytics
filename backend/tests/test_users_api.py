@@ -112,7 +112,7 @@ def test_create_user(api):
 def test_duplicate_email_returns_409_on_the_email_field(api, email):
     response = api.post("/api/users", json={**NEW_USER, "email": email})
     assert response.status_code == 409
-    assert field(response) == [(("body", "email"), "Ya existe un usuario con ese email")]
+    assert field(response) == [(("body", "email"), "A user with that email already exists")]
 
 
 def test_duplicate_email_when_editing_returns_409(api):
@@ -171,7 +171,7 @@ def test_admin_cannot_deactivate_or_demote_self_through_the_api(api):
     for changes in ({"active": False}, {"role": "supervisor"}):
         response = api.put(f"/api/users/{admin['id']}", json=body_of(admin, **changes))
         assert response.status_code == 409
-        assert "a ti mismo" in response.json()["detail"]
+        assert "your own" in response.json()["detail"]
     assert get_user(api, ADMIN) == admin
     assert audit(api) == []
 
@@ -185,7 +185,7 @@ def test_last_active_admin_is_protected_through_the_api(api):
     for changes in ({"active": False}, {"role": "viewer"}):
         response = other.put(f"/api/users/{admin['id']}", json=body_of(admin, **changes))
         assert response.status_code == 409
-        assert "último administrador" in response.json()["detail"]
+        assert "last active administrator" in response.json()["detail"]
 
 
 # --- Roles y permisos ---
@@ -206,7 +206,7 @@ def test_base_roles_cannot_be_deleted(api):
     for code in ("admin", "supervisor", "analista", "viewer"):
         response = api.delete(f"/api/roles/{role_id(code)}")
         assert response.status_code == 409, code
-        assert "base" in response.json()["detail"]
+        assert "built-in" in response.json()["detail"]
     assert list(roles(api)) == ["admin", "supervisor", "analista", "viewer"]
 
 
@@ -224,7 +224,7 @@ def test_create_custom_role_assign_it_and_delete_it_once_unused(api):
     assert lector.get("/api/auth/me").json()["role_name"] == "Lector de flujos"
 
     in_use = api.delete(f"/api/roles/{role['id']}")
-    assert in_use.status_code == 409 and "usuarios" in in_use.json()["detail"]
+    assert in_use.status_code == 409 and "assigned users" in in_use.json()["detail"]
     api.put(f"/api/users/{created['id']}", json=body_of(created, role="viewer"))
     assert api.delete(f"/api/roles/{role['id']}").status_code == 204
     assert "lector_flujos" not in roles(api)
@@ -319,7 +319,7 @@ def test_each_user_and_role_change_is_audited(api):
     api.delete(f"/api/roles/{role_id('auditor')}")
 
     entries = list(reversed(audit(api)))
-    assert [e["element"] for e in entries] == ["Usuario «Lucía Pérez»"] * 3 + ["Rol «Auditor»"] * 3
+    assert [e["element"] for e in entries] == ["User “Lucía Pérez”"] * 3 + ["Role “Auditor”"] * 3
     assert all(e["section"] == "usuarios" and e["user"]["name"] == "Admin Demo" for e in entries)
     assert entries[0]["before"] is None and entries[0]["after"]["email"] == NEW_USER["email"]
     assert (entries[1]["before"]["role"], entries[1]["after"]["role"]) == ("analista", "viewer")

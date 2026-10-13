@@ -100,7 +100,7 @@ def test_the_writer_without_token_is_unavailable():
 class FailingSecondBatch(FakeWriter):
     def write(self, run_id, provider, model, overwrite, items):
         if self.calls:
-            raise WriterUnavailable("El servicio de ingesta no está disponible")
+            raise WriterUnavailable("The ingestion service is not available")
         return super().write(run_id, provider, model, overwrite, items)
 
 
@@ -118,7 +118,7 @@ def test_a_writer_failure_after_the_first_batch_says_how_much_was_saved(api, llm
     output = by_type(flow)["output"][0]
     assert snapshot["nodes"][output]["status"] == "error"
     assert snapshot["nodes"][output]["message"] == (
-        "El servicio de ingesta no está disponible: se guardaron 100 de 150 conversaciones.")
+        "The ingestion service is not available: 100 of 150 conversations were saved.")
     assert len(failing.calls) == 1
 
 
@@ -131,7 +131,7 @@ def test_the_main_topic_template_refuses_more_topics_than_labels(api):
         assert api.post("/api/config/taxonomy/main-topics", json=body).status_code == 201
     response = api.post("/api/flows", json={"name": "x", "template": "main_topic"})
     assert response.status_code == 422
-    assert "Generar summary y main topic" in response.json()["detail"]
+    assert "Generate summary and main topic" in response.json()["detail"]
     # La de una llamada no tiene ese límite: los valores permitidos admiten hasta 100.
     assert api.post("/api/flows", json={"name": "x", "template": "summary_main_topic"}).status_code == 201
 
@@ -152,7 +152,7 @@ def test_a_simulated_prompt_feeding_real_fields_warns_without_blocking(api, llm,
     body = api.post("/api/flows/validate", json=payload).json()
     warning = next(i for i in body["issues"] if i["code"] == "simulated_values_to_real_data")
     assert warning["severity"] == "warning" and body["valid"] is True
-    assert "simulados" in warning["message"]
+    assert "simulated" in warning["message"]
     # Con un proveedor real no hay aviso.
     real = api.post("/api/flows/validate", json=_flow(TEXT_PROMPT, {"kind": "campo", "mappings": [{"target": "summary"}]}))
     assert "simulated_values_to_real_data" not in {i["code"] for i in real.json()["issues"]}
@@ -168,4 +168,4 @@ def test_an_executor_without_writer_fails_the_output_with_a_clear_message():
     FlowExecutor(MockPromptRunner(), 0).execute(run_)
     output = next(n.id for n in graph.nodes if n.type == "output")
     assert run_.nodes[output].status == "error"
-    assert run_.nodes[output].message == "No hay dónde guardar los campos: falta el servicio de ingesta."
+    assert run_.nodes[output].message == "There is nowhere to save the fields: the ingestion service is missing."

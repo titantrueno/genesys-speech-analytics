@@ -131,7 +131,7 @@ def test_a_one_call_flow_writes_both_fields_visible_in_the_next_request(wired, l
     assert len(rows) == 4
     # Una conversación sin transcripción no se envía al LLM: queda rechazada y sin escribir (hallazgo de T9).
     empty = [r for r in rows if r["states"]["summary"] == "rechazado"]
-    assert all("no tiene transcripción" in r["reason"] for r in empty)
+    assert all("has no transcript" in r["reason"] for r in empty)
     written = [r["conversation"]["id"] for r in rows if r["states"]["summary"] == "escrito"]
     assert len(llm.requests) == len(written) == 4 - len(empty) > 0
     listed = api.get("/api/conversations", params={**QS, "main_topic": "comisiones", "page_size": 100}).json()

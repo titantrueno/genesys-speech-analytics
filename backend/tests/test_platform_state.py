@@ -101,7 +101,7 @@ def test_a_change_that_cannot_be_saved_is_rejected_and_not_applied(api, backend)
     assert api.post("/api/flows", json={"name": "Nuevo"}).status_code == 503
     response = api.delete(f"/api/flows/{flow['id']}")
     assert response.status_code == 503
-    assert response.json() == {"detail": "El servicio de ingesta no está disponible"}
+    assert response.json() == {"detail": "The ingestion service is not available"}
 
     backend.down = False
     current = api.get(f"/api/flows/{flow['id']}").json()
