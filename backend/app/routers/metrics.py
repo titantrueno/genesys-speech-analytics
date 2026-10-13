@@ -9,7 +9,7 @@ from app.config.kpis import DASHBOARDS
 from app.config.store import current_zone, get_config, local_day, topic_name
 from app.data.store import followup_index, get_dataset
 from app.services.filters import ConversationFilters, conversation_filters
-from app.services.kpis import (KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta,
+from app.services.kpis import (ANALYSIS_BASES, KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta,
                                delta_pct, kpi_bases, kpi_pending, pending_analysis, round_value)
 
 router = APIRouter(prefix="/api/metrics", tags=["metrics"],
@@ -105,8 +105,11 @@ def breakdown(
 ) -> dict:
     convs, followups = filters.apply(get_dataset()), followup_index()
     pending = pending_analysis(convs)
+    # KPIs del análisis sin el dato en ninguna conversación (FE014): el front los dice «pendientes» uno a uno.
+    pending_kpis = [code for code in ANALYSIS_BASES if kpi_pending(code, convs)]
     if dimension == "main_topic":  # solo se agrupan las que ya tienen main topic (FE012, FE014)
         convs = [c for c in convs if c.analysis.main_topic]
+        pending = pending and not convs
     groups = defaultdict(list)
     for c in convs:
         groups[DIMENSIONS[dimension](c)].append(c)
@@ -116,4 +119,4 @@ def breakdown(
     ]
     items.sort(key=lambda i: (-i["kpis"]["volume"], i["label"]))
     return {"dimension": dimension, "period": _period(filters.date_from, filters.date_to), "pending": pending,
-            "items": items}
+            "pending_kpis": pending_kpis, "items": items}

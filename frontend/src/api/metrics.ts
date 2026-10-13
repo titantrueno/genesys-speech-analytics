@@ -47,7 +47,10 @@ export interface TimeseriesResponse {
 export interface BreakdownResponse {
   dimension: Dimension
   period: Period
+  /** Hay conversaciones a las que les falta análisis; por main topic, ninguna tiene main topic todavía (FE014). */
   pending?: boolean
+  /** KPIs del análisis sin el dato en ninguna conversación: se dicen pendientes uno a uno (FE014). */
+  pending_kpis?: KpiCode[]
   items: Array<{ key: string; label: string; kpis: KpiValues }>
 }
 

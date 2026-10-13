@@ -198,3 +198,8 @@
 
 - **Hecho:** el panel «Análisis» del detalle tiene un único camino: muestra cada dato que existe y, en una conversación real, «Pendiente» en los que faltan; el aviso solo nombra lo que falta («El esfuerzo, el riesgo de abandono y 1 check de cumplimiento aún no se han generado.»). El cumplimiento distingue «Cumple», «No cumple», «No aplica» y «Pendiente» (`compliance_pending`). Temas secundarios, entidades y palabras clave solo aparecen si tienen algo.
 - **Ajuste de tests de FE012 y FE013:** con el análisis pendiente, las métricas se ven con «Pendiente» en lugar de ocultarse (criterio 12), y el texto del aviso cambia.
+
+## Notas de T8
+
+- **Hecho:** OpenAPI con todos los códigos de validación de los flujos (faltaban los de FE013; un test lo exige ahora), `sin_valor`, `reasons`, valores tipados, `compliance_pending` y `pending_kpis`. Vault: ADR-009 y ADR-007 ampliados; arquitectura, contrato de la API y runbook del servicio de LLM actualizados; auditoría con 0 errores.
+- **Hecho:** recorrido en Chrome con datos reales y Gemini en [VERIFY.md](VERIFY.md): 3 conversaciones, 0 rechazos por campo. Dos hallazgos corregidos con test de regresión: el desglose por main topic del dashboard seguía «pendiente» (ahora `pending_kpis` por KPI) y la pestaña del Output nombraba los 19 destinos.

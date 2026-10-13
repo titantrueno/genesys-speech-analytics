@@ -370,11 +370,17 @@ class FlowExecutor:
         counts = {t: {state: sum(row["states"].get(t) == state for row in rows) for state in FIELD_STATES}
                   for t in targets}
         with run.lock:
-            checks = get_config().checks
-            run.outputs[node.id] = {"node_id": node.id, "kind": "campo",
-                                    "destination": " + ".join(catalog.target_label(t, checks) for t in targets),
+            run.outputs[node.id] = {"node_id": node.id, "kind": "campo", "destination": _fields_destination(targets),
                                     "result": {"targets": targets, "rows": rows, "counts": counts}}
         run.update_node(node.id, processed=len(conversations))
+
+
+def _fields_destination(targets: list[str]) -> str:
+    """Nombre de la pestaña de un Output «campo»: los destinos, o los dos primeros y cuántos más (FE014)."""
+    labels = [catalog.target_label(t, get_config().checks) for t in targets]
+    if len(labels) <= 3:
+        return " + ".join(labels)
+    return f"{' + '.join(labels[:2])} y {len(labels) - 2} campos más"
 
 
 _store = RunStore()

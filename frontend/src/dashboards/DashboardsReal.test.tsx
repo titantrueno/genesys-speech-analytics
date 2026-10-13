@@ -88,3 +88,33 @@ describe('dashboards con conversaciones reales', () => {
     expect(within(agents).getAllByText('Pendiente de análisis').length).toBeGreaterThan(0)
   })
 })
+
+describe('dashboards con el análisis a medias (FE014)', () => {
+  // Hallazgo del recorrido de T8: el desglose por main topic decía «pendiente» con los main topics ya escritos.
+  function partialRoutes() {
+    const routes = realRoutes()
+    return {
+      ...routes,
+      'GET /api/metrics/breakdown': ({ url }: { url: string }) => {
+        const body = breakdownFixture(url)
+        const pendingKpis = ANALYSIS.filter((code) => code !== 'csat_avg')
+        const items = body.items.map((i) => ({ ...i, kpis: Object.fromEntries(
+          Object.entries(i.kpis).map(([code, value]) => [code, pendingKpis.includes(code) ? null : value])) }))
+        return { status: 200, body: { ...body, pending: body.dimension !== 'main_topic', pending_kpis: pendingKpis, items } }
+      },
+    }
+  }
+
+  it('el desglose por main topic se pinta y cada KPI dice si sigue pendiente', async () => {
+    signedInAs(USERS.analista, partialRoutes())
+    renderApp('/dashboards/vision-general')
+    await screen.findByRole('heading', { level: 2, name: 'Distribución por main topic' })
+    const topics = card('Distribución por main topic')
+    expect(await within(topics).findByRole('list', { name: 'Distribución por main topic' })).toBeInTheDocument()
+    expect(topics).not.toHaveTextContent(PENDING_TEXT)
+    const table = card('KPIs por main topic')
+    expect(table).toHaveTextContent('Pendiente de análisis')  // los KPIs sin datos
+    expect(within(table).queryAllByText('Pendiente de análisis').length).toBeLessThan(
+      within(table).getAllByRole('row').length * ANALYSIS.length)
+  })
+})

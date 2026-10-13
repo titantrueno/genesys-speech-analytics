@@ -1,4 +1,4 @@
-import { useBreakdown, useSummary, useTimeseries, type Dimension, type KpiCode } from '../api/metrics'
+import { useBreakdown, useSummary, useTimeseries, type BreakdownResponse, type Dimension, type KpiCode } from '../api/metrics'
 import { Link } from 'react-router'
 import { formatKpi, formatShortDate } from '../lib/format'
 import { ChartCard, DataTable, LoadError } from './ChartCard'
@@ -66,6 +66,13 @@ export function TimeseriesWidget({ kpi, title }: { kpi: KpiCode; title: string }
   )
 }
 
+/** Un KPI del análisis está pendiente si ninguna conversación tiene su dato (FE014); sin `pending_kpis` (respuestas
+ *  anteriores), si falta análisis en alguna. */
+function kpiPending(data: BreakdownResponse | undefined, kpi: KpiCode): boolean {
+  if (!data || !ANALYSIS_KPIS.has(kpi)) return false
+  return data.pending_kpis ? data.pending_kpis.includes(kpi) : Boolean(data.pending)
+}
+
 export function BreakdownBars({ title, dimension, kpi, order = 'desc', diverging = false, subtitle }: {
   title: string; dimension: Dimension; kpi: KpiCode; order?: 'asc' | 'desc'; diverging?: boolean; subtitle?: string
 }) {
@@ -79,7 +86,7 @@ export function BreakdownBars({ title, dimension, kpi, order = 'desc', diverging
   const hrefFor = (item: { key: string }) => drillDownHref(filters, KPI_DRILL[kpi], dimensionDrill(dimension, item.key))
   return (
     <ChartCard title={title} subtitle={subtitle} loading={isFetching} error={isError}
-      pending={data?.pending && (ANALYSIS_KPIS.has(kpi) || dimension === 'main_topic')}
+      pending={(dimension === 'main_topic' && data?.pending) || kpiPending(data, kpi)}
       table={<DataTable caption={title} columns={['', KPI_META[kpi].short]}
         rows={items.map((i) => [<Link key="label" to={hrefFor(i)} className="text-brand-700 hover:underline">{i.label}</Link>, format(i.value)])} />}>
       <RankedBars label={title} items={items} format={format} diverging={diverging} hrefFor={hrefFor}
@@ -122,12 +129,12 @@ export function BreakdownTable({ title, dimension, codes }: { title: string; dim
   const { filters } = useDashboardFilters()
   const { data, isFetching, isError } = useBreakdown(dimension, filters)
   return (
-    <ChartCard title={title} loading={isFetching} error={isError} pending={data?.pending && dimension === 'main_topic'}
+    <ChartCard title={title} loading={isFetching} error={isError} pending={dimension === 'main_topic' && data?.pending}
       className="lg:col-span-2">
       <DataTable caption={title} columns={['', ...codes.map((c) => KPI_META[c].short)]}
         rows={(data?.items ?? []).map((i) => [
           <Link key="label" to={drillDownHref(filters, dimensionDrill(dimension, i.key))} className="text-brand-700 hover:underline">{i.label}</Link>,
-          ...codes.map((c) => (data?.pending && ANALYSIS_KPIS.has(c) ? 'Pendiente de análisis' : formatKpi(i.kpis[c], KPI_META[c].unit))),
+          ...codes.map((c) => (kpiPending(data, c) ? 'Pendiente de análisis' : formatKpi(i.kpis[c], KPI_META[c].unit))),
         ])} />
     </ChartCard>
   )

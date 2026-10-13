@@ -221,8 +221,10 @@ class BreakdownItem(Doc):
 class Breakdown(Doc):
     dimension: Literal["main_topic", "channel", "queue", "agent"]
     period: Period
-    pending: bool = Field(description="`true` si hay conversaciones sin analizar: sus KPIs de análisis son `null` y el "
-                                      "desglose por main topic no tiene grupos.")
+    pending: bool = Field(description="`true` si hay conversaciones a las que les falta análisis; en el desglose por "
+                                      "main topic, solo si ninguna tiene main topic todavía (FE014).")
+    pending_kpis: list[str] = Field(description="KPIs del análisis sin el dato en ninguna conversación del periodo: "
+                                                "se muestran como pendientes (FE014).")
     items: list[BreakdownItem]
 
 

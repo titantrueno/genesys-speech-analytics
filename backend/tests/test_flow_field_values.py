@@ -243,3 +243,11 @@ def test_skipped_fields_carry_the_reason_from_the_writer(api, llm, writer, real_
     row = next(iter(snapshot["outputs"].values()))["result"]["rows"][0]
     assert row["states"]["sentiment"] == "omitido"
     assert row["reasons"]["sentiment"] == "Genesys ya da el sentimiento"
+
+
+def test_a_long_list_of_targets_gets_a_short_destination(api, llm, writer, real_origin):
+    # Hallazgo del recorrido de T8: la pestaña del Output nombraba los 19 campos de la plantilla completa.
+    llm.answer = lambda body: _answer()
+    flow = flow_with(api, _flow(_full_prompt(), _output()))
+    output = next(iter(_finished(api, flow, run(api, flow)["id"])["outputs"].values()))
+    assert output["destination"] == f"Resolución + Riesgo de abandono y {len(FULL_MAPPINGS) - 2} campos más"

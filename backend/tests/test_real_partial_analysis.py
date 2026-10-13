@@ -142,3 +142,14 @@ def test_a_check_is_empty_only_while_it_is_pending(real_api, pg_url):
     assert [i["id"] for i in run(real_api, cond(f"check:{check.code}", "not_applicable"))["items"]] == [real_id(FIRST)]
     compliant = real_api.get("/api/conversations", params={**QS, "compliant": "true", "page_size": 100}).json()
     assert [i["id"] for i in compliant["items"]] == [real_id(FIRST)]  # sin incumplimientos y con un resultado
+
+
+def test_the_breakdown_says_which_kpis_are_still_pending(real_api, pg_url):
+    # Hallazgo del recorrido de T8: el dashboard ocultaba el desglose por main topic con datos ya escritos.
+    _set(pg_url, FIRST, main_topic="cajeros", csat=4)
+    topic = real_api.get("/api/metrics/breakdown", params={**QS, "dimension": "main_topic"}).json()
+    assert topic["pending"] is False and topic["items"]
+    queue = real_api.get("/api/metrics/breakdown", params={**QS, "dimension": "queue"}).json()
+    assert "csat_avg" not in queue["pending_kpis"] and "effort_avg" in queue["pending_kpis"]
+    assert set(queue["pending_kpis"]) <= {"resolution_rate", "escalation_rate", "fcr_rate", "effort_avg",
+                                          "compliance_rate", "churn_high_pct"}
