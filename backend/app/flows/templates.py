@@ -51,8 +51,10 @@ LIST_FIELDS = [
 CHECK_ANSWERS = ["cumple", "no_cumple", "no_aplica"]
 ENTITY_TASKS = {"importe": "El importe principal mencionado", "producto": "El producto del banco del que se habla",
                 "fecha": "La fecha relevante mencionada", "comercio": "El comercio mencionado"}
-FULL_TASK = ("Analiza la conversación y responde con estos campos. Usa solo la información de la transcripción; "
-             "en las entidades, un texto vacío si no aparecen.")
+# Lo común a varios campos va una vez, para que quepan más checks en `MAX_TEMPLATE` (hallazgo de /test).
+FULL_TASK = ("Analiza la conversación y responde con estos campos. Usa solo la información de la transcripción. En "
+             "cada check_…, cumple, no_cumple o no_aplica si no corresponde en esta conversación; en las entidades, "
+             "un texto vacío si no aparecen.")
 # Condiciones del Sampling: los campos escalares; las listas y entidades vacías pueden ser la respuesta correcta.
 FULL_EMPTY = ("summary", "main_topic", "resolution", "csat", "effort", "churn_risk")
 
@@ -70,9 +72,8 @@ def _full(config) -> tuple[list[dict], dict, list[dict], str]:
             for target, name, ftype, opts, task in FULL_FIELDS + LIST_FIELDS]
     for i, check in enumerate(checks):
         name = f"check_{check.code}" if len(check.code) <= catalog.MAX_FIELD_NAME - 6 else f"check_{i}"
-        task = f"¿{check.name}? {check.description}".strip()
         rows.append((f"{catalog.CHECK_PREFIX}{check.code}", name, "texto", CHECK_ANSWERS,
-                     f"{task} cumple, no_cumple o no_aplica si no corresponde en esta conversación."))
+                     f"¿{check.name}? {check.description}".strip()))
     rows += [(f"{catalog.ENTITY_PREFIX}{etype}", f"entidad_{etype}", "texto", None, f"{task}.")
              for etype, task in ENTITY_TASKS.items()]
     fields = [{"name": name, "type": ftype, **({"options": opts} if opts else {})} for _, name, ftype, opts, _ in rows]
