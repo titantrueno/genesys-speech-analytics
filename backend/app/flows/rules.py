@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from app.flows import catalog
 from app.flows.connections import Rejection, connection_rejection
 from app.config.store import get_config
-from app.flows.fields import topic_code
+from app.flows.fields import accepts_option, topic_code
 from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
 from app.query.model import QueryError, parse_query
 
@@ -148,10 +148,48 @@ def _prompt(node: PromptNode, graph: Graph, llm_keys: LlmKeys | None = None) -> 
     return issues + _provider(node, llm_keys) + _output_format(node)
 
 
+# Qué campo del JSON necesita cada destino del análisis completo (FE014, criterio 6): tipo, si exige valores permitidos
+# y cómo se dice en el mensaje. Summary y main topic siguen con sus reglas de FE013.
+_CHECK_RULE = ("texto", True, "un campo de texto con valores permitidos cumple, no_cumple y no_aplica")
+_TARGET_RULES = {
+    "resolution": ("texto", True, "un campo de texto con valores permitidos resuelta, no_resuelta y escalada"),
+    "churn_risk": ("texto", True, "un campo de texto con valores permitidos bajo, medio y alto"),
+    "csat": ("numero", False, "un campo numérico"),
+    "effort": ("numero", False, "un campo numérico"),
+    "sentiment": ("numero", False, "un campo numérico"),
+    "secondary_topics": ("lista", True, "una lista con valores permitidos que sean temas secundarios activos"),
+    "keywords": ("lista", False, "una lista"),
+}
+_ENTITY_RULE = ("texto", False, "un campo de texto")
+
+
+def _target_rule(target: str) -> tuple[str, bool, str]:
+    if catalog.check_code(target):
+        return _CHECK_RULE
+    if target.startswith(catalog.ENTITY_PREFIX):
+        return _ENTITY_RULE
+    return _TARGET_RULES[target]
+
+
+def _analysis_mapping(node: OutputNode, mapping, fmt, label: str) -> list[Issue]:
+    field_type, needs_options, wanted = _target_rule(mapping.target)
+    if fmt.type != "json":
+        return [Issue("invalid_mapping", f"{label}: un Prompt de texto o etiqueta solo puede guardar Summary o Main "
+                                         "topic; usa un Prompt JSON.", node.id)]
+    field = next((f for f in fmt.fields or [] if f.name == mapping.source), None)
+    unknown = [o for o in (field.options or []) if not accepts_option(mapping.target, o)] if field else []
+    if field is None or field.type != field_type or (needs_options and not field.options) or unknown:
+        detail = f" No lo son: {', '.join(unknown)}." if unknown else ""
+        return [Issue("invalid_mapping", f"{label}: elige {wanted} del JSON del Prompt.{detail}", node.id)]
+    return []
+
+
 def _mapping(node: OutputNode, mapping, prompt: PromptNode) -> list[Issue]:
     """Una asignación de un Output `campo` frente al formato del Prompt de entrada (FE013, criterio 17)."""
     fmt = prompt.config.output
     label = catalog.target_label(mapping.target, get_config().checks)
+    if mapping.target not in ("summary", "main_topic"):
+        return _analysis_mapping(node, mapping, fmt, label)
     if fmt.type == "json":
         field = next((f for f in fmt.fields or [] if f.name == mapping.source), None)
         if field is None or field.type != "texto":
@@ -174,6 +212,13 @@ def _mapping(node: OutputNode, mapping, prompt: PromptNode) -> list[Issue]:
     return []
 
 
+def _unknown_checks(node: OutputNode) -> set[str]:
+    """Checks asignados que ya no existen o están desactivados (FE014, criterio 7)."""
+    checks = get_config().checks
+    codes = {catalog.check_code(m.target) for m in node.config.mappings or []} - {None}
+    return {code for code in codes if code not in checks or not checks[code].active}
+
+
 def _fields_output(node: OutputNode, graph: Graph) -> list[Issue]:
     cfg = node.config
     if not cfg.mappings:
@@ -185,6 +230,9 @@ def _fields_output(node: OutputNode, graph: Graph) -> list[Issue]:
     targets = [m.target for m in cfg.mappings]
     if len(set(targets)) != len(targets):
         issues.append(Issue("duplicate_target", "Un campo destino solo puede aparecer una vez.", node.id))
+    unknown = _unknown_checks(node)
+    issues += [Issue("unknown_check", f"El check «{code}» no existe o está desactivado: quita su asignación.", node.id)
+               for code in sorted(unknown)]
     prompt = next((graph.node(s) for s in graph.inputs(node.id) if isinstance(graph.node(s), PromptNode)), None)
     if prompt is None or prompt.config.output is None:
         return issues
@@ -197,7 +245,8 @@ def _fields_output(node: OutputNode, graph: Graph) -> list[Issue]:
                                                "asignación, o un Prompt JSON para varios campos.", node.id))
         return issues
     for mapping in cfg.mappings:
-        issues += _mapping(node, mapping, prompt)
+        if catalog.check_code(mapping.target) not in unknown:
+            issues += _mapping(node, mapping, prompt)
     return issues
 
 

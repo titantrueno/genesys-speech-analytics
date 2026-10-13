@@ -38,6 +38,7 @@ class FakeWriter:
     def __init__(self, existing: dict | None = None, down: bool = False):
         self.existing = existing or {}  # conversation_id → {campo: valor ya guardado}
         self.down = down
+        self.reasons: dict[str, str] = {}  # campo → motivo con que la base lo omitiría siempre (FE014)
         self.calls: list[dict] = []
         self.lock = threading.Lock()
 
@@ -50,8 +51,11 @@ class FakeWriter:
         outcomes = {}
         for item in items:
             current = self.existing.get(item["conversation_id"], {})
+            reasons = {t: self.reasons[t] for t in item["values"] if t in self.reasons}
+            reasons |= {t: "Ya tenía valor" for t in item["values"] if t not in reasons and not overwrite
+                        and current.get(t)}
             outcomes[item["conversation_id"]] = {
-                target: "escrito" if overwrite or not current.get(target) else "omitido" for target in item["values"]}
+                "outcomes": {t: "omitido" if t in reasons else "escrito" for t in item["values"]}, "reasons": reasons}
         return outcomes
 
 
@@ -203,8 +207,8 @@ def test_one_call_per_conversation_writes_both_fields_with_the_topic_code(api, l
         (("main_topic", "bloqueo_tarjeta"), ("summary", "El cliente pide bloquear su tarjeta."))}
     result = next(iter(snapshot["outputs"].values()))
     assert result["kind"] == "campo" and result["destination"] == "Summary + Main topic"
-    assert result["result"]["counts"] == {"summary": {"escrito": 6, "omitido": 0, "rechazado": 0, "error": 0},
-                                          "main_topic": {"escrito": 6, "omitido": 0, "rechazado": 0, "error": 0}}
+    written = {"escrito": 6, "omitido": 0, "rechazado": 0, "sin_valor": 0, "error": 0}
+    assert result["result"]["counts"] == {"summary": written, "main_topic": written}
 
 
 def test_existing_values_are_skipped_unless_overwrite(api, llm, writer, real_origin):
@@ -234,7 +238,8 @@ def test_rejected_and_failed_conversations_appear_with_their_state(api, llm, wri
     result = next(iter(snapshot["outputs"].values()))["result"]
     assert len(result["rows"]) == 6
     for target in ("summary", "main_topic"):
-        assert result["counts"][target] == {"escrito": 4, "omitido": 0, "rechazado": 2, "error": 0}
+        assert result["counts"][target] == {"escrito": 4, "omitido": 0, "rechazado": 2, "sin_valor": 0,
+                                                "error": 0}
         assert sum(result["counts"][target].values()) == 6
     rejected = [row for row in result["rows"] if row["states"]["summary"] == "rechazado"]
     assert all("Hipotecas" in row["reason"] and row["values"] == {} for row in rejected)

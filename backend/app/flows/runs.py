@@ -18,8 +18,8 @@ from typing import Any, Callable
 from app import ids
 from app.auth import User
 from app.flows import catalog
-from app.flows.analysis_writer import BATCH_SIZE, AnalysisWriter, WriterUnavailable
-from app.flows.fields import topic_code
+from app.flows.analysis_writer import BATCH_SIZE, FIELD_STATES, AnalysisWriter, WriterUnavailable
+from app.flows.fields import NO_VALUE, ValueRejected, coerce
 from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
 from app.flows.outputs import build_metric, build_report, build_table
 from app.services.listing import list_item
@@ -326,21 +326,24 @@ class FlowExecutor:
         run.update_node(node.id, total=len(conversations))
         rows, items = [], []
         for conv in conversations:
-            row = {"conversation": list_item(conv), "values": {}, "states": {}, "reason": None}
+            # `reason`: por qué falló la conversación entera; `reasons`: por qué no se guardó un campo (FE014).
+            row = {"conversation": list_item(conv), "values": {}, "states": {}, "reason": None, "reasons": {}}
             if conv.id not in results:  # el Prompt la rechazó o no obtuvo respuesta
                 failure = failures.get(conv.id, {"status": "error", "reason": "Sin resultado del Prompt"})
                 row["states"] = {t: failure["status"] for t in targets}
                 row["reason"] = failure["reason"]
             else:
                 for mapping in cfg.mappings:
-                    value = results[conv.id] if mapping.source is None else results[conv.id][mapping.source]
-                    if mapping.target == "main_topic":
-                        code = topic_code(value)
-                        if code is None:  # la taxonomía cambió durante la ejecución
-                            row["states"]["main_topic"] = "rechazado"
-                            row["reason"] = f"«{value}» no es un main topic activo"
-                            continue
-                        value = code
+                    answer = results[conv.id] if mapping.source is None else results[conv.id][mapping.source]
+                    try:  # un valor no válido solo deja en «rechazado» su campo (criterio 4)
+                        value = coerce(mapping.target, answer)
+                    except ValueRejected as exc:
+                        row["states"][mapping.target] = "rechazado"
+                        row["reasons"][mapping.target] = str(exc)
+                        continue
+                    if value is NO_VALUE:
+                        row["states"][mapping.target] = "sin_valor"
+                        continue
                     row["values"][mapping.target] = value
                 if row["values"]:
                     items.append({"conversation_id": conv.id, "values": row["values"]})
@@ -354,17 +357,18 @@ class FlowExecutor:
                                              bool(cfg.overwrite), batch)
             except WriterUnavailable as exc:
                 raise NodeFailure(f"{exc}: se guardaron {written} de {len(items)} conversaciones.") from exc
-            for conversation_id, per_target in outcomes.items():
+            for conversation_id, written_fields in outcomes.items():
                 row = by_id[conversation_id]
-                for target, outcome in per_target.items():
+                for target, outcome in written_fields["outcomes"].items():
                     row["states"][target] = "error" if outcome == "no_encontrada" else outcome
                     if outcome == "no_encontrada":
                         row["reason"] = "La conversación no está en la base de datos"
+                row["reasons"].update(written_fields.get("reasons", {}))
             written += len(batch)
             run.update_node(node.id, processed=min(len(conversations), written))
             self._step(run)
-        counts = {t: {state: sum(row["states"].get(t) == state for row in rows)
-                      for state in ("escrito", "omitido", "rechazado", "error")} for t in targets}
+        counts = {t: {state: sum(row["states"].get(t) == state for row in rows) for state in FIELD_STATES}
+                  for t in targets}
         with run.lock:
             checks = get_config().checks
             run.outputs[node.id] = {"node_id": node.id, "kind": "campo",

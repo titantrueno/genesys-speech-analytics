@@ -76,7 +76,7 @@ def test_the_writer_posts_the_batch_and_maps_the_outcomes():
         return httpx.Response(200, json={"results": [{"conversation_id": "1CO-A", "outcomes": {"summary": "escrito"}}]})
     items = [{"conversation_id": "1CO-A", "values": {"summary": "Resumen."}}]
     assert _writer(handler).write("1RN-X", "gemini", "gemini-3.5-flash-lite", True, items) == {
-        "1CO-A": {"summary": "escrito"}}
+        "1CO-A": {"outcomes": {"summary": "escrito"}, "reasons": {}}}
     assert str(seen[0].url) == "http://ingesta/analysis/fields"
     assert seen[0].headers["authorization"] == "Bearer t"
     assert httpx.Response(200, content=seen[0].content).json() == {

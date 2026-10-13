@@ -160,3 +160,13 @@
 - **Decisión:** `MAX_MAPPINGS = 60` asignaciones por Output; `/api/flows/catalog` lo expone en `limits.max_mappings`, y `target_fields` lleva `group` (`analisis`, `cumplimiento`, `entidades`).
 - **Decisión:** el proveedor simulado responde a un campo `lista` con un valor permitido, o con las palabras clave del análisis (o el main topic) si no tiene valores permitidos.
 - **Ajuste de tests de FE013:** el catálogo de destinos se comprueba por sus dos primeros elementos, y el caso «demasiadas asignaciones» pasa de 3 a 61.
+
+## Notas de T3
+
+- **Cambio de diseño:** la validación por destino vive en `app/flows/fields.py` (ya era «qué valores acepta cada campo destino» en FE013), no en un `targets.py` nuevo. `coerce(destino, valor)` devuelve el valor a guardar, `NO_VALUE` o lanza `ValueRejected`; `accepts_option` lo usan las reglas del editor.
+- **Decisión:** una lista vacía (`secondary_topics`, `keywords`) es `sin_valor`, como una entidad vacía: no se escribe nada y la conversación sigue vacía en ese campo.
+- **Decisión:** las palabras clave con un elemento vacío se rechazan enteras (criterio 4: «textos no vacíos»); no se descartan en silencio.
+- **Decisión:** el resultado del Output distingue `reason` (la conversación entera: Prompt rechazado, no encontrada) de `reasons` (por campo: valor rechazado, ya tenía valor, Genesys ya da el sentimiento). El escritor devuelve `{outcomes, reasons}` por conversación.
+- **Decisión:** las reglas nuevas usan el código `invalid_mapping` con el nombre del destino en el mensaje; el check borrado o desactivado, `unknown_check` (bloquea la ejecución).
+- **Pendiente para T8:** `IssueCode` del OpenAPI no lista los códigos de FE013 (`invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target`, `field_output_requires_real_data`, `simulated_values_to_real_data`, …) ni `unknown_check`.
+- **Ajuste de tests de FE013:** los recuentos incluyen `sin_valor` y el escritor devuelve `{outcomes, reasons}`.

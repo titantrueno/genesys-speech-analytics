@@ -8,7 +8,9 @@ import pytest
 
 from ingestion.runs import RunExecutor, create_run
 from tests.ingestion_helpers import DAY_END, DAY_START, client_factory, create_flow, make_fake
-from tests.test_flow_fields_pg import RUN_ID, _ids, service  # noqa: F401  (fixture)
+from tests.test_flow_fields_pg import RUN_ID, _ids, service, wired  # noqa: F401  (fixtures)
+from tests.real_helpers import real_api  # noqa: F401  (fixture)
+from tests.test_llm_flows import llm  # noqa: F401  (fixture)
 
 pytestmark = pytest.mark.pg
 
@@ -154,3 +156,38 @@ def test_redownloading_with_overwrite_erases_the_new_fields(service, pg_url, cid
     row = _row(pg_url, cid)
     assert row == {**row, "resolution": None, "sentiment": None, "keywords": None, "compliance": None,
                    "entities": None, "llm_meta": {}}
+
+
+# --- Integración de T3: API → servicio de ingesta → PostgreSQL ---
+
+def test_a_flow_writes_resolution_a_check_and_an_entity(wired, llm, pg_url):
+    from app.config.store import get_config
+    from tests.flow_fixtures import SAMPLING
+    from tests.real_helpers import QS
+    from tests.test_flow_fields import BOTH_PROMPT, _flow
+    from tests.test_flow_runs import flow_with, run
+    from tests.test_llm_flows import _finished
+    api = wired
+    check = next(c for c in get_config().checks.values() if c.active)
+    prompt = {**BOTH_PROMPT, "output": {"type": "json", "fields": [
+        {"name": "resolucion", "type": "texto", "options": ["resuelta", "no_resuelta", "escalada"]},
+        {"name": "check", "type": "texto", "options": ["cumple", "no_cumple", "no_aplica"]},
+        {"name": "importe", "type": "texto"}]}}
+    output = {"kind": "campo", "overwrite": False, "mappings": [
+        {"target": "resolution", "source": "resolucion"}, {"target": f"compliance:{check.code}", "source": "check"},
+        {"target": "entity:importe", "source": "importe"}]}
+    llm.answer = lambda body: '{"resolucion": "Resuelta", "check": "no_cumple", "importe": "30 €"}'
+    payload = _flow(prompt, output)
+    payload["nodes"][0]["config"] = {**SAMPLING, "size": 4,
+                                     "query": {"from": QS["from"], "to": QS["to"], "root": {"op": "and", "conditions": []}}}
+    flow = flow_with(api, payload)
+    snapshot = _finished(api, flow, run(api, flow)["id"])
+    assert snapshot["status"] == "ok", snapshot["nodes"]
+    result = next(iter(snapshot["outputs"].values()))["result"]
+    assert all(sum(c.values()) == len(result["rows"]) for c in result["counts"].values())
+    written = [r["conversation"]["id"] for r in result["rows"] if r["states"]["resolution"] == "escrito"]
+    assert written and result["counts"]["entity:importe"]["escrito"] == len(written)
+    row = _row(pg_url, written[0])
+    assert (row["resolution"], row["compliance"], row["entities"]) == (
+        "resuelta", {check.code: False}, {"importe": "30 €"})
+    assert row["status"] == "pendiente"
