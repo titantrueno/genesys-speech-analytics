@@ -3,9 +3,9 @@ title: "Arquitectura de la plataforma"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad, usuarios, roles, genesys, ingesta, postgresql]
+tags: [arquitectura, frontend, backend, api, mock, busqueda, flujos, configuracion, privacidad, usuarios, roles, genesys, ingesta, postgresql, llm]
 created: 2026-09-27
-updated: 2026-10-12
+updated: 2026-10-13
 ---
 
 # Arquitectura de la plataforma
@@ -141,7 +141,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 
 - `ConversationRepository` (`backend/app/data/repository.py`) tiene dos implementaciones: `SyntheticRepository` (el generador de siempre) y `RealRepository` (`app/data/real.py`, PostgreSQL de solo lectura con `DATABASE_URL`). `data/store.py` es la fachada que usan los servicios.
 - **Hecho:** el testigo de la base se consulta una vez por petición (middleware `begin_request`) y, si cambia, se recarga la instantánea. Si PostgreSQL no responde, las secciones de datos devuelven `503` «Los datos reales no están disponibles»; Configuración sigue sirviendo para volver a `sintetico`.
-- **Análisis pendiente:** una conversación real tiene `analysis.pending = true`. Los KPIs que dependen del análisis (resolución, escalado, FCR, CSAT, esfuerzo, cumplimiento, riesgo de abandono) y el desglose por main topic salen como pendientes; volumen, AHT (`handle_s` de las atendidas por un agente), sentimiento y % de negativas se calculan con Genesys, con `based_on`.
+- **Análisis pendiente:** una conversación real sin análisis tiene `analysis.pending = true`. Los KPIs que dependen del análisis (resolución, escalado, FCR, CSAT, esfuerzo, cumplimiento, riesgo de abandono) y el desglose por main topic salen como pendientes; volumen, AHT (`handle_s` de las atendidas por un agente), sentimiento y % de negativas se calculan con Genesys, con `based_on`. Desde FE014 la lectura es **campo a campo** (sección siguiente).
 - **Pendiente para producción:** la API se conecta con el mismo usuario que el servicio de ingesta; la solo lectura se impone en la sesión, no con un rol de base de datos. Conviene un rol `SELECT` propio ([revisión de FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/REVIEW.md)).
 - Los cachés derivados del dataset se indexan por origen y versión (`cached_by_version`) o por identidad del objeto, nunca por identificador solo.
 
@@ -152,7 +152,15 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Una llamada, dos campos:** Prompt JSON con `summary` y `main_topic` (con valores permitidos = main topics activos, que el proveedor recibe como `enum`) y Output «Guardar en campos» con dos asignaciones.
 - **Escritura:** lotes de 100 a `POST /analysis/fields` del servicio de ingesta; `main_topic` por código; solo campos vacíos salvo `overwrite`; trazabilidad en `analysis.llm_meta`. `RealRepository` lee summary y main topic aunque el resto del análisis siga pendiente.
 - **Validación del editor:** proveedor sin clave, modelo ajeno y servicio no disponible (consulta `/health` una vez por validación); reglas de asignación y «solo con datos reales» (`/api/flows/catalog` expone `origin`).
-- **Plantillas:** `app/flows/templates.py` construye los tres flujos con la taxonomía activa y el proveedor por defecto.
+- **Plantillas:** `app/flows/templates.py` construye los flujos con la taxonomía activa y el proveedor por defecto; desde FE014, también «Generar análisis completo».
+
+### Análisis completo con LLM y lectura campo a campo (FE014)
+
+- **Destinos:** un Output «Guardar en campos» puede escribir cualquier campo del análisis, cada check activo (`compliance:<código>`) y cada tipo de entidad (`entity:<tipo>`). La API valida y normaliza cada valor (`app/flows/fields.py`) y el servicio de ingesta lo escribe solo si el campo está vacío (o con «Sobrescribir»); `compliance` y `entities` se combinan clave a clave. `sentiment` va a una columna propia y solo si Genesys no lo da.
+- **Lectura** (`RealRepository`): cada campo se lee siempre; `pending` significa que falta alguno de summary, main topic, resolución, CSAT, esfuerzo o riesgo. El sentimiento es el de Genesys o, si falta, el del LLM.
+- **KPIs:** cada KPI del análisis se calcula sobre las conversaciones que tienen su dato (`ANALYSIS_BASES` en `services/kpis.py`, con `based_on`); sale «pendiente» solo si ninguna lo tiene y alguna espera análisis. FCR y «Recontacto en 7 días» usan las que tienen resolución. El desglose por main topic agrupa las que ya lo tienen.
+- **Cumplimiento:** estado pendiente además de cumple, no cumple y no aplica; el resultado guardado manda sobre las frases ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). El detalle devuelve `compliance` y `compliance_pending`.
+- **Filtros y explorador:** un campo con valor deja de estar vacío y se filtra con sus operadores de siempre; un check solo está vacío mientras está pendiente.
 
 ### Rendimiento
 
@@ -184,5 +192,6 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)
 - [Spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)
 - [Spec FE011](../../features/FE011-ingesta-de-conversaciones-genesys/spec.md)
+- [Spec FE014](../../features/FE014-analisis-completo-con-llm/spec.md)
 - [Contrato de la API entre front y back](contrato-api-front-back.md)
 - [Gobierno del vault](../Governance.md)

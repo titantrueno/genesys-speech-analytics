@@ -3,16 +3,16 @@ title: "Contrato de la API entre front y back"
 type: knowledge
 status: active
 owners: [equipo-del-proyecto]
-tags: [arquitectura, api, contrato, frontend, backend, http, auth, errores, genesys, ingesta]
+tags: [arquitectura, api, contrato, frontend, backend, http, auth, errores, genesys, ingesta, llm]
 created: 2026-10-02
-updated: 2026-10-12
+updated: 2026-10-13
 ---
 
 # Contrato de la API entre front y back
 
 ## Resumen
 
-Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.7.0` más FE011, FE012 y FE013: **72 operaciones**, en 9 dominios (más la sonda de salud). FE011 añade 11: los flujos de descarga de Genesys y el conector real; FE012, el origen de datos; FE013, el estado y la prueba de los proveedores de LLM. Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
+Referencia completa de la API HTTP que el front (React, `frontend/src/`) consume del backend (FastAPI, `backend/app/`) en `v0.7.0` más FE011, FE012, FE013 y FE014: **72 operaciones**, en 9 dominios (más la sonda de salud). FE011 añade 11: los flujos de descarga de Genesys y el conector real; FE012, el origen de datos; FE013, el estado y la prueba de los proveedores de LLM; FE014 no añade operaciones, amplía «Guardar en campos» y el detalle. Para cada una indica permiso, parámetros, cuerpo, respuesta, errores y qué módulo del front la usa. También recoge las convenciones transversales: autenticación, cabecera de versión, identificadores, fechas, paginación y los **seis formatos de error** que conviven.
 
 Es la fuente canónica del contrato. La tabla de endpoints de [backend/README.md](../../backend/README.md) es un resumen. Las decisiones que explican el contrato están en sus ADR (enlazados en cada sección).
 
@@ -233,6 +233,7 @@ La numeración cuenta operaciones (método más ruta): son las 72 del OpenAPI.
 - **KPIs** (13, en este orden): `volume`, `aht_s`, `sentiment_avg`, `negative_pct`, `resolution_rate`, `escalation_rate`, `fcr_rate`, `csat_avg`, `effort_avg`, `compliance_rate`, `churn_high_pct`, `first_response_s` (solo chat) y `avg_turns`.
 - **Unidades:** `conversaciones`, `s`, `índice` (de -1 a 1), `%`, `1-5` y `turnos`.
 - **Nulos:** `value` es `null` cuando no hay conversaciones aplicables (por ejemplo, `first_response_s` en voz).
+- **Datos reales (FE012, FE014):** `based_on` dice sobre cuántas conversaciones se calcula un KPI que no usa todas; los del análisis usan las que tienen su dato. `pending` es `true` si ninguna lo tiene y alguna espera análisis.
 - **Variación:** `delta` es `null` si falta algún valor. `delta_pct` es `null` si el anterior es 0 o nulo, o si la unidad es `índice` (cruza el cero).
 - **Estado:** `status` vale `verde`, `ambar`, `rojo` o `null` (sin umbrales), según los umbrales de Configuración y `higher_is_better`. Un valor igual al umbral toma el color mejor.
 - `compliance_by_check` no depende de `dashboard`.
@@ -297,7 +298,8 @@ Elemento del listado (`list_item`, el mismo en explorador, búsqueda y outputs d
 ```
 
 - `speaker`: `cliente`, `agente`, `bot` o `sistema`. `sentiment_timeline` tiene un valor por turno.
-- `compliance` es el **cumplimiento efectivo** con los checks activos: `true` cumple, `false` no cumple y `null` no aplica.
+- `compliance` es el **cumplimiento efectivo** con los checks activos que tienen resultado: `true` cumple, `false` no cumple y `null` no aplica. `compliance_pending` (FE014) lista los checks activos aún sin resultado en una conversación real.
+- Conversaciones reales (FE012, FE014): cada campo del análisis se da en cuanto existe; los que faltan son `null` o vacíos y `pending` es `true` mientras falte alguno de summary, main topic, resolución, CSAT, esfuerzo o riesgo. `sentiment` es el de Genesys o, si falta, el que generó un flujo con LLM.
 - `entities.type`: `importe`, `producto`, `fecha` o `comercio`.
 - El front abre el detalle en `?turn=N` y desplaza la vista hasta ese turno.
 
@@ -404,19 +406,20 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
   - `provider` (FE013): `gemini`, `openai`, `anthropic` o `simulado`; sin él, el nodo es simulado (flujos anteriores);
   - `model`: uno del proveedor (`mock-rapido` y `mock-preciso` en el simulado);
   - `temperature` de 0 a 1; solo se envía a los modelos que la admiten (`providers[].models[].temperature` del catálogo);
-  - `output.type`: `texto`, `etiqueta` (de 2 a 20 `labels`, hasta 60 caracteres) o `json` (de 1 a 20 `fields` `{name, type: texto|numero|booleano, options?}`; `options`, hasta 100 valores permitidos de un campo de texto, que el LLM recibe como `enum`).
+  - `output.type`: `texto`, `etiqueta` (de 2 a 20 `labels`, hasta 60 caracteres) o `json` (de 1 a 40 `fields` `{name, type: texto|numero|booleano|lista, options?}`; `options`, hasta 100 valores permitidos de un campo de texto o de cada elemento de una lista, que el LLM recibe como `enum`; `lista` es una lista de textos, FE014).
 - **Output:** `kind` es `tabla`, `metrica` (exige un prompt de etiqueta; `aggregation`: `recuento` o `porcentaje`), `informe` o `campo` (FE013); `destination` tiene hasta 80 caracteres y es único (no se pide en `campo`).
-  - **`campo`** («Guardar en campos de la conversación»): `mappings: [{target: summary|main_topic, source?}]` (`source`, un campo de texto del JSON del Prompt; sin él, la respuesta entera) y `overwrite` (`false` por defecto). Solo con datos reales. Un Prompt JSON con `summary` y `main_topic` y dos asignaciones guarda los dos campos con una llamada por conversación.
+  - **`campo`** («Guardar en campos de la conversación»): hasta 60 `mappings: [{target, source?}]` (`source`, un campo del JSON del Prompt; sin él, la respuesta entera de un Prompt de texto o etiqueta, solo para summary o main topic) y `overwrite` (`false` por defecto). Solo con datos reales. Un Prompt JSON con varios campos guarda todos con una llamada por conversación.
+  - `target` (FE014): `summary`, `main_topic`, `resolution`, `csat`, `effort`, `churn_risk`, `sentiment`, `secondary_topics`, `keywords`, `entity:<importe|producto|fecha|comercio>` o `compliance:<código de check>`. Cada destino exige un campo JSON de su tipo: texto con valores permitidos válidos para resolución, riesgo y checks (`cumple`, `no_cumple`, `no_aplica`), número para CSAT, esfuerzo y sentimiento, lista con temas secundarios activos o lista libre para palabras clave, y texto para entidades.
 - **Conexiones:** solo `sampling → prompt`, `prompt → prompt` y `prompt → output`, sin ciclos. Límites: 50 nodos y 100 conexiones.
 - **Dos niveles de validación:**
   - **integridad**, siempre exigida al guardar (`422` E5: tipos, rangos, identificadores, conexiones imposibles);
-  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`; desde FE013, también `model_not_in_provider`, `provider_without_key`, `llm_unavailable`, `invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target` y `field_output_requires_real_data`, y el aviso (`severity: warning`) `simulated_values_to_real_data` cuando un Prompt simulado alimenta «Guardar en campos».
+  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`; desde FE013, también `model_not_in_provider`, `provider_without_key`, `llm_unavailable`, `invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target` y `field_output_requires_real_data`, y el aviso (`severity: warning`) `simulated_values_to_real_data` cuando un Prompt simulado alimenta «Guardar en campos»; desde FE014, `unknown_check` (un `compliance:<código>` de un check borrado o desactivado).
 
 #### Endpoints
 
 - **`GET /api/flows`** → `{items: [{id, name, author: {id, name}, created_at, updated_at, status: "valido"|"con_errores", last_run: {id, created_at, status} | null}]}`, del modificado más recientemente al más antiguo.
-- **`POST /api/flows`** `{name (1–80), template?}` → `201`, el flujo con su grafo vacío o, con `template` (`summary`, `main_topic`, `summary_main_topic`), ya configurado con la taxonomía activa y el proveedor por defecto (FE013).
-- **`GET /api/flows/catalog`** → opciones con `{value, label}` de `node_types`, `sampling_methods`, `strata`, `order_keys`, `orders`, `models`, `variables`, `output_formats`, `field_types`, `output_kinds`, `target_fields`, `templates` y `aggregations`; además, `providers` (con sus modelos y si admiten temperatura), `default_provider` y `default_model` (los de Configuración, que toma un Prompt nuevo), `origin` (origen de datos activo) y `limits`.
+- **`POST /api/flows`** `{name (1–80), template?}` → `201`, el flujo con su grafo vacío o, con `template` (`summary`, `main_topic`, `summary_main_topic`), ya configurado con la taxonomía activa y el proveedor por defecto (FE013); desde FE014, también `analisis_completo` («Generar análisis completo»), que responde `422` con el motivo si los checks activos no caben en una llamada.
+- **`GET /api/flows/catalog`** → opciones con `{value, label}` de `node_types`, `sampling_methods`, `strata`, `order_keys`, `orders`, `models`, `variables`, `output_formats`, `field_types`, `output_kinds`, `target_fields`, `templates` y `aggregations`; además, `providers` (con sus modelos y si admiten temperatura), `default_provider` y `default_model` (los de Configuración, que toma un Prompt nuevo), `origin` (origen de datos activo) y `limits` (con `max_mappings` desde FE014). `target_fields` lleva además `group` (`analisis`, `cumplimiento` o `entidades`) y un `compliance:<código>` por check activo (FE014).
 - **`POST /api/flows/validate`** (grafo) → `{valid, issues: [{code, message, node_id}]}`. Un grafo sin integridad responde `422` E5.
 - **`POST /api/flows/sampling/estimate`** `{query, size?}` → `{available, sample_size, period}`: cuántas conversaciones cumplen los filtros y cuántas tendría la muestra.
 - **`GET /api/flows/{id}`** → el resumen más `graph`. **`PATCH`** `{name}` lo renombra. **`DELETE`** → `204` (borra también sus ejecuciones).
@@ -445,7 +448,7 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
   - `tabla`: `{rows: [{conversation: list_item, result}]}`, donde `result` es texto, etiqueta u objeto JSON según el prompt;
   - `metrica`: `{aggregation, total, items: [{label, count, percent}]}`, con porcentajes de un decimal que suman exactamente 100;
   - `informe`: `{text}`;
-  - `campo` (FE013): `{targets, rows: [{conversation, values, states, reason}], counts: {campo: {escrito, omitido, rechazado, error}}}`, con una fila por conversación que llegó al Prompt.
+  - `campo` (FE013): `{targets, rows: [{conversation, values, states, reason, reasons}], counts: {campo: {escrito, omitido, rechazado, sin_valor, error}}}`, con una fila por conversación que llegó al Prompt. Desde FE014, un valor no válido deja solo su campo en `rechazado`, `sin_valor` es una entidad o lista vacía, `values` va tipado (checks como `true|false|null`) y `reasons` da el motivo por campo (rechazo, ya tenía valor, Genesys ya da el sentimiento).
 - **Prompts con LLM (FE013):** `rejected` cuenta respuestas fuera de formato y `failed` conversaciones sin respuesta del proveedor; `failures` da el motivo de cada una. Se excluyen de los outputs.
 - **Progreso por *polling*:** el front pide la instantánea cada 500 ms mientras el estado es `pendiente` o `en_curso` (`RUN_POLL_MS`, `staleTime: 0`). No hay WebSocket ni SSE.
 
