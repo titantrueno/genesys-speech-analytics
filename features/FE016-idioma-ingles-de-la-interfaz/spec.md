@@ -12,6 +12,7 @@ Permitir usar la interfaz (menús y textos fijos) en inglés además de en espa�
 |---|---|
 | ¿Cómo se elige? | **Solo** en el campo `language` de Configuración → General (hoy solo `es-ES`; se añade `en-US`, «English (United States)»). Es un ajuste de la plataforma: no hay selector en el login ni en el panel principal, ni elección personal por navegador (decisión de la persona usuaria, 2026-10-13). |
 | ¿Qué se traduce? | Los menús y textos fijos de toda la interfaz del frontend (~6.400 líneas con textos en español, sin capa i18n). **No** se traduce el contenido: transcripciones, resúmenes, main topic, palabras clave y demás datos se muestran como llegan, en cualquier idioma de la interfaz. |
+| ¿Y la API? | **Solo en inglés**, sin depender del idioma del cliente: mensajes de error y de validación (`detail`), mensajes de estado y documentación OpenAPI (rutas, resúmenes, descripciones). La API no lee `Accept-Language` ni el idioma configurado; el idioma elegido solo cambia la parte visual del cliente (decisión de la persona usuaria, 2026-10-13). |
 | ¿Cómo? | Capa i18n propia, sin dependencias nuevas: diccionarios `es` y `en` tipados, función `t(clave, params)` y proveedor React. |
 | ¿Fechas y números? | Siguen el idioma activo (hoy fijos a `es-ES` en `frontend/src/lib/format.ts` y `frontend/src/downloads/labels.ts`). La zona horaria sigue siendo la de la configuración. |
 | ¿Cómo se entrega? | Por fases (ver Alcance). |
@@ -29,8 +30,8 @@ Permitir usar la interfaz (menús y textos fijos) en inglés además de en espa�
 9. Fechas, horas, números, porcentajes y duraciones se formatean con la configuración regional del idioma activo (p. ej. `1.234,5` en `es`, `1,234.5` en `en`) y siguen respetando la zona horaria configurada (tests de `format.ts`).
 10. Con el idioma `es` el comportamiento y los textos actuales no cambian: la suite de tests existente pasa sin modificar sus aserciones de texto.
 11. Las etiquetas de catálogo que llegan del backend (operadores, campos y valores de consulta, estados) se muestran traducidas por clave en `en`; una clave sin traducción muestra la etiqueta del backend (test con clave desconocida).
-12. El frontend envía `Accept-Language` con el idioma activo; los mensajes de error y validación del backend que están catalogados se devuelven en ese idioma y los no catalogados siguen en español (tests de backend por mensaje catalogado y por fallback).
-13. La documentación OpenAPI refleja `en-US` y `Accept-Language` (extiende FE010).
+12. Todos los mensajes de la API (`detail` de errores HTTP, errores de validación, mensajes de estado) están en inglés y no cambian con el idioma configurado ni con ninguna cabecera: tests de backend por mensaje con `en-US` y `es-ES` configurados y con `Accept-Language: es`, y un test que recorre el código del backend y falla si un mensaje de error contiene texto en español.
+13. La documentación OpenAPI (`backend/openapi.yaml`: resúmenes, descripciones, ejemplos de mensaje) está en inglés, documenta `en-US` como idioma de la plataforma y no documenta `Accept-Language` (extiende FE010; test de backend que comprueba que el documento exportado no contiene texto en español).
 14. `./scripts/ci.sh` termina con código 0 y `python scripts/audit_vault.py` también.
 15. Verificación manual en navegador: cambiar entre `es` y `en` en login, dashboards, detalle de conversación y configuración.
 
@@ -50,10 +51,12 @@ Fases, cada una entregable y verificable por separado:
 3. **Explorador y búsqueda** (incluye catálogo de operadores/campos del backend por clave).
 4. **Flujos y descargas.**
 5. **Configuración y usuarios** (incluye la tarjeta de Genesys y el visor OpenAPI propio, no el contenido de Swagger UI).
-6. **Mensajes del backend** con `Accept-Language` y cierre (regla de lint, vault, ADR).
+6. **API solo en inglés** (mensajes de error, de estado y OpenAPI) y cierre (regla de lint, vault, ADR).
 
 ## Fuera de alcance
 
+- Que la API responda en el idioma del cliente (`Accept-Language`) o en español: es solo en inglés.
+- Traducir los textos de la API que son datos (nombres de taxonomía, de checks, de colas y agentes, etiquetas de catálogo): no son mensajes y se muestran como llegan o se traducen por clave en el front.
 - Idiomas distintos de español e inglés (la capa los admite; añadirlos será otra feature).
 - Idioma por persona o por navegador y selectores de idioma fuera de Configuración → General.
 - Cambiar el idioma desde un rol sin `config:edit`: ese rol usa el idioma de la plataforma.
@@ -68,7 +71,7 @@ Fases, cada una entregable y verificable por separado:
 
 - **Tamaño:** ~6.400 líneas de UI; es el riesgo principal. Mitigación: fases con criterios 7 y 8 por pantalla migrada; mientras una pantalla no esté migrada seguirá en español con `en` activo (aceptable solo entre fases, no en la entrega final).
 - **Tests existentes** dependen de textos en español: se asume que `es` se conserva literal (criterio 10); migrar a claves exige que `es` reproduzca exactamente los textos actuales.
-- **Mensajes del backend:** asumo que la fase 6 puede limitarse a los mensajes catalogados (los ~67 `detail`/`HTTPException` y mensajes de validación de configuración). Si la persona usuaria prefiere dejarlos en español, se mueve a fuera de alcance. **Por confirmar.**
+- **Errores de la API en una interfaz en español:** los mensajes de la API (p. ej. un error de validación bajo un campo de Configuración) se mostrarán en inglés aunque la interfaz esté en español. Aceptado por la persona usuaria; las etiquetas de catálogo (operadores, campos, KPIs) no son mensajes de la API y se traducen por clave en el front.
 - **Ajuste único:** todas las personas usuarias ven el mismo idioma; quien necesite otro depende de que un administrador lo cambie. Aceptado.
 - **Texto mixto:** las etiquetas de usuario (taxonomía, checks) seguirán en español dentro de una interfaz inglesa; aceptado.
 - Se asume que `language` persistido como `es-ES` (FE015) sigue siendo válido tras añadir `en-US`.

@@ -8,13 +8,13 @@
 |---|---|---|
 | [Arquitectura](../../vault/arquitectura/arquitectura-de-la-plataforma.md) (l. 105), [ADR-007](../../vault/decisiones/adr-007-configuracion-global-y-enmascarado.md), [estado operativo](../../vault/operaciones/estado-operativo.md) (l. 34) | `active`; `GET /api/config/public` ya devuelve `language` sin sesión. | No hace falta endpoint nuevo: el idioma global llega por `usePublicConfig` (`frontend/src/config/api.ts`). |
 | [ADR-009](../../vault/decisiones/adr-009-servicio-llm-con-proveedores-intercambiables.md) | El ADR-009 ya existe (servicio LLM). | La spec decía «ADR-009» para i18n: es **ADR-010**; corregido en la spec. |
-| [Patrones de interfaz](../../vault/ingenieria/patrones-de-interfaz.md), [contrato API](../../vault/arquitectura/contrato-api-front-back.md) | `active`. | Se actualizan en T9 (convención «sin texto de UI fuera de los diccionarios»; `Accept-Language`). |
+| [Patrones de interfaz](../../vault/ingenieria/patrones-de-interfaz.md), [contrato API](../../vault/arquitectura/contrato-api-front-back.md) | `active`. | Se actualizan en T9 (convención «sin texto de UI fuera de los diccionarios»; mensajes de la API solo en inglés). |
 | `backend/app/config/model.py` (`LANGUAGES = {"es-ES": …}`), `routers/config.py` l. 58, `openapi/schemas.py` l. 581 | El idioma válido sale de `LANGUAGES`. | T1: añadir `en-US`. El valor persistido `es-ES` (FE015) sigue siendo válido. |
 | `frontend/src/lib/format.ts` (`LOCALE = 'es-ES'`, formateadores creados al cargar el módulo), `downloads/labels.ts` l. 44 | Configuración regional fija. | T2: `setDisplayLocale()` (como `setDisplayTimeZone`) y formateadores en caché por locale. `AppLayout` ya remonta el contenido con `key` al cambiar la zona; se añade el idioma a esa `key`. |
 | `layout/AppLayout.tsx`, `layout/navigation.ts` | Barra lateral con `label` y `description` fijos. | T2: `NAV_ITEMS` pasa a guardar claves; no hay selector de idioma en la barra lateral ni en el login (el idioma se elige solo en Configuración › General). |
 | `frontend/src/test/utils.tsx` | Utilidad común de render para los tests. | T2: envuelve con el proveedor i18n en `es` por defecto, de modo que los tests actuales no cambian (criterio 10). |
 | Tamaño por carpeta (líneas, sin tests) | dashboards 723 · conversations 1010 · explorer 899 · search 414 · flows 2194 · downloads 766 · config 1352 · users 385 · pages/layout/components/auth ~520 | Reparto de T2–T7. |
-| `backend/app` con ~67 `HTTPException`/`detail` y ~45 etiquetas | Textos en español. | Etiquetas de catálogo: por clave en el front (T4). Errores: `Accept-Language` en T8. |
+| `backend/app` con ~67 `HTTPException`/`detail` y ~45 etiquetas | Textos en español. | Etiquetas de catálogo: por clave en el front (T4). Mensajes de error y OpenAPI: solo inglés en el backend (T8), sin `Accept-Language`. |
 
 ## Decisiones de diseño
 
@@ -67,15 +67,15 @@
 - **Criterios de la spec:** 2, 7, 8, 10.
 - **Depende de:** T2.
 
-### T8 — Mensajes del backend con `Accept-Language`
-- **Qué:** el cliente HTTP (`frontend/src/api/client.ts`) envía `Accept-Language`; catálogo de mensajes en el backend (`app/i18n.py`) para los `detail` y errores de validación de configuración; lo no catalogado sigue en español; OpenAPI documenta la cabecera.
-- **Hecho cuando:** tests de backend: un mensaje catalogado sale en `en` con `Accept-Language: en-US`, en `es` sin cabecera o con `es-ES`, y uno no catalogado sale en español; test de front: el cliente envía el idioma activo.
-- **Atención:** `frontend/src/components/dataErrors.ts` reconoce el `503` de datos reales comparando el texto en español del mensaje; al traducir los mensajes debe pasar a reconocerlo por otra señal (código de error o `status` + ruta) o dejaría de mostrarse el aviso con `Accept-Language: en-US`. Hoy está excluido del test de «sin español a mano».
+### T8 — API solo en inglés
+- **Qué:** traducir al inglés todos los mensajes de la API: `detail` de `HTTPException`, mensajes de validación (pydantic y propios), mensajes de estado y el texto del contrato OpenAPI (resúmenes, descripciones, ejemplos), y regenerar `backend/openapi.yaml`. La API no lee `Accept-Language` ni el idioma configurado. El front sigue mostrando esos mensajes tal cual; `components/dataErrors.ts` pasa a comparar con el mensaje en inglés de «real data unavailable» (y sale de la exclusión del test de «sin español a mano»).
+- **Hecho cuando:** tests de backend actualizados a los mensajes en inglés (con `es-ES` y `en-US` configurados y con `Accept-Language: es`, la respuesta es la misma); test que recorre `backend/app` y falla si un mensaje de error (`detail=`, `ValueError(...)`, `raise ...(...)`) contiene español; test que comprueba que `openapi.yaml` no contiene español; test de front del aviso de datos no disponibles con el mensaje en inglés. `./scripts/ci.sh` en verde.
+- **Atención:** los textos que son datos o etiquetas de dominio (taxonomía, checks, KPIs, operadores de consulta) no son mensajes de la API y no entran aquí; el cliente de pruebas del front sigue usando mocks con sus propios textos. Las pruebas del servicio de ingesta y del LLM (`ingestion/`, `llm/`) cuentan igual si exponen mensajes por HTTP.
 - **Criterios de la spec:** 12, 13.
-- **Depende de:** T2. (Pendiente de confirmar con la persona usuaria; si prefiere dejarlos en español, se mueve a fuera de alcance.)
+- **Depende de:** T2.
 
 ### T9 — Conocimiento y cierre
-- **Qué:** `/vault capture`: ADR-010 (capa i18n propia; el idioma es un ajuste de la plataforma), arquitectura y patrones de interfaz (convención de diccionarios y cómo añadir un idioma), contrato API (`Accept-Language`, `en-US`), estado operativo (idiomas disponibles) y entrega; el test de «sin español a mano» pasa a cubrir **todo** `frontend/src`; `VERIFY.md` con recorrido manual en navegador.
+- **Qué:** `/vault capture`: ADR-010 (capa i18n propia; el idioma es un ajuste de la plataforma y la API responde solo en inglés), arquitectura y patrones de interfaz (convención de diccionarios y cómo añadir un idioma), contrato API (mensajes solo en inglés, `en-US`), estado operativo (idiomas disponibles) y entrega; el test de «sin español a mano» pasa a cubrir **todo** `frontend/src`; `VERIFY.md` con recorrido manual en navegador.
 - **Hecho cuando:** `./scripts/ci.sh` y `python scripts/audit_vault.py` con código 0; índices del vault actualizados; criterio 15 comprobado en navegador (login, dashboards, detalle de conversación, configuración) en `es` y `en`.
 - **Criterios de la spec:** 7, 14, 15.
 - **Depende de:** T3–T8.
