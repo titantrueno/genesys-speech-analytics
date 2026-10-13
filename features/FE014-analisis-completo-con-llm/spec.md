@@ -1,6 +1,6 @@
 # FE014 — Análisis completo con LLM
 
-> Estado: **aprobada** (2026-10-13). Depende de FE013 (servicio de LLM y «Guardar en campos»), FE012 (origen real y análisis pendiente) y FE005 (taxonomía y checks). Aplica FE008 y FE009.
+> Estado: **entregada** en `v0.11.0` el 2026-10-13 ([ship](SHIP.md)). Aprobada el 2026-10-13. Depende de FE013 (servicio de LLM y «Guardar en campos»), FE012 (origen real y análisis pendiente) y FE005 (taxonomía y checks). Aplica FE008 y FE009.
 
 ## Objetivo
 

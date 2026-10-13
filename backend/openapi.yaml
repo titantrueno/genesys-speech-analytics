@@ -41,7 +41,7 @@ info:
 
 
     Referencia ampliada: `vault/arquitectura/contrato-api-front-back.md`.'
-  version: 0.10.0
+  version: 0.11.0
   x-permissions:
   - value: dashboards:view
     label: Ver dashboards

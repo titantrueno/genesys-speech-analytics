@@ -15,6 +15,7 @@ Mantener la trazabilidad entre cambios enviados, evidencia de verificación y co
 ## Estado inicial
 
 - [Plataforma v0.10.0: servicio de LLM para summary y main topic](2026-10-13-plataforma-v0-10-0.md) — FE013.
+- [Plataforma v0.11.0: análisis completo con LLM](2026-10-13-plataforma-v0-11-0.md) — FE014.
 - [Plataforma v0.9.0: switch entre datos sintéticos y reales](2026-10-12-plataforma-v0-9-0.md) — FE012.
 - [Plataforma v0.8.0: ingesta de conversaciones de Genesys](2026-10-12-plataforma-v0-8-0.md) — FE011.
 - [Plataforma v0.7.0: especificación OpenAPI en Configuración](2026-10-03-plataforma-v0-7-0.md) — FE010 y OpenAPI 3.1 completo.
