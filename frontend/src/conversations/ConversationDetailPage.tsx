@@ -4,36 +4,39 @@ import { Link, useLocation, useParams, useSearchParams, type Location } from 're
 import { ApiError } from '../api/client'
 import { useConversation } from '../api/conversations'
 import { useAuth } from '../auth/useAuth'
+import type { TKey } from '../i18n/dictionaries'
+import { useI18n } from '../i18n/useI18n'
 import { LoadingScreen } from '../layout/LoadingScreen'
 import { formatDateTimeLong, formatDuration } from '../lib/format'
 import { AnalysisPanel } from './AnalysisPanel'
 import { PendingText } from './badges'
 import { GenesysPanel } from './GenesysPanel'
 import { ChatTranscript } from './ChatTranscript'
-import { CHANNEL_LABELS } from './labels'
+import { channelLabel } from './labels'
 
 
-const BACK_LABELS: Record<string, string> = {
-  '/conversaciones': 'Volver al listado',
-  '/explorador': 'Volver al explorador',
-  '/busqueda': 'Volver a la búsqueda',
+const BACK_LABELS: Record<string, TKey> = {
+  '/conversaciones': 'conv.back.list',
+  '/explorador': 'conv.back.explorer',
+  '/busqueda': 'conv.back.search',
 }
 
 // Orígenes con parámetros en la ruta (FE004: la tabla de resultados de una ejecución de flujo).
-const BACK_PATTERNS: Array<[RegExp, string]> = [[/^\/flujos\/[^/]+\/ejecuciones\/[^/]+$/, 'Volver a la ejecución']]
+const BACK_PATTERNS: Array<[RegExp, TKey]> = [[/^\/flujos\/[^/]+\/ejecuciones\/[^/]+$/, 'conv.back.run']]
 
-function backLabel(pathname: string): string | undefined {
+function backLabel(pathname: string): TKey | undefined {
   return BACK_LABELS[pathname] ?? BACK_PATTERNS.find(([pattern]) => pattern.test(pathname))?.[1]
 }
 
 function BackLink() {
+  const { t } = useI18n()
   const location = useLocation()
   const from = (location.state as { from?: Pick<Location, 'pathname' | 'search'> } | null)?.from
   const label = from ? backLabel(from.pathname) : undefined
   const to = from && label ? `${from.pathname}${from.search}` : '/conversaciones'
   return (
     <Link to={to} className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
-      <ArrowLeft className="size-4" aria-hidden />{label ?? BACK_LABELS['/conversaciones']}
+      <ArrowLeft className="size-4" aria-hidden />{t(label ?? BACK_LABELS['/conversaciones'])}
     </Link>
   )
 }
@@ -49,6 +52,7 @@ export function ConversationDetailPage() {
   const { conversationId = '' } = useParams()
   const { data: conversation, error, isLoading } = useConversation(conversationId)
   const { can } = useAuth()
+  const { t } = useI18n()
   const [params] = useSearchParams()
   const turnElements = useRef(new Map<number, HTMLLIElement>())
   const chatRef = useRef<HTMLDivElement>(null)
@@ -85,7 +89,7 @@ export function ConversationDetailPage() {
       <div className="space-y-3">
         <BackLink />
         <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {notFound ? 'Conversación no encontrada.' : 'No se ha podido cargar la conversación.'}
+          {notFound ? t('conv.notFound') : t('conv.detailError')}
         </p>
       </div>
     )
@@ -95,19 +99,19 @@ export function ConversationDetailPage() {
   return (
     <div className="space-y-4">
       <BackLink />
-      <section aria-label="Resumen de la conversación" className="rounded-xl border border-slate-200 bg-white p-5">
+      <section aria-label={t('conv.summaryAria')} className="rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">Conversación {conversation.id}</h1>
+            <h1 className="text-xl font-semibold text-slate-900">{t('conv.heading', { id: conversation.id })}</h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
               <span className="inline-flex items-center gap-1.5 font-medium text-slate-700">
                 <ChannelIcon className="size-4" aria-hidden />
-                <span>{CHANNEL_LABELS[conversation.channel]}</span>
-                {conversation.channel === 'voz' && <span className="font-normal text-slate-500">(transcripción)</span>}
+                <span>{channelLabel(t, conversation.channel)}</span>
+                {conversation.channel === 'voz' && <span className="font-normal text-slate-500">{t('conv.voiceTranscript')}</span>}
               </span>
               <span>{formatDateTimeLong(conversation.started_at)}</span>
-              <span>{conversation.queue ?? 'Sin cola'}</span>
-              <span>{conversation.agent ?? 'Sin agente'}</span>
+              <span>{conversation.queue ?? t('conv.noQueue')}</span>
+              <span>{conversation.agent ?? t('conv.noAgent')}</span>
               <span>{formatDuration(conversation.duration_s)}</span>
             </p>
           </div>
@@ -115,7 +119,7 @@ export function ConversationDetailPage() {
             {can('search:use') && (
               <Link to={`/busqueda?similar=${conversation.id}`}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
-                <ScanSearch className="size-4" aria-hidden />Buscar conversaciones similares
+                <ScanSearch className="size-4" aria-hidden />{t('conv.similar')}
               </Link>
             )}
             {conversation.main_topic_label
@@ -124,7 +128,7 @@ export function ConversationDetailPage() {
           </div>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-slate-700">
-          <span className="font-medium text-slate-900">Summary. </span>
+          <span className="font-medium text-slate-900">{t('conv.summaryLabel')}</span>
           {conversation.analysis.summary || <PendingText className="text-sm" />}
         </p>
       </section>

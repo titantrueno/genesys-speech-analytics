@@ -1,5 +1,6 @@
 import { NavLink, useParams } from 'react-router'
 import { useSummary } from '../api/metrics'
+import { useI18n } from '../i18n/useI18n'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { DASHBOARDS } from './definitions'
 import { FilterBar } from './FilterBar'
@@ -8,6 +9,7 @@ import { useDashboardFilters } from './useDashboardFilters'
 export function DashboardsPage() {
   const { dashboardId } = useParams()
   const { filters, search } = useDashboardFilters()
+  const { t } = useI18n()
   const { data: summary } = useSummary(filters)
   const dashboard = DASHBOARDS.find((d) => d.id === dashboardId)
   if (!dashboard) return <NotFoundPage />
@@ -16,14 +18,14 @@ export function DashboardsPage() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Dashboards</h1>
-          <p className="text-sm text-slate-500">{dashboard.description}</p>
+          <h1 className="text-2xl font-semibold text-slate-900">{t('dash.title')}</h1>
+          <p className="text-sm text-slate-500">{t(dashboard.descriptionKey)}</p>
         </div>
-        <nav aria-label="Dashboards" className="flex rounded-lg border border-slate-200 bg-white p-1">
+        <nav aria-label={t('dash.title')} className="flex rounded-lg border border-slate-200 bg-white p-1">
           {DASHBOARDS.map((d) => (
             <NavLink key={d.id} to={{ pathname: `/dashboards/${d.id}`, search }}
               className={({ isActive }) => `rounded-md px-3 py-1.5 text-sm ${isActive ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-              {d.title}
+              {t(d.titleKey)}
             </NavLink>
           ))}
         </nav>

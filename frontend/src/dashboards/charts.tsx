@@ -1,7 +1,8 @@
 import { Link, useNavigate } from 'react-router'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from 'recharts'
 import type { KpiUnit, TimeseriesResponse } from '../api/metrics'
-import { formatKpi, formatShortDate } from '../lib/format'
+import { useI18n } from '../i18n/useI18n'
+import { formatKpi, formatPercentWhole, formatShortDate } from '../lib/format'
 import { EmptyState } from './bars'
 
 export { EmptyState, RankedBars, type BarItem } from './bars'
@@ -29,7 +30,7 @@ export function SplitBar({ label, parts, hrefFor }: {
             <Link to={hrefFor(p.key)} className="flex items-center gap-2 text-slate-700 hover:text-brand-700">
               <span aria-hidden className="size-2.5 rounded-sm" style={{ background: p.color }} />
               {p.label}
-              <span className="text-slate-500 tabular-nums">{p.value} · {Math.round((p.value / total) * 100)} %</span>
+              <span className="text-slate-500 tabular-nums">{p.value} · {formatPercentWhole((p.value / total) * 100)}</span>
             </Link>
           </li>
         ))}
@@ -39,12 +40,13 @@ export function SplitBar({ label, parts, hrefFor }: {
 }
 
 function TimeseriesTooltip({ active, payload, unit }: TooltipContentProps & { unit: KpiUnit }) {
+  const { t } = useI18n()
   if (!active || !payload?.length) return null
   const point = payload[0].payload as TimeseriesResponse['points'][number]
   const days = (Date.parse(point.period_end) - Date.parse(point.period_start)) / 86_400_000 + 1
   const range = point.period_start === point.period_end
     ? formatShortDate(point.period_start)
-    : `${formatShortDate(point.period_start)} – ${formatShortDate(point.period_end)}${days < 7 ? ' (semana parcial)' : ''}`
+    : `${formatShortDate(point.period_start)} – ${formatShortDate(point.period_end)}${days < 7 ? ` (${t('dash.partialWeek')})` : ''}`
   return (
     <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs shadow-md">
       <p className="text-sm font-semibold text-slate-900">{formatKpi(point.value, unit)}</p>

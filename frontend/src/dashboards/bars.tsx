@@ -1,5 +1,6 @@
 // Barras en HTML, sin Recharts: así las usan también las vistas que no necesitan la librería de gráficos (FE004).
 import { Link } from 'react-router'
+import { useI18n } from '../i18n/useI18n'
 
 export interface BarItem { key: string; label: string; value: number | null }
 
@@ -11,6 +12,7 @@ export function RankedBars({ label, items, format, maxValue, diverging = false, 
   diverging?: boolean
   hrefFor?: (item: BarItem) => string
 }) {
+  const { t } = useI18n()
   const max = maxValue ?? Math.max(...items.map((i) => Math.abs(i.value ?? 0)), 1)
   if (items.length === 0) return <EmptyState />
   return (
@@ -22,7 +24,7 @@ export function RankedBars({ label, items, format, maxValue, diverging = false, 
         return (
           <li key={item.key} className="grid grid-cols-[minmax(0,14rem)_1fr] items-center gap-3 text-sm" title={`${item.label}: ${text}`}>
             {hrefFor ? (
-              <Link to={hrefFor(item)} aria-label={`${item.label}: ${text}. Ver conversaciones`}
+              <Link to={hrefFor(item)} aria-label={t('dash.barLink', { label: item.label, text })}
                 className="truncate text-slate-700 underline-offset-2 hover:text-brand-700 hover:underline">
                 {item.label}
               </Link>
@@ -52,5 +54,6 @@ export function RankedBars({ label, items, format, maxValue, diverging = false, 
 }
 
 export function EmptyState() {
-  return <p className="py-8 text-center text-sm text-slate-500">Sin conversaciones para estos filtros</p>
+  const { t } = useI18n()
+  return <p className="py-8 text-center text-sm text-slate-500">{t('dash.empty')}</p>
 }

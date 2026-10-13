@@ -125,6 +125,11 @@ export function formatDecimal(value: number, digits: 1 | 2): string {
   return (digits === 1 ? formats().oneDecimal : formats().twoDecimals).format(value)
 }
 
+/** Porcentaje sin decimales («50 %» en español, «50%» en inglés). */
+export function formatPercentWhole(value: number): string {
+  return `${formats().integer.format(Math.round(value))}${formats().percent}`
+}
+
 /** Hasta un decimal, sin ceros finales («2,5», «3»). */
 export function formatUpToOneDecimal(value: number): string {
   return formats().upToOneDecimal.format(value)

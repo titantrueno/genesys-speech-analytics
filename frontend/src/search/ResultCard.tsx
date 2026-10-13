@@ -1,7 +1,8 @@
 import { MessageSquareText, Phone } from 'lucide-react'
 import { Link } from 'react-router'
 import { SentimentValue } from '../conversations/badges'
-import { CHANNEL_LABELS } from '../conversations/labels'
+import { channelLabel } from '../conversations/labels'
+import { useI18n } from '../i18n/useI18n'
 import { useRowNavigation } from '../conversations/useRowNavigation'
 import { formatDateTimeWithYear } from '../lib/format'
 import { highlight } from '../lib/highlight'
@@ -30,6 +31,7 @@ export function ResultCard({ conversation: conv, score, href, turns, highlights 
   turns?: SearchResult['turns']
   highlights?: string[]
 }) {
+  const { t } = useI18n()
   const { onClick, onAuxClick, linkState } = useRowNavigation(href)
   const ChannelIcon = conv.channel === 'voz' ? Phone : MessageSquareText
   const speaker = (s: SearchResult['turns'][number]['speaker']) => s === 'agente' ? conv.agent ?? 'Agente' : s === 'bot' ? 'Asistente virtual' : 'Cliente'
@@ -42,7 +44,7 @@ export function ResultCard({ conversation: conv, score, href, turns, highlights 
           <Link to={href} state={linkState} className="font-medium text-brand-700 hover:underline">
             {formatDateTimeWithYear(conv.started_at)}
           </Link>
-          <span className="inline-flex items-center gap-1.5"><ChannelIcon className="size-3.5 text-slate-400" aria-hidden />{CHANNEL_LABELS[conv.channel]}</span>
+          <span className="inline-flex items-center gap-1.5"><ChannelIcon className="size-3.5 text-slate-400" aria-hidden />{channelLabel(t, conv.channel)}</span>
           <span>{conv.queue}</span>
           {conv.main_topic_label && (
             <span className="rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{conv.main_topic_label}</span>

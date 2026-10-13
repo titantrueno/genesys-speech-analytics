@@ -1,6 +1,7 @@
 import { Bot, CircleAlert, Split } from 'lucide-react'
 import { Fragment } from 'react'
 import type { ConversationDetail, Turn } from '../api/conversations'
+import { useI18n } from '../i18n/useI18n'
 import { formatOffset } from '../lib/format'
 import { highlight } from '../lib/highlight'
 import { sentimentTone } from './labels'
@@ -30,13 +31,14 @@ interface Props {
 }
 
 export function ChatTranscript({ conversation, activeTurn, registerTurn }: Props) {
+  const { t } = useI18n()
   const keywords = conversation.analysis.keywords
   const speakerName = (speaker: Turn['speaker']) =>
-    speaker === 'agente' ? conversation.agent ?? 'Agente' : speaker === 'bot' ? 'Asistente virtual' : 'Cliente'
+    speaker === 'agente' ? conversation.agent ?? t('conv.speaker.agent') : speaker === 'bot' ? t('conv.speaker.bot') : t('conv.speaker.customer')
   const transfers = transfersBefore(conversation.turns)
 
   return (
-    <ol aria-label="Transcripción" className="space-y-2 p-4">
+    <ol aria-label={t('conv.transcript')} className="space-y-2 p-4">
       {conversation.turns.map((turn, index) => {
         const transfer = transfers[index]
         const side = SIDE[turn.speaker]
@@ -49,10 +51,10 @@ export function ChatTranscript({ conversation, activeTurn, registerTurn }: Props
           'data-active': active ? 'true' : undefined,
         }
         const line = transfer && (
-          <li role="separator" aria-label="Transferencia del asistente virtual al agente"
+          <li role="separator" aria-label={t('conv.transfer')}
             className="flex items-center gap-2 py-1 text-xs font-medium text-brand-700">
             <span className="h-px flex-1 bg-brand-200" aria-hidden />
-            <Split className="size-3.5" aria-hidden />Transferencia del asistente virtual al agente
+            <Split className="size-3.5" aria-hidden />{t('conv.transfer')}
             <span className="h-px flex-1 bg-brand-200" aria-hidden />
           </li>
         )
@@ -65,7 +67,7 @@ export function ChatTranscript({ conversation, activeTurn, registerTurn }: Props
             </li>
           )
         }
-        const tone = turn.sentiment === null ? null : sentimentTone(turn.sentiment)
+        const tone = turn.sentiment === null ? null : sentimentTone(turn.sentiment, t)
         const undelivered = turn.delivered === false
         return (
           <Fragment key={index}>
@@ -80,13 +82,13 @@ export function ChatTranscript({ conversation, activeTurn, registerTurn }: Props
               <p className="mt-1 flex items-center justify-end gap-1.5 text-[11px] text-slate-500">
                 {undelivered && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 font-medium text-amber-800">
-                    <CircleAlert className="size-3" aria-hidden />No entregado
+                    <CircleAlert className="size-3" aria-hidden />{t('conv.undelivered')}
                   </span>
                 )}
                 {tone && (
                   <>
-                    <span aria-hidden className="size-2 rounded-full" style={{ background: tone.color }} title={`Sentimiento ${tone.label.toLowerCase()}`} />
-                    <span className="sr-only">Sentimiento {tone.label.toLowerCase()}</span>
+                    <span aria-hidden className="size-2 rounded-full" style={{ background: tone.color }} title={t('conv.sentimentTone', { tone: tone.label.toLowerCase() })} />
+                    <span className="sr-only">{t('conv.sentimentTone', { tone: tone.label.toLowerCase() })}</span>
                   </>
                 )}
                 <span className="tabular-nums">{formatOffset(turn.offset_s)}</span>

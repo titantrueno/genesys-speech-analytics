@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from 'react'
 import type { Turn } from '../api/conversations'
+import { useI18n } from '../i18n/useI18n'
 import { formatOffset, formatSigned } from '../lib/format'
 import { sentimentTone } from './labels'
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function SentimentTimeline({ turns, activeTurn, onSelect }: Props) {
+  const { t } = useI18n()
   // Solo los turnos del cliente con sentimiento: en las conversaciones reales, Genesys puede no darlo (FE012).
   const points = turns.flatMap((turn, index) =>
     turn.speaker === 'cliente' && turn.sentiment !== null ? [{ index, turn, sentiment: turn.sentiment }] : [])
@@ -31,7 +33,7 @@ export function SentimentTimeline({ turns, activeTurn, onSelect }: Props) {
   }
 
   return (
-    <div role="group" aria-label="Evolución del sentimiento del cliente">
+    <div role="group" aria-label={t('conv.timeline.group')}>
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" aria-hidden={points.length === 0}>
         {[1, 0, -1].map((v) => (
           <g key={v}>
@@ -44,23 +46,23 @@ export function SentimentTimeline({ turns, activeTurn, onSelect }: Props) {
         ))}
         <polyline points={line} fill="none" stroke="var(--chart-muted)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {points.map((p, i) => {
-          const tone = sentimentTone(p.sentiment)
+          const tone = sentimentTone(p.sentiment, t)
           const active = activeTurn === p.index
           return (
             <g key={p.index} role="button" tabIndex={0} className="cursor-pointer outline-none [&:focus-visible>circle:last-child]:stroke-[var(--series-1)]"
-              aria-label={`Turno ${p.index + 1}: sentimiento ${formatSigned(p.sentiment)} (${tone.label.toLowerCase()})`}
+              aria-label={t('conv.timeline.point', { n: p.index + 1, value: formatSigned(p.sentiment), tone: tone.label.toLowerCase() })}
               onClick={() => onSelect(p.index)} onKeyDown={(e) => onKey(e, p.index)}>
-              <title>{`Turno ${p.index + 1} · ${formatOffset(p.turn.offset_s)} · ${formatSigned(p.sentiment)}`}</title>
+              <title>{t('conv.timeline.title', { n: p.index + 1, time: formatOffset(p.turn.offset_s), value: formatSigned(p.sentiment) })}</title>
               <circle cx={x(i)} cy={y(p.sentiment)} r={12} fill="transparent" />
               <circle cx={x(i)} cy={y(p.sentiment)} r={active ? 6 : 4.5} fill={tone.color}
                 stroke={active ? 'var(--series-1)' : 'var(--chart-surface)'} strokeWidth={2} />
             </g>
           )
         })}
-        <text x={M.left} y={HEIGHT - 6} fontSize={10} fill="var(--chart-muted)">Inicio</text>
-        <text x={WIDTH - M.right} y={HEIGHT - 6} fontSize={10} fill="var(--chart-muted)" textAnchor="end">Final</text>
+        <text x={M.left} y={HEIGHT - 6} fontSize={10} fill="var(--chart-muted)">{t('conv.timeline.start')}</text>
+        <text x={WIDTH - M.right} y={HEIGHT - 6} fontSize={10} fill="var(--chart-muted)" textAnchor="end">{t('conv.timeline.end')}</text>
       </svg>
-      <p className="text-xs text-slate-500">Pulsa un punto para ir a ese mensaje del cliente.</p>
+      <p className="text-xs text-slate-500">{t('conv.timeline.hint')}</p>
     </div>
   )
 }

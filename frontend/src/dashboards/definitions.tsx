@@ -1,30 +1,31 @@
 import type { ReactNode } from 'react'
+import type { TKey } from '../i18n/dictionaries'
 import { DEFAULT_DASHBOARD_ID } from './DashboardsIndex'
 import { BreakdownBars, BreakdownTable, ChannelSplit, ComplianceChecks, KpiRow, TimeseriesWidget } from './widgets'
 
 export interface DashboardDefinition {
   id: string
-  title: string
-  description: string
+  titleKey: TKey
+  descriptionKey: TKey
   render: () => ReactNode
 }
 
 export const DASHBOARDS: DashboardDefinition[] = [
   {
     id: DEFAULT_DASHBOARD_ID,
-    title: 'Visión general',
-    description: 'Volumen, resolución y satisfacción de la atención al cliente.',
+    titleKey: 'dash.overview.title',
+    descriptionKey: 'dash.overview.description',
     render: () => (
       <>
         <KpiRow dashboard={DEFAULT_DASHBOARD_ID} codes={['volume', 'aht_s', 'resolution_rate', 'escalation_rate', 'fcr_rate', 'csat_avg']} />
         <div className="grid items-start gap-4 lg:grid-cols-2">
-          <TimeseriesWidget kpi="volume" title="Volumen de conversaciones" />
-          <BreakdownBars title="Distribución por main topic" dimension="main_topic" kpi="volume" subtitle="Conversaciones por motivo principal" />
+          <TimeseriesWidget kpi="volume" titleKey="dash.w.volume" />
+          <BreakdownBars titleKey="dash.w.topicDistribution" dimension="main_topic" kpi="volume" subtitleKey="dash.w.topicSubtitle" />
           <div className="space-y-4">
             <ChannelSplit />
-            <BreakdownBars title="Volumen por cola" dimension="queue" kpi="volume" />
+            <BreakdownBars titleKey="dash.w.volumeByQueue" dimension="queue" kpi="volume" />
           </div>
-          <BreakdownTable title="KPIs por main topic" dimension="main_topic"
+          <BreakdownTable titleKey="dash.w.kpisByTopic" dimension="main_topic"
             codes={['volume', 'resolution_rate', 'escalation_rate', 'fcr_rate', 'csat_avg', 'sentiment_avg', 'aht_s']} />
         </div>
       </>
@@ -32,16 +33,16 @@ export const DASHBOARDS: DashboardDefinition[] = [
   },
   {
     id: 'calidad-y-cumplimiento',
-    title: 'Calidad y cumplimiento',
-    description: 'Checks de cumplimiento, resolución y escalado por cola y agente.',
+    titleKey: 'dash.quality.title',
+    descriptionKey: 'dash.quality.description',
     render: () => (
       <>
         <KpiRow dashboard="calidad-y-cumplimiento" codes={['compliance_rate', 'resolution_rate', 'escalation_rate', 'aht_s', 'avg_turns']} />
         <div className="grid items-start gap-4 lg:grid-cols-2">
           <ComplianceChecks />
-          <BreakdownBars title="Cumplimiento por cola" dimension="queue" kpi="compliance_rate" />
-          <TimeseriesWidget kpi="compliance_rate" title="Evolución del cumplimiento" />
-          <BreakdownTable title="Rendimiento por agente" dimension="agent"
+          <BreakdownBars titleKey="dash.w.complianceByQueue" dimension="queue" kpi="compliance_rate" />
+          <TimeseriesWidget kpi="compliance_rate" titleKey="dash.w.complianceTrend" />
+          <BreakdownTable titleKey="dash.w.agentPerformance" dimension="agent"
             codes={['volume', 'compliance_rate', 'resolution_rate', 'escalation_rate', 'aht_s', 'csat_avg']} />
         </div>
       </>
@@ -49,17 +50,17 @@ export const DASHBOARDS: DashboardDefinition[] = [
   },
   {
     id: 'experiencia-de-cliente',
-    title: 'Experiencia de cliente',
-    description: 'Satisfacción, esfuerzo, sentimiento y riesgo de abandono.',
+    titleKey: 'dash.experience.title',
+    descriptionKey: 'dash.experience.description',
     render: () => (
       <>
         <KpiRow dashboard="experiencia-de-cliente" codes={['csat_avg', 'effort_avg', 'sentiment_avg', 'negative_pct', 'churn_high_pct', 'first_response_s']} />
         <div className="grid items-start gap-4 lg:grid-cols-2">
-          <TimeseriesWidget kpi="csat_avg" title="Evolución del CSAT predicho" />
-          <BreakdownBars title="CSAT predicho por main topic" dimension="main_topic" kpi="csat_avg" order="asc"
-            subtitle="De peor a mejor valorado" />
-          <BreakdownBars title="Sentimiento medio por cola" dimension="queue" kpi="sentiment_avg" order="asc" diverging
-            subtitle="Índice de -1 (negativo) a 1 (positivo)" />
+          <TimeseriesWidget kpi="csat_avg" titleKey="dash.w.csatTrend" />
+          <BreakdownBars titleKey="dash.w.csatByTopic" dimension="main_topic" kpi="csat_avg" order="asc"
+            subtitleKey="dash.w.worstToBest" />
+          <BreakdownBars titleKey="dash.w.sentimentByQueue" dimension="queue" kpi="sentiment_avg" order="asc" diverging
+            subtitleKey="dash.w.sentimentScale" />
         </div>
       </>
     ),

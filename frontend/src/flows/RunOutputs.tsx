@@ -1,7 +1,9 @@
 import { useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router'
 import { useRowNavigation } from '../conversations/useRowNavigation'
-import { CHANNEL_LABELS, CHURN_LABELS, RESOLUTION_LABELS } from '../conversations/labels'
+import { channelLabel, churnLabel, resolutionLabel } from '../conversations/labels'
+import type { Translate } from '../i18n/context'
+import { useI18n } from '../i18n/useI18n'
 import { RankedBars } from '../dashboards/bars'
 import { ChartCard, DataTable } from '../dashboards/ChartCard'
 import { formatDateTime, formatDecimal, formatInteger, shortId } from '../lib/format'
@@ -27,6 +29,7 @@ function ResultValue({ value }: { value: unknown }) {
 }
 
 function TableRow({ row }: { row: TableResult['rows'][number] }) {
+  const { t } = useI18n()
   const { conversation } = row
   const href = `/conversaciones/${conversation.id}`
   const { onClick, onAuxClick, linkState } = useRowNavigation(href)
@@ -36,7 +39,7 @@ function TableRow({ row }: { row: TableResult['rows'][number] }) {
         <Link to={href} state={linkState} className="font-medium text-brand-700 hover:underline">{formatDateTime(conversation.started_at)}</Link>
         <p className="font-mono text-[11px] text-slate-400" title={conversation.id}>{shortId(conversation.id)}</p>
       </td>
-      <td className="px-2.5 py-2 whitespace-nowrap text-slate-700">{CHANNEL_LABELS[conversation.channel]}</td>
+      <td className="px-2.5 py-2 whitespace-nowrap text-slate-700">{channelLabel(t, conversation.channel)}</td>
       <td className="px-2.5 py-2 text-slate-700">{conversation.queue}</td>
       <td className="px-2.5 py-2">
         <span className="inline-block rounded-lg bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{conversation.main_topic_label}</span>
@@ -94,17 +97,18 @@ function columnGroup(target: TargetField): ColumnGroup {
   return target === 'secondary_topics' || target === 'keywords' ? 'temas' : 'analisis'
 }
 
-function fieldValue(target: TargetField, value: FieldValue | undefined): string | null {
+function fieldValue(target: TargetField, value: FieldValue | undefined, t: Translate): string | null {
   if (value === undefined) return null
   if (target.startsWith('compliance:')) return value === true ? 'Cumple' : value === false ? 'No cumple' : 'No aplica'
   if (Array.isArray(value)) return value.join(', ')
   if (typeof value === 'number') return formatDecimal(value, 2)
-  if (target === 'resolution') return RESOLUTION_LABELS[String(value)] ?? String(value)
-  if (target === 'churn_risk') return CHURN_LABELS[String(value)] ?? String(value)
+  if (target === 'resolution') return resolutionLabel(t, String(value))
+  if (target === 'churn_risk') return churnLabel(t, String(value))
   return String(value)
 }
 
 function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets: FieldsResult['targets'] }) {
+  const { t } = useI18n()
   const { conversation } = row
   const href = `/conversaciones/${conversation.id}`
   const { onClick, onAuxClick, linkState } = useRowNavigation(href)
@@ -114,10 +118,10 @@ function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets
         <Link to={href} state={linkState} className="font-medium text-brand-700 hover:underline">{formatDateTime(conversation.started_at)}</Link>
         <p className="font-mono text-[11px] text-slate-400" title={conversation.id}>{shortId(conversation.id)}</p>
       </td>
-      <td className="px-2.5 py-2 whitespace-nowrap text-slate-700">{CHANNEL_LABELS[conversation.channel]}</td>
+      <td className="px-2.5 py-2 whitespace-nowrap text-slate-700">{channelLabel(t, conversation.channel)}</td>
       {targets.map((target) => {
         const state = row.states[target]
-        const value = fieldValue(target, row.values[target])
+        const value = fieldValue(target, row.values[target], t)
         const reason = row.reasons?.[target]
         return (
           <td key={target} className={`${target === 'summary' ? 'min-w-72' : 'min-w-32'} px-2.5 py-2 text-slate-800`}>

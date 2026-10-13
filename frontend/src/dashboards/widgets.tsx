@@ -1,5 +1,7 @@
 import { useBreakdown, useSummary, useTimeseries, type BreakdownResponse, type Dimension, type KpiCode } from '../api/metrics'
 import { Link } from 'react-router'
+import type { TKey } from '../i18n/dictionaries'
+import { useI18n } from '../i18n/useI18n'
 import { formatKpi, formatShortDate } from '../lib/format'
 import { ChartCard, DataTable, LoadError } from './ChartCard'
 import { RankedBars, SplitBar, TimeseriesChart } from './charts'
@@ -8,10 +10,10 @@ import { KpiTile } from './KpiTile'
 import { ANALYSIS_KPIS, KPI_META } from './kpiMeta'
 import { useDashboardFilters } from './useDashboardFilters'
 
-const CHANNEL_COLORS: Record<string, { label: string; color: string }> = {
-  voz: { label: 'Voz', color: 'var(--series-1)' },
-  chat: { label: 'Chat', color: 'var(--series-2)' },
-}
+const CHANNEL_COLORS = {
+  voz: { label: 'domain.channel.voz', color: 'var(--series-1)' },
+  chat: { label: 'domain.channel.chat', color: 'var(--series-2)' },
+} as const satisfies Record<string, { label: TKey; color: string }>
 
 /**
  * Tarjetas de un dashboard: las que Configuración › KPIs muestra en él (FE005). `codes` fija el orden de las de
@@ -33,7 +35,9 @@ export function KpiRow({ dashboard, codes }: { dashboard: string; codes: KpiCode
   )
 }
 
-export function TimeseriesWidget({ kpi, title }: { kpi: KpiCode; title: string }) {
+export function TimeseriesWidget({ kpi, titleKey }: { kpi: KpiCode; titleKey: TKey }) {
+  const { t } = useI18n()
+  const title = t(titleKey)
   const { filters, granularity, update } = useDashboardFilters()
   const { data, isFetching, isError } = useTimeseries(kpi, granularity, filters)
   const unit = KPI_META[kpi].unit
@@ -46,15 +50,15 @@ export function TimeseriesWidget({ kpi, title }: { kpi: KpiCode; title: string }
         <button key={g} type="button" aria-pressed={granularity === g}
           onClick={() => update({ granularity: g === 'week' ? 'week' : undefined })}
           className={`rounded px-2 py-0.5 ${granularity === g ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-          {g === 'day' ? 'Día' : 'Semana'}
+          {g === 'day' ? t('dash.day') : t('dash.week')}
         </button>
       ))}
     </div>
   )
   return (
-    <ChartCard title={title} subtitle={granularity === 'day' ? 'Por día' : 'Por semana'} actions={toggle} loading={isFetching} error={isError}
+    <ChartCard title={title} subtitle={granularity === 'day' ? t('dash.byDay') : t('dash.byWeek')} actions={toggle} loading={isFetching} error={isError}
       pending={data?.pending && ANALYSIS_KPIS.has(kpi)} className="lg:col-span-2"
-      table={<DataTable caption={title} columns={[granularity === 'day' ? 'Día' : 'Semana', KPI_META[kpi].short]}
+      table={<DataTable caption={title} columns={[granularity === 'day' ? t('dash.day') : t('dash.week'), t(KPI_META[kpi].short)]}
         rows={points.map((p) => [
           <Link key="period" to={hrefFor(p)} className="text-brand-700 hover:underline">
             {p.period_start === p.period_end ? formatShortDate(p.period_start) : `${formatShortDate(p.period_start)} – ${formatShortDate(p.period_end)}`}
@@ -73,9 +77,11 @@ function kpiPending(data: BreakdownResponse | undefined, kpi: KpiCode): boolean 
   return data.pending_kpis ? data.pending_kpis.includes(kpi) : Boolean(data.pending)
 }
 
-export function BreakdownBars({ title, dimension, kpi, order = 'desc', diverging = false, subtitle }: {
-  title: string; dimension: Dimension; kpi: KpiCode; order?: 'asc' | 'desc'; diverging?: boolean; subtitle?: string
+export function BreakdownBars({ titleKey, dimension, kpi, order = 'desc', diverging = false, subtitleKey }: {
+  titleKey: TKey; dimension: Dimension; kpi: KpiCode; order?: 'asc' | 'desc'; diverging?: boolean; subtitleKey?: TKey
 }) {
+  const { t } = useI18n()
+  const title = t(titleKey)
   const { filters } = useDashboardFilters()
   const { data, isFetching, isError } = useBreakdown(dimension, filters)
   const unit = KPI_META[kpi].unit
@@ -85,9 +91,9 @@ export function BreakdownBars({ title, dimension, kpi, order = 'desc', diverging
   const format = (v: number | null) => formatKpi(v, unit)
   const hrefFor = (item: { key: string }) => drillDownHref(filters, KPI_DRILL[kpi], dimensionDrill(dimension, item.key))
   return (
-    <ChartCard title={title} subtitle={subtitle} loading={isFetching} error={isError}
+    <ChartCard title={title} subtitle={subtitleKey && t(subtitleKey)} loading={isFetching} error={isError}
       pending={(dimension === 'main_topic' && data?.pending) || kpiPending(data, kpi)}
-      table={<DataTable caption={title} columns={['', KPI_META[kpi].short]}
+      table={<DataTable caption={title} columns={['', t(KPI_META[kpi].short)]}
         rows={items.map((i) => [<Link key="label" to={hrefFor(i)} className="text-brand-700 hover:underline">{i.label}</Link>, format(i.value)])} />}>
       <RankedBars label={title} items={items} format={format} diverging={diverging} hrefFor={hrefFor}
         maxValue={unit === '%' ? 100 : unit === '1-5' ? 5 : undefined} />
@@ -96,45 +102,49 @@ export function BreakdownBars({ title, dimension, kpi, order = 'desc', diverging
 }
 
 export function ChannelSplit() {
+  const { t } = useI18n()
   const { filters } = useDashboardFilters()
   const { data, isFetching, isError } = useBreakdown('channel', filters)
-  const parts = ['voz', 'chat'].map((code) => ({
-    key: code, label: CHANNEL_COLORS[code].label, color: CHANNEL_COLORS[code].color,
+  const parts = (['voz', 'chat'] as const).map((code) => ({
+    key: code, label: t(CHANNEL_COLORS[code].label), color: CHANNEL_COLORS[code].color,
     value: data?.items.find((i) => i.key === code)?.kpis.volume ?? 0,
   }))
   return (
-    <ChartCard title="Volumen por canal" loading={isFetching} error={isError}
-      table={<DataTable caption="Volumen por canal" columns={['Canal', 'Volumen']} rows={parts.map((p) => [p.label, formatKpi(p.value, 'conversaciones')])} />}>
-      <SplitBar label="Volumen por canal" parts={parts} hrefFor={(key) => drillDownHref(filters, { channel: key })} />
+    <ChartCard title={t('dash.w.volumeByChannel')} loading={isFetching} error={isError}
+      table={<DataTable caption={t('dash.w.volumeByChannel')} columns={[t('dash.col.channel'), t('dash.col.volume')]} rows={parts.map((p) => [p.label, formatKpi(p.value, 'conversaciones')])} />}>
+      <SplitBar label={t('dash.w.volumeByChannel')} parts={parts} hrefFor={(key) => drillDownHref(filters, { channel: key })} />
     </ChartCard>
   )
 }
 
 export function ComplianceChecks() {
+  const { t } = useI18n()
   const { filters } = useDashboardFilters()
   const { data, isFetching, isError } = useSummary(filters)
   const items = (data?.compliance_by_check ?? []).map((c) => ({ key: c.code, label: c.label, value: c.value }))
   const format = (v: number | null) => formatKpi(v, '%')
   const pending = data?.kpis.find((k) => k.code === 'compliance_rate')?.pending
   return (
-    <ChartCard title="Cumplimiento por check" subtitle="% de conversaciones en las que aplica y se cumple" loading={isFetching} error={isError}
+    <ChartCard title={t('dash.w.complianceByCheck')} subtitle={t('dash.w.complianceByCheckSubtitle')} loading={isFetching} error={isError}
       pending={pending}
-      table={<DataTable caption="Cumplimiento por check" columns={['Check', 'Cumplimiento']} rows={items.map((i) => [i.label, format(i.value)])} />}>
-      <RankedBars label="Cumplimiento por check" items={items} format={format} maxValue={100} />
+      table={<DataTable caption={t('dash.w.complianceByCheck')} columns={[t('dash.col.check'), t('dash.col.compliance')]} rows={items.map((i) => [i.label, format(i.value)])} />}>
+      <RankedBars label={t('dash.w.complianceByCheck')} items={items} format={format} maxValue={100} />
     </ChartCard>
   )
 }
 
-export function BreakdownTable({ title, dimension, codes }: { title: string; dimension: Dimension; codes: KpiCode[] }) {
+export function BreakdownTable({ titleKey, dimension, codes }: { titleKey: TKey; dimension: Dimension; codes: KpiCode[] }) {
+  const { t } = useI18n()
+  const title = t(titleKey)
   const { filters } = useDashboardFilters()
   const { data, isFetching, isError } = useBreakdown(dimension, filters)
   return (
     <ChartCard title={title} loading={isFetching} error={isError} pending={dimension === 'main_topic' && data?.pending}
       className="lg:col-span-2">
-      <DataTable caption={title} columns={['', ...codes.map((c) => KPI_META[c].short)]}
+      <DataTable caption={title} columns={['', ...codes.map((c) => t(KPI_META[c].short))]}
         rows={(data?.items ?? []).map((i) => [
           <Link key="label" to={drillDownHref(filters, dimensionDrill(dimension, i.key))} className="text-brand-700 hover:underline">{i.label}</Link>,
-          ...codes.map((c) => (kpiPending(data, c) ? 'Pendiente de análisis' : formatKpi(i.kpis[c], KPI_META[c].unit))),
+          ...codes.map((c) => (kpiPending(data, c) ? t('dash.pendingCell') : formatKpi(i.kpis[c], KPI_META[c].unit))),
         ])} />
     </ChartCard>
   )
