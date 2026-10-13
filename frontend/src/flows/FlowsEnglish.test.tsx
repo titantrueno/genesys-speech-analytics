@@ -18,9 +18,9 @@ describe('Flujos de insights con la interfaz en inglés (FE016, T5)', () => {
   it('listado: cabeceras, tipo y estados en inglés; los nombres de los flujos no cambian', async () => {
     const flows: FlowSummary[] = [
       { id: fakeId('1FL', 1), name: 'Motivos de fraude', author: AUTHOR, created_at: '2026-09-20T08:00:00+00:00', updated_at: '2026-09-27T10:30:00+00:00',
-        status: 'valido', last_run: { id: fakeId('1RN', 1), created_at: '2026-09-27T11:00:00+00:00', status: 'ok' } },
+        status: 'valido', last_run: { id: fakeId('1RN', 1), created_at: '2026-09-27T11:00:00+00:00', status: 'ok' }, next_run: null },
       { id: fakeId('1FL', 2), name: 'Borrador de quejas', author: AUTHOR, created_at: '2026-09-20T08:00:00+00:00', updated_at: '2026-09-26T10:30:00+00:00',
-        status: 'con_errores', last_run: null },
+        status: 'con_errores', last_run: null, next_run: null },
     ]
     signedInAs(USERS.analista, {
       ...english,
@@ -101,7 +101,7 @@ describe('Flujos de insights con la interfaz en inglés (FE016, T5)', () => {
       id: fakeId('1RN', 7), flow_id: FLOW_ID, seed: 1, graph: GRAPH, created_at: '2026-09-27T11:00:00+00:00',
       started_at: '2026-09-27T11:00:00+00:00', finished_at: '2026-09-27T11:00:02.500000+00:00', duration_ms: 2500,
       status: 'ok', sample_size: 40, user: { id: USERS.analista.id, name: 'Analista Demo' },
-      nodes: Object.fromEntries(GRAPH.nodes.map((n) => [n.id, state('ok', 40, 40)])), outputs,
+      nodes: Object.fromEntries(GRAPH.nodes.map((n) => [n.id, state('ok', 40, 40)])), outputs, origin: 'manual', notes: [], download: null,
     }
     signedInAs(USERS.analista, {
       ...detailRoutes, ...english,

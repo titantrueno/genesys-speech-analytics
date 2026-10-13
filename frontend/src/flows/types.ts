@@ -1,5 +1,5 @@
 import type { ConversationListItem } from '../api/conversations'
-import type { DownloadChannel, DownloadInterval, DownloadSchedule } from '../downloads/types'
+import type { DownloadChannel, DownloadCounters, DownloadInterval, DownloadRunStatus, DownloadSchedule } from '../downloads/types'
 import type { ExplorerQuery } from '../explorer/queryModel'
 
 export type NodeType = 'descarga' | 'sampling' | 'prompt' | 'output'
@@ -98,6 +98,9 @@ export interface FlowGraph {
 
 export type FlowStatus = 'valido' | 'con_errores'
 export type RunStatus = 'pendiente' | 'en_curso' | 'ok' | 'error'
+/** `omitido` (FE017): el nodo no se ejecuta porque la descarga de la caja no trajo conversaciones. */
+export type NodeStatus = RunStatus | 'omitido'
+export type RunOrigin = 'manual' | 'programada'
 
 export interface Person { id: string; name: string }
 
@@ -109,9 +112,11 @@ export interface FlowSummary {
   updated_at: string
   status: FlowStatus
   last_run: { id: string; created_at: string; status: RunStatus } | null
+  /** Próxima ejecución de un flujo con caja «Genesys download» programada y activa (FE017). */
+  next_run: string | null
 }
 
-export interface Flow extends Omit<FlowSummary, 'last_run'> {
+export interface Flow extends Omit<FlowSummary, 'last_run' | 'next_run'> {
   graph: FlowGraph
 }
 
@@ -153,7 +158,7 @@ export interface FlowCatalog {
 }
 
 export interface NodeState {
-  status: RunStatus
+  status: NodeStatus
   processed: number
   total: number | null
   message: string | null
@@ -168,6 +173,8 @@ export interface RunSummary {
   status: RunStatus
   sample_size: number | null
   user: Person
+  /** Lanzada a mano o por el programador (FE017). */
+  origin: RunOrigin
 }
 
 export interface TableResult { rows: Array<{ conversation: ConversationListItem; result: unknown }> }
@@ -199,4 +206,16 @@ export interface Run extends RunSummary {
   graph: FlowGraph
   nodes: Record<string, NodeState>
   outputs: Record<string, RunOutput>
+  /** Programadas omitidas o errores de validación de una programada que no pudo arrancar (FE017). */
+  notes: string[]
+  /** Descarga de la caja «Genesys download» (FE017); `null` sin caja. */
+  download: RunDownload | null
+}
+
+export interface RunDownload {
+  node_id: string
+  run_id: string
+  status: DownloadRunStatus
+  counters: DownloadCounters
+  error: string | null
 }

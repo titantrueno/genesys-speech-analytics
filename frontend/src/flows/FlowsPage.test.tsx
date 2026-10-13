@@ -12,7 +12,7 @@ const AUTHOR = { id: fakeId('1US', 3), name: 'Analista Demo' }
 function summary(n: number, overrides: Partial<FlowSummary> = {}): FlowSummary {
   return {
     id: fakeId('1FL', n), name: `Flujo ${n}`, author: AUTHOR, created_at: '2026-09-20T08:00:00+00:00',
-    updated_at: '2026-09-27T10:30:00+00:00', status: 'valido', last_run: null, ...overrides,
+    updated_at: '2026-09-27T10:30:00+00:00', status: 'valido', last_run: null, next_run: null, ...overrides,
   }
 }
 

@@ -92,14 +92,14 @@ export function useDownloadRun(flowId: string, runId: string) {
  * Log de una ejecución, cargado por tramos: cada consulta pide solo las entradas posteriores a la última (`after`) y las
  * añade a las que ya tiene. Con `polling`, cada 2 s.
  */
-export function useDownloadLog(flowId: string, runId: string, level: LogLevel | null, polling: boolean) {
+export function useDownloadLog(basePath: string, level: LogLevel | null, polling: boolean) {
   const client = useQueryClient()
-  const key = ['download-log', flowId, runId, level]
+  const key = ['download-log', basePath, level]
   return useQuery({
     queryKey: key,
     queryFn: async ({ signal }) => {
       const previous = client.getQueryData<LogEntry[]>(key) ?? []
-      const { items } = await apiRequest<{ items: LogEntry[] }>(`/api/download-flows/${flowId}/runs/${runId}/log`, {
+      const { items } = await apiRequest<{ items: LogEntry[] }>(`${basePath}/log`, {
         query: { after: previous.at(-1)?.id ?? 0, level }, signal,
       })
       return [...previous, ...items]
@@ -110,9 +110,9 @@ export function useDownloadLog(flowId: string, runId: string, level: LogLevel | 
 }
 
 /** Descarga el log completo en texto (`format=text`) como fichero, con la sesión actual. */
-export async function downloadLogFile(flowId: string, runId: string): Promise<void> {
+export async function downloadLogFile(basePath: string, runId: string): Promise<void> {
   const token = tokenStorage.get()
-  const response = await fetch(`${API_URL}/api/download-flows/${flowId}/runs/${runId}/log?format=text`, {
+  const response = await fetch(`${API_URL}${basePath}/log?format=text`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
   if (!response.ok) throw new ApiError(response.status, `Error ${response.status}`)

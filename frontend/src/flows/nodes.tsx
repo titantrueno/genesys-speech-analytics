@@ -3,7 +3,7 @@ import { AlertCircle, CloudDownload, Filter, MessageSquareCode, Table2, type Luc
 import { useI18n } from '../i18n/useI18n'
 import { nodeSummary, useCatalog } from './catalog'
 import type { CanvasNode } from './graph'
-import { RUN_STATUS } from './labels'
+import { NODE_STATUS } from './labels'
 import { NODE_LABELS } from './rules'
 import { StatusBadge } from './StatusBadge'
 import type { NodeContent, NodeType } from './types'
@@ -35,7 +35,7 @@ export function FlowNodeCard({ type, data, selected, isConnectable }: NodeProps<
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
           <Icon className="size-3.5" aria-hidden />{NODE_LABELS[type]}
         </span>
-        {state && <StatusBadge label={t(RUN_STATUS[state.status].label)} className={RUN_STATUS[state.status].className} />}
+        {state && <StatusBadge label={t(NODE_STATUS[state.status].label)} className={NODE_STATUS[state.status].className} />}
       </header>
       <div className="space-y-0.5 px-3 pt-1 pb-2">
         <p className="line-clamp-2 text-sm font-medium text-slate-800">{first}</p>
@@ -45,7 +45,7 @@ export function FlowNodeCard({ type, data, selected, isConnectable }: NodeProps<
             {state.total === null ? t('flows.node.notStarted') : t('flows.node.processed', { processed: state.processed, total: state.total })}
           </p>
         )}
-        {state?.message && <p className="text-xs text-red-700">{state.message}</p>}
+        {state?.message && <p className={`text-xs ${state.status === 'omitido' ? 'text-slate-500' : 'text-red-700'}`}>{state.message}</p>}
         {issues.length > 0 && (
           <p className="inline-flex items-center gap-1 text-xs font-medium text-red-700">
             <AlertCircle className="size-3.5" aria-hidden />{t('flows.node.errors', { count: issues.length, n: issues.length })}

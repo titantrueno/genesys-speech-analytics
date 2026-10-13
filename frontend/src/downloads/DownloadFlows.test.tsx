@@ -10,7 +10,7 @@ import type { DownloadFlow } from './types'
 
 const INSIGHTS: FlowSummary = {
   id: fakeId('1FL', 1), name: 'Motivos de fraude', author: { id: fakeId('1US', 3), name: 'Analista Demo' },
-  created_at: '2026-10-01T08:00:00+00:00', updated_at: '2026-10-10T10:30:00+00:00', status: 'valido', last_run: null,
+  created_at: '2026-10-01T08:00:00+00:00', updated_at: '2026-10-10T10:30:00+00:00', status: 'valido', last_run: null, next_run: null,
 }
 const SCHEDULED = downloadFlow(1, {
   name: 'Descarga cada 6 horas', schedule: { type: 'cada_horas', hours: 6 }, next_run_at: '2026-10-12T16:00:00+00:00',

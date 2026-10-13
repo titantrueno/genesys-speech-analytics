@@ -141,7 +141,7 @@ function FlowRow({ flow, canEdit }: { flow: FlowSummary; canEdit: boolean }) {
           </span>
         ) : <span className="text-slate-400">{t('flows.noRuns')}</span>}
       </td>
-      <td className="px-3 py-2.5">{none}</td>
+      <td className="px-3 py-2.5 whitespace-nowrap text-slate-700">{flow.next_run ? formatDateTime(flow.next_run) : none}</td>
       <td className="px-3 py-2.5"><StatusBadge label={t(status.label)} className={status.className} /></td>
       {canEdit && (
         <td className="px-3 py-2.5">

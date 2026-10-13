@@ -37,7 +37,7 @@ function run(overrides: Partial<Run> = {}): Run {
     id: RUN_ID, flow_id: FLOW_ID, seed: 1, graph: GRAPH, created_at: '2026-09-27T11:00:00+00:00',
     started_at: '2026-09-27T11:00:00+00:00', finished_at: '2026-09-27T11:00:02.500000+00:00', duration_ms: 2500,
     status: 'ok', sample_size: 40, user: { id: USERS.analista.id, name: 'Analista Demo' },
-    nodes: everyNode(state('ok', 40, 40)), outputs: OUTPUTS, ...overrides,
+    nodes: everyNode(state('ok', 40, 40)), outputs: OUTPUTS, origin: 'manual', notes: [], download: null, ...overrides,
   }
 }
 
@@ -229,8 +229,8 @@ describe('ejecución de un flujo', () => {
 
 describe('historial de ejecuciones', () => {
   const RUNS: RunSummary[] = [
-    { id: RUN_ID, created_at: '2026-09-27T11:00:00+00:00', started_at: null, finished_at: null, duration_ms: 2500, status: 'ok', sample_size: 40, user: { id: 'x', name: 'Analista Demo' } },
-    { id: fakeId('1RN', 6), created_at: '2026-09-26T09:15:00+00:00', started_at: null, finished_at: null, duration_ms: 480, status: 'error', sample_size: 0, user: { id: 'y', name: 'Admin Demo' } },
+    { id: RUN_ID, created_at: '2026-09-27T11:00:00+00:00', started_at: null, finished_at: null, duration_ms: 2500, status: 'ok', sample_size: 40, user: { id: 'x', name: 'Analista Demo' }, origin: 'manual' },
+    { id: fakeId('1RN', 6), created_at: '2026-09-26T09:15:00+00:00', started_at: null, finished_at: null, duration_ms: 480, status: 'error', sample_size: 0, user: { id: 'y', name: 'Admin Demo' }, origin: 'programada' },
   ]
 
   it('lista fecha, usuario, tamaño de muestra, duración y estado, y reabre una ejecución', async () => {
@@ -238,7 +238,7 @@ describe('historial de ejecuciones', () => {
     const user = userEvent.setup()
     expect(await screen.findByRole('heading', { name: 'Historial de ejecuciones · Motivos de fraude' })).toBeInTheDocument()
     const rows = screen.getAllByRole('row').slice(1).map((r) => r.textContent)
-    expect(rows).toEqual(['27 sept, 11:00Analista Demo402,5 sOK', '26 sept, 09:15Admin Demo0480 msError'])
+    expect(rows).toEqual(['27 sept, 11:00ManualAnalista Demo402,5 sOK', '26 sept, 09:15ProgramadaAdmin Demo0480 msError'])
     await user.click(screen.getByRole('link', { name: '27 sept, 11:00' }))
     await waitFor(() => expect(router.state.location.pathname).toBe(`/flujos/${FLOW_ID}/ejecuciones/${RUN_ID}`))
     expect(await screen.findByRole('tablist', { name: 'Outputs' })).toBeInTheDocument()

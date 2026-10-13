@@ -57,7 +57,7 @@
 | T4 ✅ | Ejecución end-to-end: descarga, subconjunto y estado `omitido` | T1, T2, T3 | 3 (servicio caído), 4, 5, 6, 7, 8, 19 (API) |
 | T5 ✅ | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
 | T6 ✅ | Front del editor: caja, reglas, panel del Sampling y textos | T2, T3 | 12, 13, 14, 16, 17 |
-| T7 | Front de la ejecución, historial y listado | T4, T5, T6 | 15, 9 (próxima ejecución en el listado) |
+| T7 ✅ | Front de la ejecución, historial y listado | T4, T5, T6 | 15, 9 (próxima ejecución en el listado) |
 | T8 | OpenAPI, conocimiento, recorrido en Chrome y gate | T1–T7 | 18, 20, 21 y conocimiento afectado |
 
 ### T1 — Ingesta: descargas de una caja y subconjunto por ejecución
@@ -202,6 +202,11 @@
   - el historial muestra el origen;
   - el listado muestra la próxima ejecución;
   - textos `es` y `en`.
+
+- **Ajustes en `/build`:**
+  - El visor de log de FE011 pasa a `downloads/DownloadLog.tsx`, parametrizado con la ruta de la descarga (`basePath`). Lo usan la página de una descarga y la sección «Descarga de Genesys» de la ejecución, que lo abre con «Ver log de la descarga».
+  - `omitido` es un estado de nodo (`NODE_STATUS`), no de ejecución. Su mensaje se muestra en gris, no como error.
+  - Los fixtures de los tests del front incluyen ahora `next_run`, `origin`, `notes` y `download`, que forman parte del contrato.
 
 ### T8 — OpenAPI, conocimiento, recorrido en Chrome y gate
 - **Qué:**
