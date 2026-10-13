@@ -187,3 +187,9 @@
 - **Decisión:** si los checks activos no caben en `MAX_FIELDS` (más de 27) o las instrucciones superan `MAX_TEMPLATE`, la plantilla responde `422` con el motivo, en vez de crear un flujo que no valida.
 - **Ajuste de tests de FE013:** el catálogo de plantillas incluye la nueva.
 - **Hecho (2026-10-13, Gemini real):** el Prompt de la plantilla con la configuración por defecto (19 campos, `enum` de 15 main topics y 34 temas secundarios) con `gemini-3.5-flash-lite` sobre 3 conversaciones sintéticas: 0 rechazos por campo tras `coerce`. Los checks salen `cumple` o `no_aplica` con sentido (bloqueo preventivo «no aplica» fuera de fraude) y las entidades vacías quedan `sin_valor`. El riesgo de esquema grande queda sin materializar; se vuelve a medir con datos reales en T8.
+
+## Notas de T6
+
+- **Hecho:** el desplegable de destino agrupa con `<optgroup>` «Análisis», «Cumplimiento» y «Entidades»; el de «Campo del JSON» ofrece solo los campos del tipo que necesita el destino (número para CSAT, esfuerzo y sentimiento; lista para temas y palabras clave; texto para el resto). El editor de esquema admite «Lista» con valores permitidos.
+- **Hecho:** la tabla del resultado ordena y agrupa las columnas en Análisis, Cumplimiento, Temas y Entidades (la fila de grupos solo aparece con más de un grupo, así que «Summary + Main topic» se ve igual que en FE013), muestra «Sin valor», el motivo de cada campo bajo su estado y los valores legibles (resolución y riesgo con su etiqueta, checks como «Cumple», «No cumple» o «No aplica», listas separadas por comas).
+- **Ajuste de tests de FE013:** el catálogo de prueba es el de FE014; «Añadir campo destino» ya no se agota con dos destinos (se comprueba que un destino usado sale desactivado) y los recuentos incluyen «sin valor».

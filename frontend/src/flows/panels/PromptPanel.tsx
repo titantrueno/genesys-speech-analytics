@@ -27,7 +27,8 @@ function LabelsEditor({ labels, onChange }: { labels: string[]; onChange: (label
   )
 }
 
-/** Valores permitidos de un campo de texto (FE013), uno por línea; el LLM los recibe como `enum`. */
+/** Valores permitidos de un campo de texto (FE013) o de cada elemento de una lista (FE014), uno por línea; el LLM los
+ *  recibe como `enum`. */
 function AllowedValues({ index, options, onChange }: { index: number; options: string[]; onChange: (options: string[]) => void }) {
   const [text, setText] = useState(options.join('\n'))
   return (
@@ -56,14 +57,14 @@ function SchemaEditor({ fields, onChange }: { fields: NonNullable<OutputFormat['
             <button type="button" aria-label={`Quitar campo ${i + 1}`} onClick={() => onChange(fields.filter((_, j) => j !== i))}
               className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X className="size-4" aria-hidden /></button>
           </div>
-          {field.type === 'texto' && (
+          {(field.type === 'texto' || field.type === 'lista') && (
             <label className="flex items-center gap-1.5 text-xs text-slate-600">
               <input type="checkbox" aria-label={`Limitar el campo ${i + 1} a una lista de valores`} checked={field.options !== undefined}
                 onChange={(e) => onChange(fields.map((f, j) => (j === i ? (e.target.checked ? { ...f, options: [] } : { name: f.name, type: f.type }) : f)))} />
               Limitar a una lista de valores
             </label>
           )}
-          {field.type === 'texto' && field.options !== undefined && (
+          {(field.type === 'texto' || field.type === 'lista') && field.options !== undefined && (
             <AllowedValues index={i + 1} options={field.options}
               onChange={(options) => onChange(fields.map((f, j) => (j === i ? { ...f, options } : f)))} />
           )}

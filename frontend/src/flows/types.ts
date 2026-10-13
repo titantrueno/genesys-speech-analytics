@@ -6,10 +6,15 @@ export type SamplingMethod = 'aleatorio' | 'estratificado' | 'primeros_n'
 export type Stratum = 'canal' | 'cola' | 'main_topic'
 export type OrderKey = 'fecha' | 'duracion' | 'sentimiento' | 'csat'
 export type OutputFormatType = 'texto' | 'etiqueta' | 'json'
-export type FieldType = 'texto' | 'numero' | 'booleano'
+export type FieldType = 'texto' | 'numero' | 'booleano' | 'lista'
 export type OutputKind = 'tabla' | 'metrica' | 'informe' | 'campo'
 /** Campo del análisis que escribe un Output «campo» (FE013). */
-export type TargetField = 'summary' | 'main_topic'
+/** Campo destino de «Guardar en campos» (FE013 y FE014): uno del análisis, un check (`compliance:<código>`) o una entidad. */
+export type AnalysisTarget = 'summary' | 'main_topic' | 'resolution' | 'csat' | 'effort' | 'churn_risk' | 'sentiment'
+  | 'secondary_topics' | 'keywords'
+export type TargetField = AnalysisTarget | `compliance:${string}` | `entity:${string}`
+export type TargetGroup = 'analisis' | 'cumplimiento' | 'entidades'
+export interface TargetOption extends Option<TargetField> { group: TargetGroup }
 export type Aggregation = 'recuento' | 'porcentaje'
 
 export interface SamplingConfig {
@@ -125,14 +130,14 @@ export interface FlowCatalog {
   field_types: Option<FieldType>[]
   output_kinds: Option<OutputKind>[]
   /** Campos destino de un Output «campo» (FE013). */
-  target_fields: Option<TargetField>[]
+  target_fields: TargetOption[]
   /** Plantillas para crear un flujo ya configurado (FE013). */
   templates: Option[]
   /** Origen de datos activo: un Output «campo» solo se ejecuta con `real`. */
   origin: 'sintetico' | 'real'
   aggregations: Option<Aggregation>[]
   limits: Record<'max_sample_size' | 'max_template' | 'max_labels' | 'max_label' | 'max_fields' | 'max_field_name'
-    | 'max_destination' | 'max_flow_name' | 'max_nodes' | 'max_edges', number>
+    | 'max_mappings' | 'max_destination' | 'max_flow_name' | 'max_nodes' | 'max_edges', number>
 }
 
 export interface NodeState {
@@ -156,12 +161,18 @@ export interface RunSummary {
 export interface TableResult { rows: Array<{ conversation: ConversationListItem; result: unknown }> }
 export interface MetricResult { aggregation: Aggregation; total: number; items: Array<{ label: string; count: number; percent: number }> }
 export interface ReportResult { text: string }
-export type FieldState = 'escrito' | 'omitido' | 'rechazado' | 'error'
+export type FieldState = 'escrito' | 'omitido' | 'rechazado' | 'sin_valor' | 'error'
+/** Valor ya validado que se guarda: texto, número, lista de textos o el resultado de un check (`null`, «no aplica»). */
+export type FieldValue = string | number | boolean | null | string[]
 export interface FieldsResult {
   targets: TargetField[]
-  rows: Array<{ conversation: ConversationListItem; values: Partial<Record<TargetField, string>>
-    states: Partial<Record<TargetField, FieldState>>; reason: string | null }>
-  counts: Partial<Record<TargetField, Record<FieldState, number>>>
+  rows: Array<{ conversation: ConversationListItem; values: Partial<Record<TargetField, FieldValue>>
+    states: Partial<Record<TargetField, FieldState>>
+    /** Por qué falló la conversación entera (Prompt rechazado, no encontrada). */
+    reason: string | null
+    /** Por qué no se guardó un campo (FE014): valor rechazado, ya tenía valor, Genesys ya da el sentimiento. */
+    reasons?: Partial<Record<TargetField, string>> }>
+  counts: Partial<Record<TargetField, Partial<Record<FieldState, number>>>>
 }
 
 export type RunOutput =

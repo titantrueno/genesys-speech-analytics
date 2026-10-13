@@ -128,13 +128,24 @@ describe('listado de flujos', () => {
     const template = await screen.findByLabelText('Plantilla')
     expect(template).toHaveValue('')
     expect([...template.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
-      'Vacío', 'Generar summary', 'Generar main topic', 'Generar summary y main topic'])
+      'Vacío', 'Generar summary', 'Generar main topic', 'Generar summary y main topic', 'Generar análisis completo'])
     await user.type(screen.getByLabelText('Nombre del flujo'), 'Summary y main topic')
     await user.selectOptions(template, 'summary_main_topic')
     await user.click(screen.getByRole('button', { name: 'Crear' }))
     await waitFor(() => expect(router.state.location.pathname).toBe(`/flujos/${fakeId('1FL', 10)}`))
     expect(calls).toContainEqual({ method: 'POST', path: '/api/flows',
       body: { name: 'Summary y main topic', template: 'summary_main_topic' } })
+  })
+
+  it('crea un flujo desde la plantilla de análisis completo (FE014)', async () => {
+    const { calls } = setup({ catalog: true })
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Nuevo flujo' }))
+    await user.type(screen.getByLabelText('Nombre del flujo'), 'Análisis completo')
+    await user.selectOptions(await screen.findByLabelText('Plantilla'), 'analisis_completo')
+    await user.click(screen.getByRole('button', { name: 'Crear' }))
+    await waitFor(() => expect(calls).toContainEqual({ method: 'POST', path: '/api/flows',
+      body: { name: 'Análisis completo', template: 'analisis_completo' } }))
   })
 
   it('avisa si no se puede crear el flujo', async () => {

@@ -64,7 +64,8 @@ describe('Output «Guardar en campos»', () => {
     await user.click(within(panel).getByRole('button', { name: 'Añadir campo destino' }))
     expect(within(panel).getByLabelText('Campo destino 2')).toHaveValue('main_topic')
     await user.selectOptions(within(panel).getByLabelText('Campo del JSON 2'), 'main_topic')
-    expect(within(panel).getByRole('button', { name: 'Añadir campo destino' })).toBeDisabled()  // no quedan campos
+    // Un destino ya asignado no se puede repetir en otra asignación.
+    expect(within(within(panel).getByLabelText('Campo destino 2')).getByRole('option', { name: 'Summary' })).toBeDisabled()
     const overwrite = within(panel).getByRole('checkbox', { name: 'Sobrescribir valores existentes' })
     expect(overwrite).not.toBeChecked()
     await user.click(overwrite)
@@ -120,5 +121,55 @@ describe('valores permitidos en el esquema JSON', () => {
     expect(within(panel).getByRole('checkbox', { name: 'Limitar el campo 2 a una lista de valores' })).toBeChecked()
     expect(within(panel).getByLabelText('Valores permitidos del campo 2')).toHaveValue('Cajeros\nComisiones')
     expect(within(panel).queryByRole('checkbox', { name: 'Limitar el campo 3 a una lista de valores' })).not.toBeInTheDocument()
+  })
+})
+
+const FULL_PROMPT: PromptConfig = {
+  ...JSON_PROMPT,
+  output: { type: 'json', fields: [
+    { name: 'summary', type: 'texto' }, { name: 'csat', type: 'numero' }, { name: 'esfuerzo', type: 'numero' },
+    { name: 'temas', type: 'lista', options: ['Fraude'] }, { name: 'saludo', type: 'texto', options: ['cumple', 'no_cumple', 'no_aplica'] },
+    { name: 'urgente', type: 'booleano' }] },
+}
+
+describe('análisis completo en «Guardar en campos» (FE014)', () => {
+  it('el desplegable de destino agrupa análisis, cumplimiento y entidades', async () => {
+    const ctx = setupEditor({ graph: graph(FULL_PROMPT, { kind: 'campo', overwrite: false, mappings: [{ target: 'summary', source: 'summary' }] }),
+      catalog: { origin: 'real' } })
+    const panel = await open(3, ctx)
+    const target = within(panel).getByLabelText('Campo destino 1')
+    const groups = [...target.querySelectorAll('optgroup')]
+    expect(groups.map((g) => g.label)).toEqual(['Análisis', 'Cumplimiento', 'Entidades'])
+    expect([...groups[1].querySelectorAll('option')].map((o) => o.textContent)).toEqual([
+      'Saludo e identificación del agente', 'Despedida con resumen de la gestión'])
+    expect([...groups[2].querySelectorAll('option')].map((o) => o.value)).toEqual([
+      'entity:importe', 'entity:producto', 'entity:fecha', 'entity:comercio'])
+  })
+
+  it('cada destino ofrece solo los campos del JSON de su tipo', async () => {
+    const ctx = setupEditor({ graph: graph(FULL_PROMPT, { kind: 'campo', overwrite: false, mappings: [{ target: 'summary', source: 'summary' }] }),
+      catalog: { origin: 'real' } })
+    const user = userEvent.setup()
+    const panel = await open(3, ctx)
+    const sources = (i: number) => [...within(panel).getByLabelText(`Campo del JSON ${i}`).querySelectorAll('option')].map((o) => o.value)
+    await user.selectOptions(within(panel).getByLabelText('Campo destino 1'), 'csat')
+    expect(sources(1)).toEqual(['', 'csat', 'esfuerzo'])
+    await user.selectOptions(within(panel).getByLabelText('Campo destino 1'), 'secondary_topics')
+    expect(sources(1)).toEqual(['', 'temas'])
+    await user.selectOptions(within(panel).getByLabelText('Campo destino 1'), 'compliance:saludo')
+    expect(sources(1)).toEqual(['', 'summary', 'saludo'])
+    await user.selectOptions(within(panel).getByLabelText('Campo del JSON 1'), 'saludo')
+    expect(await saved(ctx, N(3))).toEqual({ kind: 'campo', overwrite: false, mappings: [{ target: 'compliance:saludo', source: 'saludo' }] })
+  })
+
+  it('el esquema admite el tipo «Lista» con valores permitidos', async () => {
+    const ctx = setupEditor({ graph: graph({ ...JSON_PROMPT, output: { type: 'json', fields: [{ name: 'temas', type: 'texto' }] } }) })
+    const user = userEvent.setup()
+    const panel = await open(2, ctx)
+    await user.selectOptions(within(panel).getByLabelText('Tipo del campo 1'), 'lista')
+    await user.click(within(panel).getByRole('checkbox', { name: 'Limitar el campo 1 a una lista de valores' }))
+    await user.type(within(panel).getByLabelText('Valores permitidos del campo 1'), 'Fraude{Enter}App móvil')
+    expect(await saved(ctx, N(2))).toMatchObject({ output: { type: 'json', fields: [
+      { name: 'temas', type: 'lista', options: ['Fraude', 'App móvil'] }] } })
   })
 })

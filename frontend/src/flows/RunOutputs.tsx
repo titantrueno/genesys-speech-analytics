@@ -1,12 +1,12 @@
 import { useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router'
 import { useRowNavigation } from '../conversations/useRowNavigation'
-import { CHANNEL_LABELS } from '../conversations/labels'
+import { CHANNEL_LABELS, CHURN_LABELS, RESOLUTION_LABELS } from '../conversations/labels'
 import { RankedBars } from '../dashboards/bars'
 import { ChartCard, DataTable } from '../dashboards/ChartCard'
-import { formatDateTime, formatInteger, shortId } from '../lib/format'
+import { formatDateTime, formatDecimal, formatInteger, shortId } from '../lib/format'
 import { useCatalog, optionLabel } from './catalog'
-import type { FieldsResult, FieldState, MetricResult, ReportResult, RunOutput, TableResult } from './types'
+import type { FieldsResult, FieldState, FieldValue, MetricResult, ReportResult, RunOutput, TableResult, TargetField } from './types'
 
 const percent = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
@@ -80,7 +80,28 @@ const FIELD_STATES: Record<FieldState, { label: string; one: string; many: strin
   escrito: { label: 'Escrito', one: 'escrito', many: 'escritos', tone: 'bg-emerald-50 text-emerald-700' },
   omitido: { label: 'Omitido', one: 'omitido', many: 'omitidos', tone: 'bg-slate-100 text-slate-600' },
   rechazado: { label: 'Rechazado', one: 'rechazado', many: 'rechazados', tone: 'bg-amber-50 text-amber-800' },
+  sin_valor: { label: 'Sin valor', one: 'sin valor', many: 'sin valor', tone: 'bg-slate-50 text-slate-500' },
   error: { label: 'Error', one: 'con error', many: 'con error', tone: 'bg-red-50 text-red-700' },
+}
+
+/** Grupos de columnas de la tabla (FE014): el análisis, cada check, los temas y las entidades. */
+type ColumnGroup = 'analisis' | 'cumplimiento' | 'temas' | 'entidades'
+const COLUMN_GROUPS: Record<ColumnGroup, string> = { analisis: 'Análisis', cumplimiento: 'Cumplimiento', temas: 'Temas', entidades: 'Entidades' }
+
+function columnGroup(target: TargetField): ColumnGroup {
+  if (target.startsWith('compliance:')) return 'cumplimiento'
+  if (target.startsWith('entity:')) return 'entidades'
+  return target === 'secondary_topics' || target === 'keywords' ? 'temas' : 'analisis'
+}
+
+function fieldValue(target: TargetField, value: FieldValue | undefined): string | null {
+  if (value === undefined) return null
+  if (target.startsWith('compliance:')) return value === true ? 'Cumple' : value === false ? 'No cumple' : 'No aplica'
+  if (Array.isArray(value)) return value.join(', ')
+  if (typeof value === 'number') return formatDecimal(value, 2)
+  if (target === 'resolution') return RESOLUTION_LABELS[String(value)] ?? String(value)
+  if (target === 'churn_risk') return CHURN_LABELS[String(value)] ?? String(value)
+  return String(value)
 }
 
 function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets: FieldsResult['targets'] }) {
@@ -96,10 +117,13 @@ function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets
       <td className="px-2.5 py-2 whitespace-nowrap text-slate-700">{CHANNEL_LABELS[conversation.channel]}</td>
       {targets.map((target) => {
         const state = row.states[target]
+        const value = fieldValue(target, row.values[target])
+        const reason = row.reasons?.[target]
         return (
-          <td key={target} className="min-w-56 px-2.5 py-2 text-slate-800">
+          <td key={target} className={`${target === 'summary' ? 'min-w-72' : 'min-w-32'} px-2.5 py-2 text-slate-800`}>
             {state && <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-xs ${FIELD_STATES[state].tone}`}>{FIELD_STATES[state].label}</span>}
-            {row.values[target] && <p className={target === 'main_topic' ? 'font-mono text-xs' : ''}>{row.values[target]}</p>}
+            {value !== null && <p className={target === 'main_topic' ? 'font-mono text-xs' : ''}>{value}</p>}
+            {reason && <p className="text-xs text-slate-500">{reason}</p>}
           </td>
         )
       })}
@@ -108,14 +132,18 @@ function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets
   )
 }
 
-/** «Guardar en campos» (FE013): qué se escribió en cada conversación, campo a campo. */
+/** «Guardar en campos» (FE013 y FE014): qué se escribió en cada conversación, campo a campo. Con campos de varios
+ *  grupos, las columnas se agrupan y la tabla se desplaza en horizontal sin desbordar la página. */
 function FieldsOutput({ result, destination }: { result: FieldsResult; destination: string }) {
   const catalog = useCatalog()
   const label = (target: string) => optionLabel(catalog.target_fields, target) ?? target
+  const order = Object.keys(COLUMN_GROUPS) as ColumnGroup[]
+  const targets = [...result.targets].sort((a, b) => order.indexOf(columnGroup(a)) - order.indexOf(columnGroup(b)))
+  const spans = order.map((group) => [group, targets.filter((t) => columnGroup(t) === group).length] as const).filter(([, n]) => n > 0)
   return (
     <div className="space-y-3">
       <ul aria-label="Recuentos por campo" className="space-y-1 text-sm text-slate-700">
-        {result.targets.map((target) => {
+        {targets.map((target) => {
           const counts = result.counts[target]
           return (
             <li key={target}>
@@ -131,11 +159,20 @@ function FieldsOutput({ result, destination }: { result: FieldsResult; destinati
       <div className="overflow-x-auto">
         <table aria-label={`Campos guardados: ${destination}`} className="w-full text-sm">
           <thead>
+            {spans.length > 1 && (
+              <tr className="text-left text-xs text-slate-500">
+                <th scope="colgroup" colSpan={2} />
+                {spans.map(([group, n]) => (
+                  <th key={group} scope="colgroup" colSpan={n} className="border-b border-slate-200 px-2.5 pt-2 font-semibold text-slate-600">{COLUMN_GROUPS[group]}</th>
+                ))}
+                <th scope="colgroup" colSpan={1} />
+              </tr>
+            )}
             <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-              {['Fecha', 'Canal', ...result.targets.map(label), 'Motivo'].map((c) => <th key={c} scope="col" className="px-2.5 py-2 font-medium">{c}</th>)}
+              {['Fecha', 'Canal', ...targets.map(label), 'Motivo'].map((c, i) => <th key={i} scope="col" className="px-2.5 py-2 font-medium">{c}</th>)}
             </tr>
           </thead>
-          <tbody>{result.rows.map((row) => <FieldRow key={row.conversation.id} row={row} targets={result.targets} />)}</tbody>
+          <tbody>{result.rows.map((row) => <FieldRow key={row.conversation.id} row={row} targets={targets} />)}</tbody>
         </table>
       </div>
     </div>

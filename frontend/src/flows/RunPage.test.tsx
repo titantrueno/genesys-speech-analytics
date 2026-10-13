@@ -6,7 +6,7 @@ import { conversationDetailFixture, conversationItem, DETAIL_ID, detailRoutes, f
 import { CATALOG, CHAINED, FLOW_ID, flowFixture, nodeId } from '../test/flowFixtures'
 import { mockReactFlow } from '../test/reactFlow'
 import { renderApp, signedInAs, USERS } from '../test/utils'
-import type { FlowGraph, NodeState, Run, RunOutput, RunSummary } from './types'
+import type { FlowGraph, NodeState, Run, RunOutput, RunSummary, TargetField } from './types'
 
 beforeAll(mockReactFlow)
 
@@ -123,8 +123,8 @@ describe('ejecución de un flujo', () => {
     const panel = await screen.findByRole('tabpanel')
     const counts = within(panel).getByRole('list', { name: 'Recuentos por campo' })
     expect(within(counts).getAllByRole('listitem').map((i) => i.textContent)).toEqual([
-      'Summary: 1 escrito · 0 omitidos · 1 rechazado · 0 con error',
-      'Main topic: 0 escritos · 1 omitido · 1 rechazado · 0 con error',
+      'Summary: 1 escrito · 0 omitidos · 1 rechazado · 0 sin valor · 0 con error',
+      'Main topic: 0 escritos · 1 omitido · 1 rechazado · 0 sin valor · 0 con error',
     ])
     const table = within(panel).getByRole('table', { name: 'Campos guardados: Summary + Main topic' })
     const rows = within(table).getAllByRole('row')
@@ -135,6 +135,46 @@ describe('ejecución de un flujo', () => {
     expect(rows[1]).toHaveTextContent('Omitido')
     expect(rows[2]).toHaveTextContent('Rechazado')
     expect(rows[2]).toHaveTextContent('«Hipotecas» no es un valor permitido de main_topic')
+  })
+
+  it('el análisis completo agrupa los campos, con «sin valor» y el motivo de cada rechazo (FE014)', async () => {
+    const targets: TargetField[] = ['resolution', 'csat', 'compliance:saludo', 'secondary_topics', 'keywords', 'entity:importe']
+    const fields: RunOutput = {
+      node_id: nodeId(5), kind: 'campo', destination: 'Análisis completo',
+      result: {
+        targets,
+        rows: [{
+          conversation: ROW(0),
+          values: { resolution: 'escalada', 'compliance:saludo': null, secondary_topics: ['fraude'], keywords: ['tarjeta', 'cargo'] },
+          states: { resolution: 'escrito', csat: 'rechazado', 'compliance:saludo': 'escrito', secondary_topics: 'escrito',
+            keywords: 'omitido', 'entity:importe': 'sin_valor' },
+          reason: null, reasons: { csat: 'CSAT predicho: 7 está fuera del rango de 1 a 5', keywords: 'Ya tenía valor' },
+        }],
+        counts: Object.fromEntries(targets.map((t) => [t, { escrito: 0, omitido: 0, rechazado: 0, sin_valor: 1, error: 0 }])),
+      },
+    }
+    setup([{ status: 200, body: run({ outputs: { [nodeId(5)]: fields } }) }])
+    const panel = await screen.findByRole('tabpanel')
+    const table = within(panel).getByRole('table', { name: 'Campos guardados: Análisis completo' })
+    expect(table.parentElement).toHaveClass('overflow-x-auto')
+    const [groups, columns, row] = within(table).getAllByRole('row')
+    expect(within(groups).getAllByRole('columnheader').map((h) => [h.textContent, h.getAttribute('colspan')])).toEqual([
+      ['', '2'], ['Análisis', '2'], ['Cumplimiento', '1'], ['Temas', '2'], ['Entidades', '1'], ['', '1']])
+    expect(within(columns).getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'Fecha', 'Canal', 'Resolución', 'CSAT predicho', 'Saludo e identificación del agente', 'Temas secundarios',
+      'Palabras clave', 'Importe', 'Motivo'])
+    const cells = within(row).getAllByRole('cell')
+    expect(cells[2]).toHaveTextContent('Escrito')
+    expect(cells[2]).toHaveTextContent('Escalada')
+    expect(cells[3]).toHaveTextContent('Rechazado')
+    expect(cells[3]).toHaveTextContent('CSAT predicho: 7 está fuera del rango de 1 a 5')
+    expect(cells[4]).toHaveTextContent('No aplica')
+    expect(cells[5]).toHaveTextContent('fraude')
+    expect(cells[6]).toHaveTextContent('tarjeta, cargo')
+    expect(cells[6]).toHaveTextContent('Ya tenía valor')
+    expect(cells[7]).toHaveTextContent('Sin valor')
+    const counts = within(panel).getByRole('list', { name: 'Recuentos por campo' })
+    expect(within(counts).getAllByRole('listitem')[0]).toHaveTextContent('Resolución: 0 escritos · 0 omitidos · 0 rechazados · 1 sin valor · 0 con error')
   })
 
   it('la métrica se ve como gráfico de barras y como tabla', async () => {

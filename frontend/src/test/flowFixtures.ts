@@ -1,4 +1,4 @@
-import type { Flow, FlowCatalog, FlowGraph } from '../flows/types'
+import type { Flow, FlowCatalog, FlowGraph, TargetField, TargetGroup } from '../flows/types'
 import { fakeId } from './fixtures'
 
 export const nodeId = (n: number) => fakeId('1ND', n)
@@ -21,6 +21,7 @@ export const CHAINED: FlowGraph = {
 
 
 const options = <T extends string>(entries: Array<[T, string]>) => entries.map(([value, label]) => ({ value, label }))
+const grouped = (group: TargetGroup, entries: Array<[TargetField, string]>) => entries.map(([value, label]) => ({ value, label, group }))
 
 /** Igual que `GET /api/flows/catalog`. */
 export const CATALOG: FlowCatalog = {
@@ -45,16 +46,26 @@ export const CATALOG: FlowCatalog = {
     ['resultado_anterior', 'Resultado del prompt anterior (solo en un prompt encadenado)'],
   ]),
   output_formats: options([['texto', 'Texto'], ['etiqueta', 'Etiqueta de una lista'], ['json', 'JSON con esquema']]),
-  field_types: options([['texto', 'Texto'], ['numero', 'Número'], ['booleano', 'Booleano']]),
+  field_types: options([['texto', 'Texto'], ['numero', 'Número'], ['booleano', 'Booleano'], ['lista', 'Lista']]),
   output_kinds: options([['tabla', 'Tabla de insights por conversación'], ['metrica', 'Métrica agregada'], ['informe', 'Informe resumen'],
     ['campo', 'Guardar en campos de la conversación']]),
-  target_fields: options([['summary', 'Summary'], ['main_topic', 'Main topic']]),
+  // Como `/api/flows/catalog` (FE014): análisis, un check por check activo y una entidad por tipo.
+  target_fields: [
+    ...grouped('analisis', [['summary', 'Summary'], ['main_topic', 'Main topic'], ['resolution', 'Resolución'],
+      ['csat', 'CSAT predicho'], ['effort', 'Esfuerzo del cliente'], ['churn_risk', 'Riesgo de abandono'],
+      ['sentiment', 'Sentimiento global'], ['secondary_topics', 'Temas secundarios'], ['keywords', 'Palabras clave']]),
+    ...grouped('cumplimiento', [['compliance:saludo', 'Saludo e identificación del agente'],
+      ['compliance:despedida', 'Despedida con resumen de la gestión']]),
+    ...grouped('entidades', [['entity:importe', 'Importe'], ['entity:producto', 'Producto'], ['entity:fecha', 'Fecha'],
+      ['entity:comercio', 'Comercio']]),
+  ],
   templates: options([['summary', 'Generar summary'], ['main_topic', 'Generar main topic'],
-    ['summary_main_topic', 'Generar summary y main topic']]),
+    ['summary_main_topic', 'Generar summary y main topic'], ['analisis_completo', 'Generar análisis completo']]),
   origin: 'sintetico',
   aggregations: options([['recuento', 'Recuento por etiqueta'], ['porcentaje', '% por etiqueta']]),
   limits: {
-    max_sample_size: 1000, max_template: 4000, max_labels: 20, max_label: 60, max_fields: 20, max_field_name: 40,
+    max_sample_size: 1000, max_template: 4000, max_labels: 20, max_label: 60, max_fields: 40, max_field_name: 40,
+    max_mappings: 60,
     max_destination: 80, max_flow_name: 80, max_nodes: 50, max_edges: 100,
   },
 }
