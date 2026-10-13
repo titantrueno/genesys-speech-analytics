@@ -36,8 +36,11 @@ info:
     grafo (`GraphErrors`) e incidencias de flujo (`FlowIssues`).
 
 
-    **Persistencia.** Todo lo que se escribe vive en memoria y se pierde al reiniciar la API, salvo los flujos de descarga
-    (FE011), que guarda el servicio de ingesta en PostgreSQL. Si ese servicio no está disponible, sus rutas responden `503`.
+    **Persistencia.** El servicio de ingesta guarda en PostgreSQL los flujos de descarga (FE011), los flujos de insights y
+    las secciones General, Origen de datos, Privacidad y Modelos de IA de la configuración (FE015), que sobreviven a un reinicio.
+    Si ese servicio no está disponible, sus rutas responden `503` y el cambio no se aplica. El resto (ejecuciones de flujos
+    de insights, taxonomía, checks, KPIs, usuarios, consultas guardadas y auditoría) vive en memoria y se pierde al reiniciar
+    la API.
 
 
     Referencia ampliada: `vault/arquitectura/contrato-api-front-back.md`.'
@@ -1524,6 +1527,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `flows:view`. Flujos con su estado y su última ejecución, del modificado más recientemente al
         más antiguo.'
     post:
@@ -1572,6 +1583,14 @@ paths:
                 oneOf:
                 - *id001
                 - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -1768,6 +1787,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `flows:view`.'
     patch:
       tags:
@@ -1831,6 +1858,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `flows:edit`.'
     delete:
       tags:
@@ -1880,6 +1915,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -1990,6 +2033,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `flows:edit`. Reemplaza el grafo. Asigna un identificador `1ND` a cada nodo temporal (`tmp-…`)
         y devuelve la correspondencia en `id_map`. Exige integridad, no completitud.'
   /api/flows/{flow_id}/duplicate:
@@ -2044,6 +2095,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2114,6 +2173,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `flows:edit`. Acepta la ejecución y la procesa en segundo plano. El progreso se consulta con
         `GET /api/flows/{flow_id}/runs/{run_id}` (el front lo hace cada 500 ms mientras está activa).'
     get:
@@ -2168,6 +2235,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2230,6 +2305,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015).'
+          content:
+            application/json:
+              schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2954,6 +3037,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `config:edit`.'
   /api/config/sources:
     put:
@@ -3001,6 +3092,14 @@ paths:
                 oneOf:
                 - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          content:
+            application/json:
+              schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3052,6 +3151,14 @@ paths:
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
       description: 'Permiso: `config:edit`.'
   /api/config/ai:
     put:
@@ -3099,6 +3206,14 @@ paths:
                 oneOf:
                 - *id010
                 - $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: 'No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica.'
+          content:
+            application/json:
+              schema: *id001
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'

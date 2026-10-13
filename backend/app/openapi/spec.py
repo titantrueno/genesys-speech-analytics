@@ -45,7 +45,7 @@ configurada; por defecto, los 30 días que acaban el día anterior a la fecha de
 (`HTTPValidationError`, en inglés), errores por campo (`FieldErrors`), errores de consulta (`QueryErrors`), errores de
 grafo (`GraphErrors`) e incidencias de flujo (`FlowIssues`).
 
-**Persistencia.** Todo lo que se escribe vive en memoria y se pierde al reiniciar la API, salvo los flujos de descarga (FE011), que guarda el servicio de ingesta en PostgreSQL. Si ese servicio no está disponible, sus rutas responden `503`.
+**Persistencia.** El servicio de ingesta guarda en PostgreSQL los flujos de descarga (FE011), los flujos de insights y las secciones General, Origen de datos, Privacidad y Modelos de IA de la configuración (FE015), que sobreviven a un reinicio. Si ese servicio no está disponible, sus rutas responden `503` y el cambio no se aplica. El resto (ejecuciones de flujos de insights, taxonomía, checks, KPIs, usuarios, consultas guardadas y auditoría) vive en memoria y se pierde al reiniciar la API.
 
 Referencia ampliada: `vault/arquitectura/contrato-api-front-back.md`.
 """.strip()
@@ -82,6 +82,8 @@ class Op:
 NOT_FOUND = "No existe (o el identificador es de otro tipo)."
 UNAVAILABLE_503 = "El servicio de ingesta no está disponible."
 LLM_503 = "El servicio de LLM no está disponible."
+STATE_503 = "No se pueden leer o guardar los flujos de insights: el servicio de ingesta no está disponible (FE015)."
+CONFIG_503 = "No se puede guardar la sección: el servicio de ingesta no está disponible (FE015). No se aplica."
 DOWNLOAD_422 = ("Un campo no es válido: nombre, intervalo (rangos, orden, 90 días, sin futuro), canales o programación (solo con intervalo relativo).")
 
 
@@ -182,12 +184,14 @@ OPERATIONS: dict[tuple[str, str], Op] = {
 
     # --- Flujos ---
     ("GET", "/api/flows"): Op("Flujos", s.FlowList, "flows:view",
-                              "Flujos con su estado y su última ejecución, del modificado más recientemente al más antiguo."),
+                              "Flujos con su estado y su última ejecución, del modificado más recientemente al más antiguo.",
+                              errors={503: (STATE_503, s.ErrorText)}),
     ("POST", "/api/flows"): Op("Crear un flujo", s.Flow, "flows:edit",
                                "Crea un flujo con el grafo vacío o, con `template`, ya configurado para generar summary, "
                                "main topic o los dos en una llamada (FE013).", status=201,
-                               errors=_e422("Nombre vacío, plantilla desconocida o demasiados main topics activos "
-                                            "para la plantilla de main topic.", s.ErrorText)),
+                               errors={**_e422("Nombre vacío, plantilla desconocida o demasiados main topics "
+                                               "activos para la plantilla de main topic.", s.ErrorText),
+                                       503: (STATE_503, s.ErrorText)}),
     ("GET", "/api/flows/catalog"): Op("Opciones de los nodos", s.FlowCatalog, "flows:view",
                                       "Opciones de configuración de cada tipo de nodo, modelo por defecto y límites."),
     ("POST", "/api/flows/validate"): Op(
@@ -198,32 +202,36 @@ OPERATIONS: dict[tuple[str, str], Op] = {
         "Estimar una muestra", s.SampleEstimate, "flows:view",
         "Cuántas conversaciones cumplen los filtros de un Sampling y cuántas tendría la muestra.",
         errors=_e422("Consulta no válida.", s.QueryErrors)),
-    ("GET", "/api/flows/{flow_id}"): Op("Flujo", s.Flow, "flows:view", errors={404: (NOT_FOUND, s.ErrorText)}),
+    ("GET", "/api/flows/{flow_id}"): Op("Flujo", s.Flow, "flows:view",
+                                        errors={404: (NOT_FOUND, s.ErrorText), 503: (STATE_503, s.ErrorText)}),
     ("PATCH", "/api/flows/{flow_id}"): Op("Renombrar un flujo", s.Flow, "flows:edit",
-                                          errors={404: (NOT_FOUND, s.ErrorText), 422: ("Nombre vacío.", s.ErrorText)}),
+                                          errors={404: (NOT_FOUND, s.ErrorText), 422: ("Nombre vacío.", s.ErrorText),
+                                                  503: (STATE_503, s.ErrorText)}),
     ("DELETE", "/api/flows/{flow_id}"): Op("Borrar un flujo", None, "flows:edit", "Borra también sus ejecuciones.",
-                                           status=204, errors={404: (NOT_FOUND, s.ErrorText)}),
+                                           status=204,
+                                           errors={404: (NOT_FOUND, s.ErrorText), 503: (STATE_503, s.ErrorText)}),
     ("PUT", "/api/flows/{flow_id}/graph"): Op(
         "Guardar el grafo", s.SavedFlow, "flows:edit",
         "Reemplaza el grafo. Asigna un identificador `1ND` a cada nodo temporal (`tmp-…`) y devuelve la "
         "correspondencia en `id_map`. Exige integridad, no completitud.",
-        body=Graph, errors={404: (NOT_FOUND, s.ErrorText), 422: ("Grafo sin integridad.", s.GraphErrors)}),
+        body=Graph, errors={404: (NOT_FOUND, s.ErrorText), 422: ("Grafo sin integridad.", s.GraphErrors),
+                            503: (STATE_503, s.ErrorText)}),
     ("POST", "/api/flows/{flow_id}/duplicate"): Op("Duplicar un flujo", s.Flow, "flows:edit",
                                                    "Crea «Copia de …» con nodos nuevos.", status=201,
-                                                   errors={404: (NOT_FOUND, s.ErrorText)}),
+                                                   errors={404: (NOT_FOUND, s.ErrorText), 503: (STATE_503, s.ErrorText)}),
     ("POST", "/api/flows/{flow_id}/runs"): Op(
         "Ejecutar un flujo", s.Run, "flows:edit",
         "Acepta la ejecución y la procesa en segundo plano. El progreso se consulta con "
         "`GET /api/flows/{flow_id}/runs/{run_id}` (el front lo hace cada 500 ms mientras está activa).",
         status=202, ok_description="Ejecución aceptada (`status: pendiente`).",
         errors={404: (NOT_FOUND, s.ErrorText), 409: ("Ya hay una ejecución en curso de este flujo.", s.ErrorText),
-                422: ("El flujo no es válido.", s.FlowIssues)}),
+                422: ("El flujo no es válido.", s.FlowIssues), 503: (STATE_503, s.ErrorText)}),
     ("GET", "/api/flows/{flow_id}/runs"): Op("Ejecuciones de un flujo", s.RunList, "flows:view",
                                              "Las 50 últimas, de la más reciente a la más antigua.",
-                                             errors={404: (NOT_FOUND, s.ErrorText)}),
+                                             errors={404: (NOT_FOUND, s.ErrorText), 503: (STATE_503, s.ErrorText)}),
     ("GET", "/api/flows/{flow_id}/runs/{run_id}"): Op(
         "Ejecución", s.Run, "flows:view", "Instantánea con el estado de cada nodo y los resultados de cada Output.",
-        errors={404: (NOT_FOUND, s.ErrorText)}),
+        errors={404: (NOT_FOUND, s.ErrorText), 503: (STATE_503, s.ErrorText)}),
 
     # --- Flujos de descarga (FE011) ---
     ("GET", "/api/download-flows"): Op(
@@ -272,14 +280,18 @@ OPERATIONS: dict[tuple[str, str], Op] = {
     ("GET", "/api/config"): Op("Configuración", s.PlatformConfig, "config:view",
                                "Configuración completa, versión y opciones de los selectores."),
     ("PUT", "/api/config/general"): Op("Guardar General", s.PlatformConfig, "config:edit", body=GeneralConfig,
-                                       errors=_e422("Errores por campo.", s.FieldErrors)),
+                                       errors={**_e422("Errores por campo.", s.FieldErrors),
+                                               503: (CONFIG_503, s.ErrorText)}),
     ("PUT", "/api/config/sources"): Op("Guardar Origen de datos", s.PlatformConfig, "config:edit", body=SourcesConfig,
                                        description="Cambia el origen de datos de toda la plataforma (FE012).",
-                                       errors=_e422("Origen desconocido.", s.FieldErrors)),
+                                       errors={**_e422("Origen desconocido.", s.FieldErrors),
+                                               503: (CONFIG_503, s.ErrorText)}),
     ("PUT", "/api/config/privacy"): Op("Guardar Privacidad", s.PlatformConfig, "config:edit", body=PrivacyConfig,
-                                       errors=_e422("Errores por campo.", s.FieldErrors)),
+                                       errors={**_e422("Errores por campo.", s.FieldErrors),
+                                               503: (CONFIG_503, s.ErrorText)}),
     ("PUT", "/api/config/ai"): Op("Guardar Modelos de IA", s.PlatformConfig, "config:edit", body=AiConfig,
-                                  errors=_e422("Proveedor o modelo desconocidos.", s.FieldErrors)),
+                                  errors={**_e422("Proveedor o modelo desconocidos.", s.FieldErrors),
+                                          503: (CONFIG_503, s.ErrorText)}),
     ("GET", "/api/config/ai/status"): Op(
         "Estado del servicio de LLM", s.AiStatus, "config:view",
         "Qué proveedores tienen clave en el servicio de LLM (sí o no, nunca la clave).",
