@@ -1,3 +1,7 @@
+import { DEFAULT_I18N } from '../i18n/context'
+import { formatUpToTwoDecimals } from '../lib/format'
+import { fieldLabel, operatorLabel, valueLabel as optionLabel, type Labeler } from './labels'
+
 export type FieldType = 'categorical' | 'numeric' | 'check' | 'text' | 'boolean'
 export type GroupOp = 'and' | 'or'
 export type Speaker = 'cliente' | 'agente' | 'bot'
@@ -92,35 +96,37 @@ export function decodeQuery(value: string | null): { query: ExplorerQuery; error
   return { query: DEFAULT_QUERY, error: true }
 }
 
-const numberFormat = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 })
-
-function valueLabel(field: FieldSchema | undefined, value: unknown): string {
-  if (typeof value === 'number') return numberFormat.format(value)
-  if (typeof value === 'boolean') return value ? 'sí' : 'no'
-  return field?.values?.find((v) => v.value === value)?.label ?? String(value)
+function valueLabel(field: FieldSchema | undefined, value: unknown, i18n: Labeler): string {
+  if (typeof value === 'number') return formatUpToTwoDecimals(value)
+  if (typeof value === 'boolean') return i18n.t(value ? 'exp.bool.true' : 'exp.bool.false')
+  const option = field?.values?.find((v) => v.value === value)
+  return option && field ? optionLabel(i18n, field.key, option) : String(value)
 }
 
-function conditionText(cond: Condition, schema: QuerySchema): string {
+function conditionText(cond: Condition, schema: QuerySchema, i18n: Labeler): string {
   const field = schema.fields.find((f) => f.key === cond.field)
-  const label = `${field?.label ?? cond.field}${cond.speaker ? ` (${cond.speaker})` : ''}`
-  const operator = field?.operators.find((o) => o.key === cond.operator)?.label ?? cond.operator
+  const speaker = cond.speaker ? ` (${i18n.tOr(`exp.speaker.${cond.speaker}`, cond.speaker)})` : ''
+  const label = `${field ? fieldLabel(i18n, field) : cond.field}${speaker}`
+  const found = field?.operators.find((o) => o.key === cond.operator)
+  const operator = found ? operatorLabel(i18n, found) : cond.operator
   if (field?.type === 'check' || isEmptyOperator(cond.operator)) return `${label} ${operator}`
   if (field?.type === 'text') return `${label} ${operator} «${cond.value ?? ''}»`
   if (cond.operator === 'between' && Array.isArray(cond.value)) {
-    return `${label} ${operator} ${valueLabel(field, cond.value[0])} y ${valueLabel(field, cond.value[1])}`
+    return `${label} ${operator} ${valueLabel(field, cond.value[0], i18n)}${i18n.t('exp.andBetween')}${valueLabel(field, cond.value[1], i18n)}`
   }
   const values = Array.isArray(cond.value) ? cond.value : [cond.value]
-  return `${label} ${operator} ${values.map((v) => valueLabel(field, v)).join(', ')}`
+  return `${label} ${operator} ${values.map((v) => valueLabel(field, v, i18n)).join(', ')}`
 }
 
-function groupText(group: Group, schema: QuerySchema, nested: boolean): string {
-  const parts = group.conditions.map((node) => (isGroup(node) ? groupText(node, schema, true) : conditionText(node, schema)))
-  const text = parts.join(group.op === 'and' ? ' Y ' : ' O ')
+function groupText(group: Group, schema: QuerySchema, nested: boolean, i18n: Labeler): string {
+  const parts = group.conditions.map((node) => (isGroup(node) ? groupText(node, schema, true, i18n) : conditionText(node, schema, i18n)))
+  const text = parts.join(i18n.t(group.op === 'and' ? 'exp.and' : 'exp.or'))
   return nested && parts.length > 1 ? `(${text})` : text
 }
 
-export function queryToText(query: ExplorerQuery, schema: QuerySchema): string {
-  return query.root.conditions.length === 0 ? 'Todas las conversaciones del periodo' : groupText(query.root, schema, false)
+/** Frase de la consulta en el idioma de la interfaz; sin traductor, en español. */
+export function queryToText(query: ExplorerQuery, schema: QuerySchema, i18n: Labeler = DEFAULT_I18N): string {
+  return query.root.conditions.length === 0 ? i18n.t('exp.allConversations') : groupText(query.root, schema, false, i18n)
 }
 
 function mapGroup(group: Group, path: NodePath, update: (group: Group) => Group): Group {

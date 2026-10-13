@@ -5,9 +5,10 @@ import { ApiError } from '../api/client'
 import { useCatalog } from '../api/metrics'
 import { MultiSelect } from '../components/MultiSelect'
 import { LoadError } from '../dashboards/ChartCard'
+import { useI18n } from '../i18n/useI18n'
 import { parseIsoDate, presetRange, DEFAULT_PRESET } from '../dashboards/useDashboardFilters'
 import { useDebouncedValue } from '../explorer/hooks'
-import { formatInteger, shortId } from '../lib/format'
+import { formatInteger, formatPercentWhole, shortId } from '../lib/format'
 import { useSemanticSearch, useSimilar, type SearchResponse } from './api'
 import { ResultCard } from './ResultCard'
 import { useSearchState } from './useSearchState'
@@ -18,6 +19,7 @@ const labelClass = 'flex flex-col gap-1 text-xs font-medium text-slate-500'
 const percent = (score: number) => Math.round(score * 100)
 
 function ThresholdSlider({ value, best, onChange }: { value: number; best?: number | null; onChange: (value: number) => void }) {
+  const { t } = useI18n()
   const external = Math.round(value * 100)
   const [draft, setDraft] = useState(external)
   const [previous, setPrevious] = useState(external)
@@ -33,22 +35,22 @@ function ThresholdSlider({ value, best, onChange }: { value: number; best?: numb
   }, [debounced]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <label className={`relative ${labelClass}`}>
-      Puntuación mínima
+      {t('search.minScore')}
       <span className="flex h-9 items-center gap-2">
         <span className="relative flex w-32 items-center">
-          <input type="range" min={0} max={100} step={5} value={draft} aria-label="Puntuación mínima"
+          <input type="range" min={0} max={100} step={5} value={draft} aria-label={t('search.minScore')}
             onChange={(e) => setDraft(Number(e.target.value))} className="w-full accent-brand-600" />
           {best != null && (
-            <span data-testid="max-score-mark" aria-hidden title="Mejor puntuación de esta búsqueda"
+            <span data-testid="max-score-mark" aria-hidden title={t('search.bestMark')}
               className="pointer-events-none absolute -top-1 h-5 w-0.5 -translate-x-1/2 rounded bg-amber-500"
               style={{ left: `${percent(best)}%` }} />
           )}
         </span>
-        <span className="w-10 text-sm text-slate-700 tabular-nums">{draft} %</span>
+        <span className="w-10 text-sm text-slate-700 tabular-nums">{formatPercentWhole(draft)}</span>
       </span>
       {best != null && (
         <span className="absolute top-full mt-0.5 whitespace-nowrap text-[11px] font-normal text-slate-500">
-          Mejor puntuación de esta búsqueda: {percent(best)} %
+          {t('search.best', { value: formatPercentWhole(percent(best)) })}
         </span>
       )}
     </label>
@@ -56,6 +58,7 @@ function ThresholdSlider({ value, best, onChange }: { value: number; best?: numb
 }
 
 export function SearchPage() {
+  const { t } = useI18n()
   const { search, similar, raw, update } = useSearchState()
   const { data: catalog } = useCatalog()
   const run = useSemanticSearch(search)
@@ -80,46 +83,46 @@ export function SearchPage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Búsqueda semántica</h1>
-        <p className="text-sm text-slate-500">Encuentra conversaciones por significado, no solo por palabras exactas.</p>
+        <h1 className="text-2xl font-semibold text-slate-900">{t('search.title')}</h1>
+        <p className="text-sm text-slate-500">{t('search.subtitle')}</p>
       </header>
       <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
-        <form role="search" aria-label="Búsqueda" onSubmit={onSubmit} className="flex gap-2">
-          <input type="search" aria-label="Consulta" maxLength={500} value={draft} onChange={(e) => setDraft(e.target.value)}
-            placeholder="Por ejemplo: me han cobrado algo que no he comprado"
+        <form role="search" aria-label={t('search.formAria')} onSubmit={onSubmit} className="flex gap-2">
+          <input type="search" aria-label={t('search.queryAria')} maxLength={500} value={draft} onChange={(e) => setDraft(e.target.value)}
+            placeholder={t('search.placeholder')}
             className="h-10 min-w-0 flex-1 rounded-md border border-slate-300 px-3 text-sm text-slate-800" />
           <button type="submit" className="inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700">
-            <Search className="size-4" aria-hidden />Buscar
+            <Search className="size-4" aria-hidden />{t('search.submit')}
           </button>
         </form>
         <div className="flex flex-wrap items-end gap-x-3 gap-y-5 pb-3">
           <label className={labelClass}>
-            Desde
+            {t('dash.from')}
             <input type="date" className={inputClass} value={from} max={to || undefined}
               onChange={(e) => e.target.value && update({ from: e.target.value, to: to || undefined })} />
           </label>
           <label className={labelClass}>
-            Hasta
+            {t('dash.to')}
             <input type="date" className={inputClass} value={to} min={from || undefined}
               onChange={(e) => e.target.value && update({ from: from || undefined, to: e.target.value })} />
           </label>
           <label className={labelClass}>
-            Canal
+            {t('dash.channel')}
             <select className={inputClass} value={raw.channel} onChange={(e) => update({ channel: e.target.value || undefined })}>
-              <option value="">Todos</option>
-              <option value="voz">Voz</option>
-              <option value="chat">Chat</option>
+              <option value="">{t('dash.all')}</option>
+              <option value="voz">{t('domain.channel.voz')}</option>
+              <option value="chat">{t('domain.channel.chat')}</option>
             </select>
           </label>
-          <MultiSelect label="Cola" allLabel="Todas" selected={raw.queue} onChange={(queue) => update({ queue })}
+          <MultiSelect label={t('dash.queue')} allLabel={t('dash.allFeminine')} selected={raw.queue} onChange={(queue) => update({ queue })}
             options={(catalog?.queues ?? []).map((q) => ({ value: q.id, label: q.name }))} />
           <ThresholdSlider value={raw.minScore} best={search ? run.data?.max_score : null} onChange={setThreshold} />
           <label className={labelClass}>
-            Mostrar
+            {t('search.showLabel')}
             <select className={inputClass} value={raw.group}
               onChange={(e) => update({ group: e.target.value === 'fragment' ? 'fragment' : undefined })}>
-              <option value="conversation">Mejor fragmento por conversación</option>
-              <option value="fragment">Todos los fragmentos</option>
+              <option value="conversation">{t('search.group.conversation')}</option>
+              <option value="fragment">{t('search.group.fragment')}</option>
             </select>
           </label>
         </div>
@@ -128,7 +131,7 @@ export function SearchPage() {
         <Results run={run} group={search.group} minScore={search.min_score} onThreshold={setThreshold} />
       ) : (
         <p className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm text-slate-500">
-          Escribe lo que buscas con tus palabras: encontraremos conversaciones que hablen de lo mismo aunque no usen los mismos términos.
+          {t('search.intro')}
         </p>
       )}
     </div>
@@ -141,20 +144,20 @@ function Results({ run, group, minScore, onThreshold }: {
   minScore: number
   onThreshold: (score: number) => void
 }) {
+  const { t } = useI18n()
   const data: SearchResponse | undefined = run.data
-  const unit = group === 'fragment' ? ['fragmento', 'fragmentos'] : ['conversación', 'conversaciones']
   const apiMessage = run.error instanceof ApiError && run.error.status === 422 && typeof run.error.detail === 'string'
     ? run.error.detail : undefined
   return (
-    <section aria-label="Resultados" className="space-y-3">
-      {run.isError && <LoadError message={apiMessage ?? 'No se ha podido completar la búsqueda. Inténtalo de nuevo.'} />}
-      {!data && run.isFetching && <p role="status" className="text-sm text-slate-500">Buscando…</p>}
+    <section aria-label={t('search.results')} className="space-y-3">
+      {run.isError && <LoadError message={apiMessage ?? t('search.error')} />}
+      {!data && run.isFetching && <p role="status" className="text-sm text-slate-500">{t('search.searching')}</p>}
       {data && (
         <>
           <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
-            <p className="font-medium text-slate-700">{formatInteger(data.total)} {data.total === 1 ? unit[0] : unit[1]}</p>
+            <p className="font-medium text-slate-700">{t(group === 'fragment' ? 'search.fragments' : 'conv.count', { count: data.total, n: formatInteger(data.total) })}</p>
             {data.expansions.length > 0 && (
-              <p className="text-slate-500"><span>También se ha buscado:</span> <span className="text-slate-700">{data.expansions.join(', ')}</span></p>
+              <p className="text-slate-500"><span>{t('search.alsoSearched')}</span> <span className="text-slate-700">{data.expansions.join(', ')}</span></p>
             )}
           </div>
           {data.results.length === 0 ? (
@@ -174,42 +177,44 @@ function Results({ run, group, minScore, onThreshold }: {
 }
 
 function EmptyResults({ best, minScore, onThreshold }: { best: number | null; minScore: number; onThreshold: (score: number) => void }) {
+  const { t } = useI18n()
   const box = 'space-y-2 rounded-xl border border-slate-200 bg-white py-10 text-center text-sm text-slate-500'
   if (best !== null && minScore > best) {
     // Múltiplo de 5 por debajo de la mejor puntuación, el paso del control.
     const adjusted = Math.floor(percent(best) / 5) * 5
     return (
       <div className={box}>
-        <p>Ningún resultado alcanza el {percent(minScore)} %; la mejor coincidencia puntúa un {percent(best)} %.</p>
+        <p>{t('search.belowThreshold', { min: formatPercentWhole(percent(minScore)), best: formatPercentWhole(percent(best)) })}</p>
         <button type="button" onClick={() => onThreshold(adjusted / 100)}
           className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50">
-          Ajustar el umbral a {adjusted} %
+          {t('search.adjustThreshold', { value: formatPercentWhole(adjusted) })}
         </button>
       </div>
     )
   }
   return (
     <div className={box}>
-      <p>No hay resultados para esta búsqueda.</p>
-      <p>Baja la puntuación mínima o amplía el intervalo.</p>
+      <p>{t('search.noResults')}</p>
+      <p>{t('search.noResultsHint')}</p>
     </div>
   )
 }
 
 function SimilarResults({ conversationId }: { conversationId: string }) {
+  const { t } = useI18n()
   const { data, error, isPending } = useSimilar(conversationId)
   const notFound = error instanceof ApiError && error.status === 404
   return (
     <section aria-labelledby="similar-title" className="space-y-3">
       <h2 id="similar-title" className="text-sm font-medium text-slate-700">
-        Conversaciones similares a{' '}
+        {t('search.similarTo')}{' '}
         <Link to={`/conversaciones/${conversationId}`} className="font-mono text-brand-700 hover:underline" title={conversationId}>
           {shortId(conversationId)}
         </Link>
       </h2>
-      {notFound && <LoadError message="La conversación de origen no existe." />}
-      {error && !notFound && <LoadError message="No se han podido cargar las conversaciones similares." />}
-      {isPending && <p role="status" className="text-sm text-slate-500">Buscando conversaciones similares…</p>}
+      {notFound && <LoadError message={t('search.similarMissing')} />}
+      {error && !notFound && <LoadError message={t('search.similarError')} />}
+      {isPending && <p role="status" className="text-sm text-slate-500">{t('search.similarLoading')}</p>}
       {data && (
         <div className="space-y-3">
           {data.results.map((r) => (

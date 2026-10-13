@@ -1,6 +1,9 @@
 import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { conversationDetailFixture, conversationItem, DETAIL_ID, detailRoutes, metricsRoutes } from '../test/fixtures'
+import {
+  conversationDetailFixture, conversationItem, DETAIL_ID, detailRoutes, explorerRoutes, explorerSchemaFixture, metricsRoutes, searchResponse,
+} from '../test/fixtures'
 import { renderApp, signedInAs, USERS } from '../test/utils'
 
 const english = { 'GET /api/config/public': () => ({ status: 200, body: { platform_name: 'Speech & Text Analytics', timezone: 'UTC', language: 'en-US' } }) }
@@ -84,5 +87,72 @@ describe('Pantallas de datos con la interfaz en inglés (FE016, T3)', () => {
     for (const datum of [...analysis.keywords, ...analysis.secondary_topics, '366,12 €', 'TiendaYa Online', 'Verificación de identidad del cliente']) {
       expect(await within(panel).findByText(datum)).toBeInTheDocument()
     }
+  })
+})
+
+describe('Explorador y búsqueda con la interfaz en inglés (FE016, T4)', () => {
+  const extraField = { key: 'brand_new', label: 'Campo nuevo del backend', type: 'numeric', min: 0, max: 10,
+    operators: [{ key: 'gt', label: '>' }, { key: 'weird', label: 'operador raro' }] }
+
+  function explorerEnglish() {
+    const routes = explorerRoutes([])
+    return signedInAs(USERS.analista, {
+      ...routes,
+      ...english,
+      'GET /api/query/schema': () => ({ status: 200, body: { ...explorerSchemaFixture, fields: [...explorerSchemaFixture.fields, extraField] } }),
+    })
+  }
+
+  it('explorador: textos fijos, campos, operadores y valores del catálogo en inglés; checks y colas son datos', async () => {
+    explorerEnglish()
+    const user = userEvent.setup()
+    renderApp('/explorador')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Explorer' })).toBeInTheDocument()
+    expect(screen.getByText('All conversations in the period')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: 'Add condition' }))
+
+    const row = screen.getByRole('group', { name: 'Condition 1' })
+    const field = within(row).getByLabelText('Field')
+    expect(within(field).getByRole('option', { name: 'Channel' })).toBeInTheDocument()
+    expect(within(field).getByRole('option', { name: 'Transcript' })).toBeInTheDocument()
+    expect(within(field).getByRole('option', { name: 'Recontact within 7 days' })).toBeInTheDocument()
+    // El nombre de un check es un dato; un campo que el front no conoce muestra la etiqueta del backend.
+    expect(within(field).getByRole('option', { name: 'Verificación de identidad del cliente' })).toBeInTheDocument()
+    expect(within(field).getByRole('option', { name: 'Campo nuevo del backend' })).toBeInTheDocument()
+    expect(within(row).getByRole('option', { name: 'is any of' })).toBeInTheDocument()
+    expect(await within(row).findByRole('option', { name: 'Voice (192)' })).toBeInTheDocument()
+    expect(screen.getByText('Channel is Voice')).toBeInTheDocument()
+
+    // Operador sin traducción: etiqueta del backend.
+    await user.selectOptions(field, 'brand_new')
+    expect(within(row).getByRole('option', { name: 'operador raro' })).toBeInTheDocument()
+
+    expect(screen.getByRole('button', { name: 'Add group' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Saved queries' })).toBeInTheDocument()
+    expect(screen.getByText('Describe what you are looking for (in Spanish)')).toBeInTheDocument()
+  })
+
+  it('búsqueda: textos fijos en inglés; resumen, fragmentos y expansiones sin traducir', async () => {
+    signedInAs(USERS.analista, {
+      ...detailRoutes,
+      ...english,
+      'GET /api/search/semantic': () => ({ status: 200, body: searchResponse(3) }),
+    })
+    renderApp('/busqueda?q=cargo')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Semantic search' })).toBeInTheDocument()
+    expect(screen.getByRole('search', { name: 'Search' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Show')).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Best fragment per conversation' })).toBeInTheDocument()
+
+    const results = await screen.findByRole('region', { name: 'Results' })
+    expect(await within(results).findByText('3 conversations')).toBeInTheDocument()
+    expect(within(results).getByText('Also searched:')).toBeInTheDocument()
+    expect(screen.getByText('Best score of this search: 87%')).toBeInTheDocument()
+    expect(within(results).getAllByRole('meter', { name: 'Score' })).toHaveLength(3)
+    expect(within(results).getAllByText('Customer').length).toBeGreaterThan(0)
+    // Datos: tal cual llegan.
+    expect(results.textContent).toContain('Me ha aparecido un cargo que no reconozco en la tarjeta.')
+    expect(within(results).getByText('cargo, no reconozco, fraude')).toBeInTheDocument()
+    expect(within(results).getAllByText(/La clienta llama porque no reconoce un cargo/).length).toBeGreaterThan(0)
   })
 })

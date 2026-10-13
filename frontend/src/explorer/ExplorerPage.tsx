@@ -4,6 +4,7 @@ import { ConversationTable, Pagination } from '../conversations/ConversationTabl
 import { nextSort, type SortState } from '../conversations/sorting'
 import { LoadError } from '../dashboards/ChartCard'
 import { KpiTile } from '../dashboards/KpiTile'
+import { useI18n } from '../i18n/useI18n'
 import { formatInteger } from '../lib/format'
 import { ApiError } from '../api/client'
 import { LoadingScreen } from '../layout/LoadingScreen'
@@ -38,6 +39,8 @@ function validationErrors(error: unknown, toOriginal: Map<string, number[]>): Va
 }
 
 function Explorer({ schema }: { schema: QuerySchema }) {
+  const i18n = useI18n()
+  const { t } = i18n
   const { query, invalidLink, setQuery, page, sort, order, setListing } = useExplorerState()
   const pruned = useMemo(() => pruneIncomplete(query, schema), [query, schema])
   const debounced = useDebouncedValue(pruned.query, 300)
@@ -58,12 +61,12 @@ function Explorer({ schema }: { schema: QuerySchema }) {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Explorador</h1>
-        <p className="text-sm text-slate-500">Consultas asistidas en tiempo real sobre las conversaciones de un intervalo.</p>
+        <h1 className="text-2xl font-semibold text-slate-900">{t('exp.title')}</h1>
+        <p className="text-sm text-slate-500">{t('exp.subtitle')}</p>
       </header>
       {invalidLink && (
         <p role="alert" className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          El enlace de la consulta no es válido; se ha cargado una consulta vacía.
+          {t('exp.invalidLink')}
         </p>
       )}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
@@ -71,20 +74,20 @@ function Explorer({ schema }: { schema: QuerySchema }) {
         <NaturalLanguage onQuery={edit} />
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
-            Desde
+            {t('dash.from')}
             <input type="date" className={inputClass} value={from} max={to}
               onChange={(e) => e.target.value && edit({ ...query, from: e.target.value, to })} />
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
-            Hasta
+            {t('dash.to')}
             <input type="date" className={inputClass} value={to} min={from}
               onChange={(e) => e.target.value && edit({ ...query, from, to: e.target.value })} />
           </label>
         </div>
         <GroupEditor group={query.root} path={[]} schema={schema} from={from} to={to} errors={errors.byPath} handlers={handlers} />
         <p className="rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">
-          <span className="mr-1 font-medium text-slate-900">Consulta:</span>
-          <span>{queryToText(query, schema)}</span>
+          <span className="mr-1 font-medium text-slate-900">{t('exp.query')}</span>
+          <span>{queryToText(query, schema, i18n)}</span>
         </p>
       </div>
         <SavedQueries current={pruned.query} onLoad={edit} />
@@ -109,21 +112,22 @@ function Results({ run, validation, sort, order, page, onSort, onPage, onRemoveL
   onPage: (page: number) => void
   onRemoveLast?: () => void
 }) {
+  const { t } = useI18n()
   const data: QueryRunResponse | undefined = run.data
   const kpis = (data?.kpis ?? []).filter((k) => RESULT_KPIS.includes(k.code))
     .map((k): KpiSummary => ({ ...k, previous: null, delta: null, delta_pct: null }))
   return (
-    <section aria-label="Resultados" className="space-y-3">
-      {validation.byPath.size > 0 && <p className="text-sm text-red-700">Revisa las condiciones marcadas.</p>}
+    <section aria-label={t('exp.results')} className="space-y-3">
+      {validation.byPath.size > 0 && <p className="text-sm text-red-700">{t('exp.reviewConditions')}</p>}
       {validation.general.map((message) => <p key={message} role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>)}
       {run.isError && validation.byPath.size === 0 && validation.general.length === 0 && (
-        <LoadError message="No se han podido cargar los resultados." />
+        <LoadError message={t('exp.resultsError')} />
       )}
-      {!data && run.isPending && <p role="status" className="text-sm text-slate-500">Cargando resultados…</p>}
+      {!data && run.isPending && <p role="status" className="text-sm text-slate-500">{t('exp.loadingResults')}</p>}
       {data && (
         <>
           <p className="text-sm font-medium text-slate-700">
-            {formatInteger(data.total)} {data.total === 1 ? 'conversación' : 'conversaciones'}
+            {t('conv.count', { count: data.total, n: formatInteger(data.total) })}
           </p>
           {data.total > 0 && (
             <div className={`grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6 ${run.isFetching ? 'opacity-60' : ''}`}>
@@ -133,10 +137,10 @@ function Results({ run, validation, sort, order, page, onSort, onPage, onRemoveL
           <ConversationTable items={data.items} sort={sort} order={order} onSort={onSort} dimmed={run.isFetching}
             empty={
               <div className="space-y-2 py-10 text-center text-sm text-slate-500">
-                <p>No hay conversaciones que cumplan la consulta.</p>
+                <p>{t('exp.noMatch')}</p>
                 {onRemoveLast && (
                   <button type="button" onClick={onRemoveLast} className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50">
-                    Quitar la última condición
+                    {t('exp.removeLast')}
                   </button>
                 )}
               </div>
@@ -149,8 +153,9 @@ function Results({ run, validation, sort, order, page, onSort, onPage, onRemoveL
 }
 
 export function ExplorerPage() {
+  const { t } = useI18n()
   const { data: schema, isError } = useQuerySchema()
-  if (isError) return <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">No se ha podido cargar el explorador.</p>
+  if (isError) return <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{t('exp.loadError')}</p>
   if (!schema) return <LoadingScreen />
   return <Explorer schema={schema} />
 }

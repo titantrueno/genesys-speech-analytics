@@ -17,6 +17,7 @@ interface NumberFormats {
   signedTwo: Intl.NumberFormat
   signedOne: Intl.NumberFormat
   upToOneDecimal: Intl.NumberFormat
+  upToTwoDecimals: Intl.NumberFormat
   shortDate: Intl.DateTimeFormat
   /** Español: «12,3 %» con espacio; inglés: «12.3%». */
   percent: string
@@ -36,6 +37,7 @@ function formats(): NumberFormats {
       signedTwo: decimals(2, { signDisplay: 'exceptZero' }),
       signedOne: decimals(1, { signDisplay: 'exceptZero' }),
       upToOneDecimal: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }),
+      upToTwoDecimals: new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }),
       shortDate: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' }),
       percent: locale.startsWith('es') ? ' %' : '%',
     }
@@ -123,6 +125,11 @@ export function shortId(id: string): string {
 
 export function formatDecimal(value: number, digits: 1 | 2): string {
   return (digits === 1 ? formats().oneDecimal : formats().twoDecimals).format(value)
+}
+
+/** Hasta dos decimales, sin ceros finales. */
+export function formatUpToTwoDecimals(value: number): string {
+  return formats().upToTwoDecimals.format(value)
 }
 
 /** Porcentaje sin decimales («50 %» en español, «50%» en inglés). */

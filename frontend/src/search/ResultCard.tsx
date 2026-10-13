@@ -4,21 +4,22 @@ import { SentimentValue } from '../conversations/badges'
 import { channelLabel } from '../conversations/labels'
 import { useI18n } from '../i18n/useI18n'
 import { useRowNavigation } from '../conversations/useRowNavigation'
-import { formatDateTimeWithYear } from '../lib/format'
+import { formatDateTimeWithYear, formatPercentWhole } from '../lib/format'
 import { highlight } from '../lib/highlight'
 import type { ConversationListItem } from '../api/conversations'
 import type { SearchResult } from './api'
 
 
 export function ScoreBar({ score }: { score: number }) {
+  const { t } = useI18n()
   const percent = Math.round(score * 100)
   return (
     <div className="flex items-center gap-2">
-      <div role="meter" aria-label="Puntuación" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}
+      <div role="meter" aria-label={t('search.score')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent}
         className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
         <div className="h-full rounded-full bg-brand-500" style={{ width: `${percent}%` }} />
       </div>
-      <span className="w-10 text-right text-sm font-medium text-slate-700 tabular-nums">{percent} %</span>
+      <span className="w-10 text-right text-sm font-medium text-slate-700 tabular-nums">{formatPercentWhole(percent)}</span>
     </div>
   )
 }
@@ -34,7 +35,8 @@ export function ResultCard({ conversation: conv, score, href, turns, highlights 
   const { t } = useI18n()
   const { onClick, onAuxClick, linkState } = useRowNavigation(href)
   const ChannelIcon = conv.channel === 'voz' ? Phone : MessageSquareText
-  const speaker = (s: SearchResult['turns'][number]['speaker']) => s === 'agente' ? conv.agent ?? 'Agente' : s === 'bot' ? 'Asistente virtual' : 'Cliente'
+  const speaker = (s: SearchResult['turns'][number]['speaker']) =>
+    s === 'agente' ? conv.agent ?? t('conv.speaker.agent') : s === 'bot' ? t('conv.speaker.bot') : t('conv.speaker.customer')
 
   return (
     <article onClick={onClick} onAuxClick={onAuxClick}

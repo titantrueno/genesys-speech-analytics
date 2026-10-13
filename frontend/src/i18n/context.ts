@@ -14,8 +14,10 @@ export interface I18nContextValue {
 }
 
 /** Sin `I18nProvider` (un componente aislado) la interfaz sale en español, el idioma base. */
-export const I18nContext = createContext<I18nContextValue>({
+export const DEFAULT_I18N: I18nContextValue = {
   language: DEFAULT_LANGUAGE,
   t: (key, params) => translate(es, DEFAULT_LANGUAGE, key, params),
   tOr: (key, fallback) => (key in es ? translate(es, DEFAULT_LANGUAGE, key) : fallback),
-})
+}
+
+export const I18nContext = createContext<I18nContextValue>(DEFAULT_I18N)

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
  * FE016, criterio 7: las pantallas migradas no llevan texto de interfaz en español escrito a mano; sale de los
  * diccionarios. Cada tarea añade sus carpetas a `MIGRATED`.
  */
-const MIGRATED = ['layout/', 'pages/', 'auth/', 'components/', 'i18n/I18nProvider.tsx', 'dashboards/', 'conversations/']
+const MIGRATED = ['layout/', 'pages/', 'auth/', 'components/', 'i18n/I18nProvider.tsx', 'dashboards/', 'conversations/', 'explorer/', 'search/']
 
 const SPANISH = /[áéíóúñ¿¡]|\b(de|el|la|los|las|para|con|sin|una|por|del|al|en|se|que|su)\b/i
 
