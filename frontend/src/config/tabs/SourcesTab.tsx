@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { ApiError } from '../../api/client'
 import { useGenesysConnector, useTestGenesys } from '../../downloads/api'
-import { CHANNEL_LABELS, DOWNLOAD_STATUS, QUALITY_LABELS } from '../../downloads/labels'
+import { CHANNEL_KEYS, DOWNLOAD_STATUS, QUALITY_KEYS, splitCounts } from '../../downloads/labels'
+import { useI18n } from '../../i18n/useI18n'
 import { StatusBadge } from '../../flows/StatusBadge'
 import { formatDateTime, formatInteger } from '../../lib/format'
 import { configRequests, useConfigMutation, useConnectors } from '../api'
@@ -68,11 +69,9 @@ function Item({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-const split = (values: Record<string, number>, labels: Record<string, string>) =>
-  Object.entries(labels).map(([key, label]) => `${label} ${formatInteger(values[key] ?? 0)}`).join(' · ')
-
 /** Conector real (FE011): estado del servicio de ingesta, credenciales, última descarga y conversaciones guardadas. */
 function GenesysCard({ canEdit }: { canEdit: boolean }) {
+  const { t } = useI18n()
   const { data, isError, isPending } = useGenesysConnector()
   const test = useTestGenesys()
   const result = test.data
@@ -103,15 +102,15 @@ function GenesysCard({ canEdit }: { canEdit: boolean }) {
             {data.last_download?.finished_at ? (
               <span className="inline-flex items-center gap-2">
                 {formatDateTime(data.last_download.finished_at)}
-                <StatusBadge {...DOWNLOAD_STATUS[data.last_download.status]} />
+                <StatusBadge label={t(DOWNLOAD_STATUS[data.last_download.status].label)} className={DOWNLOAD_STATUS[data.last_download.status].className} />
               </span>
             ) : 'Ninguna'}
           </Item>
           {data.conversations && (
             <>
               <Item label="Conversaciones guardadas">{formatInteger(data.conversations.total)}</Item>
-              <Item label="Por canal">{split(data.conversations.by_channel, CHANNEL_LABELS)}</Item>
-              <Item label="Por calidad de la transcripción">{split(data.conversations.by_quality, QUALITY_LABELS)}</Item>
+              <Item label="Por canal">{splitCounts(t, data.conversations.by_channel, CHANNEL_KEYS)}</Item>
+              <Item label="Por calidad de la transcripción">{splitCounts(t, data.conversations.by_quality, QUALITY_KEYS)}</Item>
             </>
           )}
         </dl>

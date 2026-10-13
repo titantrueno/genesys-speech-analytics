@@ -177,7 +177,7 @@ function DownloadRow({ flow, canEdit }: { flow: DownloadFlow; canEdit: boolean }
   const { remove } = useDownloadMutations()
   const [confirming, setConfirming] = useState(false)
   const state = flow.active
-    ? { label: describeSchedule(flow.schedule), className: 'bg-brand-50 text-brand-700' }
+    ? { label: describeSchedule(t, flow.schedule), className: 'bg-brand-50 text-brand-700' }
     : { label: t('flows.inactive'), className: 'bg-slate-100 text-slate-600' }
 
   return (
@@ -193,7 +193,7 @@ function DownloadRow({ flow, canEdit }: { flow: DownloadFlow; canEdit: boolean }
         {flow.last_run ? (
           <span className="inline-flex items-center gap-2 text-slate-700">
             {formatDateTime(flow.last_run.created_at)}
-            <StatusBadge {...DOWNLOAD_STATUS[flow.last_run.status]} />
+            <StatusBadge label={t(DOWNLOAD_STATUS[flow.last_run.status].label)} className={DOWNLOAD_STATUS[flow.last_run.status].className} />
           </span>
         ) : <span className="text-slate-400">{t('flows.noRuns')}</span>}
       </td>
