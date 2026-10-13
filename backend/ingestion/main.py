@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse
 from app.clock import now as real_now
 from ingestion import db, flows
 from ingestion.analysis import build_analysis_router
-from ingestion.api import Context, build_router, build_status_router
+from ingestion.api import Context, build_insight_downloads_router, build_router, build_status_router
 from ingestion.genesys.client import GenesysAuthError, GenesysClient
 from ingestion.pipeline.analyze import Analyzer
 from ingestion.pipeline.read import read_conversation
@@ -87,6 +87,7 @@ def create_app(settings: Settings | None = None, migrate_on_start: bool = True,
         return conversation
 
     app.include_router(build_router(ctx))
+    app.include_router(build_insight_downloads_router(ctx))
     app.include_router(build_status_router(ctx))
     app.include_router(build_analysis_router(settings.database_url, clock))
     app.include_router(build_state_router(settings.database_url, clock))

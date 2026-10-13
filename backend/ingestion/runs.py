@@ -52,24 +52,46 @@ def create_run(database_url: str, flow_id: str, origin: str, start: datetime, en
 
     Copia la casilla «Sobrescribir» del flujo: editar el flujo con la ejecución ya creada no la cambia.
     """
+    return _insert_run(database_url, "flow_id", flow_id, origin, start, end, channels, user, notes,
+                       overwrite_sql="(SELECT overwrite FROM download_flow WHERE id = %s)", overwrite=flow_id)
+
+
+def create_insight_run(database_url: str, insight_flow_id: str, origin: str, start: datetime, end: datetime,
+                       channels: list[str], overwrite: bool, timezone: str, user: tuple[str, str] | None = None,
+                       notes: list[str] | None = None) -> str:
+    """Crea la descarga de la caja «Genesys download» de un flujo de insights (FE017), con la configuración de la caja."""
+    return _insert_run(database_url, "insight_flow_id", insight_flow_id, origin, start, end, channels, user, notes,
+                       overwrite_sql="%s", overwrite=overwrite, timezone=timezone)
+
+
+def _insert_run(database_url: str, owner: str, owner_id: str, origin: str, start: datetime, end: datetime,
+                channels: list[str], user: tuple[str, str] | None, notes: list[str] | None, *, overwrite_sql: str,
+                overwrite, timezone: str | None = None) -> str:
     run_id = ids.new_id(ids.RUN, _rng)
     user_id, user_name = user or (None, None)
     try:
         with psycopg.connect(database_url) as conn:
             conn.execute(
-                "INSERT INTO download_run (id, flow_id, origin, status, interval_from, interval_to, channels, counters, "
-                "started_by_id, started_by_name, created_at, notes, overwrite) "
-                "VALUES (%s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s, %s, "
-                "(SELECT overwrite FROM download_flow WHERE id = %s))",
-                (run_id, flow_id, origin, start, end, list(channels), Jsonb(new_counters()), user_id, user_name, now(),
-                 Jsonb(notes or []), flow_id))
+                f"INSERT INTO download_run (id, {owner}, origin, status, interval_from, interval_to, channels, "
+                "counters, started_by_id, started_by_name, created_at, notes, timezone, overwrite) "
+                f"VALUES (%s, %s, %s, 'pendiente', %s, %s, %s, %s, %s, %s, %s, %s, %s, {overwrite_sql})",
+                (run_id, owner_id, origin, start, end, list(channels), Jsonb(new_counters()), user_id, user_name,
+                 now(), Jsonb(notes or []), timezone, overwrite))
             conn.execute(
-                "DELETE FROM download_run WHERE flow_id = %s AND status <> ALL(%s) AND id NOT IN ("
-                "SELECT id FROM download_run WHERE flow_id = %s ORDER BY created_at DESC LIMIT %s)",
-                (flow_id, list(ACTIVE), flow_id, MAX_RUNS_PER_FLOW))
+                f"DELETE FROM download_run WHERE {owner} = %s AND status <> ALL(%s) AND id NOT IN ("
+                f"SELECT id FROM download_run WHERE {owner} = %s ORDER BY created_at DESC LIMIT %s)",
+                (owner_id, list(ACTIVE), owner_id, MAX_RUNS_PER_FLOW))
     except psycopg.errors.UniqueViolation:
-        raise RunAlreadyActive(flow_id) from None
+        raise RunAlreadyActive(owner_id) from None
     return run_id
+
+
+def list_subset(database_url: str, run_id: str) -> list[str]:
+    """Conversaciones (`1CO`) que la ejecución insertó o actualizó, en orden de identificador (FE017)."""
+    with psycopg.connect(database_url) as conn:
+        rows = conn.execute("SELECT conversation_id FROM download_run_conversation WHERE run_id = %s "
+                            "ORDER BY conversation_id", (ids.normalize(run_id),)).fetchall()
+    return [row[0] for row in rows]
 
 
 def list_runs(database_url: str, flow_id: str) -> list[dict]:
@@ -90,6 +112,8 @@ def run_to_dict(row: dict) -> dict:
         "started_by": {"id": row["started_by_id"], "name": row["started_by_name"]} if row["started_by_id"] else None,
         "created_at": _iso(row["created_at"]), "started_at": _iso(started), "finished_at": _iso(finished),
         "duration_s": round((finished - started).total_seconds(), 3) if finished and started else None,
+        # Solo en las descargas de una caja (FE017): las de los flujos de descarga mantienen su contrato de FE011.
+        **({"insight_flow_id": row["insight_flow_id"]} if row.get("insight_flow_id") else {}),
     }
 
 
@@ -149,7 +173,8 @@ class _Execution:
         self.x, self.conn, self.run_id = executor, conn, run_id
         self.row = conn.execute("SELECT * FROM download_run WHERE id = %s", (run_id,)).fetchone()
         flow = conn.execute("SELECT timezone FROM download_flow WHERE id = %s", (self.row["flow_id"],)).fetchone()
-        self.timezone = flow["timezone"] if flow else "UTC"
+        # La descarga de una caja (FE017) trae su zona horaria; la de un flujo de descarga, la del flujo.
+        self.timezone = self.row.get("timezone") or (flow["timezone"] if flow else "UTC")
         self.counters = new_counters()
         self.warnings = 0
         self.client: GenesysClient | None = None
@@ -256,7 +281,11 @@ class _Execution:
                 analyzed += analysis.status == "completo"
                 self.x.on_step("analysis")
                 stage = "load"
-                outcome = load(self.conn, normalized, analysis, overwrite)
+                with self.conn.transaction():  # la conversación y su entrada en el subconjunto, juntas (FE017)
+                    outcome = load(self.conn, normalized, analysis, overwrite)
+                    if outcome != OMITTED:
+                        self.conn.execute("INSERT INTO download_run_conversation (run_id, conversation_id) "
+                                          "VALUES (%s, %s) ON CONFLICT DO NOTHING", (self.run_id, normalized.id))
             except GenesysAuthError:
                 raise
             except Exception as exc:  # noqa: BLE001 - una conversación que falla no detiene la ejecución
