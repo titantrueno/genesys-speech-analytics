@@ -1,6 +1,6 @@
 # FE015 — Persistencia de flujos de insights y preferencias
 
-> Estado: **construida y verificada** el 2026-10-13, pendiente de review y ship. Corrige un fallo que reportó la persona usuaria y amplía FE004, FE005 y FE012. Aplica ADR-008.
+> Estado: **entregada** en `v0.12.0` el 2026-10-13, junto con FE016 ([ship](../FE016-idioma-ingles-de-la-interfaz/SHIP.md)). Se construyó y se verificó con el gate, pero **no tiene `/test` ni `/review` propios** (deuda registrada en esa entrega). Corrige un fallo que reportó la persona usuaria y amplía FE004, FE005 y FE012. Aplica ADR-008.
 
 ## Problema
 

@@ -104,3 +104,5 @@ python3 scripts/audit_vault.py          # desde la raíz
 | FE012 Switch entre datos sintéticos y reales | Entregada en `v0.9.0` |
 | FE013 Servicio de LLM para summary y main topic | Entregada en `v0.10.0` |
 | FE014 Análisis completo con LLM | Entregada en `v0.11.0` |
+| FE015 Persistencia de flujos y preferencias | Entregada en `v0.12.0` (sin review propio, ver [SHIP de FE016](features/FE016-idioma-ingles-de-la-interfaz/SHIP.md)) |
+| FE016 Idioma inglés de la interfaz | Entregada en `v0.12.0` |

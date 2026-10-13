@@ -1,6 +1,6 @@
 # FE016 — Idioma inglés de la interfaz
 
-> Estado: **construida** el 2026-10-13 (T1–T9), pendiente de `/test`, review y ship. Amplía FE005 (que dejó «traducción de la UI a otros idiomas» fuera de alcance, `features/FE005-configuracion-de-la-plataforma/spec.md`).
+> Estado: **entregada** en `v0.12.0` el 2026-10-13 ([ship](SHIP.md)); verificada ([VERIFY](VERIFY.md)) y revisada ([REVIEW](REVIEW.md)). Amplía FE005 (que dejó «traducción de la UI a otros idiomas» fuera de alcance, `features/FE005-configuracion-de-la-plataforma/spec.md`).
 
 ## Objetivo
 
