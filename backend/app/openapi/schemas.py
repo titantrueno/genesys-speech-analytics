@@ -66,8 +66,8 @@ IssueCode = Literal[
     "main_topic_requires_taxonomy",
     # FE014: un check asignado que ya no existe o está desactivado.
     "unknown_check",
-    # FE017: la caja «Genesys download» solo trabaja con datos reales.
-    "download_needs_real_origin",
+    # FE017: la caja «Genesys download» solo trabaja con datos reales; «All conversations» con muchas conversaciones.
+    "download_needs_real_origin", "large_sample",
 ]
 
 
@@ -469,9 +469,10 @@ class Validation(Doc):
 
 
 class SampleEstimate(Doc):
-    available: int
-    sample_size: int | None
-    period: Period
+    available: int | None = Field(description="`null` behind a Genesys download box: it depends on the download.")
+    sample_size: int | None = Field(description="With `size: \"all\"` (All conversations), every available one.")
+    period: Period | None
+    depends_on_download: bool | None = Field(None, description="Only behind a Genesys download box (FE017).")
 
 
 class RunSummary(Doc):

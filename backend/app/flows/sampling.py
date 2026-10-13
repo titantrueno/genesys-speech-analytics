@@ -5,6 +5,7 @@ from collections import defaultdict
 from math import floor
 
 from app.data.store import get_dataset
+from app.flows import catalog
 from app.flows.model import SamplingConfig
 from app.models import Conversation
 from app.query.engine import run_query
@@ -43,6 +44,8 @@ def proportional_quotas(sizes: dict[str, int], total: int, wanted: int) -> dict[
 
 
 def draw_sample(conversations: list[Conversation], config: SamplingConfig, seed: int) -> list[Conversation]:
+    if config.size == catalog.ALL_CONVERSATIONS:
+        return _chronological(conversations)
     size = min(config.size, len(conversations))
     rng = random.Random(seed)
     if config.method == "aleatorio":

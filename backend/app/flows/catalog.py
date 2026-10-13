@@ -8,6 +8,18 @@ STRATA = {"canal": "Canal", "cola": "Cola", "main_topic": "Main topic"}
 ORDER_KEYS = {"fecha": "Fecha", "duracion": "Duración", "sentimiento": "Sentimiento", "csat": "CSAT predicho"}
 ORDERS = {"desc": "Descendente", "asc": "Ascendente"}
 MAX_SAMPLE_SIZE = 1000
+# «All conversations» (FE017): sin tamaño; por encima de este número de conversaciones, la validación avisa.
+ALL_CONVERSATIONS = "all"
+LARGE_SAMPLE = 1000
+
+
+def sample_size(value):
+    """Tamaño de muestra: un entero de 1 a `MAX_SAMPLE_SIZE` o `"all"`. Un solo error con la ruta del campo (FE004)."""
+    if value is None or value == ALL_CONVERSATIONS:
+        return value
+    if isinstance(value, int) and not isinstance(value, bool) and 1 <= value <= MAX_SAMPLE_SIZE:
+        return value
+    raise ValueError(f"The sample size must be a whole number from 1 to {MAX_SAMPLE_SIZE}, or \"{ALL_CONVERSATIONS}\"")
 
 # Proveedores y modelos (FE005; LLM real desde FE013). Las claves las tiene solo el servicio de LLM (`backend/llm/`),
 # que comparte estos nombres de proveedor (un test lo comprueba). `temperature` dice si el modelo la admite: los

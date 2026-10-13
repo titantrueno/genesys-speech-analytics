@@ -14,6 +14,7 @@ from app.config.store import get_config
 from app.flows.download_config import SpecificInterval, _localize
 from app.flows.fields import accepts_option, topic_code
 from app.flows.model import DownloadNode, Graph, OutputNode, PromptNode, SamplingNode
+from app.flows.sampling import candidates
 from app.query.model import QueryError, parse_query
 
 VARIABLE = re.compile(r"\{\{\s*([^{}]*?)\s*\}\}")
@@ -82,13 +83,14 @@ def _sampling(node: SamplingNode, graph: Graph) -> list[Issue]:
     cfg = node.config
     # Detrás de una caja de descarga, las conversaciones las da la descarga: los filtros son opcionales (FE017).
     after_download = any(isinstance(graph.node(source), DownloadNode) for source in graph.inputs(node.id))
+    everything = cfg.size == catalog.ALL_CONVERSATIONS  # «All conversations» no usa método (FE017)
     missing = _missing([
         ("filters", cfg.query is not None or after_download),
-        ("method", cfg.method is not None),
+        ("method", cfg.method is not None or everything),
         ("sample size", cfg.size is not None),
-        ("stratification criterion", cfg.method != "estratificado" or cfg.stratify_by is not None),
-        ("order criterion", cfg.method != "primeros_n" or cfg.order_by is not None),
-        ("order direction", cfg.method != "primeros_n" or cfg.order is not None),
+        ("stratification criterion", everything or cfg.method != "estratificado" or cfg.stratify_by is not None),
+        ("order criterion", everything or cfg.method != "primeros_n" or cfg.order_by is not None),
+        ("order direction", everything or cfg.method != "primeros_n" or cfg.order is not None),
     ])
     issues = [Issue("node_unconfigured", f"Not configured: missing {', '.join(missing)}.", node.id)] if missing else []
     if cfg.query is not None:
@@ -97,7 +99,23 @@ def _sampling(node: SamplingNode, graph: Graph) -> list[Issue]:
         except QueryError as exc:
             detail = "; ".join(e["message"] for e in exc.errors)
             issues.append(Issue("invalid_config", f"The Sampling filters are not valid: {detail}", node.id))
+        else:
+            if everything and not after_download:
+                issues += _large_sample(node, graph)
     return issues
+
+
+def _large_sample(node: SamplingNode, graph: Graph) -> list[Issue]:
+    """«All conversations» con muchas conversaciones (FE017, criterio 10): avisa sin bloquear. Detrás de una caja de
+    descarga no se sabe cuántas serán hasta ejecutar."""
+    count = len(candidates(node.config))
+    if count <= catalog.LARGE_SAMPLE:
+        return []
+    message = f"All conversations: {count} conversations will be processed."
+    if any(isinstance(n, PromptNode) and (n.config.provider or catalog.SIMULATED) != catalog.SIMULATED
+           for n in graph.nodes):
+        message += " Prompts with a real provider will make one LLM call per conversation."
+    return [Issue("large_sample", message, node.id, "warning")]
 
 
 def _output_format(node: PromptNode) -> list[Issue]:

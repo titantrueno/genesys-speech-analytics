@@ -53,7 +53,7 @@
 |---|---|---|---|
 | T1 ✅ | Ingesta: descargas de una caja y subconjunto por ejecución | — | 4, 5 y 6 (datos), 19 (ingesta) |
 | T2 ✅ | Modelo, reglas y validación de la caja `descarga` | — | 1, 2, 3 (salvo el servicio caído), 11 |
-| T3 | Sampling «All conversations» y aviso `large_sample` | T2 | 10, 11 |
+| T3 ✅ | Sampling «All conversations» y aviso `large_sample` | T2 | 10, 11 |
 | T4 | Ejecución end-to-end: descarga, subconjunto y estado `omitido` | T1, T2, T3 | 3 (servicio caído), 4, 5, 6, 7, 8, 19 (API) |
 | T5 | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
 | T6 | Front del editor: caja, reglas, panel del Sampling y textos | T2, T3 | 12, 13, 14, 16, 17 |
@@ -112,6 +112,10 @@
   - hay test del aviso por encima y por debajo de 1.000, usando un dataset de prueba inyectado;
   - un grafo de FE004 guardado con método y tamaño se ejecuta igual (misma semilla, misma muestra);
   - ida y vuelta de `"all"`.
+
+- **Ajustes en `/build`:**
+  - `size` se valida con `catalog.sample_size` en un validador `before`. Así un tamaño no válido da un solo error en `nodes[i].config.size`, como en FE004, y el OpenAPI conserva `integer 1–1000 | "all"`.
+  - El umbral `catalog.LARGE_SAMPLE = 1000` se puede sustituir en los tests, que lo ajustan al recuento real en lugar de inyectar un dataset.
 
 ### T4 — Ejecución end-to-end: descarga, subconjunto y estado `omitido`
 - **Qué:**

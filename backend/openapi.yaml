@@ -1728,7 +1728,8 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
       description: 'Permission: `flows:view`. How many conversations match the filters of a Sampling and how many the sample
-        would have.'
+        would have. `size` admits `"all"` (All conversations); with `after_download: true` the filters are optional and the
+        count depends on the download.'
   /api/flows/{flow_id}:
     get:
       tags:
@@ -4554,19 +4555,25 @@ components:
     EstimateIn:
       properties:
         query:
-          additionalProperties: true
-          type: object
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
           title: Query
         size:
           anyOf:
           - type: integer
             maximum: 1000.0
             minimum: 1.0
+          - type: string
+            const: all
           - type: 'null'
           title: Size
+        after_download:
+          type: boolean
+          title: After Download
+          default: false
       type: object
-      required:
-      - query
       title: EstimateIn
     FlowName:
       properties:
@@ -6582,6 +6589,7 @@ components:
           - main_topic_requires_taxonomy
           - unknown_check
           - download_needs_real_origin
+          - large_sample
           title: Code
           type: string
         message:
@@ -8430,15 +8438,28 @@ components:
       additionalProperties: false
       properties:
         available:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: '`null` behind a Genesys download box: it depends on the download.'
           title: Available
-          type: integer
         sample_size:
           anyOf:
           - type: integer
           - type: 'null'
+          description: 'With `size: "all"` (All conversations), every available one.'
           title: Sample Size
         period:
-          $ref: '#/components/schemas/Period'
+          anyOf:
+          - $ref: '#/components/schemas/Period'
+          - type: 'null'
+        depends_on_download:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          default: null
+          description: Only behind a Genesys download box (FE017).
+          title: Depends On Download
       required:
       - available
       - sample_size
@@ -8500,6 +8521,8 @@ components:
           - maximum: 1000
             minimum: 1
             type: integer
+          - const: all
+            type: string
           - type: 'null'
           default: null
           title: Size

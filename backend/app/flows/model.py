@@ -34,7 +34,10 @@ class SamplingConfig(_Strict):
     stratify_by: Literal[tuple(catalog.STRATA)] | None = None
     order_by: Literal[tuple(catalog.ORDER_KEYS)] | None = None
     order: Literal[tuple(catalog.ORDERS)] | None = None
-    size: int | None = Field(None, ge=1, le=catalog.MAX_SAMPLE_SIZE)
+    # Un número, o «All conversations» (`"all"`, FE017): todas las que cumplen los filtros, sin método.
+    size: Annotated[int, Field(ge=1, le=catalog.MAX_SAMPLE_SIZE)] | Literal["all"] | None = None
+
+    _size = field_validator("size", mode="before")(classmethod(lambda cls, value: catalog.sample_size(value)))
 
 
 Label = Annotated[str, StringConstraints(max_length=catalog.MAX_LABEL)]

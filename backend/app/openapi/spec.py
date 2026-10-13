@@ -189,7 +189,9 @@ OPERATIONS: dict[tuple[str, str], Op] = {
         body=Graph, errors=_e422("Graph without integrity.", s.GraphErrors)),
     ("POST", "/api/flows/sampling/estimate"): Op(
         "Estimate a sample", s.SampleEstimate, "flows:view",
-        "How many conversations match the filters of a Sampling and how many the sample would have.",
+        "How many conversations match the filters of a Sampling and how many the sample would have. `size` admits "
+        "`\"all\"` (All conversations); with `after_download: true` the filters are optional and the count depends on "
+        "the download.",
         errors=_e422("Invalid query.", s.QueryErrors)),
     ("GET", "/api/flows/{flow_id}"): Op("Flujo", s.Flow, "flows:view",
                                         errors={404: (NOT_FOUND, s.ErrorText), 503: (STATE_503, s.ErrorText)}),

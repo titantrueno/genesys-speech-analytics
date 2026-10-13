@@ -1,9 +1,9 @@
 """API de flujos de insights (FE004). Lecturas con `flows:view`; escrituras y ejecuciones con `flows:edit`."""
 import copy
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Response, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.auth import User, require_permission
 from app.config.store import get_config
@@ -36,8 +36,18 @@ class NewFlow(FlowName):
 
 
 class EstimateIn(BaseModel):
-    query: dict[str, Any]
-    size: int | None = Field(None, ge=1, le=catalog.MAX_SAMPLE_SIZE)
+    query: dict[str, Any] | None = None
+    size: Annotated[int, Field(ge=1, le=catalog.MAX_SAMPLE_SIZE)] | Literal["all"] | None = None
+    # Sampling detrás de una caja «Genesys download» (FE017): sus conversaciones las da la descarga.
+    after_download: bool = False
+
+    _size = field_validator("size", mode="before")(classmethod(lambda cls, value: catalog.sample_size(value)))
+
+    @model_validator(mode="after")
+    def _query_unless_after_download(self) -> "EstimateIn":
+        if self.query is None and not self.after_download:
+            raise ValueError("The filters are required")
+        return self
 
 
 def _clean_name(name: str) -> str:
@@ -139,6 +149,8 @@ def validate_graph(graph: Graph = Depends(parsed_graph), client: LlmClient = Dep
 
 @router.post("/sampling/estimate", dependencies=[Depends(VIEW)])
 def estimate(body: EstimateIn) -> dict:
+    if body.after_download:
+        return {"available": None, "sample_size": None, "period": None, "depends_on_download": True}
     try:
         query = parse_query(copy.deepcopy(body.query))
     except QueryError as exc:
@@ -146,7 +158,8 @@ def estimate(body: EstimateIn) -> dict:
     available = len(run_query(query, get_dataset()))
     return {
         "available": available,
-        "sample_size": None if body.size is None else min(body.size, available),
+        "sample_size": None if body.size is None else available if body.size == catalog.ALL_CONVERSATIONS
+        else min(body.size, available),
         "period": {"from": query.date_from.isoformat(), "to": query.date_to.isoformat()},
     }
 
