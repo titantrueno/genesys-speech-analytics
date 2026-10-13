@@ -83,7 +83,7 @@ export const config = {
   'cfg.gc.testUnavailable': 'El servicio de ingesta no está disponible',
   'cfg.gc.testError': 'No se ha podido probar la conexión.',
   'cfg.origin.title': 'Origen de datos',
-  'cfg.origin.description': 'Toda la plataforma trabaja con un único origen a la vez. Se pierde al reiniciar la API y vuelve a sintético.',
+  'cfg.origin.description': 'Toda la plataforma trabaja con un único origen a la vez. Se conserva al reiniciar la API (sin servicio de ingesta, vuelve a sintético).',
   'cfg.origin.sintetico.label': 'Sintético',
   'cfg.origin.sintetico.description': 'El dataset generado de demostración (1.000 conversaciones de los últimos 90 días).',
   'cfg.origin.real.label': 'Real (Genesys Cloud)',

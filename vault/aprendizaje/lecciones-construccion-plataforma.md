@@ -65,6 +65,7 @@ Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009, FE006, FE010 y F
 47. **FE013:** con la ventana de Chrome oculta (`visibilityState: hidden`), la extensión no entregaba el teclado y TanStack Query dejaba de sondear la ejecución: parecía un fallo de la aplicación. Rellenar con el `setter` nativo y navegar dentro de la app lo evitó.
 48. **FE017:** ampliar un campo de Pydantic a `int | Literal["all"]` cambió la ruta de sus errores a `size.constrained-int` y `size.literal['all']`, y rompió el contrato E5 que marca el campo en el editor (`nodes[0].config.size`). Lo detectaron los tests de rangos de FE004.
 49. **FE017:** un test de «intervalo en el futuro» usaba la fecha de referencia del dataset (`days_ago`) en lugar del reloj real y no fallaba como se esperaba.
+50. **Post-FE017:** `ConversationsPage.test.tsx` fallaba de vez en cuando porque leía las etiquetas de los chips en cuanto aparecía la lista, cuando el catálogo aún no había llegado y el chip mostraba el código (`cajeros`). Con la máquina cargada, el catálogo llegaba tarde. Se reprodujo siempre sirviendo el catálogo con 50 ms de retraso.
 
 ## Causa
 
@@ -122,6 +123,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - FE003: test de despedidas en los representantes (< 10 %) y test de pares contra los turnos reales del dataset.
 - FE006: test de la casilla con un guardado lento, test de recarga de `/me` solo con cambio de versión y `tests/roles.py`.
 - FE010: `swagger-ui-react` fijado a `5.33.1`, con tests de búsqueda por «método ruta» y por varias palabras.
+- Post-FE017: un test que lee textos que dependen de un catálogo espera a la etiqueta (`findByText`), y su escenario sirve el catálogo con retraso para que la carrera sea determinista.
 - FE017: los tipos unión de Pydantic se validan con un validador `before` que lanza un único error con la ruta del campo; las comprobaciones que dependen de la hora usan el reloj real, nunca la fecha de referencia del dataset.
 - FE004: mock de React Flow con `contentRect` en `frontend/src/test/reactFlow.ts`, tests de ida y vuelta, test de arranque concurrente determinista y patrón de lienzo en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 

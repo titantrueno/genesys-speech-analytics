@@ -43,6 +43,9 @@ describe('Configuración: origen de datos (FE012)', () => {
     const origin = await card()
     expect(within(origin).getByRole('radio', { name: /Sintético/ })).toBeChecked()
     expect(within(origin).getByRole('radio', { name: /Real \(Genesys Cloud\)/ })).not.toBeChecked()
+    // Desde FE015 el origen se guarda: el texto no debe decir que se pierde al reiniciar.
+    expect(origin).toHaveTextContent('Se conserva al reiniciar la API')
+    expect(origin).not.toHaveTextContent('Se pierde al reiniciar')
   })
 
   it('cambiar el origen pide confirmación y no guarda hasta confirmar', async () => {

@@ -10,7 +10,7 @@ function lastListRequest(fetchMock: ReturnType<typeof mockApi>) {
   return urls[urls.length - 1].searchParams
 }
 
-async function openList(path = '/conversaciones', routes = conversationRoutes) {
+async function openList(path = '/conversaciones', routes: Parameters<typeof signedInAs>[1] = conversationRoutes) {
   const fetchMock = signedInAs(USERS.admin, routes)
   const result = renderApp(path)
   await screen.findByRole('heading', { level: 1, name: 'Conversaciones' })
@@ -65,8 +65,17 @@ describe('listado de conversaciones', () => {
   })
 
   it('muestra los filtros activos como chips eliminables', async () => {
-    const { router, fetchMock } = await openList('/conversaciones?main_topic=cajeros&resolution=escalada&compliant=true&from=2026-09-01&to=2026-09-20&page=2')
+    // El catálogo llega tarde a propósito: el chip muestra el código hasta tenerlo, y el test espera a la etiqueta.
+    // Sin esa espera, el test fallaba de forma intermitente con la máquina cargada.
+    const slowCatalog = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      return conversationRoutes['GET /api/catalog']()
+    }
+    const { router, fetchMock } = await openList(
+      '/conversaciones?main_topic=cajeros&resolution=escalada&compliant=true&from=2026-09-01&to=2026-09-20&page=2',
+      { ...conversationRoutes, 'GET /api/catalog': slowCatalog })
     const chips = await screen.findByRole('list', { name: 'Filtros activos' })
+    await within(chips).findByText(/Incidencia en cajero/)
     const labels = within(chips).getAllByRole('listitem').map((c) => c.textContent)
     expect(labels).toEqual(expect.arrayContaining([
       expect.stringContaining('Incidencia en cajero'),

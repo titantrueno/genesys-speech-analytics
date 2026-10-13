@@ -85,7 +85,7 @@ export const config: Record<keyof typeof es, string> = {
   'cfg.gc.testUnavailable': 'The ingestion service is not available',
   'cfg.gc.testError': 'The connection could not be tested.',
   'cfg.origin.title': 'Data origin',
-  'cfg.origin.description': 'The whole platform works with a single origin at a time. It is lost when the API restarts and goes back to synthetic.',
+  'cfg.origin.description': 'The whole platform works with a single origin at a time. It is kept when the API restarts (without the ingestion service, it goes back to synthetic).',
   'cfg.origin.sintetico.label': 'Synthetic',
   'cfg.origin.sintetico.description': 'The generated demo dataset (1,000 conversations from the last 90 days).',
   'cfg.origin.real.label': 'Real (Genesys Cloud)',
