@@ -22,9 +22,9 @@ from app.main import app
 from app.routers.flows import get_prompt_runner
 from tests.flow_fixtures import OUTPUT_TABLE, PROMPT_TEXT, SAMPLING, edge, graph, node
 from tests.test_flow_runs import detail, flow_with, run
+from tests.test_flows_api import reader  # noqa: F401  (fixture)
 
 DOWNLOAD = {"interval": {"type": "relativo", "unit": "hoy"}, "channels": ["voz", "chat"], "overwrite": True}
-SECRET = "secreto-que-no-debe-salir"
 
 
 def _graph(sampling: dict | None = None, download: dict | None = None) -> dict:
@@ -263,14 +263,52 @@ def test_a_run_without_a_box_has_no_download(api):
     assert api.get(f"/api/flows/{flow['id']}/runs/{run_id}/download").status_code == 404
 
 
-def test_no_secret_reaches_the_run(api, real_origin, downloader):
-    downloader.final, downloader.error = "error", "Genesys rejected the request"
-    flow = flow_with(api, _graph())
-    run_id = run(api, flow)["id"]
-    body = api.get(f"/api/flows/{flow['id']}/runs/{run_id}").text
-    assert SECRET not in body and "Bearer" not in body
-
 
 def _user():
     from app import auth
     return auth.get_store().find_by_email("admin@bancohorizonte.demo")
+
+
+# --- Casos añadidos en /test ---
+
+def test_behind_the_box_the_sampling_keeps_its_method_and_size(api, real_origin, downloader):
+    flow = flow_with(api, _graph({"method": "aleatorio", "size": 2}))
+    final = detail(api, flow, run(api, flow)["id"])
+    rows = next(iter(final["outputs"].values()))["result"]["rows"]
+    assert final["sample_size"] == 2
+    assert {r["conversation"]["id"] for r in rows} <= set(downloader.subset_ids)
+
+
+def test_a_download_with_warnings_lets_the_flow_continue(api, real_origin, downloader):
+    downloader.final = "completada_con_avisos"
+    flow = flow_with(api, _graph())
+    final = detail(api, flow, run(api, flow)["id"])
+    assert final["status"] == "ok" and final["download"]["status"] == "completada_con_avisos"
+    assert final["sample_size"] == len(downloader.subset_ids)
+
+
+def test_the_real_data_snapshot_is_refreshed_after_the_download(monkeypatch):
+    """Sin una petición HTTP de por medio (ejecución programada), la instantánea de los datos reales solo se recarga si
+    el ejecutor abre una «petición» nueva al terminar la descarga y antes del Sampling."""
+    events = []
+    fake = FakeDownloader(_subset(), steps=1)
+    original_subset = fake.subset
+    fake.subset = lambda run_id: events.append("subset") or original_subset(run_id)
+    monkeypatch.setattr(runs, "begin_request", lambda: events.append("begin_request"))
+    import app.flows.runs as runs_module
+    original_candidates = runs_module.candidates
+    monkeypatch.setattr(runs_module, "candidates",
+                        lambda config, subset=None: events.append("sampling") or original_candidates(config, subset))
+    flow = get_flow_store().create(_user(), "Flujo", parse_graph(_graph()))
+    the_run = get_run_store().create(flow, _user())
+    FlowExecutor(MockPromptRunner(), 0, downloader=fake, poll_s=0).execute(the_run)
+    assert events == ["subset", "begin_request", "sampling"]
+
+
+def test_a_view_only_role_reads_the_download_of_a_run(api, real_origin, downloader, reader):
+    flow = flow_with(api, _graph())
+    run_id = run(api, flow)["id"]
+    base = f"/api/flows/{flow['id']}/runs/{run_id}/download"
+    assert api.get(base, headers=reader).status_code == 200
+    assert api.get(f"{base}/log", headers=reader).status_code == 200
+    assert api.post(f"/api/flows/{flow['id']}/runs", headers=reader).status_code == 403

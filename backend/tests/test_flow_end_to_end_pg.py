@@ -18,7 +18,7 @@ from app.main import app as api_app
 from ingestion.main import create_app
 from ingestion.settings import Settings
 from tests.flow_fixtures import edge, graph, node
-from tests.ingestion_helpers import DAY_END, DAY_START, client_factory, fixture, fixtures, make_fake
+from tests.ingestion_helpers import DAY_END, DAY_START, SECRET, client_factory, fixture, fixtures, make_fake
 from tests.real_helpers import seed_real
 from tests.test_flow_runs import detail, flow_with, run
 
@@ -41,13 +41,14 @@ def wired(api, pg_url, monkeypatch):
     monkeypatch.setattr(flow_runs, "DOWNLOAD_POLL_S", 0)
     seed_real(pg_url, [fixture(short) for short in ALREADY_STORED])
     assert api.put("/api/config/sources", json={"origin": "real"}).status_code == 200
+    fake = make_fake()
     service_app = create_app(Settings(database_url=pg_url, token=TOKEN), scheduler=False,
-                             client_factory=client_factory(make_fake()), run_in_background=lambda job: job())
+                             client_factory=client_factory(fake), run_in_background=lambda job: job())
     with TestClient(service_app) as service:
         client = IngestionClient("http://testserver", TOKEN, http=service)
         api_app.dependency_overrides[get_ingestion_client] = lambda: client
         api_app.dependency_overrides[get_analysis_writer] = lambda: IngestionAnalysisWriter(client)
-        yield api, service
+        yield api, service, fake
     api_app.dependency_overrides.pop(get_ingestion_client, None)
     api_app.dependency_overrides.pop(get_analysis_writer, None)
 
@@ -66,7 +67,7 @@ def _summaries(pg_url) -> dict[str, str | None]:
 
 
 def test_the_flow_downloads_and_writes_only_in_the_new_conversations(wired, pg_url):
-    api, service = wired
+    api, service, fake = wired
     before = set(_summaries(pg_url))
     interval = {"type": "especifico", "from": _local(DAY_START), "to": _local(DAY_END)}
     flow = flow_with(api, graph(
@@ -87,8 +88,14 @@ def test_the_flow_downloads_and_writes_only_in_the_new_conversations(wired, pg_u
     rows = next(iter(final["outputs"].values()))["result"]["rows"]
     assert {r["conversation"]["id"] for r in rows} == new
     assert {cid for cid, summary in after.items() if summary} == new
-    log = api.get(f"/api/flows/{flow['id']}/runs/{final['id']}/download/log").json()["items"]
+    base = f"/api/flows/{flow['id']}/runs/{final['id']}/download"
+    log = api.get(f"{base}/log").json()["items"]
     assert any(e["stage"] == "load" for e in log)
+    # Ni el secreto de Genesys ni sus tokens llegan a la ejecución, a su descarga ni a su log (criterio 19).
+    outputs = [api.get(f"/api/flows/{flow['id']}/runs/{final['id']}").text, api.get(base).text,
+               api.get(f"{base}/log", params={"format": "text"}).text]
+    for secret in [SECRET, *fake.issued_tokens]:
+        assert all(secret not in output for output in outputs)
 
     # Repetida sin «Sobrescribir», la descarga no trae nada nuevo: el resto queda omitido y no se escribe nada.
     again = detail(api, flow, run(api, flow)["id"])
