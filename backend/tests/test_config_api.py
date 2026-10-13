@@ -79,6 +79,18 @@ def test_public_endpoint_only_exposes_name_timezone_and_language(api):
     assert response.json() == GENERAL
 
 
+def test_english_is_an_available_language_and_is_exposed_publicly(api):
+    """FE016: `en-US` es un idioma por defecto válido; `es-ES` sigue siéndolo."""
+    options = api.get("/api/config").json()["options"]["languages"]
+    assert [o["value"] for o in options] == ["es-ES", "en-US"]
+    assert {o["value"]: o["label"] for o in options}["en-US"] == "English (United States)"
+    english = {**GENERAL, "language": "en-US"}
+    assert api.put("/api/config/general", json=english).status_code == 200
+    assert api.get("/api/config").json()["general"]["language"] == "en-US"
+    api.headers.pop("Authorization")
+    assert api.get("/api/config/public").json() == english
+
+
 def test_new_prompt_nodes_take_the_default_model_from_the_flow_catalog(api):
     assert api.get("/api/flows/catalog").json()["default_model"] == "gemini-3.5-flash-lite"
     api.put("/api/config/ai", json={"provider": "simulado", "model": "mock-preciso"})
@@ -104,7 +116,7 @@ def test_every_change_increments_the_version(api):
     ({**GENERAL, "platform_name": "   "}, "platform_name"),
     ({**GENERAL, "platform_name": "x" * 61}, "platform_name"),
     ({**GENERAL, "timezone": "Europe/Atlantida"}, "timezone"),
-    ({**GENERAL, "language": "en-US"}, "language"),
+    ({**GENERAL, "language": "fr-FR"}, "language"),
 ])
 def test_invalid_general_returns_one_error_per_field(api, payload, field):
     errors = field_errors(api.put("/api/config/general", json=payload))

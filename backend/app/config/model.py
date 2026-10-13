@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError, 
 
 from app.flows.catalog import PROVIDERS
 
-LANGUAGES = {"es-ES": "Español (España)"}
+LANGUAGES = {"es-ES": "Español (España)", "en-US": "English (United States)"}
 MAX_PLATFORM_NAME = 60
 
 SECTIONS = {

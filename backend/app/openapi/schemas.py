@@ -578,7 +578,7 @@ class Run(RunSummary):
 class PublicConfig(Doc):
     platform_name: str
     timezone: str = Field(examples=["Europe/Madrid"])
-    language: str = Field(examples=["es-ES"])
+    language: str = Field(examples=["es-ES", "en-US"])
 
 
 class Privacy(Doc):

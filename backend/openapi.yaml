@@ -7836,6 +7836,7 @@ components:
         language:
           examples:
           - es-ES
+          - en-US
           title: Language
           type: string
       required:
