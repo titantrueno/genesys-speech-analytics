@@ -21,8 +21,9 @@ class Analysis:
     csat: float | None = None
     effort: float | None = None
     churn_risk: str | None = None
+    sentiment: float | None = None  # del LLM, solo si Genesys no lo da (FE014)
     compliance: dict[str, Any] | None = None
-    entities: list[dict] | None = None
+    entities: dict[str, str] | None = None  # `{tipo: valor}`, combinable clave a clave (FE014)
     keywords: list[str] | None = None
     error: str | None = None
 

@@ -160,7 +160,7 @@ def test_runs_from_before_overwrite_existed_have_an_unknown_mode(pg_url):
                      "counters, created_at) VALUES ('1RN-00000000-0000-4000-8000-0000000000AA', %s, 'manual', "
                      "'completada', %s, %s, '{voz}', '{}', %s - interval '1 day')",
                      (flow_id, DAY_START, DAY_END, applied))
-        conn.execute("DELETE FROM schema_migrations WHERE version >= '0005'")  # vuelve a aplicar la corrección
+        conn.execute("DELETE FROM schema_migrations WHERE version = '0005_run_overwrite_unknown'")  # reaplica la corrección
         db.migrate(conn)
     old = get_run(pg_url, "1RN-00000000-0000-4000-8000-0000000000AA")
     assert old["overwrite"] is None and old["counters"]["skipped_existing"] == 0

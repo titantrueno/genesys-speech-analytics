@@ -5,7 +5,7 @@ sus tramos, turnos, temas y respuestas originales.
 
 Casilla «Sobrescribir» del flujo (FE013): sin ella, una conversación que ya existe no se toca (`OMITTED`); el ejecutor
 ya lo comprueba antes de descargar, y esto cubre otra ejecución que la cargue mientras tanto. Con ella, la conversación
-se sustituye entera y su análisis también, aunque estuviera `completo`: se borran el summary y el main topic del LLM.
+se sustituye entera y su análisis también, aunque estuviera `completo`: se borra todo lo que escribió un LLM (FE013, FE014).
 """
 from dataclasses import asdict
 
@@ -25,7 +25,7 @@ _CONVERSATION_COLUMNS = [
     "metrics",
 ]
 _ANALYSIS_FIELDS = ["status", "source", "summary", "main_topic", "secondary_topics", "resolution", "csat", "effort",
-                    "churn_risk", "compliance", "entities", "keywords", "error"]
+                    "churn_risk", "sentiment", "compliance", "entities", "keywords", "error"]
 _JSON_ANALYSIS = {"secondary_topics", "compliance", "entities", "keywords"}
 
 

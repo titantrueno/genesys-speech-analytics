@@ -64,7 +64,8 @@ def test_the_internal_read_returns_the_normalized_conversation(pg_url):
     assert [t["name"] for t in body["topics"]] == ["Conexión", "Conexión", "Saludos", "Realización de pagos"]
     assert body["analysis"] == {"status": "pendiente", "source": "genesys", "summary": None, "main_topic": None,
                                 "secondary_topics": None, "resolution": None, "csat": None, "effort": None,
-                                "churn_risk": None, "compliance": None, "entities": None, "keywords": None}
+                                "churn_risk": None, "sentiment": None, "compliance": None, "entities": None,
+                                "keywords": None}
     assert body["metrics"]["ivr_s"] == pytest.approx(86.546)
 
 

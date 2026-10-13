@@ -11,7 +11,7 @@ from psycopg.rows import dict_row
 from app import ids
 
 _ANALYSIS = ["status", "source", "summary", "main_topic", "secondary_topics", "resolution", "csat", "effort",
-             "churn_risk", "compliance", "entities", "keywords"]
+             "churn_risk", "sentiment", "compliance", "entities", "keywords"]
 
 
 def _iso(value: datetime | None) -> str | None:
