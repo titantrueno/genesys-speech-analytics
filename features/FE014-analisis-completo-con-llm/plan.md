@@ -186,3 +186,4 @@
 - **Decisión:** los campos JSON de los checks se llaman `check_<código>` y los de entidades `entidad_<tipo>`; el resto, como su destino.
 - **Decisión:** si los checks activos no caben en `MAX_FIELDS` (más de 27) o las instrucciones superan `MAX_TEMPLATE`, la plantilla responde `422` con el motivo, en vez de crear un flujo que no valida.
 - **Ajuste de tests de FE013:** el catálogo de plantillas incluye la nueva.
+- **Hecho (2026-10-13, Gemini real):** el Prompt de la plantilla con la configuración por defecto (19 campos, `enum` de 15 main topics y 34 temas secundarios) con `gemini-3.5-flash-lite` sobre 3 conversaciones sintéticas: 0 rechazos por campo tras `coerce`. Los checks salen `cumple` o `no_aplica` con sentido (bloqueo preventivo «no aplica» fuera de fraude) y las entidades vacías quedan `sin_valor`. El riesgo de esquema grande queda sin materializar; se vuelve a medir con datos reales en T8.
