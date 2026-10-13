@@ -19,6 +19,8 @@ export function setupEditor(options: {
   saveStatus?: number
   estimate?: (body: { query: unknown; size?: number }) => Reply
   catalog?: Partial<typeof CATALOG>
+  /** Rutas adicionales (p. ej. `GET /api/config/public` para probar otro idioma). */
+  extraRoutes?: Parameters<typeof signedInAs>[1]
 } = {}) {
   let stored = structuredClone(options.graph ?? CHAINED)
   const puts: FlowGraph[] = []
@@ -62,6 +64,7 @@ export function setupEditor(options: {
       calls.push('RUN')
       return options.run?.() ?? { status: 202, body: { id: RUN_ID, status: 'pendiente' } }
     },
+    ...options.extraRoutes,
   })
   const result = renderApp(`/flujos/${FLOW_ID}`)
   const nodes = () => [...result.container.querySelectorAll<HTMLElement>('.react-flow__node')]

@@ -1,13 +1,14 @@
+import type { TKey } from '../i18n/dictionaries'
 import type { FlowStatus, RunStatus } from './types'
 
-export const FLOW_STATUS: Record<FlowStatus, { label: string; className: string }> = {
-  valido: { label: 'Válido', className: 'bg-green-50 text-[var(--status-good-text)]' },
-  con_errores: { label: 'Con errores', className: 'bg-amber-50 text-amber-800' },
+export const FLOW_STATUS: Record<FlowStatus, { label: TKey; className: string }> = {
+  valido: { label: 'flows.status.valido', className: 'bg-green-50 text-[var(--status-good-text)]' },
+  con_errores: { label: 'flows.status.con_errores', className: 'bg-amber-50 text-amber-800' },
 }
 
-export const RUN_STATUS: Record<RunStatus, { label: string; className: string }> = {
-  pendiente: { label: 'Pendiente', className: 'bg-slate-100 text-slate-600' },
-  en_curso: { label: 'En curso', className: 'bg-brand-50 text-brand-700' },
-  ok: { label: 'OK', className: 'bg-green-50 text-[var(--status-good-text)]' },
-  error: { label: 'Error', className: 'bg-red-50 text-[var(--status-critical)]' },
+export const RUN_STATUS: Record<RunStatus, { label: TKey; className: string }> = {
+  pendiente: { label: 'flows.runStatus.pendiente', className: 'bg-slate-100 text-slate-600' },
+  en_curso: { label: 'flows.runStatus.en_curso', className: 'bg-brand-50 text-brand-700' },
+  ok: { label: 'flows.runStatus.ok', className: 'bg-green-50 text-[var(--status-good-text)]' },
+  error: { label: 'flows.runStatus.error', className: 'bg-red-50 text-[var(--status-critical)]' },
 }

@@ -1,4 +1,6 @@
 import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from 'react'
+import { useI18n } from '../../i18n/useI18n'
+import { catalogLabel } from '../catalog'
 import type { Option } from '../types'
 
 export const control = 'h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700 disabled:bg-slate-50'
@@ -17,14 +19,16 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   )
 }
 
-export function Select<T extends string>({ label, value, options, onChange, placeholder }: {
-  label: string; value: T | undefined; options: Option<T>[]; onChange: (value: T) => void; placeholder?: string
+/** `group` traduce las etiquetas del catálogo del backend por clave (`flows.cat.<group>.<valor>`). */
+export function Select<T extends string>({ label, value, options, onChange, placeholder, group }: {
+  label: string; value: T | undefined; options: Option<T>[]; onChange: (value: T) => void; placeholder?: string; group?: string
 }) {
+  const i18n = useI18n()
   return (
     <Field label={label}>
       <select className={control} value={value ?? ''} onChange={(e) => onChange(e.target.value as T)}>
-        {(value === undefined || placeholder) && <option value="" disabled>{placeholder ?? 'Elige una opción'}</option>}
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {(value === undefined || placeholder) && <option value="" disabled>{placeholder ?? i18n.t('flows.chooseOption')}</option>}
+        {options.map((o) => <option key={o.value} value={o.value}>{group ? catalogLabel(i18n, group, o) : o.label}</option>)}
       </select>
     </Field>
   )

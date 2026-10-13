@@ -3,8 +3,9 @@ import { ArrowLeft, History } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useParams } from 'react-router'
 import { ApiError } from '../api/client'
+import { useI18n } from '../i18n/useI18n'
 import { LoadingScreen } from '../layout/LoadingScreen'
-import { formatDateTime, formatInteger } from '../lib/format'
+import { formatDateTime, formatInteger, formatUpToOneDecimal } from '../lib/format'
 import { useFlow, useFlowCatalog, useRun, useRuns } from './api'
 import { CatalogContext } from './catalog'
 import { FlowCanvas } from './FlowCanvas'
@@ -20,7 +21,7 @@ const secondary = 'inline-flex items-center gap-1.5 rounded-md border border-sla
 
 function formatRunDuration(ms: number | null): string {
   if (ms === null) return '—'
-  return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toLocaleString('es-ES', { maximumFractionDigits: 1 })} s`
+  return ms < 1000 ? `${ms} ms` : `${formatUpToOneDecimal(ms / 1000)} s`
 }
 
 function Failure({ message }: { message: string }) {
@@ -28,27 +29,29 @@ function Failure({ message }: { message: string }) {
 }
 
 function RunCanvas({ run }: { run: Run }) {
+  const { t } = useI18n()
   const nodes = useMemo(() => toCanvasNodes(run.graph).map((n) => ({ ...n, data: { ...n.data, state: run.nodes[n.id] } })), [run])
   const edges = useMemo(() => toCanvasEdges(run.graph), [run.graph])
   return (
     <div className="h-[26rem] overflow-hidden rounded-xl border border-slate-200 bg-white">
       <ReactFlowProvider>
-        <FlowCanvas nodes={nodes} edges={edges} editable={false} label="Grafo ejecutado" />
+        <FlowCanvas nodes={nodes} edges={edges} editable={false} label={t('flows.run.graph')} />
       </ReactFlowProvider>
     </div>
   )
 }
 
 export function RunPage() {
+  const { t } = useI18n()
   const { flowId = '', runId = '' } = useParams()
   const flow = useFlow(flowId)
   const catalog = useFlowCatalog()
   const run = useRun(flowId, runId)
-  const back = <Link to={`/flujos/${flowId}`} className={link}><ArrowLeft className="size-4" aria-hidden />Volver al flujo</Link>
+  const back = <Link to={`/flujos/${flowId}`} className={link}><ArrowLeft className="size-4" aria-hidden />{t('flows.run.back')}</Link>
 
   if (run.isError || catalog.isError) {
     const notFound = run.error instanceof ApiError && run.error.status === 404
-    return <div className="space-y-3">{back}<Failure message={notFound ? 'Ejecución no encontrada.' : 'No se ha podido cargar la ejecución.'} /></div>
+    return <div className="space-y-3">{back}<Failure message={notFound ? t('flows.run.notFound') : t('flows.run.loadError')} /></div>
   }
   if (!run.data || !catalog.data) return <LoadingScreen />
 
@@ -64,26 +67,26 @@ export function RunPage() {
           <div>
             {back}
             <h1 className="text-2xl font-semibold text-slate-900">
-              Ejecución de {flow.data?.name ?? 'flujo'}
+              {t('flows.run.title', { name: flow.data?.name ?? t('flows.run.defaultName') })}
             </h1>
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600">
-              <StatusBadge {...RUN_STATUS[data.status]} />
+              <StatusBadge label={t(RUN_STATUS[data.status].label)} className={RUN_STATUS[data.status].className} />
               <span>{formatDateTime(data.created_at)}</span>
               <span>{data.user.name}</span>
-              <span>Muestra: {data.sample_size === null ? '—' : formatInteger(data.sample_size)}</span>
-              <span>Duración: {formatRunDuration(data.duration_ms)}</span>
+              <span>{t('flows.run.sample', { value: data.sample_size === null ? '—' : formatInteger(data.sample_size) })}</span>
+              <span>{t('flows.run.duration', { value: formatRunDuration(data.duration_ms) })}</span>
             </p>
           </div>
-          <Link to={`/flujos/${flowId}/ejecuciones`} className={secondary}><History className="size-4" aria-hidden />Historial</Link>
+          <Link to={`/flujos/${flowId}/ejecuciones`} className={secondary}><History className="size-4" aria-hidden />{t('flows.run.history')}</Link>
         </header>
-        {active && <p role="status" className="text-sm text-slate-500">Ejecutando… el progreso se actualiza automáticamente.</p>}
+        {active && <p role="status" className="text-sm text-slate-500">{t('flows.run.running')}</p>}
         {failures.map((n) => (
-          <Failure key={n.id} message={`${NODE_LABELS[n.type]}: ${data.nodes[n.id].message ?? 'Error'}`} />
+          <Failure key={n.id} message={`${NODE_LABELS[n.type]}: ${data.nodes[n.id].message ?? t('flows.run.error')}`} />
         ))}
         <RunCanvas run={data} />
         {outputs.length > 0 ? <RunOutputs outputs={outputs} /> : (
           <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">
-            {active ? 'Los resultados aparecerán al terminar la ejecución.' : 'Esta ejecución no ha producido resultados.'}
+            {active ? t('flows.run.resultsLater') : t('flows.run.noResults')}
           </p>
         )}
       </div>
@@ -92,6 +95,7 @@ export function RunPage() {
 }
 
 function RunRow({ flowId, run }: { flowId: string; run: RunSummary }) {
+  const { t } = useI18n()
   return (
     <tr className="border-b border-slate-100">
       <td className="px-3 py-2.5 whitespace-nowrap">
@@ -102,35 +106,36 @@ function RunRow({ flowId, run }: { flowId: string; run: RunSummary }) {
       <td className="px-3 py-2.5 text-slate-700">{run.user.name}</td>
       <td className="px-3 py-2.5 text-right text-slate-700 tabular-nums">{run.sample_size === null ? '—' : formatInteger(run.sample_size)}</td>
       <td className="px-3 py-2.5 text-right text-slate-700 tabular-nums">{formatRunDuration(run.duration_ms)}</td>
-      <td className="px-3 py-2.5"><StatusBadge {...RUN_STATUS[run.status]} /></td>
+      <td className="px-3 py-2.5"><StatusBadge label={t(RUN_STATUS[run.status].label)} className={RUN_STATUS[run.status].className} /></td>
     </tr>
   )
 }
 
 export function RunsPage() {
+  const { t } = useI18n()
   const { flowId = '' } = useParams()
   const flow = useFlow(flowId)
   const runs = useRuns(flowId)
-  const back = <Link to={`/flujos/${flowId}`} className={link}><ArrowLeft className="size-4" aria-hidden />Volver al flujo</Link>
+  const back = <Link to={`/flujos/${flowId}`} className={link}><ArrowLeft className="size-4" aria-hidden />{t('flows.run.back')}</Link>
   if (runs.isError) {
     const notFound = runs.error instanceof ApiError && runs.error.status === 404
-    return <div className="space-y-3">{back}<Failure message={notFound ? 'Flujo no encontrado.' : 'No se ha podido cargar el historial.'} /></div>
+    return <div className="space-y-3">{back}<Failure message={notFound ? t('flows.runs.flowNotFound') : t('flows.runs.loadError')} /></div>
   }
   return (
     <div className="space-y-4">
       <header>
         {back}
-        <h1 className="text-2xl font-semibold text-slate-900">Historial de ejecuciones{flow.data && ` · ${flow.data.name}`}</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">{t('flows.runs.title')}{flow.data && ` · ${flow.data.name}`}</h1>
       </header>
-      {runs.isPending && <p role="status" className="text-sm text-slate-500">Cargando ejecuciones…</p>}
-      {runs.data?.items.length === 0 && <p className="text-sm text-slate-500">Este flujo aún no se ha ejecutado.</p>}
+      {runs.isPending && <p role="status" className="text-sm text-slate-500">{t('flows.runs.loading')}</p>}
+      {runs.data?.items.length === 0 && <p className="text-sm text-slate-500">{t('flows.runs.empty')}</p>}
       {runs.data && runs.data.items.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-                {['Fecha', 'Usuario', 'Tamaño de muestra', 'Duración', 'Estado'].map((c, i) => (
-                  <th key={c} scope="col" className={`px-3 py-2 font-medium ${i === 2 || i === 3 ? 'text-right' : ''}`}>{c}</th>
+                {(['flows.runs.col.date', 'flows.runs.col.user', 'flows.runs.col.sample', 'flows.runs.col.duration', 'flows.runs.col.status'] as const).map((c, i) => (
+                  <th key={c} scope="col" className={`px-3 py-2 font-medium ${i === 2 || i === 3 ? 'text-right' : ''}`}>{t(c)}</th>
                 ))}
               </tr>
             </thead>

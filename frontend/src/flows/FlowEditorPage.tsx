@@ -5,6 +5,8 @@ import { Link, useBlocker, useNavigate, useParams } from 'react-router'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/useAuth'
 import { useDebouncedValue } from '../explorer/hooks'
+import type { TKey } from '../i18n/dictionaries'
+import { useI18n } from '../i18n/useI18n'
 import { LoadingScreen } from '../layout/LoadingScreen'
 import { useFlow, useFlowCatalog, useSaveGraph, useStartRun, useValidation } from './api'
 import { CatalogContext, useCatalog } from './catalog'
@@ -19,19 +21,20 @@ import type { Flow, Issue, NodeType } from './types'
 
 const button = 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50'
 const secondary = `${button} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`
-const PALETTE: Array<{ type: NodeType; description: string }> = [
-  { type: 'sampling', description: 'Toma una muestra de conversaciones' },
-  { type: 'prompt', description: 'Aplica un prompt a cada conversación' },
-  { type: 'output', description: 'Produce una tabla, una métrica o un informe' },
+const PALETTE: Array<{ type: NodeType; description: TKey }> = [
+  { type: 'sampling', description: 'flows.palette.sampling' },
+  { type: 'prompt', description: 'flows.palette.prompt' },
+  { type: 'output', description: 'flows.palette.output' },
 ]
 
 function Palette({ onAdd }: { onAdd: (type: NodeType) => void }) {
+  const { t } = useI18n()
   return (
-    <aside aria-label="Paleta de nodos" className="w-44 shrink-0 space-y-2">
-      <h2 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Nodos</h2>
-      <p className="text-xs text-slate-500">Arrástralos al lienzo o púlsalos para añadirlos.</p>
+    <aside aria-label={t('flows.palette.aria')} className="w-44 shrink-0 space-y-2">
+      <h2 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">{t('flows.palette.title')}</h2>
+      <p className="text-xs text-slate-500">{t('flows.palette.hint')}</p>
       {PALETTE.map(({ type, description }) => (
-        <button key={type} type="button" draggable aria-label={`Añadir ${NODE_LABELS[type]}`}
+        <button key={type} type="button" draggable aria-label={t('flows.palette.add', { node: NODE_LABELS[type] })}
           onDragStart={(event) => {
             event.dataTransfer.setData(NODE_DRAG_TYPE, type)
             event.dataTransfer.effectAllowed = 'move'
@@ -39,7 +42,7 @@ function Palette({ onAdd }: { onAdd: (type: NodeType) => void }) {
           onClick={() => onAdd(type)}
           className="block w-full cursor-grab rounded-lg border border-slate-200 bg-white p-2.5 text-left shadow-sm hover:border-brand-500 active:cursor-grabbing">
           <span className="block text-sm font-semibold text-slate-800">{NODE_LABELS[type]}</span>
-          <span className="block text-xs text-slate-500">{description}</span>
+          <span className="block text-xs text-slate-500">{t(description)}</span>
         </button>
       ))}
     </aside>
@@ -49,26 +52,27 @@ function Palette({ onAdd }: { onAdd: (type: NodeType) => void }) {
 function ValidationPanel({ issues, loading, nodes, onSelect, onClose }: {
   issues: Issue[] | undefined; loading: boolean; nodes: CanvasNode[]; onSelect: (id: string) => void; onClose: () => void
 }) {
+  const { t } = useI18n()
   const names = useNodeNames(nodes)
   // Un aviso no impide ejecutar el flujo (FE012): se muestra aparte y no marca el nodo como erróneo.
   const errors = (issues ?? []).filter((issue) => issue.severity !== 'warning')
   const warnings = (issues ?? []).filter((issue) => issue.severity === 'warning')
   return (
-    <section aria-label="Validación" className="rounded-xl border border-slate-200 bg-white p-3">
+    <section aria-label={t('flows.validation.title')} className="rounded-xl border border-slate-200 bg-white p-3">
       <header className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-900">Validación</h2>
-        <button type="button" onClick={onClose} aria-label="Cerrar validación" className="rounded p-1 text-slate-400 hover:bg-slate-100">
+        <h2 className="text-sm font-semibold text-slate-900">{t('flows.validation.title')}</h2>
+        <button type="button" onClick={onClose} aria-label={t('flows.validation.close')} className="rounded p-1 text-slate-400 hover:bg-slate-100">
           <X className="size-4" aria-hidden />
         </button>
       </header>
-      {!issues && loading && <p role="status" className="text-sm text-slate-500">Validando…</p>}
+      {!issues && loading && <p role="status" className="text-sm text-slate-500">{t('flows.validation.loading')}</p>}
       {issues && errors.length === 0 && (
         <p className="inline-flex items-center gap-1.5 text-sm text-[var(--status-good-text)]">
-          <CheckCircle2 className="size-4" aria-hidden />El flujo es válido.
+          <CheckCircle2 className="size-4" aria-hidden />{t('flows.validation.valid')}
         </p>
       )}
       {warnings.length > 0 && (
-        <ul aria-label="Avisos de validación" className="mt-1 space-y-1">
+        <ul aria-label={t('flows.validation.warnings')} className="mt-1 space-y-1">
           {warnings.map((issue, i) => {
             const name = issue.node_id ? names.get(issue.node_id)?.split(' · ')[0] : undefined
             return (
@@ -81,7 +85,7 @@ function ValidationPanel({ issues, loading, nodes, onSelect, onClose }: {
         </ul>
       )}
       {errors.length > 0 && (
-        <ul aria-label="Errores de validación" className={`space-y-1 ${loading ? 'opacity-60' : ''}`}>
+        <ul aria-label={t('flows.validation.errors')} className={`space-y-1 ${loading ? 'opacity-60' : ''}`}>
           {errors.map((issue, i) => {
             // «Prompt 2»: tipo y número, sin el resumen, para distinguir nodos del mismo tipo.
             const name = issue.node_id ? names.get(issue.node_id)?.split(' · ')[0] : undefined
@@ -103,15 +107,16 @@ function ValidationPanel({ issues, loading, nodes, onSelect, onClose }: {
 }
 
 function UnsavedChangesDialog({ onLeave, onStay }: { onLeave: () => void; onStay: () => void }) {
+  const { t } = useI18n()
   return (
     <div role="alertdialog" aria-labelledby="unsaved-title" aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30">
       <div className="w-96 space-y-3 rounded-xl bg-white p-5 shadow-xl">
-        <h2 id="unsaved-title" className="text-base font-semibold text-slate-900">Hay cambios sin guardar</h2>
-        <p className="text-sm text-slate-600">Si sales ahora, perderás los cambios del flujo.</p>
+        <h2 id="unsaved-title" className="text-base font-semibold text-slate-900">{t('flows.unsaved.title')}</h2>
+        <p className="text-sm text-slate-600">{t('flows.unsaved.body')}</p>
         <div className="flex justify-end gap-2">
-          <button type="button" className={secondary} onClick={onStay} autoFocus>Seguir editando</button>
-          <button type="button" className={`${button} bg-red-600 text-white hover:bg-red-700`} onClick={onLeave}>Salir sin guardar</button>
+          <button type="button" className={secondary} onClick={onStay} autoFocus>{t('flows.unsaved.stay')}</button>
+          <button type="button" className={`${button} bg-red-600 text-white hover:bg-red-700`} onClick={onLeave}>{t('flows.unsaved.leave')}</button>
         </div>
       </div>
     </div>
@@ -127,6 +132,7 @@ function errorMessage(error: unknown, fallback: string): string {
 }
 
 function Editor({ flow }: { flow: Flow }) {
+  const { t } = useI18n()
   const catalog = useCatalog()
   const { can } = useAuth()
   const editable = can('flows:edit')
@@ -176,7 +182,7 @@ function Editor({ flow }: { flow: Flow }) {
   const connect = (source: string, target: string) => {
     const rejection = connectionRejection(types, graph.edges, source, target)
     if (rejection) {
-      setNotice(`No se puede conectar: ${rejection.message}`)
+      setNotice(t('flows.editor.cannotConnect', { message: t(rejection.message, rejection.params) }))
       return
     }
     setNotice(null)
@@ -238,46 +244,46 @@ function Editor({ flow }: { flow: Flow }) {
   }
 
   const runError = start.error instanceof ApiError
-    ? start.error.status === 422 ? 'El flujo tiene errores: corrígelos antes de ejecutarlo.'
-      : start.error.status === 409 ? 'Ya hay una ejecución en curso de este flujo.' : 'No se ha podido ejecutar el flujo.'
-    : start.error ? 'No se ha podido ejecutar el flujo.' : null
+    ? start.error.status === 422 ? t('flows.editor.runInvalid')
+      : start.error.status === 409 ? t('flows.editor.runBusy') : t('flows.editor.runError')
+    : start.error ? t('flows.editor.runError') : null
 
   return (
     <div className="flex h-[calc(100vh-3rem)] min-h-[560px] flex-col gap-3">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <Link to="/flujos" className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
-            <ArrowLeft className="size-4" aria-hidden />Volver a flujos
+            <ArrowLeft className="size-4" aria-hidden />{t('flows.editor.back')}
           </Link>
           <h1 className="truncate text-2xl font-semibold text-slate-900">{flow.name}</h1>
           <p role="status" className="text-xs text-slate-500">
-            {!editable ? 'Solo lectura' : save.isPending ? 'Guardando…' : dirty ? 'Cambios sin guardar' : 'Guardado'}
+            {!editable ? t('flows.editor.readOnly') : save.isPending ? t('flows.editor.saving') : dirty ? t('flows.editor.dirty') : t('flows.editor.saved')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Link to={`/flujos/${flow.id}/ejecuciones`} className={secondary}><History className="size-4" aria-hidden />Historial</Link>
+          <Link to={`/flujos/${flow.id}/ejecuciones`} className={secondary}><History className="size-4" aria-hidden />{t('flows.editor.history')}</Link>
           <button type="button" className={secondary} onClick={() => setValidating(true)}>
-            <ShieldCheck className="size-4" aria-hidden />Validar
+            <ShieldCheck className="size-4" aria-hidden />{t('flows.editor.validate')}
           </button>
           {editable && (
             <>
               <button type="button" className={secondary} disabled={!dirty || save.isPending} onClick={() => void persist()}>
-                <Save className="size-4" aria-hidden />Guardar
+                <Save className="size-4" aria-hidden />{t('flows.editor.save')}
               </button>
               <button type="button" className={`${button} bg-brand-600 text-white hover:bg-brand-700`}
                 disabled={save.isPending || start.isPending} onClick={() => void run()}>
-                <Play className="size-4" aria-hidden />Ejecutar
+                <Play className="size-4" aria-hidden />{t('flows.editor.run')}
               </button>
             </>
           )}
         </div>
       </header>
-      {save.isError && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage(save.error, 'No se ha podido guardar el flujo.')}</p>}
+      {save.isError && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{errorMessage(save.error, t('flows.editor.saveError'))}</p>}
       {runError && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{runError}</p>}
       {notice && (
         <p role="alert" className="flex items-center justify-between rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
           {notice}
-          <button type="button" aria-label="Cerrar aviso" onClick={() => setNotice(null)} className="rounded p-0.5 hover:bg-amber-100">
+          <button type="button" aria-label={t('flows.editor.closeNotice')} onClick={() => setNotice(null)} className="rounded p-0.5 hover:bg-amber-100">
             <X className="size-4" aria-hidden />
           </button>
         </p>
@@ -285,7 +291,7 @@ function Editor({ flow }: { flow: Flow }) {
       <div className="flex min-h-0 flex-1 gap-3">
         {editable && <Palette onAdd={(type) => addNode(type)} />}
         <div ref={canvasRef} className="min-w-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <FlowCanvas nodes={shownNodes} edges={edges} editable={editable} label="Lienzo del flujo"
+          <FlowCanvas nodes={shownNodes} edges={edges} editable={editable} label={t('flows.editor.canvas')}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
             onConnectAttempt={connect}
             isValidConnection={(source, target) => !connectionRejection(types, graph.edges, source, target)}
@@ -314,6 +320,7 @@ function Editor({ flow }: { flow: Flow }) {
 }
 
 export function FlowEditorPage() {
+  const { t } = useI18n()
   const { flowId = '' } = useParams()
   const flow = useFlow(flowId)
   const catalog = useFlowCatalog()
@@ -322,10 +329,10 @@ export function FlowEditorPage() {
     return (
       <div className="space-y-3">
         <Link to="/flujos" className="inline-flex items-center gap-1 text-sm text-brand-700 hover:underline">
-          <ArrowLeft className="size-4" aria-hidden />Volver a flujos
+          <ArrowLeft className="size-4" aria-hidden />{t('flows.editor.back')}
         </Link>
         <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {notFound ? 'Flujo no encontrado.' : 'No se ha podido cargar el flujo.'}
+          {notFound ? t('flows.editor.notFound') : t('flows.editor.loadError')}
         </p>
       </div>
     )

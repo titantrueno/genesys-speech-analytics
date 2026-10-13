@@ -4,6 +4,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useState, type DragEvent, type ReactNode } from 'react'
+import { useI18n } from '../i18n/useI18n'
 import type { CanvasEdge, CanvasNode } from './graph'
 import { FlowNodeCard } from './nodes'
 import type { NodeType } from './types'
@@ -38,6 +39,7 @@ export function FlowCanvas({
   nodes, edges, editable, label, onNodesChange, onEdgesChange, onConnectAttempt, isValidConnection, onDropNode, children,
 }: Props) {
   const { screenToFlowPosition } = useReactFlow()
+  const { t } = useI18n()
   // Encuadrar solo al abrir un flujo con nodos: en un lienzo vacío, `fitView` se dispararía con el primer nodo
   // que se suelta y cambiaría el zoom a mitad del diseño.
   const [fitOnOpen] = useState(nodes.length > 0)
@@ -79,7 +81,7 @@ export function FlowCanvas({
       >
         <Background gap={15} />
         <Controls showInteractive={false} />
-        <MiniMap pannable zoomable ariaLabel="Minimapa del flujo" />
+        <MiniMap pannable zoomable ariaLabel={t('flows.editor.minimap')} />
         {children}
       </ReactFlow>
     </div>

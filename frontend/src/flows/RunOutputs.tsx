@@ -6,20 +6,20 @@ import type { Translate } from '../i18n/context'
 import { useI18n } from '../i18n/useI18n'
 import { RankedBars } from '../dashboards/bars'
 import { ChartCard, DataTable } from '../dashboards/ChartCard'
-import { formatDateTime, formatDecimal, formatInteger, shortId } from '../lib/format'
+import type { TKey } from '../i18n/dictionaries'
+import { formatDateTime, formatDecimal, formatInteger, formatKpi, shortId } from '../lib/format'
 import { useCatalog, optionLabel } from './catalog'
 import type { FieldsResult, FieldState, FieldValue, MetricResult, ReportResult, RunOutput, TableResult, TargetField } from './types'
 
-const percent = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-
 function ResultValue({ value }: { value: unknown }) {
+  const { t } = useI18n()
   if (value !== null && typeof value === 'object') {
     return (
       <dl className="grid grid-cols-[auto_1fr] gap-x-2 text-xs">
         {Object.entries(value as Record<string, unknown>).map(([key, item]) => (
           <div key={key} className="contents">
             <dt className="font-mono text-slate-500">{key}</dt>
-            <dd className="text-slate-800">{typeof item === 'boolean' ? (item ? 'sí' : 'no') : String(item)}</dd>
+            <dd className="text-slate-800">{typeof item === 'boolean' ? t(item ? 'exp.bool.true' : 'exp.bool.false') : String(item)}</dd>
           </div>
         ))}
       </dl>
@@ -50,13 +50,14 @@ function TableRow({ row }: { row: TableResult['rows'][number] }) {
 }
 
 function TableOutput({ result, destination }: { result: TableResult; destination: string }) {
+  const { t } = useI18n()
   return (
     <div className="overflow-x-auto">
-      <p className="mb-2 text-sm text-slate-600">{formatInteger(result.rows.length)} conversaciones</p>
-      <table aria-label={`Insights por conversación: ${destination}`} className="w-full text-sm">
+      <p className="mb-2 text-sm text-slate-600">{t('conv.count', { count: result.rows.length, n: formatInteger(result.rows.length) })}</p>
+      <table aria-label={t('flows.out.tableAria', { destination })} className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-            {['Fecha', 'Canal', 'Cola', 'Main topic', 'Resultado'].map((c) => <th key={c} scope="col" className="px-2.5 py-2 font-medium">{c}</th>)}
+            {(['flows.out.col.date', 'flows.out.col.channel', 'flows.out.col.queue', 'flows.out.col.mainTopic', 'flows.out.col.result'] as const).map((c) => <th key={c} scope="col" className="px-2.5 py-2 font-medium">{t(c)}</th>)}
           </tr>
         </thead>
         <tbody>{result.rows.map((row) => <TableRow key={row.conversation.id} row={row} />)}</tbody>
@@ -66,30 +67,33 @@ function TableOutput({ result, destination }: { result: TableResult; destination
 }
 
 function MetricOutput({ result, destination }: { result: MetricResult; destination: string }) {
+  const { t } = useI18n()
   const byPercent = result.aggregation === 'porcentaje'
   const items = result.items.map((i) => ({ key: i.label, label: i.label, value: byPercent ? i.percent : i.count }))
   return (
     <ChartCard title={destination}
-      subtitle={`${byPercent ? '% de conversaciones' : 'Conversaciones'} por etiqueta · muestra de ${formatInteger(result.total)}`}
-      table={<DataTable caption={`Tabla de ${destination}`} columns={['Etiqueta', 'Conversaciones', '%']}
-        rows={result.items.map((i) => [i.label, formatInteger(i.count), `${percent.format(i.percent)} %`])} />}>
-      <RankedBars label={`Gráfico de ${destination}`} items={items} maxValue={byPercent ? 100 : undefined}
-        format={(v) => (byPercent ? `${percent.format(v ?? 0)} %` : formatInteger(v ?? 0))} />
+      subtitle={t(byPercent ? 'flows.out.metricPct' : 'flows.out.metricCount', { n: formatInteger(result.total) })}
+      table={<DataTable caption={t('flows.out.metricTable', { destination })} columns={[t('flows.out.metricLabel'), t('flows.out.metricConversations'), '%']}
+        rows={result.items.map((i) => [i.label, formatInteger(i.count), formatKpi(i.percent, '%')])} />}>
+      <RankedBars label={t('flows.out.metricChart', { destination })} items={items} maxValue={byPercent ? 100 : undefined}
+        format={(v) => (byPercent ? formatKpi(v ?? 0, '%') : formatInteger(v ?? 0))} />
     </ChartCard>
   )
 }
 
-const FIELD_STATES: Record<FieldState, { label: string; one: string; many: string; tone: string }> = {
-  escrito: { label: 'Escrito', one: 'escrito', many: 'escritos', tone: 'bg-emerald-50 text-emerald-700' },
-  omitido: { label: 'Omitido', one: 'omitido', many: 'omitidos', tone: 'bg-slate-100 text-slate-600' },
-  rechazado: { label: 'Rechazado', one: 'rechazado', many: 'rechazados', tone: 'bg-amber-50 text-amber-800' },
-  sin_valor: { label: 'Sin valor', one: 'sin valor', many: 'sin valor', tone: 'bg-slate-50 text-slate-500' },
-  error: { label: 'Error', one: 'con error', many: 'con error', tone: 'bg-red-50 text-red-700' },
+const FIELD_STATES: Record<FieldState, { label: TKey; count: TKey; tone: string }> = {
+  escrito: { label: 'flows.out.state.escrito', count: 'flows.out.count.escrito', tone: 'bg-emerald-50 text-emerald-700' },
+  omitido: { label: 'flows.out.state.omitido', count: 'flows.out.count.omitido', tone: 'bg-slate-100 text-slate-600' },
+  rechazado: { label: 'flows.out.state.rechazado', count: 'flows.out.count.rechazado', tone: 'bg-amber-50 text-amber-800' },
+  sin_valor: { label: 'flows.out.state.sin_valor', count: 'flows.out.count.sin_valor', tone: 'bg-slate-50 text-slate-500' },
+  error: { label: 'flows.out.state.error', count: 'flows.out.count.error', tone: 'bg-red-50 text-red-700' },
 }
 
 /** Grupos de columnas de la tabla (FE014): el análisis, cada check, los temas y las entidades. */
 type ColumnGroup = 'analisis' | 'cumplimiento' | 'temas' | 'entidades'
-const COLUMN_GROUPS: Record<ColumnGroup, string> = { analisis: 'Análisis', cumplimiento: 'Cumplimiento', temas: 'Temas', entidades: 'Entidades' }
+const COLUMN_GROUPS: Record<ColumnGroup, TKey> = {
+  analisis: 'flows.out.group.analisis', cumplimiento: 'flows.out.group.cumplimiento', temas: 'flows.out.group.temas', entidades: 'flows.out.group.entidades',
+}
 
 function columnGroup(target: TargetField): ColumnGroup {
   if (target.startsWith('compliance:')) return 'cumplimiento'
@@ -99,7 +103,7 @@ function columnGroup(target: TargetField): ColumnGroup {
 
 function fieldValue(target: TargetField, value: FieldValue | undefined, t: Translate): string | null {
   if (value === undefined) return null
-  if (target.startsWith('compliance:')) return value === true ? 'Cumple' : value === false ? 'No cumple' : 'No aplica'
+  if (target.startsWith('compliance:')) return t(value === true ? 'conv.compliance.cumple' : value === false ? 'conv.compliance.no_cumple' : 'conv.compliance.no_aplica')
   if (Array.isArray(value)) return value.join(', ')
   if (typeof value === 'number') return formatDecimal(value, 2)
   if (target === 'resolution') return resolutionLabel(t, String(value))
@@ -125,7 +129,7 @@ function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets
         const reason = row.reasons?.[target]
         return (
           <td key={target} className={`${target === 'summary' ? 'min-w-72' : 'min-w-32'} px-2.5 py-2 text-slate-800`}>
-            {state && <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-xs ${FIELD_STATES[state].tone}`}>{FIELD_STATES[state].label}</span>}
+            {state && <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-xs ${FIELD_STATES[state].tone}`}>{t(FIELD_STATES[state].label)}</span>}
             {value !== null && <p className={target === 'main_topic' ? 'font-mono text-xs' : ''}>{value}</p>}
             {reason && <p className="text-xs text-slate-500">{reason}</p>}
           </td>
@@ -140,13 +144,15 @@ function FieldRow({ row, targets }: { row: FieldsResult['rows'][number]; targets
  *  grupos, las columnas se agrupan y la tabla se desplaza en horizontal sin desbordar la página. */
 function FieldsOutput({ result, destination }: { result: FieldsResult; destination: string }) {
   const catalog = useCatalog()
-  const label = (target: string) => optionLabel(catalog.target_fields, target) ?? target
+  const i18n = useI18n()
+  const { t } = i18n
+  const label = (target: string) => optionLabel(catalog.target_fields, target, i18n, 'target_fields') ?? target
   const order = Object.keys(COLUMN_GROUPS) as ColumnGroup[]
   const targets = [...result.targets].sort((a, b) => order.indexOf(columnGroup(a)) - order.indexOf(columnGroup(b)))
   const spans = order.map((group) => [group, targets.filter((t) => columnGroup(t) === group).length] as const).filter(([, n]) => n > 0)
   return (
     <div className="space-y-3">
-      <ul aria-label="Recuentos por campo" className="space-y-1 text-sm text-slate-700">
+      <ul aria-label={t('flows.out.counts')} className="space-y-1 text-sm text-slate-700">
         {targets.map((target) => {
           const counts = result.counts[target]
           return (
@@ -154,26 +160,26 @@ function FieldsOutput({ result, destination }: { result: FieldsResult; destinati
               <span className="font-medium">{label(target)}</span>:{' '}
               {(Object.keys(FIELD_STATES) as FieldState[]).map((state) => {
                 const n = counts?.[state] ?? 0
-                return `${formatInteger(n)} ${n === 1 ? FIELD_STATES[state].one : FIELD_STATES[state].many}`
+                return t(FIELD_STATES[state].count, { count: n, n: formatInteger(n) })
               }).join(' · ')}
             </li>
           )
         })}
       </ul>
       <div className="overflow-x-auto">
-        <table aria-label={`Campos guardados: ${destination}`} className="w-full text-sm">
+        <table aria-label={t('flows.out.fieldsAria', { destination })} className="w-full text-sm">
           <thead>
             {spans.length > 1 && (
               <tr className="text-left text-xs text-slate-500">
                 <th scope="colgroup" colSpan={2} />
                 {spans.map(([group, n]) => (
-                  <th key={group} scope="colgroup" colSpan={n} className="border-b border-slate-200 px-2.5 pt-2 font-semibold text-slate-600">{COLUMN_GROUPS[group]}</th>
+                  <th key={group} scope="colgroup" colSpan={n} className="border-b border-slate-200 px-2.5 pt-2 font-semibold text-slate-600">{t(COLUMN_GROUPS[group])}</th>
                 ))}
                 <th scope="colgroup" colSpan={1} />
               </tr>
             )}
             <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
-              {['Fecha', 'Canal', ...targets.map(label), 'Motivo'].map((c, i) => <th key={i} scope="col" className="px-2.5 py-2 font-medium">{c}</th>)}
+              {[t('flows.out.col.date'), t('flows.out.col.channel'), ...targets.map(label), t('flows.out.col.reason')].map((c, i) => <th key={i} scope="col" className="px-2.5 py-2 font-medium">{c}</th>)}
             </tr>
           </thead>
           <tbody>{result.rows.map((row) => <FieldRow key={row.conversation.id} row={row} targets={targets} />)}</tbody>
@@ -189,6 +195,7 @@ function ReportOutput({ result }: { result: ReportResult }) {
 
 /** Una pestaña por output, en el orden del grafo, con el patrón de pestañas de WAI-ARIA (flechas para cambiar). */
 export function RunOutputs({ outputs }: { outputs: RunOutput[] }) {
+  const { t } = useI18n()
   const [active, setActive] = useState(0)
   const current = outputs[Math.min(active, outputs.length - 1)]
 
@@ -201,8 +208,8 @@ export function RunOutputs({ outputs }: { outputs: RunOutput[] }) {
   }
 
   return (
-    <section aria-label="Resultados" className="space-y-3">
-      <div role="tablist" aria-label="Outputs" className="flex flex-wrap gap-1 border-b border-slate-200" onKeyDown={onKeyDown}>
+    <section aria-label={t('flows.out.results')} className="space-y-3">
+      <div role="tablist" aria-label={t('flows.out.tabs')} className="flex flex-wrap gap-1 border-b border-slate-200" onKeyDown={onKeyDown}>
         {outputs.map((output, i) => {
           const selected = output === current
           return (
