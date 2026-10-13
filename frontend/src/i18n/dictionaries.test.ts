@@ -43,3 +43,21 @@ describe('translate', () => {
     expect(translate(dictionary, 'es-ES', 'a.nope')).toBe('a.nope')
   })
 })
+
+describe('plurales del diccionario real (FE016)', () => {
+  const t = (key: string, params: Record<string, string | number>, language: 'es-ES' | 'en-US' = 'en-US') =>
+    translate(language === 'en-US' ? en : es, language, key, params)
+
+  it('en inglés distingue 0, 1 y varios', () => {
+    expect(t('conv.count', { count: 0, n: '0' })).toBe('0 conversations')
+    expect(t('conv.count', { count: 1, n: '1' })).toBe('1 conversation')
+    expect(t('conv.count', { count: 2, n: '2' })).toBe('2 conversations')
+    expect(t('flows.node.errors', { count: 1, n: 1 })).toBe('1 error')
+  })
+
+  it('en español conserva los textos de siempre', () => {
+    expect(t('conv.count', { count: 1, n: '1' }, 'es-ES')).toBe('1 conversación')
+    expect(t('conv.count', { count: 0, n: '0' }, 'es-ES')).toBe('0 conversaciones')
+    expect(t('flows.node.errors', { count: 3, n: 3 }, 'es-ES')).toBe('3 errores')
+  })
+})

@@ -66,6 +66,31 @@ describe('Idioma de la interfaz (FE016)', () => {
     expect(document.documentElement.lang).toBe('en')
   })
 
+  it('volver a español desde Configuración restablece los menús y <html lang>', async () => {
+    let general = { ...GENERAL, language: 'en-US' }
+    const config = () => ({ ...platformConfig(), general })
+    signedInAs(USERS.admin, {
+      'GET /api/config/public': () => ({ status: 200, body: general }),
+      'GET /api/config': () => ({ status: 200, body: config() }),
+      'GET /api/config/audit': () => ({ status: 200, body: { items: [] } }),
+      'PUT /api/config/general': (init) => {
+        general = JSON.parse(String(init.body))
+        return { status: 200, body: config() }
+      },
+    })
+    const user = userEvent.setup()
+    renderApp('/configuracion')
+    const panel = await screen.findByRole('tabpanel')
+    expect(await screen.findByRole('navigation', { name: 'Main' })).toBeInTheDocument()
+    expect(document.documentElement.lang).toBe('en')
+    await user.selectOptions(await within(panel).findByLabelText('Interface language'), 'es-ES')
+    await user.click(within(panel).getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('navigation', { name: 'Principal' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument()
+    expect(document.documentElement.lang).toBe('es')
+  })
+
   it('las páginas de error se traducen', async () => {
     signedInAs(USERS.viewer, publicConfig('en-US'))
     renderApp('/configuracion')
