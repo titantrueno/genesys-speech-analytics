@@ -11,7 +11,7 @@
 | [Patrones de interfaz](../../vault/ingenieria/patrones-de-interfaz.md), [contrato API](../../vault/arquitectura/contrato-api-front-back.md) | `active`. | Se actualizan en T9 (convención «sin texto de UI fuera de los diccionarios»; `Accept-Language`). |
 | `backend/app/config/model.py` (`LANGUAGES = {"es-ES": …}`), `routers/config.py` l. 58, `openapi/schemas.py` l. 581 | El idioma válido sale de `LANGUAGES`. | T1: añadir `en-US`. El valor persistido `es-ES` (FE015) sigue siendo válido. |
 | `frontend/src/lib/format.ts` (`LOCALE = 'es-ES'`, formateadores creados al cargar el módulo), `downloads/labels.ts` l. 44 | Configuración regional fija. | T2: `setDisplayLocale()` (como `setDisplayTimeZone`) y formateadores en caché por locale. `AppLayout` ya remonta el contenido con `key` al cambiar la zona; se añade el idioma a esa `key`. |
-| `layout/AppLayout.tsx`, `layout/navigation.ts` | Barra lateral con `label` y `description` fijos. | T2: el selector va junto al botón «Cerrar sesión»; `NAV_ITEMS` pasa a guardar claves. |
+| `layout/AppLayout.tsx`, `layout/navigation.ts` | Barra lateral con `label` y `description` fijos. | T2: `NAV_ITEMS` pasa a guardar claves; no hay selector de idioma en la barra lateral ni en el login (el idioma se elige solo en Configuración › General). |
 | `frontend/src/test/utils.tsx` | Utilidad común de render para los tests. | T2: envuelve con el proveedor i18n en `es` por defecto, de modo que los tests actuales no cambian (criterio 10). |
 | Tamaño por carpeta (líneas, sin tests) | dashboards 723 · conversations 1010 · explorer 899 · search 414 · flows 2194 · downloads 766 · config 1352 · users 385 · pages/layout/components/auth ~520 | Reparto de T2–T7. |
 | `backend/app` con ~67 `HTTPException`/`detail` y ~45 etiquetas | Textos en español. | Etiquetas de catálogo: por clave en el front (T4). Errores: `Accept-Language` en T8. |
@@ -19,7 +19,7 @@
 ## Decisiones de diseño
 
 - **Diccionarios por área** en `frontend/src/i18n/` (`es/<area>.ts`, `en/<area>.ts`), objetos planos `clave → texto` con `{param}`. `es` define el tipo de claves; `en` debe cumplirlo (error de compilación). Así cada tarea añade su área sin tocar las demás.
-- **Orden de resolución:** `localStorage` (`speech-analytics.language`, válido y presente en `languages`) → idioma global de `/api/config/public` → `es-ES`.
+- **Idioma:** el de `/api/config/public` (`language`) si tiene diccionario; si no, `es-ES`. Sin elección personal ni `localStorage`.
 - **Plural:** `t(clave, { count })` con sufijos `_one`/`_other` solo donde haga falta.
 - **Fuera de React** (etiquetas en `.ts`, p. ej. `conversations/labels.ts`): funciones que reciben `t` o devuelven la clave; no hay `t` global mutable salvo en `format.ts`, que ya es estado de módulo.
 
@@ -31,16 +31,16 @@
 - **Criterios de la spec:** 1, 13 (parte de `en-US`).
 - **Depende de:** —
 
-### T2 — Núcleo i18n, selector y esqueleto de la app
-- **Qué:** `frontend/src/i18n/` (proveedor, `useI18n()`, `t`, detección, `localStorage` con try/catch, `<html lang>`); selector en la barra lateral con «Usar el idioma de la plataforma»; `format.ts` y `downloads/labels.ts` con locale activo; `AppLayout` remonta con el idioma; utilidad de tests con `es`. Migrar `layout/`, `pages/` (login, 403, 404), `auth/`, `components/` (~520 líneas). Test de paridad de claves y test de «sin español a mano» sobre las rutas migradas.
-- **Hecho cuando:** tests de front de los criterios 2–6, 8 (login y navegación), 9 (`format.ts` con `es` y `en`) y 10 (toda la suite existente pasa sin tocar aserciones). Comprobado en navegador: login y navegación en `en`.
-- **Criterios de la spec:** 2, 3, 4, 5, 6, 7, 9, 10.
+### T2 — Núcleo i18n y esqueleto de la app
+- **Qué:** `frontend/src/i18n/` (proveedor, `useI18n()`, `t`, `<html lang>`); sin selectores de idioma en login ni panel; `format.ts` y `downloads/labels.ts` con locale activo; `AppLayout` remonta con el idioma; utilidad de tests con `es`. Migrar `layout/`, `pages/` (login, 403, 404), `auth/`, `components/` (~520 líneas). Test de paridad de claves y test de «sin español a mano» sobre las rutas migradas.
+- **Hecho cuando:** tests de front de los criterios 2–4, 6, 8 (login y navegación), 9 (`format.ts` con `es` y `en`) y 10 (toda la suite existente pasa sin tocar aserciones). Comprobado en navegador: login y navegación en `en`.
+- **Criterios de la spec:** 2, 3, 4, 6, 7, 9, 10.
 - **Depende de:** T1.
 
 ### T3 — Dashboards y conversaciones
-- **Qué:** `dashboards/` y `conversations/` (KPIs, gráficos, filtros, estados, badges, `labels.ts`, detalle, panel de análisis).
-- **Hecho cuando:** test de render en `en` de dashboards, listado y detalle sin textos fijos en español; añadidas a la lista del test 7; suite en `es` intacta.
-- **Criterios de la spec:** 7, 8, 9, 10.
+- **Qué:** `dashboards/` y `conversations/` (KPIs, gráficos, filtros, estados, badges, `labels.ts`, detalle, panel de análisis). Solo menús y textos fijos: la transcripción, el resumen, el main topic y las palabras clave se muestran tal cual llegan.
+- **Hecho cuando:** test de render en `en` de dashboards, listado y detalle sin textos fijos en español, con transcripción, resumen, main topic y palabras clave idénticos a los datos (criterio 5); añadidas a la lista del test 7; suite en `es` intacta.
+- **Criterios de la spec:** 5, 7, 8, 9, 10.
 - **Depende de:** T2.
 
 ### T4 — Explorador y búsqueda, con catálogo por clave
@@ -62,8 +62,8 @@
 - **Depende de:** T2.
 
 ### T7 — Configuración
-- **Qué:** `config/` (todas las pestañas, tarjeta de Genesys, auditoría, visor OpenAPI propio). «General» ofrece el idioma global con las dos opciones.
-- **Hecho cuando:** test en `en` de cada pestaña; cambiar el idioma global en General se refleja en el login sin sesión (criterio 2); el contenido de Swagger UI no se traduce.
+- **Qué:** `config/` (todas las pestañas, tarjeta de Genesys, auditoría, visor OpenAPI propio). «General» es el único sitio donde se elige el idioma: la etiqueta «Idioma por defecto» pasa a «Idioma de la interfaz».
+- **Hecho cuando:** test en `en` de cada pestaña; cambiar el idioma en General se refleja en el login sin sesión (criterio 2); el contenido de Swagger UI no se traduce.
 - **Criterios de la spec:** 2, 7, 8, 10.
 - **Depende de:** T2.
 
@@ -75,7 +75,7 @@
 - **Depende de:** T2. (Pendiente de confirmar con la persona usuaria; si prefiere dejarlos en español, se mueve a fuera de alcance.)
 
 ### T9 — Conocimiento y cierre
-- **Qué:** `/vault capture`: ADR-010 (capa i18n propia y preferencia personal en el navegador), arquitectura y patrones de interfaz (convención de diccionarios y cómo añadir un idioma), contrato API (`Accept-Language`, `en-US`), estado operativo (idiomas disponibles) y entrega; el test de «sin español a mano» pasa a cubrir **todo** `frontend/src`; `VERIFY.md` con recorrido manual en navegador.
+- **Qué:** `/vault capture`: ADR-010 (capa i18n propia; el idioma es un ajuste de la plataforma), arquitectura y patrones de interfaz (convención de diccionarios y cómo añadir un idioma), contrato API (`Accept-Language`, `en-US`), estado operativo (idiomas disponibles) y entrega; el test de «sin español a mano» pasa a cubrir **todo** `frontend/src`; `VERIFY.md` con recorrido manual en navegador.
 - **Hecho cuando:** `./scripts/ci.sh` y `python scripts/audit_vault.py` con código 0; índices del vault actualizados; criterio 15 comprobado en navegador (login, dashboards, detalle de conversación, configuración) en `es` y `en`.
 - **Criterios de la spec:** 7, 14, 15.
 - **Depende de:** T3–T8.

@@ -3,7 +3,6 @@ import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 import { DataUnavailableBanner } from '../components/DataUnavailable'
 import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
-import { LanguageSelect } from '../i18n/LanguageSelect'
 import { useI18n } from '../i18n/useI18n'
 import { setDisplayTimeZone } from '../lib/format'
 import { NAV_ITEMS } from './navigation'
@@ -48,7 +47,6 @@ export function AppLayout() {
         <div className="border-t border-white/10 p-4">
           <p className="truncate text-sm font-medium">{user?.name}</p>
           <p className="truncate text-xs text-slate-300">{user?.role_name}</p>
-          <div className="mt-3"><LanguageSelect tone="dark" /></div>
           <button
             type="button"
             onClick={logout}

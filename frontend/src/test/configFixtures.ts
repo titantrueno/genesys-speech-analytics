@@ -16,7 +16,7 @@ export function platformConfig(overrides: Partial<PlatformConfig> = {}): Platfor
     ai: { provider: 'gemini', model: 'gemini-3.5-flash-lite', simulated: false },
     kpis: KPI_CONFIG,
     options: {
-      languages: [{ value: 'es-ES', label: 'Español (España)' }],
+      languages: [{ value: 'es-ES', label: 'Español (España)' }, { value: 'en-US', label: 'English (United States)' }],
       timezones: ['America/Los_Angeles', 'Asia/Tokyo', 'Europe/Madrid', 'UTC'],
       providers: [
         { value: 'gemini', label: 'Gemini (Google)', models: [

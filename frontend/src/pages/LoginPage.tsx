@@ -4,7 +4,6 @@ import { Navigate, useLocation, useNavigate, type Location } from 'react-router'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/useAuth'
 import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
-import { LanguageSelect } from '../i18n/LanguageSelect'
 import { useI18n } from '../i18n/useI18n'
 
 const DEMO_ACCOUNTS = [
@@ -85,9 +84,7 @@ export function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6"><LanguageSelect /></div>
-
-        <div className="mt-6 rounded-lg bg-slate-50 p-4">
+        <div className="mt-8 rounded-lg bg-slate-50 p-4">
           <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">{t('login.demo', { password: DEMO_PASSWORD })}</p>
           <ul className="mt-2 space-y-1">
             {DEMO_ACCOUNTS.map((account) => (
