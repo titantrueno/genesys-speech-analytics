@@ -98,6 +98,10 @@ class ValueLabel(Doc):
     label: str
 
 
+class TargetField(ValueLabel):
+    group: Literal["analisis", "cumplimiento", "entidades"] = Field(description="Grupo del desplegable (FE014).")
+
+
 class Health(Doc):
     status: Literal["ok"]
 
@@ -418,6 +422,7 @@ class FlowLimits(Doc):
     max_label: int
     max_fields: int
     max_field_name: int
+    max_mappings: int = Field(description="Asignaciones de un Output «campo» (FE014).")
     max_destination: int
     max_flow_name: int
     max_nodes: int
@@ -438,7 +443,9 @@ class FlowCatalog(Doc):
     output_formats: list[ValueLabel]
     field_types: list[ValueLabel]
     output_kinds: list[ValueLabel]
-    target_fields: list[ValueLabel] = Field(description="Campos destino de un Output «campo» (FE013).")
+    target_fields: list["TargetField"] = Field(
+        description="Campos destino de un Output «campo» (FE013): los del análisis, un `compliance:<código>` por check "
+                    "activo y un `entity:<tipo>` por tipo de entidad (FE014).")
     templates: list[ValueLabel] = Field(description="Plantillas para crear un flujo ya configurado (FE013).")
     origin: Literal["sintetico", "real"] = Field(
         description="Origen de datos activo: un Output «campo» solo puede ejecutarse con `real` (FE013).")

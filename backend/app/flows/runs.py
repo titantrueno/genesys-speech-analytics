@@ -26,6 +26,7 @@ from app.services.listing import list_item
 from app.flows.prompting import PromptFailed, PromptRejected, PromptRunner, PromptUnavailable
 from app.flows.sampling import candidates, draw_sample
 from app.clock import now
+from app.config.store import get_config
 from app.flows.store import Flow
 from app.models import Conversation
 from app.privacy.masking import masked
@@ -365,8 +366,9 @@ class FlowExecutor:
         counts = {t: {state: sum(row["states"].get(t) == state for row in rows)
                       for state in ("escrito", "omitido", "rechazado", "error")} for t in targets}
         with run.lock:
+            checks = get_config().checks
             run.outputs[node.id] = {"node_id": node.id, "kind": "campo",
-                                    "destination": " + ".join(catalog.TARGET_FIELDS[t] for t in targets),
+                                    "destination": " + ".join(catalog.target_label(t, checks) for t in targets),
                                     "result": {"targets": targets, "rows": rows, "counts": counts}}
         run.update_node(node.id, processed=len(conversations))
 

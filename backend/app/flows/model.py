@@ -6,7 +6,8 @@ La integridad se exige siempre al guardar: un borrador puede estar incompleto (l
 import re
 from typing import Annotated, Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, TypeAdapter, ValidationError, model_validator
+from pydantic import (BaseModel, ConfigDict, Field, StringConstraints, TypeAdapter, ValidationError, field_validator,
+                      model_validator)
 
 from app import ids
 from app.flows import catalog
@@ -41,13 +42,14 @@ Label = Annotated[str, StringConstraints(max_length=catalog.MAX_LABEL)]
 class SchemaField(_Strict):
     name: str = Field(max_length=catalog.MAX_FIELD_NAME)
     type: Literal[tuple(catalog.FIELD_TYPES)]
-    # Valores permitidos de un campo de texto (FE013): el LLM los recibe como `enum` y otro valor se rechaza.
+    # Valores permitidos de un campo de texto (FE013) o de cada elemento de una lista (FE014): el LLM los recibe como
+    # `enum` y otro valor se rechaza.
     options: list[Label] | None = Field(None, max_length=catalog.MAX_OPTIONS)
 
     @model_validator(mode="after")
     def _options_only_for_text(self) -> "SchemaField":
-        if self.options is not None and self.type != "texto":
-            raise ValueError("Solo un campo de texto puede tener valores permitidos")
+        if self.options is not None and self.type not in ("texto", "lista"):
+            raise ValueError("Solo un campo de texto o de lista puede tener valores permitidos")
         return self
 
 
@@ -68,8 +70,15 @@ class PromptConfig(_Strict):
 
 class FieldMapping(_Strict):
     """Un campo destino y de dónde sale: la respuesta entera (`None`) o un campo del JSON del Prompt (FE013)."""
-    target: Literal[tuple(catalog.TARGET_FIELDS)]
+    target: str = Field(max_length=catalog.MAX_FIELD_NAME + len(catalog.CHECK_PREFIX))
     source: str | None = Field(None, max_length=catalog.MAX_FIELD_NAME)
+
+    @field_validator("target")
+    @classmethod
+    def _known_target(cls, target: str) -> str:
+        if not catalog.is_target(target):
+            raise ValueError(f"Campo destino desconocido: {target!r}")
+        return target
 
 
 class OutputConfig(_Strict):
@@ -77,7 +86,7 @@ class OutputConfig(_Strict):
     aggregation: Literal[tuple(catalog.AGGREGATIONS)] | None = None
     destination: str | None = Field(None, max_length=catalog.MAX_DESTINATION)
     # Solo en `campo` (FE013): asignaciones y si se sustituyen los valores que ya tiene la conversación.
-    mappings: list[FieldMapping] | None = Field(None, max_length=len(catalog.TARGET_FIELDS))
+    mappings: list[FieldMapping] | None = Field(None, max_length=catalog.MAX_MAPPINGS)
     overwrite: bool | None = None
 
 

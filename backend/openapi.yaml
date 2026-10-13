@@ -6082,9 +6082,7 @@ components:
       description: 'Un campo destino y de dónde sale: la respuesta entera (`None`) o un campo del JSON del Prompt (FE013).'
       properties:
         target:
-          enum:
-          - summary
-          - main_topic
+          maxLength: 51
           title: Target
           type: string
         source:
@@ -6276,9 +6274,10 @@ components:
           title: Output Kinds
           type: array
         target_fields:
-          description: Campos destino de un Output «campo» (FE013).
+          description: 'Campos destino de un Output «campo» (FE013): los del análisis, un `compliance:<código>` por check
+            activo y un `entity:<tipo>` por tipo de entidad (FE014).'
           items:
-            $ref: '#/components/schemas/ValueLabel'
+            $ref: '#/components/schemas/TargetField'
           title: Target Fields
           type: array
         templates:
@@ -6396,6 +6395,10 @@ components:
         max_field_name:
           title: Max Field Name
           type: integer
+        max_mappings:
+          description: Asignaciones de un Output «campo» (FE014).
+          title: Max Mappings
+          type: integer
         max_destination:
           title: Max Destination
           type: integer
@@ -6415,6 +6418,7 @@ components:
       - max_label
       - max_fields
       - max_field_name
+      - max_mappings
       - max_destination
       - max_flow_name
       - max_nodes
@@ -7375,7 +7379,7 @@ components:
           anyOf:
           - items:
               $ref: '#/components/schemas/FieldMapping'
-            maxItems: 2
+            maxItems: 60
             type: array
           - type: 'null'
           default: null
@@ -7412,7 +7416,7 @@ components:
           anyOf:
           - items:
               $ref: '#/components/schemas/SchemaField'
-            maxItems: 20
+            maxItems: 40
             type: array
           - type: 'null'
           default: null
@@ -8331,6 +8335,7 @@ components:
           - texto
           - numero
           - booleano
+          - lista
           title: Type
           type: string
         options:
@@ -8730,6 +8735,29 @@ components:
       - conversation
       - result
       title: TableRow
+      type: object
+    TargetField:
+      additionalProperties: false
+      properties:
+        value:
+          title: Value
+          type: string
+        label:
+          title: Label
+          type: string
+        group:
+          description: Grupo del desplegable (FE014).
+          enum:
+          - analisis
+          - cumplimiento
+          - entidades
+          title: Group
+          type: string
+      required:
+      - value
+      - label
+      - group
+      title: TargetField
       type: object
     Taxonomy:
       additionalProperties: false

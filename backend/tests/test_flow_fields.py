@@ -94,14 +94,15 @@ def test_the_field_output_and_allowed_values_round_trip(api, llm, writer):
 
 def test_the_catalog_offers_the_target_fields(api):
     flows_catalog = api.get("/api/flows/catalog").json()
-    assert flows_catalog["target_fields"] == [{"value": "summary", "label": "Summary"},
-                                              {"value": "main_topic", "label": "Main topic"}]
+    # FE014 amplía el catálogo (tests en `test_flow_targets.py`); summary y main topic siguen siendo los primeros.
+    assert flows_catalog["target_fields"][:2] == [{"value": "summary", "label": "Summary", "group": "analisis"},
+                                                  {"value": "main_topic", "label": "Main topic", "group": "analisis"}]
     assert {"value": "campo", "label": "Guardar en campos de la conversación"} in flows_catalog["output_kinds"]
 
 
 @pytest.mark.parametrize("output", [
     {"kind": "campo", "mappings": [{"target": "otro", "source": None}]},
-    {"kind": "campo", "mappings": [{"target": "summary", "source": None}] * 3},
+    {"kind": "campo", "mappings": [{"target": "summary", "source": None}] * 61},  # más de `MAX_MAPPINGS`
     {"kind": "campo", "overwrite": "sí"},
 ])
 def test_impossible_field_outputs_are_refused_on_save(api, output):

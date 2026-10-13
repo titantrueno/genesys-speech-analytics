@@ -18,15 +18,17 @@ from app.llm_client import UNAVAILABLE, LlmClient, LlmError, LlmUnavailable
 from app.models import Conversation
 from app.text import normalize_text
 
-JSON_TYPES = {"texto": "string", "numero": "number", "booleano": "boolean"}
+JSON_TYPES = {"texto": "string", "numero": "number", "booleano": "boolean", "lista": "array"}
 STOPPING_CODES = {"missing_key", "key_rejected", "unknown_provider"}
 
 
 def _property(field) -> dict:
-    prop = {"type": JSON_TYPES[field.type]}
+    prop = {"type": "string"}
     if field.options:  # valores permitidos (FE013): el proveedor restringe la respuesta a ellos
         prop["enum"] = list(field.options)
-    return prop
+    if field.type == "lista":  # lista de textos (FE014): los valores permitidos restringen cada elemento
+        return {"type": "array", "items": prop}
+    return prop if field.type == "texto" else {"type": JSON_TYPES[field.type]}
 
 
 def json_schema(config: PromptConfig) -> dict:
@@ -49,12 +51,18 @@ def _instructions(config: PromptConfig) -> str:
                 + " | ".join(output.labels))
     if output.type == "json":
         return "\n\nResponde únicamente con un objeto JSON con los campos: " + ", ".join(
-            f"{f.name} ({f.type}: {' | '.join(f.options)})" if f.options else f"{f.name} ({f.type})"
+            f"{f.name} ({_type_hint(f)}: {' | '.join(f.options)})" if f.options else f"{f.name} ({_type_hint(f)})"
             for f in output.fields or [])
     return ""
 
 
+def _type_hint(field) -> str:
+    return "lista de textos" if field.type == "lista" else field.type
+
+
 def _is_type(value: Any, field_type: str) -> bool:
+    if field_type == "lista":
+        return isinstance(value, list) and all(isinstance(item, str) for item in value)
     if field_type == "booleano":
         return isinstance(value, bool)
     if field_type == "numero":
@@ -87,11 +95,17 @@ def validate_answer(config: PromptConfig, text: str) -> Any:
     result = {name: data[name] for name in fields}
     for field in output.fields or []:
         if field.options:
-            option = _matching(result[field.name], field.options)
-            if option is None:
-                raise PromptRejected(f"«{result[field.name][:80]}» no es un valor permitido de {field.name}")
-            result[field.name] = option
+            values = result[field.name] if field.type == "lista" else [result[field.name]]
+            allowed = [_allowed(value, field) for value in values]
+            result[field.name] = allowed if field.type == "lista" else allowed[0]
     return result
+
+
+def _allowed(value: str, field) -> str:
+    option = _matching(value, field.options)
+    if option is None:
+        raise PromptRejected(f"«{value[:80]}» no es un valor permitido de {field.name}")
+    return option
 
 
 class LlmPromptRunner:

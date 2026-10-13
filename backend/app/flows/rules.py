@@ -151,7 +151,7 @@ def _prompt(node: PromptNode, graph: Graph, llm_keys: LlmKeys | None = None) -> 
 def _mapping(node: OutputNode, mapping, prompt: PromptNode) -> list[Issue]:
     """Una asignación de un Output `campo` frente al formato del Prompt de entrada (FE013, criterio 17)."""
     fmt = prompt.config.output
-    label = catalog.TARGET_FIELDS[mapping.target]
+    label = catalog.target_label(mapping.target, get_config().checks)
     if fmt.type == "json":
         field = next((f for f in fmt.fields or [] if f.name == mapping.source), None)
         if field is None or field.type != "texto":
@@ -261,7 +261,7 @@ def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
             if node.config.kind == "campo":
                 own = {m.target for m in node.config.mappings or []}
                 if own & targets:
-                    names = ", ".join(catalog.TARGET_FIELDS[t] for t in sorted(own & targets))
+                    names = ", ".join(catalog.target_label(t, get_config().checks) for t in sorted(own & targets))
                     issues.append(Issue("duplicate_target", f"Otro Output ya guarda en: {names}.", node.id))
                 targets |= own
             else:

@@ -202,6 +202,9 @@ def _json(config: PromptConfig, conv: Conversation, previous: Any | None) -> dic
         found, value = _known_field(field.name, field.type, conv)
         if field.options:  # valores permitidos (FE013): siempre uno de ellos
             found, value = True, choose_label(field.options, conv, _unit(conv.id, config.template, field.name))
+            value = [value] if field.type == "lista" else value
+        elif field.type == "lista":  # lista de textos (FE014): las palabras clave del análisis o el main topic
+            found, value = True, (conv.analysis.keywords[:3] or [_topic_name(conv) or conv.channel])
         if not found:
             unit = _unit(conv.id, config.template, config.model, field.name, previous)
             value = {"texto": _topic_name(conv), "numero": round(unit * 10, 1), "booleano": unit >= 0.5}[field.type]

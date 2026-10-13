@@ -1,4 +1,5 @@
 """Opciones de configuración de los nodos de un flujo de insights (FE004). `GET /api/flows/catalog` las expone al front."""
+import re
 
 NODE_TYPES = {"sampling": "Sampling", "prompt": "Prompt", "output": "Output"}
 
@@ -46,18 +47,31 @@ VARIABLES = {
 }
 PREVIOUS_RESULT = "resultado_anterior"
 OUTPUT_FORMATS = {"texto": "Texto", "etiqueta": "Etiqueta de una lista", "json": "JSON con esquema"}
-FIELD_TYPES = {"texto": "Texto", "numero": "Número", "booleano": "Booleano"}
+FIELD_TYPES = {"texto": "Texto", "numero": "Número", "booleano": "Booleano", "lista": "Lista"}
 MAX_TEMPLATE = 4000
 MAX_LABELS = 20
 MAX_LABEL = 60
-MAX_FIELDS = 20
+MAX_FIELDS = 40  # caben la plantilla «Generar análisis completo» con los checks base y algunos más (FE014)
 MAX_FIELD_NAME = 40
-MAX_OPTIONS = 100  # valores permitidos de un campo JSON de texto (FE013): caben los main topics de la taxonomía
+MAX_OPTIONS = 100  # valores permitidos de un campo JSON de texto o lista (FE013): caben los temas de la taxonomía
 
 OUTPUT_KINDS = {"tabla": "Tabla de insights por conversación", "metrica": "Métrica agregada", "informe": "Informe resumen",
                 "campo": "Guardar en campos de la conversación"}
-# Campos del análisis que un Output «campo» puede escribir en las conversaciones reales (FE013).
-TARGET_FIELDS = {"summary": "Summary", "main_topic": "Main topic"}
+# Campos del análisis que un Output «campo» puede escribir en las conversaciones reales (FE013 y FE014): los fijos, uno
+# por tipo de entidad (`entity:<tipo>`) y uno por check de cumplimiento activo (`compliance:<código>`), que depende de
+# la configuración. El servicio de ingesta comparte los tipos de entidad y el patrón del código (un test lo comprueba).
+ANALYSIS_TARGETS = {"summary": "Summary", "main_topic": "Main topic", "resolution": "Resolución",
+                    "csat": "CSAT predicho", "effort": "Esfuerzo del cliente", "churn_risk": "Riesgo de abandono",
+                    "sentiment": "Sentimiento global", "secondary_topics": "Temas secundarios",
+                    "keywords": "Palabras clave"}
+ENTITY_TYPES = {"importe": "Importe", "producto": "Producto", "fecha": "Fecha", "comercio": "Comercio"}
+CHECK_PREFIX, ENTITY_PREFIX = "compliance:", "entity:"
+TARGET_GROUPS = {"analisis": "Análisis", "cumplimiento": "Cumplimiento", "entidades": "Entidades"}
+# Destinos que no dependen de la configuración; un `compliance:` se acepta al guardar si su código tiene la forma de
+# un código de check, y la completitud comprueba que el check existe y está activo.
+FIXED_TARGETS = {**ANALYSIS_TARGETS, **{f"{ENTITY_PREFIX}{t}": label for t, label in ENTITY_TYPES.items()}}
+CHECK_TARGET = re.compile(r"^compliance:([a-z][a-z0-9_]{1,39})$")
+MAX_MAPPINGS = 60
 AGGREGATIONS = {"recuento": "Recuento por etiqueta", "porcentaje": "% por etiqueta"}
 MAX_DESTINATION = 80
 
@@ -79,3 +93,29 @@ def provider_options() -> list[dict]:
 
 def supports_temperature(model: str) -> bool:
     return any(model in p["models"] and p["models"][model]["temperature"] for p in PROVIDERS.values())
+
+
+def is_target(target: str) -> bool:
+    return target in FIXED_TARGETS or bool(CHECK_TARGET.match(target))
+
+
+def check_code(target: str) -> str | None:
+    match = CHECK_TARGET.match(target)
+    return match.group(1) if match else None
+
+
+def target_fields(checks) -> list[dict]:
+    """Destinos que se ofrecen, en el orden del desplegable: análisis, cumplimiento (checks activos) y entidades."""
+    return ([{"value": v, "label": label, "group": "analisis"} for v, label in ANALYSIS_TARGETS.items()]
+            + [{"value": f"{CHECK_PREFIX}{c.code}", "label": c.name, "group": "cumplimiento"}
+               for c in checks if c.active]
+            + [{"value": f"{ENTITY_PREFIX}{t}", "label": label, "group": "entidades"}
+               for t, label in ENTITY_TYPES.items()])
+
+
+def target_label(target: str, checks: dict) -> str:
+    """Etiqueta de un destino; un check borrado se muestra con su código."""
+    code = check_code(target)
+    if code is not None:
+        return checks[code].name if code in checks else code
+    return FIXED_TARGETS.get(target, target)

@@ -152,3 +152,11 @@
 - **Hecho (2026-10-13):** `POST /analysis/fields` acepta todos los destinos con su forma (texto, número, lista, `compliance:<código>` con `true|false|null`, `entity:<tipo>` con texto) y responde `outcomes` y `reasons` por destino («Ya tenía valor», «Genesys ya da el sentimiento»). El significado de cada valor (rangos, taxonomía) lo valida la API en T3.
 - **Decisión:** `sentiment` no se escribe si la conversación tiene sentimiento de Genesys, **tampoco con «Sobrescribir»**: el de Genesys siempre manda (criterio 10).
 - **Ajuste de tests:** `test_runs_from_before_overwrite_existed_have_an_unknown_mode` reaplicaba todas las migraciones desde la 0005; ahora solo la 0005, que es la que prueba. La lectura interna del servicio devuelve también `sentiment`.
+
+## Notas de T2
+
+- **Hecho (2026-10-13, Gemini real):** con `gemini-3.5-flash-lite` y 3 conversaciones sintéticas (texto enmascarado), un esquema con `temas_secundarios` (`array` de `string` con `enum` de 6 valores) y `palabras_clave` (`array` de `string`) responde listas válidas: los temas siempre dentro de los permitidos y de 4 a 5 palabras clave. La hipótesis de la spec queda confirmada para Gemini; OpenAI y Anthropic siguen sin comprobar (sin claves).
+- **Decisión:** `FieldMapping.target` deja de ser un `Literal`: se acepta un destino fijo (`ANALYSIS_TARGETS` y `entity:<tipo>`) o `compliance:<código>` con la forma de un código de check. Que el check exista y esté activo lo comprueba la completitud (T3), así un borrador no se rompe al borrar un check.
+- **Decisión:** `MAX_MAPPINGS = 60` asignaciones por Output; `/api/flows/catalog` lo expone en `limits.max_mappings`, y `target_fields` lleva `group` (`analisis`, `cumplimiento`, `entidades`).
+- **Decisión:** el proveedor simulado responde a un campo `lista` con un valor permitido, o con las palabras clave del análisis (o el main topic) si no tiene valores permitidos.
+- **Ajuste de tests de FE013:** el catálogo de destinos se comprueba por sus dos primeros elementos, y el caso «demasiadas asignaciones» pasa de 3 a 61.
