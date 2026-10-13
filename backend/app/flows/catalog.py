@@ -1,7 +1,7 @@
 """Opciones de configuración de los nodos de un flujo de insights (FE004). `GET /api/flows/catalog` las expone al front."""
 import re
 
-NODE_TYPES = {"sampling": "Sampling", "prompt": "Prompt", "output": "Output"}
+NODE_TYPES = {"descarga": "Genesys download", "sampling": "Sampling", "prompt": "Prompt", "output": "Output"}
 
 SAMPLING_METHODS = {"aleatorio": "Aleatorio", "estratificado": "Estratificado", "primeros_n": "Primeros N"}
 STRATA = {"canal": "Canal", "cola": "Cola", "main_topic": "Main topic"}

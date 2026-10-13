@@ -66,6 +66,8 @@ IssueCode = Literal[
     "main_topic_requires_taxonomy",
     # FE014: un check asignado que ya no existe o está desactivado.
     "unknown_check",
+    # FE017: la caja «Genesys download» solo trabaja con datos reales.
+    "download_needs_real_origin",
 ]
 
 

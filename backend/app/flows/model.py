@@ -12,10 +12,11 @@ from pydantic import (BaseModel, ConfigDict, Field, StringConstraints, TypeAdapt
 from app import ids
 from app.flows import catalog
 from app.flows.connections import connection_rejection
+from app.flows.download_config import Interval, NoSchedule, Schedule, SpecificInterval, _error
 
 TEMPORARY_ID = re.compile(r"^tmp-[A-Za-z0-9_-]{1,40}$")
 
-NodeType = Literal["sampling", "prompt", "output"]
+NodeType = Literal["descarga", "sampling", "prompt", "output"]
 
 
 class _Strict(BaseModel):
@@ -90,9 +91,39 @@ class OutputConfig(_Strict):
     overwrite: bool | None = None
 
 
+# Caja «Genesys download» (FE017): la configuración de un flujo de descarga de FE011, sin nombre ni zona horaria (se usa
+# la de la plataforma al lanzarla). Todo es opcional al guardar; la completitud lo exige para ejecutar.
+class DownloadConfig(_Strict):
+    """Genesys download box: interval, channels, overwrite, schedule and active (as a download flow)."""
+    interval: Interval | None = None
+    channels: list[Literal["voz", "chat"]] | None = None
+    overwrite: bool | None = None
+    schedule: Schedule | None = None
+    active: bool | None = None
+
+    @field_validator("channels")
+    @classmethod
+    def _channels(cls, value: list[str] | None) -> list[str] | None:
+        if value is not None and not value:
+            raise _error("Choose at least one channel")
+        return value
+
+    @model_validator(mode="after")
+    def _scheduled_needs_relative(self) -> "DownloadConfig":
+        scheduled = self.schedule is not None and not isinstance(self.schedule.root, NoSchedule)
+        if scheduled and self.interval is not None and isinstance(self.interval.root, SpecificInterval):
+            raise _error("A scheduled download needs a relative interval")
+        return self
+
+
 class _Node(_Strict):
     id: str
     position: Position
+
+
+class DownloadNode(_Node):
+    type: Literal["descarga"]
+    config: DownloadConfig = DownloadConfig()
 
 
 class SamplingNode(_Node):
@@ -110,7 +141,7 @@ class OutputNode(_Node):
     config: OutputConfig = OutputConfig()
 
 
-Node = Annotated[Union[SamplingNode, PromptNode, OutputNode], Field(discriminator="type")]
+Node = Annotated[Union[DownloadNode, SamplingNode, PromptNode, OutputNode], Field(discriminator="type")]
 _node_adapter = TypeAdapter(Node)
 
 
@@ -125,9 +156,9 @@ class Graph(_Strict):
     edges: list[Edge] = []
 
     def dump(self) -> dict:
-        return self.model_dump(mode="json", exclude_none=True)
+        return self.model_dump(mode="json", exclude_none=True, by_alias=True)  # `from` del intervalo específico
 
-    def node(self, node_id: str) -> SamplingNode | PromptNode | OutputNode | None:
+    def node(self, node_id: str) -> DownloadNode | SamplingNode | PromptNode | OutputNode | None:
         return next((n for n in self.nodes if n.id == node_id), None)
 
     def inputs(self, node_id: str) -> list[str]:
@@ -175,7 +206,7 @@ def parse_graph(payload: Any) -> Graph:
         raise GraphError(_pydantic_errors(exc)) from None
 
     errors: list[dict] = []
-    nodes, types, seen = [], {}, set()
+    nodes, types, seen, downloads = [], {}, set(), 0
     for i, raw in enumerate(envelope.nodes):
         raw_id = raw.get("id") if isinstance(raw.get("id"), str) else None
         try:
@@ -195,6 +226,11 @@ def parse_graph(payload: Any) -> Graph:
             types.setdefault(raw_id, raw["type"])
         if parsed is not None:
             nodes.append(parsed)
+        if raw.get("type") == "descarga":
+            if downloads:  # como mucho una caja por flujo (FE017): la segunda se señala
+                errors.append({"path": f"nodes[{i}].type", "node_id": raw_id,
+                               "message": "A flow can have only one Genesys download"})
+            downloads += 1
 
     accepted: list[tuple[str, str]] = []
     for j, edge in enumerate(envelope.edges):

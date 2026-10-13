@@ -28,6 +28,7 @@ const SIMULATED: ModelDefaults = { provider: 'simulado', model: 'mock-rapido' }
 
 export function defaultConfig(type: NodeType, defaults: ModelDefaults = SIMULATED): FlowNode['config'] {
   switch (type) {
+    case 'descarga': return { interval: { type: 'relativo', unit: 'hoy' }, channels: ['voz', 'chat'], overwrite: false, schedule: { type: 'desactivada' }, active: true }
     case 'sampling': return { query: { root: { op: 'and', conditions: [] } }, method: 'aleatorio', size: 100 }
     case 'prompt': return { template: '', provider: defaults.provider, model: defaults.model, temperature: 0.2, output: { type: 'texto' } }
     case 'output': return { kind: 'tabla', destination: '' }

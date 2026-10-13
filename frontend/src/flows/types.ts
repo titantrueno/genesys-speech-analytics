@@ -1,7 +1,8 @@
 import type { ConversationListItem } from '../api/conversations'
+import type { DownloadChannel, DownloadInterval, DownloadSchedule } from '../downloads/types'
 import type { ExplorerQuery } from '../explorer/queryModel'
 
-export type NodeType = 'sampling' | 'prompt' | 'output'
+export type NodeType = 'descarga' | 'sampling' | 'prompt' | 'output'
 export type SamplingMethod = 'aleatorio' | 'estratificado' | 'primeros_n'
 export type Stratum = 'canal' | 'cola' | 'main_topic'
 export type OrderKey = 'fecha' | 'duracion' | 'sentimiento' | 'csat'
@@ -16,6 +17,15 @@ export type TargetField = AnalysisTarget | `compliance:${string}` | `entity:${st
 export type TargetGroup = 'analisis' | 'cumplimiento' | 'entidades'
 export interface TargetOption extends Option<TargetField> { group: TargetGroup }
 export type Aggregation = 'recuento' | 'porcentaje'
+
+/** Caja «Genesys download» (FE017): la configuración de un flujo de descarga, sin nombre ni zona horaria. */
+export interface DownloadConfig {
+  interval?: DownloadInterval
+  channels?: DownloadChannel[]
+  overwrite?: boolean
+  schedule?: DownloadSchedule
+  active?: boolean
+}
 
 export interface SamplingConfig {
   query?: ExplorerQuery
@@ -68,6 +78,7 @@ interface BaseNode<T extends NodeType, C> {
 }
 
 export type FlowNode =
+  | BaseNode<'descarga', DownloadConfig>
   | BaseNode<'sampling', SamplingConfig>
   | BaseNode<'prompt', PromptConfig>
   | BaseNode<'output', OutputConfig>

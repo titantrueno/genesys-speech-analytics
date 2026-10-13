@@ -84,11 +84,18 @@ def _imports(path: Path) -> set[str]:
 
 
 def test_the_ingestion_package_only_shares_identifiers_clock_and_env_with_the_api():
-    allowed = ("app.ids", "app.clock", "app.envfile")
+    # FE017: también la configuración de una descarga (intervalo y programación), que comparten los flujos de descarga y
+    # la caja «Genesys download»; es un módulo puro que no importa nada de la API (test siguiente).
+    allowed = ("app.ids", "app.clock", "app.envfile", "app.flows.download_config")
     for path in (BACKEND / "ingestion").rglob("*.py"):
         used = {m for m in _imports(path) if m.startswith("app.")}
         forbidden = {m for m in used if not any(m == a or m.startswith(f"{a}.") for a in allowed)}
         assert not forbidden, f"{path.relative_to(BACKEND)} importa {sorted(forbidden)}"
+
+
+def test_the_shared_download_config_imports_nothing_from_the_api():
+    path = BACKEND / "app" / "flows" / "download_config.py"
+    assert not {m for m in _imports(path) if m.startswith("app.") or m == "app"}
 
 
 def test_the_api_never_imports_the_ingestion_package():

@@ -212,7 +212,7 @@ describe('panel de configuración', () => {
     const panel = await open(2, ctx)
     const picker = within(panel).getByLabelText('Añadir salida hacia')
     await user.selectOptions(picker, nodeId(1))
-    expect(await screen.findByRole('alert')).toHaveTextContent('No se puede conectar: Un Sampling es el inicio del flujo: no admite entradas.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se puede conectar: Un Sampling solo admite como entrada una Genesys download.')
     await user.selectOptions(picker, nodeId(5))
     expect(screen.getByRole('alert')).toHaveTextContent('El Output ya tiene una entrada')
     expect(ctx.container.querySelectorAll('.react-flow__edge')).toHaveLength(4)

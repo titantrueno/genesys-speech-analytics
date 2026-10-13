@@ -4,100 +4,24 @@ Un flujo guarda su zona horaria (la de la plataforma cuando se guardó, la enví
 la programación se calculan en ella, también en las ejecuciones programadas.
 """
 import random
-import re
-from datetime import date, datetime, time, timedelta, timezone
-from typing import Annotated, Literal, Union
+from datetime import datetime
+from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
-from pydantic import BaseModel, ConfigDict, Field, RootModel, field_validator, model_validator
-from pydantic_core import PydanticCustomError
+from pydantic import Field, field_validator
 
 from app import ids
+# Intervalo y programación: compartidos con la caja «Genesys download» de los flujos de insights (FE017).
+from app.flows.download_config import (  # noqa: F401  (reexportados: los usan el programador y los tests)
+    MAX_DAYS, MAX_EVERY_HOURS, MAX_HOURS, MAX_SPECIFIC_DAYS, Daily, EveryHours, Interval, NoSchedule, RelativeInterval,
+    Schedule, SpecificInterval, _error, _localize, _Strict, next_occurrence, resolve_interval)
 
 _rng = random.SystemRandom()
 MAX_NAME = 80
-MAX_HOURS, MAX_DAYS, MAX_SPECIFIC_DAYS = 720, 90, 90
-MAX_EVERY_HOURS = 24
 ACTIVE = ("pendiente", "en_curso")
-_HHMM = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
-
-
-def _error(message: str) -> PydanticCustomError:
-    return PydanticCustomError("value_error", message)
-
-
-class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
-
-
-class RelativeInterval(_Strict):
-    type: Literal["relativo"]
-    unit: Literal["hoy", "ayer", "horas", "dias"]
-    amount: int | None = None
-
-    @model_validator(mode="after")
-    def _amount(self):
-        if self.unit in ("hoy", "ayer"):
-            if self.amount is not None:
-                raise _error("“hoy” and “ayer” take no amount")
-        elif self.unit == "horas" and not (self.amount is not None and 1 <= self.amount <= MAX_HOURS):
-            raise _error(f"The number of hours must be between 1 and {MAX_HOURS}")
-        elif self.unit == "dias" and not (self.amount is not None and 1 <= self.amount <= MAX_DAYS):
-            raise _error(f"The number of days must be between 1 and {MAX_DAYS}")
-        return self
-
-
-class SpecificInterval(_Strict):
-    type: Literal["especifico"]
-    from_: datetime = Field(alias="from")
-    to: datetime
-
-    @model_validator(mode="after")
-    def _order(self):
-        if self.from_ >= self.to:
-            raise _error("“From” must be before “to”")
-        if self.to - self.from_ > timedelta(days=MAX_SPECIFIC_DAYS):
-            raise _error(f"The interval cannot exceed {MAX_SPECIFIC_DAYS} days")
-        return self
-
-
-class Interval(RootModel[Annotated[Union[RelativeInterval, SpecificInterval], Field(discriminator="type")]]):
-    pass
-
-
-class NoSchedule(_Strict):
-    type: Literal["desactivada"]
-
-
-class EveryHours(_Strict):
-    type: Literal["cada_horas"]
-    hours: int
-
-    @field_validator("hours")
-    @classmethod
-    def _range(cls, value: int) -> int:
-        if not 1 <= value <= MAX_EVERY_HOURS:
-            raise _error(f"The hours must be between 1 and {MAX_EVERY_HOURS}")
-        return value
-
-
-class Daily(_Strict):
-    type: Literal["diaria"]
-    time: str
-
-    @field_validator("time")
-    @classmethod
-    def _format(cls, value: str) -> str:
-        if not _HHMM.match(value):
-            raise _error("The time must have the format HH:MM")
-        return value
-
-
-class Schedule(RootModel[Annotated[Union[NoSchedule, EveryHours, Daily], Field(discriminator="type")]]):
-    pass
 
 
 class Person(_Strict):
@@ -151,53 +75,6 @@ def semantic_errors(flow: FlowIn, now: datetime) -> list[dict]:
             errors.append({"type": "value_error", "loc": ["body", "schedule"],
                            "msg": "A scheduled download needs a relative interval"})
     return errors
-
-
-# Intervalos y programación ---------------------------------------------------------------------------------------------
-
-def _localize(value: datetime, tz: str) -> datetime:
-    return value if value.tzinfo else value.replace(tzinfo=ZoneInfo(tz))
-
-
-def _midnight(day: date, tz: str) -> datetime:
-    return datetime.combine(day, time(), tzinfo=ZoneInfo(tz))
-
-
-def resolve_interval(interval: Interval, tz: str, now: datetime) -> tuple[datetime, datetime]:
-    """Instantes de inicio y fin de una ejecución lanzada en `now`."""
-    value = interval.root
-    if isinstance(value, SpecificInterval):
-        return _localize(value.from_, tz), _localize(value.to, tz)
-    today = now.astimezone(ZoneInfo(tz)).date()
-    if value.unit == "hoy":
-        return _midnight(today, tz), now
-    if value.unit == "ayer":
-        return _midnight(today - timedelta(days=1), tz), _midnight(today, tz)
-    span = timedelta(hours=value.amount) if value.unit == "horas" else timedelta(days=value.amount)
-    return (now.astimezone(timezone.utc) - span).astimezone(now.tzinfo), now
-
-
-def next_occurrence(schedule: Schedule, tz: str, after: datetime) -> datetime | None:
-    """Siguiente ejecución programada estrictamente posterior a `after`, en hora local de `tz`.
-
-    «Cada N horas» se alinea con la medianoche local (cada 5 horas: 00, 05, 10, 15 y 20 h); «diaria», a su hora.
-    """
-    value = schedule.root
-    if isinstance(value, NoSchedule):
-        return None
-    day = after.astimezone(ZoneInfo(tz)).date()
-    for offset in range(3):
-        current = day + timedelta(days=offset)
-        if isinstance(value, Daily):
-            hour, minute = (int(part) for part in value.time.split(":"))
-            candidates = [datetime.combine(current, time(hour, minute), tzinfo=ZoneInfo(tz))]
-        else:
-            candidates = [datetime.combine(current, time(h), tzinfo=ZoneInfo(tz))
-                          for h in range(0, 24, value.hours)]
-        for candidate in candidates:
-            if candidate > after:
-                return candidate
-    return None
 
 
 # Persistencia ----------------------------------------------------------------------------------------------------------

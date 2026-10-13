@@ -1,4 +1,4 @@
-"""Reglas de conexión entre nodos (FE004, criterio 2).
+"""Reglas de conexión entre nodos (FE004, criterio 2; caja «Genesys download» de FE017).
 
 Las mismas reglas existen en `frontend/src/flows/rules.ts`; los casos de `frontend/src/flows/rules.cases.json`
 se ejecutan en los dos lados para que no diverjan.
@@ -8,8 +8,9 @@ from dataclasses import dataclass
 
 from app.flows.catalog import NODE_TYPES
 
-ALLOWED = {("sampling", "prompt"), ("prompt", "prompt"), ("prompt", "output")}
-SINGLE_INPUT = {"prompt", "output"}
+ALLOWED = {("descarga", "sampling"), ("sampling", "prompt"), ("prompt", "prompt"), ("prompt", "output")}
+SINGLE_INPUT = {"sampling", "prompt", "output"}
+SINGLE_OUTPUT = {"descarga"}  # la caja alimenta un único Sampling
 
 
 @dataclass(frozen=True)
@@ -21,8 +22,12 @@ class Rejection:
 def _pair_message(source_type: str, target_type: str) -> str:
     if source_type == "output":
         return "An Output is the end of the flow: it has no outputs."
+    if target_type == "descarga":
+        return "A Genesys download is the start of the flow: it accepts no inputs."
+    if source_type == "descarga":
+        return "A Genesys download can only be connected to a Sampling."
     if target_type == "sampling":
-        return "A Sampling is the start of the flow: it accepts no inputs."
+        return "A Sampling only accepts a Genesys download as input."
     if source_type == "sampling":
         return "A Sampling can only be connected to a Prompt."
     return f"A {NODE_TYPES[source_type]} cannot be connected to a {NODE_TYPES[target_type]}."
@@ -54,6 +59,8 @@ def connection_rejection(types: dict[str, str], edges: list[tuple[str, str]], so
         return Rejection("invalid_pair", _pair_message(types[source], types[target]))
     if (source, target) in edges:
         return Rejection("duplicate", "These nodes are already connected.")
+    if types[source] in SINGLE_OUTPUT and any(s == source for s, _ in edges):
+        return Rejection("output_taken", f"The {NODE_TYPES[types[source]]} already has an output; disconnect it first.")
     if types[target] in SINGLE_INPUT and any(t == target for _, t in edges):
         return Rejection("input_taken", f"The {NODE_TYPES[types[target]]} already has an input; disconnect it first.")
     if _reaches(edges, target, source):

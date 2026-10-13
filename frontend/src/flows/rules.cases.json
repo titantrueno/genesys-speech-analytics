@@ -1,6 +1,7 @@
 {
-  "description": "Casos compartidos de las reglas de conexión de FE004. Los ejecutan backend/tests/test_flow_rules.py y frontend/src/flows/rules.test.ts; expected es el código del rechazo o null si la conexión se admite.",
+  "description": "Casos compartidos de las reglas de conexión de FE004 y FE017 (caja «Genesys download»). Los ejecutan backend/tests/test_flow_rules.py y frontend/src/flows/rules.test.ts; expected es el código del rechazo o null si la conexión se admite.",
   "nodes": [
+    { "id": "tmp-d1", "type": "descarga" },
     { "id": "tmp-s1", "type": "sampling" },
     { "id": "tmp-s2", "type": "sampling" },
     { "id": "tmp-p1", "type": "prompt" },
@@ -30,6 +31,13 @@
     { "name": "ciclo de dos prompts", "edges": [["tmp-p1", "tmp-p2"]], "connect": ["tmp-p2", "tmp-p1"], "expected": "cycle" },
     { "name": "ciclo de tres prompts", "edges": [["tmp-p1", "tmp-p2"], ["tmp-p2", "tmp-p3"]], "connect": ["tmp-p3", "tmp-p1"], "expected": "cycle" },
     { "name": "nodo de origen inexistente", "edges": [], "connect": ["tmp-x", "tmp-p1"], "expected": "unknown_node" },
-    { "name": "nodo de destino inexistente", "edges": [], "connect": ["tmp-s1", "tmp-x"], "expected": "unknown_node" }
+    { "name": "nodo de destino inexistente", "edges": [], "connect": ["tmp-s1", "tmp-x"], "expected": "unknown_node" },
+    { "name": "descarga a sampling", "edges": [], "connect": ["tmp-d1", "tmp-s1"], "expected": null },
+    { "name": "descarga a un sampling ya conectado a prompts", "edges": [["tmp-s1", "tmp-p1"]], "connect": ["tmp-d1", "tmp-s1"], "expected": null },
+    { "name": "descarga a prompt", "edges": [], "connect": ["tmp-d1", "tmp-p1"], "expected": "invalid_pair" },
+    { "name": "descarga a output", "edges": [], "connect": ["tmp-d1", "tmp-o1"], "expected": "invalid_pair" },
+    { "name": "prompt a descarga", "edges": [], "connect": ["tmp-p1", "tmp-d1"], "expected": "invalid_pair" },
+    { "name": "sampling a descarga", "edges": [], "connect": ["tmp-s1", "tmp-d1"], "expected": "invalid_pair" },
+    { "name": "descarga con la salida ocupada", "edges": [["tmp-d1", "tmp-s1"]], "connect": ["tmp-d1", "tmp-s2"], "expected": "output_taken" }
   ]
 }

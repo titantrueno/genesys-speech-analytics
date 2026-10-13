@@ -52,7 +52,7 @@
 | Id | Título | Depende de | Criterios |
 |---|---|---|---|
 | T1 ✅ | Ingesta: descargas de una caja y subconjunto por ejecución | — | 4, 5 y 6 (datos), 19 (ingesta) |
-| T2 | Modelo, reglas y validación de la caja `descarga` | — | 1, 2, 3 (salvo el servicio caído), 11 |
+| T2 ✅ | Modelo, reglas y validación de la caja `descarga` | — | 1, 2, 3 (salvo el servicio caído), 11 |
 | T3 | Sampling «All conversations» y aviso `large_sample` | T2 | 10, 11 |
 | T4 | Ejecución end-to-end: descarga, subconjunto y estado `omitido` | T1, T2, T3 | 3 (servicio caído), 4, 5, 6, 7, 8, 19 (API) |
 | T5 | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
@@ -92,6 +92,13 @@
   - una segunda caja da `422`;
   - un test por código de validación;
   - los tests de FE004, FE011, FE012, FE013 y FE014 siguen en verde sin cambiarlos.
+
+- **Ajustes en `/build`:**
+  - Los códigos `download_incomplete` y `download_without_output` del plan reutilizan los de FE004 (`node_unconfigured` y `disconnected_node`), que el editor ya sabe mostrar. El único código nuevo es `download_needs_real_origin`, ya documentado en `IssueCode` y en el OpenAPI.
+  - El rechazo nuevo de conexión es `output_taken`, para una caja que ya tiene salida.
+  - Un intervalo específico que acaba en el futuro es `invalid_config` al validar, no un `422` al guardar, porque depende de la hora actual.
+  - Las reglas del front (`rules.ts`, `NodeType`, los textos de rechazo y un resumen mínimo de la caja en el lienzo) se adelantan a T2, para que el fichero de casos compartido pase en los dos lados en el mismo commit. El panel de configuración sigue en T6.
+  - La frontera de importaciones entre la ingesta y la API (`test_ingestion_settings.py`) admite ahora `app.flows.download_config`, y un test comprueba que ese módulo no importa nada de la API.
 
 ### T3 — Sampling «All conversations» y aviso `large_sample`
 - **Qué:**

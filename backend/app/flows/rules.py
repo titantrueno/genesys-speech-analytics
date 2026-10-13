@@ -7,11 +7,13 @@ import re
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
+from app.clock import now
 from app.flows import catalog
 from app.flows.connections import Rejection, connection_rejection
 from app.config.store import get_config
+from app.flows.download_config import SpecificInterval, _localize
 from app.flows.fields import accepts_option, topic_code
-from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
+from app.flows.model import DownloadNode, Graph, OutputNode, PromptNode, SamplingNode
 from app.query.model import QueryError, parse_query
 
 VARIABLE = re.compile(r"\{\{\s*([^{}]*?)\s*\}\}")
@@ -63,10 +65,25 @@ def _missing(pairs: list[tuple[str, bool]]) -> list[str]:
     return [label for label, present in pairs if not present]
 
 
-def _sampling(node: SamplingNode) -> list[Issue]:
+def _download(node: DownloadNode) -> list[Issue]:
+    """Caja «Genesys download» (FE017, criterio 3): completa, con datos reales y sin terminar en el futuro."""
     cfg = node.config
+    missing = _missing([("interval", cfg.interval is not None), ("channels", bool(cfg.channels))])
+    issues = [Issue("node_unconfigured", f"Not configured: missing {', '.join(missing)}.", node.id)] if missing else []
+    if active_origin() != "real":
+        issues.append(Issue("download_needs_real_origin", "A Genesys download needs the real data origin.", node.id))
+    interval = cfg.interval.root if cfg.interval is not None else None
+    if isinstance(interval, SpecificInterval) and _localize(interval.to, get_config().general.timezone) > now():
+        issues.append(Issue("invalid_config", "The interval cannot end in the future.", node.id))
+    return issues
+
+
+def _sampling(node: SamplingNode, graph: Graph) -> list[Issue]:
+    cfg = node.config
+    # Detrás de una caja de descarga, las conversaciones las da la descarga: los filtros son opcionales (FE017).
+    after_download = any(isinstance(graph.node(source), DownloadNode) for source in graph.inputs(node.id))
     missing = _missing([
-        ("filters", cfg.query is not None),
+        ("filters", cfg.query is not None or after_download),
         ("method", cfg.method is not None),
         ("sample size", cfg.size is not None),
         ("stratification criterion", cfg.method != "estratificado" or cfg.stratify_by is not None),
@@ -269,11 +286,12 @@ def _output(node: OutputNode, graph: Graph) -> list[Issue]:
 
 def _disconnected(node, graph: Graph) -> Issue | None:
     has_input, has_output = bool(graph.inputs(node.id)), bool(graph.outputs(node.id))
-    loose = {"sampling": not has_output, "prompt": not (has_input and has_output), "output": not has_input}[node.type]
+    loose = {"descarga": not has_output, "sampling": not has_output, "prompt": not (has_input and has_output),
+             "output": not has_input}[node.type]
     if not loose:
         return None
-    needs = {"sampling": "connect it to a Prompt", "prompt": "it needs one input and at least one output",
-             "output": "connect a Prompt to it"}[node.type]
+    needs = {"descarga": "connect it to a Sampling", "sampling": "connect it to a Prompt",
+             "prompt": "it needs one input and at least one output", "output": "connect a Prompt to it"}[node.type]
     return Issue("disconnected_node", f"Loose node: {needs}.", node.id)
 
 
@@ -301,8 +319,10 @@ def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
     destinations: set[str] = set()
     targets: set[str] = set()
     for node in graph.nodes:
-        if isinstance(node, SamplingNode):
-            issues += _sampling(node)
+        if isinstance(node, DownloadNode):
+            issues += _download(node)
+        elif isinstance(node, SamplingNode):
+            issues += _sampling(node, graph)
         elif isinstance(node, PromptNode):
             issues += _prompt(node, graph, llm_keys)
         else:

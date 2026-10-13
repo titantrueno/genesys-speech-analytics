@@ -43,7 +43,7 @@ def test_connection_rules_match_the_shared_cases(case):
 
 def test_shared_cases_cover_every_rejection_code():
     assert {c["expected"] for c in CASES["cases"]} == {
-        None, "invalid_pair", "self_loop", "duplicate", "input_taken", "cycle", "unknown_node"}
+        None, "invalid_pair", "self_loop", "duplicate", "input_taken", "output_taken", "cycle", "unknown_node"}
 
 
 # --- Integridad al guardar ---

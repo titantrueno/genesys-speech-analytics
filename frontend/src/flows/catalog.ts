@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import type { Labeler } from '../explorer/labels'
+import { CHANNEL_KEYS, describeInterval, describeSchedule } from '../downloads/labels'
 import { DEFAULT_I18N } from '../i18n/context'
 import type { FlowCatalog, NodeContent, Option } from './types'
 
@@ -30,6 +31,14 @@ export function optionLabel(options: Option[], value: string | undefined, i18n?:
 export function nodeSummary(node: NodeContent, catalog: FlowCatalog, i18n: Labeler = DEFAULT_I18N): string[] {
   const { t } = i18n
   const count = (n: number, key: 'flows.sum.conversations' | 'flows.sum.filters' | 'flows.sum.labels' | 'flows.sum.fields') => t(key, { count: n, n })
+  if (node.type === 'descarga') {
+    const { interval, channels, schedule } = node.config
+    const channelList = (channels ?? []).map((c) => t(CHANNEL_KEYS[c])).join(' + ')
+    return [
+      interval ? describeInterval(t, interval) : t('flows.sum.noInterval'),
+      [channelList || t('flows.sum.noChannels'), describeSchedule(t, schedule ?? { type: 'desactivada' })].join(' · '),
+    ]
+  }
   if (node.type === 'sampling') {
     const { method, stratify_by, order_by, order, size, query } = node.config
     let how = optionLabel(catalog.sampling_methods, method, i18n, 'sampling_methods') ?? t('flows.sum.noMethod')

@@ -3,18 +3,22 @@ import type { Params } from '../i18n/translate'
 import type { FlowEdge, NodeType } from './types'
 
 /**
- * Reglas de conexión de FE004, iguales a `backend/app/flows/connections.py`.
+ * Reglas de conexión de FE004 y de la caja «Genesys download» (FE017), iguales a `backend/app/flows/connections.py`.
  * `rules.cases.json` se ejecuta en los dos lados para que no diverjan.
  */
 /** `message` es una clave del diccionario (`flows.rej.*`): el editor la traduce con `t(message, params)`. */
 export interface Rejection { code: string; message: TKey; params?: Params }
 
-const ALLOWED = new Set(['sampling>prompt', 'prompt>prompt', 'prompt>output'])
-const SINGLE_INPUT = new Set<NodeType>(['prompt', 'output'])
-export const NODE_LABELS: Record<NodeType, string> = { sampling: 'Sampling', prompt: 'Prompt', output: 'Output' }
+const ALLOWED = new Set(['descarga>sampling', 'sampling>prompt', 'prompt>prompt', 'prompt>output'])
+const SINGLE_INPUT = new Set<NodeType>(['sampling', 'prompt', 'output'])
+/** La caja alimenta un único Sampling. */
+const SINGLE_OUTPUT = new Set<NodeType>(['descarga'])
+export const NODE_LABELS: Record<NodeType, string> = { descarga: 'Genesys download', sampling: 'Sampling', prompt: 'Prompt', output: 'Output' }
 
 function pairRejection(source: NodeType, target: NodeType): Pick<Rejection, 'message' | 'params'> {
   if (source === 'output') return { message: 'flows.rej.pair_output' }
+  if (target === 'descarga') return { message: 'flows.rej.pair_download_target' }
+  if (source === 'descarga') return { message: 'flows.rej.pair_download_source' }
   if (target === 'sampling') return { message: 'flows.rej.pair_sampling_target' }
   if (source === 'sampling') return { message: 'flows.rej.pair_sampling_source' }
   return { message: 'flows.rej.pair_generic', params: { source: NODE_LABELS[source], target: NODE_LABELS[target] } }
@@ -43,6 +47,9 @@ export function connectionRejection(types: Map<string, NodeType>, edges: FlowEdg
   if (source === target) return { code: 'self_loop', message: 'flows.rej.self_loop' }
   if (!ALLOWED.has(`${sourceType}>${targetType}`)) return { code: 'invalid_pair', ...pairRejection(sourceType, targetType) }
   if (edges.some((e) => e.source === source && e.target === target)) return { code: 'duplicate', message: 'flows.rej.duplicate' }
+  if (SINGLE_OUTPUT.has(sourceType) && edges.some((e) => e.source === source)) {
+    return { code: 'output_taken', message: 'flows.rej.output_taken', params: { node: NODE_LABELS[sourceType] } }
+  }
   if (SINGLE_INPUT.has(targetType) && edges.some((e) => e.target === target)) {
     return { code: 'input_taken', message: 'flows.rej.input_taken', params: { node: NODE_LABELS[targetType] } }
   }

@@ -5554,6 +5554,21 @@ components:
       - items
       title: ConversationPage
       type: object
+    Daily:
+      additionalProperties: false
+      properties:
+        type:
+          const: diaria
+          title: Type
+          type: string
+        time:
+          title: Time
+          type: string
+      required:
+      - type
+      - time
+      title: Daily
+      type: object
     DetailAnalysis:
       description: 'Detail analysis: each field is given as soon as it exists (FE014); missing ones are `null` or empty.'
       properties:
@@ -5652,6 +5667,45 @@ components:
       - keywords
       - compliance_pending
       title: DetailAnalysis
+      type: object
+    DownloadConfig:
+      additionalProperties: false
+      description: 'Genesys download box: interval, channels, overwrite, schedule and active (as a download flow).'
+      properties:
+        interval:
+          anyOf:
+          - $ref: '#/components/schemas/Interval'
+          - type: 'null'
+          default: null
+        channels:
+          anyOf:
+          - items:
+              enum:
+              - voz
+              - chat
+              type: string
+            type: array
+          - type: 'null'
+          default: null
+          title: Channels
+        overwrite:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          default: null
+          title: Overwrite
+        schedule:
+          anyOf:
+          - $ref: '#/components/schemas/Schedule'
+          - type: 'null'
+          default: null
+        active:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          default: null
+          title: Active
+      title: DownloadConfig
       type: object
     DownloadCounters:
       additionalProperties: false
@@ -5939,6 +5993,32 @@ components:
       - genesys_id
       title: DownloadLogEntry
       type: object
+    DownloadNode:
+      additionalProperties: false
+      properties:
+        id:
+          title: Id
+          type: string
+        position:
+          $ref: '#/components/schemas/Position'
+        type:
+          const: descarga
+          title: Type
+          type: string
+        config:
+          $ref: '#/components/schemas/DownloadConfig'
+          default:
+            interval: null
+            channels: null
+            overwrite: null
+            schedule: null
+            active: null
+      required:
+      - id
+      - position
+      - type
+      title: DownloadNode
+      type: object
     DownloadRun:
       additionalProperties: false
       properties:
@@ -6160,6 +6240,21 @@ components:
       required:
       - detail
       title: ErrorText
+      type: object
+    EveryHours:
+      additionalProperties: false
+      properties:
+        type:
+          const: cada_horas
+          title: Type
+          type: string
+        hours:
+          title: Hours
+          type: integer
+      required:
+      - type
+      - hours
+      title: EveryHours
       type: object
     FieldErrors:
       additionalProperties: false
@@ -6486,6 +6581,7 @@ components:
           - summary_requires_text
           - main_topic_requires_taxonomy
           - unknown_check
+          - download_needs_real_origin
           title: Code
           type: string
         message:
@@ -6900,11 +6996,13 @@ components:
           items:
             discriminator:
               mapping:
+                descarga: '#/components/schemas/DownloadNode'
                 output: '#/components/schemas/OutputNode'
                 prompt: '#/components/schemas/PromptNode'
                 sampling: '#/components/schemas/SamplingNode'
               propertyName: type
             oneOf:
+            - $ref: '#/components/schemas/DownloadNode'
             - $ref: '#/components/schemas/SamplingNode'
             - $ref: '#/components/schemas/PromptNode'
             - $ref: '#/components/schemas/OutputNode'
@@ -7004,6 +7102,16 @@ components:
       - unrecognized
       title: Interpretation
       type: object
+    Interval:
+      discriminator:
+        mapping:
+          especifico: '#/components/schemas/SpecificInterval'
+          relativo: '#/components/schemas/RelativeInterval'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/RelativeInterval'
+      - $ref: '#/components/schemas/SpecificInterval'
+      title: Interval
     KpiSettings:
       additionalProperties: false
       properties:
@@ -7439,6 +7547,17 @@ components:
       - permissions
       - code
       title: NewRoleIn
+      type: object
+    NoSchedule:
+      additionalProperties: false
+      properties:
+        type:
+          const: desactivada
+          title: Type
+          type: string
+      required:
+      - type
+      title: NoSchedule
       type: object
     NodeState:
       additionalProperties: false
@@ -8013,6 +8132,32 @@ components:
       - default_period
       title: QuerySchema
       type: object
+    RelativeInterval:
+      additionalProperties: false
+      properties:
+        type:
+          const: relativo
+          title: Type
+          type: string
+        unit:
+          enum:
+          - hoy
+          - ayer
+          - horas
+          - dias
+          title: Unit
+          type: string
+        amount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Amount
+      required:
+      - type
+      - unit
+      title: RelativeInterval
+      type: object
     ReportResult:
       additionalProperties: false
       properties:
@@ -8474,6 +8619,18 @@ components:
       - updated_at
       title: SavedQuery
       type: object
+    Schedule:
+      discriminator:
+        mapping:
+          cada_horas: '#/components/schemas/EveryHours'
+          desactivada: '#/components/schemas/NoSchedule'
+          diaria: '#/components/schemas/Daily'
+        propertyName: type
+      oneOf:
+      - $ref: '#/components/schemas/NoSchedule'
+      - $ref: '#/components/schemas/EveryHours'
+      - $ref: '#/components/schemas/Daily'
+      title: Schedule
     SchemaField:
       additionalProperties: false
       properties:
@@ -8698,6 +8855,27 @@ components:
       required:
       - origin
       title: SourcesConfig
+      type: object
+    SpecificInterval:
+      additionalProperties: false
+      properties:
+        type:
+          const: especifico
+          title: Type
+          type: string
+        from:
+          format: date-time
+          title: From
+          type: string
+        to:
+          format: date-time
+          title: To
+          type: string
+      required:
+      - type
+      - from
+      - to
+      title: SpecificInterval
       type: object
     Suggestion:
       additionalProperties: false

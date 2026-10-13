@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { AlertCircle, Filter, MessageSquareCode, Table2, type LucideIcon } from 'lucide-react'
+import { AlertCircle, CloudDownload, Filter, MessageSquareCode, Table2, type LucideIcon } from 'lucide-react'
 import { useI18n } from '../i18n/useI18n'
 import { nodeSummary, useCatalog } from './catalog'
 import type { CanvasNode } from './graph'
@@ -8,8 +8,9 @@ import { NODE_LABELS } from './rules'
 import { StatusBadge } from './StatusBadge'
 import type { NodeContent, NodeType } from './types'
 
-const ICONS: Record<NodeType, LucideIcon> = { sampling: Filter, prompt: MessageSquareCode, output: Table2 }
+const ICONS: Record<NodeType, LucideIcon> = { descarga: CloudDownload, sampling: Filter, prompt: MessageSquareCode, output: Table2 }
 const ACCENT: Record<NodeType, string> = {
+  descarga: 'border-t-amber-500',
   sampling: 'border-t-sky-500',
   prompt: 'border-t-violet-500',
   output: 'border-t-emerald-600',

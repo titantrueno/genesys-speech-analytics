@@ -16,6 +16,6 @@ describe('reglas de conexión (casos compartidos con el backend)', () => {
 
   it('cubren todos los códigos de rechazo', () => {
     expect(new Set(cases.cases.map((c) => c.expected))).toEqual(
-      new Set([null, 'invalid_pair', 'self_loop', 'duplicate', 'input_taken', 'cycle', 'unknown_node']))
+      new Set([null, 'invalid_pair', 'self_loop', 'duplicate', 'input_taken', 'output_taken', 'cycle', 'unknown_node']))
   })
 })
