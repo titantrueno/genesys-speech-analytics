@@ -1,6 +1,8 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { useAuth } from '../auth/useAuth'
 import { Tabs } from '../components/Tabs'
+import type { TKey } from '../i18n/dictionaries'
+import { useI18n } from '../i18n/useI18n'
 import { useTabParam } from '../components/useTabParam'
 import { useAudit, useConfig } from './api'
 import { AuditLog } from './AuditLog'
@@ -19,25 +21,27 @@ const ApiTab = lazy(async () => ({ default: (await import('./tabs/ApiTab')).ApiT
 
 type TabProps = { config: PlatformConfig; canEdit: boolean }
 
-const TABS: Array<{ code: ConfigTabCode; label: string; render: (props: TabProps) => ReactNode }> = [
-  { code: 'general', label: 'General', render: (p) => <GeneralTab {...p} /> },
-  { code: 'fuentes', label: 'Fuentes de datos', render: (p) => <SourcesTab {...p} /> },
-  { code: 'taxonomia', label: 'Taxonomía', render: (p) => <TaxonomyTab canEdit={p.canEdit} /> },
-  { code: 'kpis', label: 'KPIs y objetivos', render: (p) => <KpisTab {...p} /> },
-  { code: 'cumplimiento', label: 'Cumplimiento', render: (p) => <ComplianceTab canEdit={p.canEdit} /> },
-  { code: 'privacidad', label: 'Privacidad', render: (p) => <PrivacyTab {...p} /> },
-  { code: 'modelos', label: 'Modelos de IA', render: (p) => <AiTab {...p} /> },
+const TABS: Array<{ code: ConfigTabCode; labelKey: TKey; render: (props: TabProps) => ReactNode }> = [
+  { code: 'general', labelKey: 'cfg.tab.general', render: (p) => <GeneralTab {...p} /> },
+  { code: 'fuentes', labelKey: 'cfg.tab.fuentes', render: (p) => <SourcesTab {...p} /> },
+  { code: 'taxonomia', labelKey: 'cfg.tab.taxonomia', render: (p) => <TaxonomyTab canEdit={p.canEdit} /> },
+  { code: 'kpis', labelKey: 'cfg.tab.kpis', render: (p) => <KpisTab {...p} /> },
+  { code: 'cumplimiento', labelKey: 'cfg.tab.cumplimiento', render: (p) => <ComplianceTab canEdit={p.canEdit} /> },
+  { code: 'privacidad', labelKey: 'cfg.tab.privacidad', render: (p) => <PrivacyTab {...p} /> },
+  { code: 'modelos', labelKey: 'cfg.tab.modelos', render: (p) => <AiTab {...p} /> },
   {
-    code: 'api', label: 'API',
+    code: 'api', labelKey: 'cfg.tab.api',
     render: () => <Suspense fallback={<SpecLoading />}><ApiTab /></Suspense>,
   },
 ]
 
 export function ConfigPage() {
+  const { t } = useI18n()
   const { can } = useAuth()
   const canEdit = can('config:edit')
   const { data, isError, isPending } = useConfig()
-  const [current, select] = useTabParam(TABS)
+  const tabs = TABS.map((tab) => ({ ...tab, label: t(tab.labelKey) }))
+  const [current, select] = useTabParam(tabs)
   // La pestaña «API» no es una sección de la configuración: no tiene registro de cambios.
   const section = current.code === 'api' ? null : current.code
   const audit = useAudit(section, Boolean(data))
@@ -45,17 +49,17 @@ export function ConfigPage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Configuración</h1>
+        <h1 className="text-2xl font-semibold text-slate-900">{t('cfg.title')}</h1>
         <p className="text-sm text-slate-500">
-          Configuración global de la plataforma; los cambios se aplican al resto de secciones.
-          {!canEdit && ' Tienes acceso de solo lectura.'}
+          {t('cfg.subtitle')}
+          {!canEdit && ` ${t('cfg.readOnly')}`}
         </p>
       </header>
-      {isPending && <p role="status" className="text-sm text-slate-500">Cargando configuración…</p>}
-      {isError && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">No se ha podido cargar la configuración.</p>}
+      {isPending && <p role="status" className="text-sm text-slate-500">{t('cfg.loading')}</p>}
+      {isError && <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{t('cfg.loadError')}</p>}
       {data && (
         <>
-          <Tabs label="Secciones de la configuración" idPrefix="config" tabs={TABS} current={current} onSelect={select} />
+          <Tabs label={t('cfg.sections')} idPrefix="config" tabs={tabs} current={current} onSelect={select} />
           <div role="tabpanel" id={`config-panel-${current.code}`} aria-labelledby={`config-tab-${current.code}`}
             className="space-y-4">
             {current.render({ config: data, canEdit })}

@@ -1,4 +1,5 @@
 import { cloneElement, isValidElement, useId, useState, type ReactElement, type ReactNode } from 'react'
+import { useI18n } from '../i18n/useI18n'
 
 export const input = 'h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm text-slate-700 disabled:bg-slate-50 disabled:text-slate-500 aria-[invalid=true]:border-red-500'
 
@@ -29,14 +30,15 @@ export function ConfigField({ label, error, hint, children }: {
 export function SaveBar({ dirty, pending, saved, failed, onSave }: {
   dirty: boolean; pending: boolean; saved: boolean; failed: boolean; onSave: () => void
 }) {
+  const { t } = useI18n()
   return (
     <div className="flex items-center gap-3 pt-2">
       <button type="button" onClick={onSave} disabled={!dirty || pending}
         className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
-        Guardar
+        {t('cfg.save')}
       </button>
-      {saved && !dirty && <p role="status" className="text-sm text-emerald-700">Cambios guardados.</p>}
-      {failed && <p role="alert" className="text-sm text-red-700">Revisa los campos marcados.</p>}
+      {saved && !dirty && <p role="status" className="text-sm text-emerald-700">{t('cfg.saved')}</p>}
+      {failed && <p role="alert" className="text-sm text-red-700">{t('cfg.reviewFields')}</p>}
     </div>
   )
 }
@@ -59,6 +61,7 @@ export const smallButton = 'inline-flex items-center gap-1 rounded-md border bor
 export function ConfirmAction({ label, question, onConfirm, disabled }: {
   label: string; question: string; onConfirm: () => void; disabled?: boolean
 }) {
+  const { t } = useI18n()
   const [asking, setAsking] = useState(false)
   if (!asking) {
     return <button type="button" className={smallButton} disabled={disabled} onClick={() => setAsking(true)}>{label}</button>
@@ -67,9 +70,9 @@ export function ConfirmAction({ label, question, onConfirm, disabled }: {
     <span className="inline-flex items-center gap-1 text-xs text-slate-600">
       {question}
       <button type="button" className={`${smallButton} text-red-700`} onClick={() => { setAsking(false); onConfirm() }}>
-        Confirmar
+        {t('cfg.confirm')}
       </button>
-      <button type="button" className={smallButton} onClick={() => setAsking(false)}>No</button>
+      <button type="button" className={smallButton} onClick={() => setAsking(false)}>{t('cfg.no')}</button>
     </span>
   )
 }

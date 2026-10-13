@@ -57,7 +57,7 @@ describe('Idioma de la interfaz (FE016)', () => {
     const user = userEvent.setup()
     renderApp('/configuracion')
     const panel = await screen.findByRole('tabpanel')
-    await user.selectOptions(await within(panel).findByLabelText('Idioma por defecto'), 'en-US')
+    await user.selectOptions(await within(panel).findByLabelText('Idioma de la interfaz'), 'en-US')
     await user.click(within(panel).getByRole('button', { name: 'Guardar' }))
 
     const nav = await screen.findByRole('navigation', { name: 'Main' })
