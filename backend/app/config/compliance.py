@@ -22,39 +22,71 @@ def _agent_text(conv: Conversation) -> str:
     return cached[1]
 
 
-def evaluate(check: Check, conv: Conversation) -> bool | None:
-    if conv.analysis.pending or not check.applies_to(conv.channel):
-        return None  # sin analizar (FE012) o un check que no aplica al canal
+PENDING = "pendiente"  # sin resultado todavía: ni del análisis ni, en un check personalizado, de sus frases
+
+
+def evaluate(check: Check, conv: Conversation) -> bool | None | str:
+    """`True` (cumple), `False` (no cumple), `None` (no aplica) o `PENDING`.
+
+    Un resultado guardado en el análisis (el sintético, o el de un flujo de insights con un LLM, FE014) manda sobre las
+    frases. Sin él, un check base queda pendiente y uno personalizado se evalúa por frases (ADR-007).
+    """
+    if not check.applies_to(conv.channel):
+        return None
+    if check.code in conv.analysis.compliance:
+        return conv.analysis.compliance[check.code]
     if check.builtin:
-        return conv.analysis.compliance.get(check.code)
+        return PENDING
     text = _agent_text(conv)
     return any(normalize_text(phrase) in text for phrase in check.phrases)
 
 
-_cache: tuple[Config, dict[str, dict[str, bool | None]]] | None = None
+_cache: tuple[Config, dict[str, tuple[Conversation, dict[str, bool | None | str]]]] | None = None
 
 
-def _results(conv: Conversation, config: Config) -> dict[str, bool | None]:
-    """Resultado de todos los checks (activos o no), cacheado por instantánea de configuración."""
+def _results(conv: Conversation, config: Config) -> dict[str, bool | None | str]:
+    """Resultado de todos los checks (activos o no), cacheado por instantánea de configuración y por conversación: una
+    recarga de las reales (un flujo acaba de escribir su cumplimiento, FE014) la sustituye por otro objeto."""
     global _cache
     if _cache is None or _cache[0] is not config:
         _cache = (config, {})
     by_conv = _cache[1]
-    result = by_conv.get(conv.id)
-    if result is None:
-        result = by_conv[conv.id] = {code: evaluate(check, conv) for code, check in config.checks.items()}
-    return result
+    cached = by_conv.get(conv.id)
+    if cached is None or cached[0] is not conv:
+        cached = by_conv[conv.id] = (conv, {code: evaluate(check, conv) for code, check in config.checks.items()})
+    return cached[1]
+
+
+def check_state(conv: Conversation, code: str) -> bool | None | str:
+    return _results(conv, get_config()).get(code, PENDING)
 
 
 def check_result(conv: Conversation, code: str) -> bool | None:
-    return _results(conv, get_config()).get(code)
+    """Como `check_state`, con un pendiente leído como «sin resultado» (`None`)."""
+    state = check_state(conv, code)
+    return None if state == PENDING else state
 
 
-def effective_compliance(conv: Conversation) -> dict[str, bool | None]:
-    """Resultado de los checks activos, en su orden de configuración."""
+def _active_states(conv: Conversation) -> dict[str, bool | None | str]:
     config = get_config()
     results = _results(conv, config)
     return {code: results[code] for code, check in config.checks.items() if check.active}
+
+
+def effective_compliance(conv: Conversation) -> dict[str, bool | None]:
+    """Resultado de los checks activos que lo tienen, en su orden de configuración."""
+    return {code: state for code, state in _active_states(conv).items() if state != PENDING}
+
+
+def pending_checks(conv: Conversation) -> list[str]:
+    return [code for code, state in _active_states(conv).items() if state == PENDING]
+
+
+def has_compliance(conv: Conversation) -> bool:
+    """Si la conversación cuenta para el cumplimiento: algún check activo que le aplica tiene resultado (FE014)."""
+    config = get_config()
+    return any(state != PENDING and config.checks[code].applies_to(conv.channel)
+               for code, state in _active_states(conv).items())
 
 
 def is_compliant(conv: Conversation) -> bool:

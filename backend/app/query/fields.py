@@ -111,7 +111,7 @@ def _field_list(config: Config, repository: ConversationRepository) -> list[Fiel
         FieldDef("summary", "Summary", "text", lambda c: c.analysis.summary),
         FieldDef("transcript", "Transcripción", "text", lambda c: c.turns, speakers=True),
         FieldDef("repeat_contact", "Recontacto en 7 días", "boolean",
-                 lambda c: None if c.analysis.pending else followup_index()[c.id]),
+                 lambda c: None if c.analysis.resolution is None else followup_index()[c.id]),
     ]
 
 

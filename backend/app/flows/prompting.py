@@ -160,7 +160,7 @@ def choose_label(labels: list[str], conv: Conversation, key: float) -> str:
 
 def _text(config: PromptConfig, conv: Conversation, previous: Any | None) -> str:
     analysis = conv.analysis
-    if analysis.pending:  # sin summary ni main topic: se resume lo primero que dijo el cliente
+    if not analysis.summary:  # sin summary: se resume lo primero que dijo el cliente
         first = next((t.text for t in masked(conv).turns if t.speaker == "cliente"), "sin transcripción")
         text = f"{conv.channel.capitalize()}: {first.split('. ')[0].rstrip('.')[:160]}."
     else:

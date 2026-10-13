@@ -170,3 +170,12 @@
 - **Decisión:** las reglas nuevas usan el código `invalid_mapping` con el nombre del destino en el mensaje; el check borrado o desactivado, `unknown_check` (bloquea la ejecución).
 - **Pendiente para T8:** `IssueCode` del OpenAPI no lista los códigos de FE013 (`invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target`, `field_output_requires_real_data`, `simulated_values_to_real_data`, …) ni `unknown_check`.
 - **Ajuste de tests de FE013:** los recuentos incluyen `sin_valor` y el escritor devuelve `{outcomes, reasons}`.
+
+## Notas de T4
+
+- **Hecho:** `real.py` lee todos los campos del análisis siempre; `pending` pasa a significar «falta alguno de summary, main topic, resolución, CSAT, esfuerzo o riesgo» (aviso del detalle y `analysis_pending` del listado). Las entidades se guardan como `{tipo: valor}` y la API las sigue dando como lista.
+- **Decisión:** el cumplimiento tiene un cuarto estado, `PENDING` (`app/config/compliance.py`). Un check que no aplica al canal es «no aplica» antes que nada; después manda el resultado guardado; sin él, un check base queda pendiente y uno personalizado se evalúa por frases. El detalle devuelve `compliance` (solo con resultado) y `compliance_pending`.
+- **Decisión:** una conversación cuenta para `compliance_rate` y para el filtro «cumple» si algún check activo que le aplica tiene resultado (`has_compliance`). En el dataset sintético son todas, así que sus cifras no cambian.
+- **Decisión:** un KPI del análisis está «pendiente» solo si ninguna conversación tiene su dato **y** alguna espera análisis (`kpi_pending`); un periodo vacío no está pendiente. El desglose por main topic agrupa las que ya lo tienen.
+- **Hallazgo y corrección:** la caché de resultados de los checks se indexaba por identificador de conversación; tras escribir un resultado y recargar la instantánea, devolvía el anterior. Ahora se invalida si cambia el objeto de la conversación, como la caché de textos del agente.
+- **Ajuste:** el proveedor simulado resume el primer turno del cliente cuando falta el summary (antes, cuando el análisis estaba pendiente).

@@ -18,7 +18,7 @@ from psycopg.rows import dict_row
 
 from app.data.repository import REAL, DataUnavailable, followup_map
 from app.envfile import API_DATABASE_KEYS, read_env
-from app.models import Analysis, Conversation, GenesysInfo, Turn
+from app.models import Analysis, Conversation, Entity, GenesysInfo, Turn
 
 CONNECT_TIMEOUT_S = 2
 # El testigo de la base se consulta una vez por petición HTTP, no una vez por llamada a un servicio: `begin_request()`
@@ -80,18 +80,30 @@ def _topic(t: dict) -> dict:
             "confidence": t["confidence"]}
 
 
+# Campos sin los que el análisis de una conversación sigue pendiente (aviso del detalle y `analysis_pending` del listado).
+_REQUIRED = ("summary", "main_topic", "resolution", "csat", "effort", "churn_risk")
+
+
+def _entities(value) -> list[Entity]:
+    """En la base, `{tipo: valor}` para combinarlas clave a clave (FE014); en la API, la lista de siempre."""
+    items = value.items() if isinstance(value, dict) else ((e["type"], e["value"]) for e in value or [])
+    return [Entity(type=etype, value=text) for etype, text in items]
+
+
 def _analysis(row: dict, analysis: dict | None, turns: list[Turn]) -> Analysis:
+    """Cada campo se lee en cuanto existe, aunque el resto siga pendiente (FE014, criterio 12): lo escribe un flujo de
+    insights campo a campo. El sentimiento es el de Genesys y, si no lo da, el del LLM."""
     timeline = [t.sentiment for t in turns if t.speaker == "cliente" and t.sentiment is not None]
-    done = analysis is not None and analysis["status"] == "completo"
-    data = analysis if done else {}
-    # Summary y main topic pueden venir de un flujo de insights aunque el resto siga pendiente (FE013, criterio 21).
-    written = analysis or {}
+    data = analysis or {}
+    sentiment = row["customer_sentiment"] if row["customer_sentiment"] is not None else data.get("sentiment")
+    complete = data.get("status") == "completo"
     return Analysis(
-        summary=written.get("summary") or "", main_topic=written.get("main_topic"),
-        secondary_topics=data.get("secondary_topics") or [], sentiment=row["customer_sentiment"],
+        summary=data.get("summary") or "", main_topic=data.get("main_topic"),
+        secondary_topics=data.get("secondary_topics") or [], sentiment=sentiment,
         sentiment_timeline=timeline, resolution=data.get("resolution"), csat=data.get("csat"),
         effort=data.get("effort"), churn_risk=data.get("churn_risk"), compliance=data.get("compliance") or {},
-        entities=data.get("entities") or [], keywords=data.get("keywords") or [], pending=not done)
+        entities=_entities(data.get("entities")), keywords=data.get("keywords") or [],
+        pending=not complete and any(data.get(name) in (None, "") for name in _REQUIRED))
 
 
 def _conversation(row: dict, turns: list[dict], segments: list[dict], topics: list[dict], analysis: dict | None,

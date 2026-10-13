@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import Depends, HTTPException, Query, status
 
 from app import ids
-from app.config.compliance import is_compliant
+from app.config.compliance import has_compliance, is_compliant
 from app.config.store import current_zone, local_day
 from app.data.store import default_period_end, followup_index
 from app.models import Conversation
@@ -55,10 +55,10 @@ class ConversationFilters:
             and (not self.churn_risks or conv.analysis.churn_risk in self.churn_risks)
             and (self.sentiment_lt is None
                  or (conv.analysis.sentiment is not None and conv.analysis.sentiment < self.sentiment_lt))
-            # Un campo sin analizar no cumple ninguna condición (FE012, criterio 10).
-            and (self.compliant is None or (not conv.analysis.pending and is_compliant(conv) == self.compliant))
+            # Un campo sin analizar no cumple ninguna condición (FE012, criterio 10), campo a campo (FE014).
+            and (self.compliant is None or (has_compliance(conv) and is_compliant(conv) == self.compliant))
             and (self.repeat_contact is None
-                 or (not conv.analysis.pending and followup_index()[conv.id] == self.repeat_contact))
+                 or (conv.analysis.resolution is not None and followup_index()[conv.id] == self.repeat_contact))
             and (self.phone is None or (conv.genesys is not None and same_phone(conv.genesys.ani, self.phone)))
             and (self.external_tag is None
                  or (conv.genesys is not None and (conv.genesys.external_tag or "").casefold()

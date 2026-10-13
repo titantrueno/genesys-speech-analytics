@@ -9,8 +9,8 @@ from app.config.kpis import DASHBOARDS
 from app.config.store import current_zone, get_config, local_day, topic_name
 from app.data.store import followup_index, get_dataset
 from app.services.filters import ConversationFilters, conversation_filters
-from app.services.kpis import (ANALYSIS_KPIS, KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta,
-                               delta_pct, kpi_bases, pending_analysis, round_value)
+from app.services.kpis import (KPI_DEFS, compliance_by_check, compute_kpi, compute_kpis, delta,
+                               delta_pct, kpi_bases, kpi_pending, pending_analysis, round_value)
 
 router = APIRouter(prefix="/api/metrics", tags=["metrics"],
                    dependencies=[Depends(require_permission("dashboards:view"))])
@@ -48,7 +48,6 @@ def summary(
     prev_from, prev_to = filters.previous_period()
     current_convs = filters.apply(dataset)
     current = compute_kpis(current_convs, followups, rounded=False)
-    pending = pending_analysis(current_convs)
     # `based_on` solo tiene sentido con datos reales, donde algunos KPIs usan una parte de las conversaciones.
     bases = kpi_bases(current_convs) if any(c.genesys for c in current_convs) else {}
     previous = compute_kpis(filters.apply(dataset, prev_from, prev_to), followups, rounded=False)
@@ -58,9 +57,9 @@ def summary(
         "kpis": [
             {"code": k.code, "label": k.label, "unit": k.unit, "higher_is_better": k.higher_is_better,
              "value": round_value(current[k.code]), "previous": round_value(previous[k.code]),
-             # Sin analizar (FE012): «Sin datos · pendiente de análisis» en lugar de 0. `based_on`: sobre cuántas
-             # conversaciones se calcula, cuando no son todas.
-             "pending": pending and k.code in ANALYSIS_KPIS, "based_on": bases.get(k.code),
+             # Sin el dato en ninguna conversación (FE012, FE014): «Sin datos · pendiente de análisis» en lugar de 0.
+             # `based_on`: sobre cuántas conversaciones se calcula, cuando no son todas.
+             "pending": kpi_pending(k.code, current_convs), "based_on": bases.get(k.code),
              "delta": delta(current[k.code], previous[k.code]),
              "delta_pct": delta_pct(current[k.code], previous[k.code], k.unit),
              "target": targets[k.code].target,
@@ -96,7 +95,7 @@ def timeseries(
         points.append({"period_start": start.isoformat(), "period_end": end.isoformat(),
                        "value": compute_kpi(kpi, bucket, followups)})
     return {"kpi": kpi, "granularity": granularity, "period": _period(filters.date_from, filters.date_to),
-            "pending": pending_analysis(convs) and kpi in ANALYSIS_KPIS, "points": points}
+            "pending": kpi_pending(kpi, convs), "points": points}
 
 
 @router.get("/breakdown")
@@ -106,9 +105,8 @@ def breakdown(
 ) -> dict:
     convs, followups = filters.apply(get_dataset()), followup_index()
     pending = pending_analysis(convs)
-    if dimension == "main_topic" and pending:  # sin main topic no hay grupos que mostrar (FE012)
-        return {"dimension": dimension, "period": _period(filters.date_from, filters.date_to), "pending": True,
-                "items": []}
+    if dimension == "main_topic":  # solo se agrupan las que ya tienen main topic (FE012, FE014)
+        convs = [c for c in convs if c.analysis.main_topic]
     groups = defaultdict(list)
     for c in convs:
         groups[DIMENSIONS[dimension](c)].append(c)

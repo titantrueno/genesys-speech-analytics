@@ -1,3 +1,4 @@
+from app.config.compliance import PENDING, check_state
 from app.config.store import current_zone, local_day
 from app.models import Conversation
 from app.privacy.masking import masked, masking_enabled
@@ -72,7 +73,7 @@ def _text(cond: Condition, fdef: FieldDef, conv: Conversation) -> bool:
 
 def _is_empty(cond: Condition, fdef: FieldDef, conv: Conversation) -> bool:
     if fdef.type == "check":
-        return conv.analysis.pending
+        return check_state(conv, fdef.key.removeprefix("check:")) == PENDING
     if fdef.text_of is not None:
         return not (fdef.text_of(conv) or "").strip()
     if fdef.key == "summary":
@@ -87,8 +88,8 @@ def _condition(cond: Condition, conv: Conversation, fields: dict[str, FieldDef])
     fdef = fields[cond.field]
     if cond.operator in EMPTY_OPERATORS:
         return _is_empty(cond, fdef, conv) == (cond.operator == "is_empty")
-    # Un campo sin analizar no cumple ninguna condición salvo «está vacío» (FE012, criterio 10).
-    if fdef.analysis and conv.analysis.pending:
+    # Un campo sin analizar no cumple ninguna condición salvo «está vacío» (FE012, criterio 10), campo a campo (FE014).
+    if fdef.analysis and _is_empty(cond, fdef, conv):
         return False
     if fdef.type == "text":
         return _text(cond, fdef, conv)

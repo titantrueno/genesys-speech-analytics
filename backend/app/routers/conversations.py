@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.auth import require_permission
 from app import ids
 from app.config.store import get_config, topic_name
-from app.config.compliance import active_checks, effective_compliance
+from app.config.compliance import active_checks, effective_compliance, pending_checks
 from app.data.repository import active_repository
 from app.data.store import conversation_index, get_dataset, reference_date
 from app.privacy.masking import shown
@@ -27,8 +27,9 @@ def get_conversation(conversation_id: str) -> dict:
     if conv is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conversación no encontrada")
     body = shown(conv).model_dump()
-    # Sin analizar no hay cumplimiento que mostrar (un «no aplica» engañaría); la UI dice «Análisis pendiente».
-    body["analysis"]["compliance"] = {} if conv.analysis.pending else effective_compliance(conv)
+    # Solo los checks con resultado; los que aún no lo tienen van aparte (FE014): la UI dice «Pendiente», no «No aplica».
+    body["analysis"]["compliance"] = effective_compliance(conv)
+    body["analysis"]["compliance_pending"] = pending_checks(conv)
     return {**body, "main_topic_label": topic_name(conv.analysis.main_topic)}
 
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from statistics import mean
 from typing import Callable
 
-from app.config.compliance import active_checks, check_result, is_compliant
+from app.config.compliance import active_checks, check_result, has_compliance, is_compliant
 from app.models import Conversation
 
 
@@ -30,9 +30,19 @@ KPI_DEFS = [
     KpiDef("avg_turns", "Turnos medios", "turnos", False),
 ]
 KPI_CODES = [k.code for k in KPI_DEFS]
-# KPIs que dependen del análisis de la plataforma: con conversaciones reales sin analizar quedan «pendientes» (FE012).
-ANALYSIS_KPIS = frozenset({"resolution_rate", "escalation_rate", "fcr_rate", "csat_avg", "effort_avg",
-                           "compliance_rate", "churn_high_pct"})
+# KPIs que dependen del análisis de la plataforma (FE012). Cada uno se calcula sobre las conversaciones que tienen su
+# dato (FE014): `based_on` dice cuántas son, y queda «pendiente» si ninguna lo tiene todavía. FCR no tiene un campo
+# propio: usa las conversaciones con resolución.
+ANALYSIS_BASES: dict[str, Callable[[Conversation], bool]] = {
+    "resolution_rate": lambda c: c.analysis.resolution is not None,
+    "escalation_rate": lambda c: c.analysis.resolution is not None,
+    "fcr_rate": lambda c: c.analysis.resolution is not None,
+    "csat_avg": lambda c: c.analysis.csat is not None,
+    "effort_avg": lambda c: c.analysis.effort is not None,
+    "compliance_rate": has_compliance,
+    "churn_high_pct": lambda c: c.analysis.churn_risk is not None,
+}
+ANALYSIS_KPIS = frozenset(ANALYSIS_BASES)
 NEGATIVE_THRESHOLD = -0.3
 
 
@@ -65,9 +75,16 @@ def pending_analysis(convs: list[Conversation]) -> bool:
     return any(c.analysis.pending for c in convs)
 
 
+def kpi_pending(code: str, convs: list[Conversation]) -> bool:
+    """Un KPI del análisis está pendiente si ninguna conversación tiene su dato y alguna espera análisis."""
+    has = ANALYSIS_BASES.get(code)
+    return has is not None and not any(has(c) for c in convs) and pending_analysis(convs)
+
+
 def kpi_bases(convs: list[Conversation]) -> dict[str, int | None]:
     """Conversaciones sobre las que se calculan los KPIs que pueden usar solo una parte de ellas."""
     return {
+        **{code: sum(1 for c in convs if has(c)) for code, has in ANALYSIS_BASES.items()},
         "aht_s": sum(1 for c in convs if handle_time(c) is not None),
         "sentiment_avg": sum(1 for c in convs if c.analysis.sentiment is not None),
         "negative_pct": sum(1 for c in convs if c.analysis.sentiment is not None),
@@ -82,21 +99,21 @@ def compute_kpis(convs: list[Conversation], followups: dict[str, bool], rounded:
 
 def _raw_kpis(convs: list[Conversation], followups: dict[str, bool]) -> dict[str, float | int | None]:
     chats = [c for c in convs if c.channel == "chat"]
-    # Lo que depende del análisis se calcula solo con las conversaciones analizadas (FE012): sin ninguna, es `None`.
-    analysed = [c for c in convs if not c.analysis.pending]
+    # Lo que depende del análisis se calcula con las conversaciones que tienen su dato (FE014): sin ninguna, es `None`.
+    having = {code: [c for c in convs if has(c)] for code, has in ANALYSIS_BASES.items()}
     with_sentiment = [c for c in convs if c.analysis.sentiment is not None]
     return {
         "volume": len(convs),
         "aht_s": _avg(t for t in (handle_time(c) for c in convs) if t is not None),
         "sentiment_avg": _avg(c.analysis.sentiment for c in with_sentiment),
         "negative_pct": _pct(with_sentiment, lambda c: c.analysis.sentiment < NEGATIVE_THRESHOLD),
-        "resolution_rate": _pct(analysed, lambda c: c.analysis.resolution == "resuelta"),
-        "escalation_rate": _pct(analysed, lambda c: c.analysis.resolution == "escalada"),
-        "fcr_rate": _pct(analysed, lambda c: not followups[c.id]),
-        "csat_avg": _avg(c.analysis.csat for c in analysed if c.analysis.csat is not None),
-        "effort_avg": _avg(c.analysis.effort for c in analysed if c.analysis.effort is not None),
-        "compliance_rate": _pct(analysed, is_compliant),
-        "churn_high_pct": _pct(analysed, lambda c: c.analysis.churn_risk == "alto"),
+        "resolution_rate": _pct(having["resolution_rate"], lambda c: c.analysis.resolution == "resuelta"),
+        "escalation_rate": _pct(having["escalation_rate"], lambda c: c.analysis.resolution == "escalada"),
+        "fcr_rate": _pct(having["fcr_rate"], lambda c: not followups[c.id]),
+        "csat_avg": _avg(c.analysis.csat for c in having["csat_avg"]),
+        "effort_avg": _avg(c.analysis.effort for c in having["effort_avg"]),
+        "compliance_rate": _pct(having["compliance_rate"], is_compliant),
+        "churn_high_pct": _pct(having["churn_high_pct"], lambda c: c.analysis.churn_risk == "alto"),
         "first_response_s": _avg(t for t in (_first_agent_offset(c) for c in chats) if t is not None),
         "avg_turns": _avg(len(c.turns) for c in convs),
     }
