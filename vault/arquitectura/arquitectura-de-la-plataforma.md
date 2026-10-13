@@ -162,6 +162,14 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Cumplimiento:** estado pendiente además de cumple, no cumple y no aplica; el resultado guardado manda sobre las frases ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). El detalle devuelve `compliance` y `compliance_pending`.
 - **Filtros y explorador:** un campo con valor deja de estar vacío y se filtra con sus operadores de siempre; un check solo está vacío mientras está pendiente.
 
+### Flujos de insights end-to-end (FE017, [ADR-008](../decisiones/adr-008-postgresql-y-servicio-de-ingesta.md))
+
+- **Caja «Genesys download»** (nodo `descarga`): primera caja de un flujo de insights, como mucho una por flujo, sin entradas y con una sola salida hacia un Sampling. Guarda intervalo, canales, «Sobrescribir», programación y activo, con las mismas reglas que un flujo de descarga (`app/flows/download_config.py`). Exige el origen de datos «Real».
+- **Ejecución:** el `FlowExecutor` pide la descarga al servicio de ingesta (`app/flows/downloader.py`, con el token interno), sigue sus contadores cada 2 s (`Run.download`) y, al terminar, lee su **subconjunto**: las conversaciones que insertó o actualizó. El Sampling de detrás trabaja solo con ellas, sin el intervalo de fechas de sus filtros. Si la descarga no trae conversaciones, el resto de nodos queda `omitido` y la ejecución termina en `ok` sin llamar al LLM; si falla, la caja y la ejecución acaban en `error`.
+- **«All conversations»:** `size: "all"` en un Sampling toma todas las conversaciones que cumplen los filtros (o todo el subconjunto). Por encima de 1.000, la validación da el aviso `large_sample`.
+- **Programación:** `app/flows/scheduler.py` lanza en la API los flujos con caja programada y activa (origen `programada`, autoría «Scheduler»). Omite y anota (`Run.notes`) la que coincide con otra en curso, registra como `error` la que no valida y no recupera las perdidas durante un reinicio. `GET /api/flows` da `next_run`.
+- **Front:** paleta, panel y lienzo de la caja (los campos se comparten con el formulario de FE011 en `downloads/DownloadSettingsFields.tsx`), casilla «All conversations» y, en la ejecución, la sección «Descarga de Genesys» con sus contadores y su log (`downloads/DownloadLog.tsx`).
+
 ### Idioma de la interfaz y mensajes de la API (FE016, [ADR-010](../decisiones/adr-010-idioma-de-la-interfaz-y-api-en-ingles.md))
 
 - **Front:** `I18nProvider` (dentro de `QueryClientProvider`, fuera de `AuthProvider`) toma el idioma de `GET /api/config/public`, así que también vale en el login; si no es uno de los dos con diccionario, usa `es-ES`. Diccionarios planos por área en `frontend/src/i18n/{es,en}/`, `t()` y `tOr()` con parámetros y plurales; `lib/format.ts` usa el idioma activo para números, porcentajes, fechas y duraciones. El idioma se cambia **solo** en Configuración → General; `AppLayout` vuelve a montar el contenido al cambiarlo.
@@ -181,7 +189,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - Desde FE005, los DNI e IBAN ficticios de las conversaciones de voz se enmascaran por defecto y nunca llegan al índice de búsqueda ni a los prompts. Los patrones son españoles más email y tarjeta completa; con datos reales podrían escaparse formatos no previstos (hipótesis, [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
 - La configuración es global: la taxonomía, los checks y los KPIs se pierden al reiniciar (General, Origen de datos, Privacidad y Modelos de IA se conservan desde FE015), y si dos administradores la editan a la vez gana la última escritura.
 - Usuarios y roles creados desde la UI se pierden al reiniciar (fuera de alcance de FE006). La contraseña demo es la misma para todos, también para los usuarios nuevos ([ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)).
-- Los flujos de insights se conservan al reiniciar (FE015); sus ejecuciones viven en memoria y se pierden. Si dos personas guardan el mismo flujo, gana el último guardado. Los resultados del prompt son simulados ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
+- Los flujos de insights se conservan al reiniciar (FE015); sus ejecuciones viven en memoria y se pierden, también las programadas (FE017), aunque el log de su descarga sigue en PostgreSQL. Si dos personas guardan el mismo flujo, gana el último guardado. Los resultados del prompt son simulados ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
 - La búsqueda semántica es léxica: sus limitaciones medidas (puntuaciones bajas, dependencia del diccionario, sesgo hacia texto plantillado) están en [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md).
 
 ## Fuentes
@@ -194,6 +202,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE002](../../features/FE002-explorador-de-queries-asistidas/spec.md)
 - [Spec FE003](../../features/FE003-busqueda-semantica-de-conversaciones/spec.md)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
+- [Spec FE017](../../features/FE017-caja-genesys-en-flujos-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
 - [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)
 - [Spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)

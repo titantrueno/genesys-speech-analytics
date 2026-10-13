@@ -3,7 +3,7 @@ title: "ADR-008 — PostgreSQL y servicio de ingesta de Genesys aparte"
 type: adr
 status: active
 owners: [equipo-del-proyecto]
-tags: [adr, genesys, ingesta, postgresql, persistencia, fe011, fe015]
+tags: [adr, genesys, ingesta, postgresql, persistencia, fe011, fe015, fe017]
 created: 2026-10-12
 updated: 2026-10-13
 ---
@@ -23,7 +23,7 @@ FE011 trae conversaciones reales de una organización de Genesys Cloud: transcri
 - **PostgreSQL 16 en Docker** (`docker-compose.yml`, volumen persistente, solo en `127.0.0.1`). En la máquina de desarrollo el daemon es Colima. El esquema se gestiona con **migraciones SQL numeradas** (`backend/ingestion/migrations/`), aplicadas al arrancar con un cerrojo consultivo, sin ORM.
 - **El «nuevo backend» es otro proceso del mismo proyecto Python** (`backend/ingestion/`, `uvicorn ingestion.main:app`):
   - Comparte venv y `requirements.txt` con la API.
-  - Solo importa de `app` los módulos `ids`, `clock` y `envfile`, porque los identificadores se generan en un único sitio. La API no importa `ingestion`. Un test estructural lo comprueba.
+  - Solo importa de `app` los módulos `ids`, `clock` y `envfile` (y, desde FE017, `app.flows.download_config`, ver Ampliaciones), porque los identificadores se generan en un único sitio. La API no importa `ingestion`. Un test estructural lo comprueba.
   - Es el **único** que lee `GENESYS_*`. Cada proceso lee del `.env` solo su lista blanca de claves (`app/envfile.py`).
 - **La API es la única puerta.** El front solo habla con la API, que comprueba la sesión y los permisos (`flows:view`/`flows:edit`, `config:view`/`config:edit`), añade la autoría, la zona horaria y quién lanza, y delega en el servicio de ingesta con un **token interno**. Si el servicio no responde, falta el token o lo rechaza, la API devuelve `503`.
 - **Analítica separada del análisis.** La analítica de Genesys (tramos, contención, tiempos, métricas de chat, Speech & Text Analytics, acústica) va en columnas filtrables y en `metrics` (`jsonb`). El análisis de la plataforma va en `analysis`, en estado `pendiente`, con `fuente` `genesys` o `llm`. Las respuestas originales se guardan en `raw_payload` para poder reanalizar.
@@ -61,10 +61,21 @@ FE011 trae conversaciones reales de una organización de Genesys Cloud: transcri
 
 - **FE013 (2026-10-12) · «Sobrescribir»:** los flujos de descarga tienen la casilla `overwrite` (migración `0003`, `false` por defecto; la ejecución copia el valor al crearse). Sin marcar, antes de descargar una conversación se comprueba si ya está en la base; si está, no se llama a Genesys ni se toca nada (contador `skipped_existing`). Marcada, se sustituye entera y su análisis vuelve a `pendiente`, también si estaba `completo`, borrando summary, main topic y su trazabilidad. **Cambio de comportamiento:** volver a descargar ya no actualiza las conversaciones existentes salvo con «Sobrescribir». La migración `0005` deja `download_run.overwrite` en nulo en las ejecuciones anteriores a la `0003` (actualizaban, no omitían); la página de la ejecución no afirma ningún modo para ellas.
 - **FE015 (2026-10-13) · estado de la plataforma:** el servicio de ingesta guarda también, por cuenta de la API, los **flujos de insights** y las secciones General, Origen de datos, Privacidad y Modelos de IA de la configuración (migración `0007`: `insight_flow` y `platform_setting`; rutas internas en `ingestion/state.py`). La API valida el contenido y lo mantiene en memoria; cada cambio se guarda antes de aplicarse y, si no se puede guardar, responde `503` sin aplicarlo. Sin `INGESTION_TOKEN` todo sigue en memoria. Las ejecuciones de los flujos de insights, la taxonomía, los checks, los KPIs, los usuarios y la auditoría siguen en memoria ([spec FE015](../../features/FE015-persistencia-flujos-y-preferencias/spec.md)).
+- **FE017 (2026-10-13) · caja «Genesys download» de los flujos de insights:**
+  - Una descarga puede colgar de un flujo de descarga **o** de un flujo de insights. La migración `0008` hace `download_run.flow_id` opcional, añade `insight_flow_id` (referencia a `insight_flow`, `ON DELETE CASCADE`) con un `CHECK` que exige exactamente uno, y un índice único de una descarga activa por caja.
+  - La tabla `download_run_conversation` guarda el **subconjunto** de cada descarga: las conversaciones que insertó o actualizó. Sin «Sobrescribir», las que ya existían no entran.
+  - Rutas internas `/insight-downloads` (lanzar, estado, log y subconjunto). Las descargas de FE011 no cambian de contrato y `insight_flow_id` solo aparece en las de una caja.
+  - La descarga exige que el flujo esté guardado en `insight_flow`: con la persistencia de FE015 siempre lo está; si no, la ingesta responde `404` y la caja termina en error con un mensaje que lo explica.
+  - El intervalo y la programación (`Interval`, `Schedule`, `resolve_interval`, `next_occurrence`) pasan a `app/flows/download_config.py`, un módulo puro que comparten la ingesta y la API; es la única excepción a la frontera de importaciones, y un test comprueba que no importa nada más de `app`.
+  - **Los flujos de insights se programan en la API**, no en la ingesta, porque sus ejecuciones viven en la memoria de la API: `app/flows/scheduler.py`, un hilo con tics de 30 s en el `lifespan` (`FLOW_SCHEDULER=0` lo apaga). Recuerda en memoria la última vez que miró cada flujo, así que tras un reinicio las ejecuciones perdidas no se recuperan, como en el programador de la ingesta.
+  - Ver la [spec](../../features/FE017-caja-genesys-en-flujos-insights/spec.md) y el [plan](../../features/FE017-caja-genesys-en-flujos-insights/plan.md).
 - **FE013 · escritura del LLM:** el servicio de ingesta sigue siendo el único escritor. `POST /analysis/fields` escribe summary y main topic generados por un flujo (solo campos vacíos salvo `overwrite`), con la trazabilidad en `analysis.llm_meta` (migración `0004`) y sin cambiar el `status`. La API lee summary y main topic aunque el resto del análisis siga pendiente. Ver [ADR-009](adr-009-servicio-llm-con-proveedores-intercambiables.md).
 
 ## Fuentes
 
+- [Spec FE017](../../features/FE017-caja-genesys-en-flujos-insights/spec.md)
+- [Programador de flujos de insights](../../backend/app/flows/scheduler.py)
+- [Migración 0008](../../backend/ingestion/migrations/0008_insight_downloads.sql)
 - [Spec FE015](../../features/FE015-persistencia-flujos-y-preferencias/spec.md)
 - [Spec FE011](../../features/FE011-ingesta-de-conversaciones-genesys/spec.md)
 - [Plan y evidencia de FE011](../../features/FE011-ingesta-de-conversaciones-genesys/plan.md)

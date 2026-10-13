@@ -63,6 +63,8 @@ Durante FE001, FE007, FE008, FE002, FE003, FE004, FE005, FE009, FE006, FE010 y F
 45. **FE013:** la forma REST de la guía de Gemini para pedir JSON (`responseFormat.text`) respondía `400` contra la API real; los tests con `MockTransport` solo comprobaban lo que el adaptador enviaba. Lo destapó una llamada real con la clave de la persona usuaria.
 46. **FE013:** dos conversaciones de voz sin transcripción recibieron un summary y un main topic inventados por el LLM, distintos en cada ejecución. Ningún test enviaba una conversación vacía; lo destapó comparar en el navegador el summary guardado con el recién generado.
 47. **FE013:** con la ventana de Chrome oculta (`visibilityState: hidden`), la extensión no entregaba el teclado y TanStack Query dejaba de sondear la ejecución: parecía un fallo de la aplicación. Rellenar con el `setter` nativo y navegar dentro de la app lo evitó.
+48. **FE017:** ampliar un campo de Pydantic a `int | Literal["all"]` cambió la ruta de sus errores a `size.constrained-int` y `size.literal['all']`, y rompió el contrato E5 que marca el campo en el editor (`nodes[0].config.size`). Lo detectaron los tests de rangos de FE004.
+49. **FE017:** un test de «intervalo en el futuro» usaba la fecha de referencia del dataset (`days_ago`) en lugar del reloj real y no fallaba como se esperaba.
 
 ## Causa
 
@@ -120,6 +122,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - FE003: test de despedidas en los representantes (< 10 %) y test de pares contra los turnos reales del dataset.
 - FE006: test de la casilla con un guardado lento, test de recarga de `/me` solo con cambio de versión y `tests/roles.py`.
 - FE010: `swagger-ui-react` fijado a `5.33.1`, con tests de búsqueda por «método ruta» y por varias palabras.
+- FE017: los tipos unión de Pydantic se validan con un validador `before` que lanza un único error con la ruta del campo; las comprobaciones que dependen de la hora usan el reloj real, nunca la fecha de referencia del dataset.
 - FE004: mock de React Flow con `contentRect` en `frontend/src/test/reactFlow.ts`, tests de ida y vuelta, test de arranque concurrente determinista y patrón de lienzo en [patrones de interfaz](../ingenieria/patrones-de-interfaz.md).
 
 ## Fuentes
@@ -136,5 +139,6 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 - [Plan y evidencia de FE011](../../features/FE011-ingesta-de-conversaciones-genesys/plan.md)
 - [Plan y evidencia de FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/plan.md)
 - [Plan y evidencia de FE013](../../features/FE013-servicio-llm-summary-main-topic/plan.md)
+- [Plan y evidencia de FE017](../../features/FE017-caja-genesys-en-flujos-insights/plan.md)
 - [swagger-ui-react · README](https://github.com/swagger-api/swagger-ui/blob/master/flavors/swagger-ui-react/README.md)
 - [HTML-AAM](https://www.w3.org/TR/html-aam-1.0/)

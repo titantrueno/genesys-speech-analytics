@@ -58,7 +58,7 @@
 | T5 ✅ | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
 | T6 ✅ | Front del editor: caja, reglas, panel del Sampling y textos | T2, T3 | 12, 13, 14, 16, 17 |
 | T7 ✅ | Front de la ejecución, historial y listado | T4, T5, T6 | 15, 9 (próxima ejecución en el listado) |
-| T8 | OpenAPI, conocimiento, recorrido en Chrome y gate | T1–T7 | 18, 20, 21 y conocimiento afectado |
+| T8 ✅ | OpenAPI, conocimiento, recorrido en Chrome y gate | T1–T7 | 18, 20, 21 y conocimiento afectado |
 
 ### T1 — Ingesta: descargas de una caja y subconjunto por ejecución
 - **Qué:**

@@ -131,6 +131,8 @@ Resumen. El contrato completo (parámetros, cuerpos, respuestas, formatos de err
 
 **Flujos de insights:** el prompt es simulado y determinista detrás de `PromptRunner` (`vault/decisiones/adr-006-ejecucion-de-prompts-simulada.md`). `FLOW_RUN_STEP_DELAY_MS` (15 por defecto) marca el ritmo de la ejecución para que el progreso sea visible.
 
+**Caja «Genesys download» (FE017):** un flujo de insights puede empezar descargando de Genesys a través del servicio de ingesta (necesita `INGESTION_URL` e `INGESTION_TOKEN`, como la persistencia de FE015). La API lanza los flujos con la caja programada con un hilo propio que arranca con ella; `FLOW_SCHEDULER=0` lo apaga.
+
 **Configuración y privacidad:** la configuración es global, en memoria y leída en cada petición (General, Origen de datos, Privacidad y Modelos de IA, además, se guardan en PostgreSQL a través del servicio de ingesta y se recuperan al arrancar, FE015); los datos personales se enmascaran por defecto, y el índice de búsqueda y los prompts usan siempre el texto enmascarado (`vault/decisiones/adr-007-configuracion-global-y-enmascarado.md`). Los días de los filtros se calculan en la zona horaria configurada.
 
 **Usuarios y roles:** toda escritura pasa por `UserStore.apply`, que rechaza con `409` lo que dejaría la plataforma sin administración: quitarse a uno mismo `users:admin`, dejar sin ningún `admin` activo o quitar `users:admin` al rol `admin`. Cada respuesta a una petición con sesión lleva `X-Auth-Version` (expuesta por CORS); el front recarga `/api/auth/me` cuando cambia (`vault/decisiones/adr-003-auth-mock-por-roles.md`).

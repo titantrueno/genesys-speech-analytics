@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [glosario, harness]
 created: 2026-09-27
-updated: 2026-10-12
+updated: 2026-10-13
 ---
 
 # Términos del harness
@@ -53,9 +53,14 @@ updated: 2026-10-12
 - **Expansión de consulta:** términos que el diccionario de sinónimos del dominio añade a una consulta (por ejemplo, «visa» → «tarjeta»).
 - **Flujo de insights:** grafo de nodos `Sampling → Prompt → Output` que toma una muestra de conversaciones, les aplica un prompt y produce un resultado. Tiene identificador `1FL` y se guarda como JSON ([arquitectura](../arquitectura/arquitectura-de-la-plataforma.md#flujos-de-insights-fe004)).
 - **Nodo:** caja de un flujo (`1ND`) de tipo Sampling, Prompt u Output, con su posición en el lienzo y su configuración.
-- **Conexión:** arista entre dos nodos de un flujo. Solo se admiten `Sampling → Prompt`, `Prompt → Prompt` y `Prompt → Output`, sin ciclos.
+- **Conexión:** arista entre dos nodos de un flujo. Solo se admiten `Genesys download → Sampling` (FE017), `Sampling → Prompt`, `Prompt → Prompt` y `Prompt → Output`, sin ciclos.
 - **Sampling:** selección de una muestra de conversaciones con los filtros del explorador y un método (aleatorio, estratificado o primeros N).
 - **Ejecución:** ejecución simulada (`1RN`) de la versión guardada de un flujo, con el estado de cada nodo (pendiente, en curso, ok o error), los resultados de cada output y una copia del grafo ejecutado ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
+- **Caja «Genesys download»:** nodo `descarga` de un flujo de insights (FE017) que descarga de Genesys transcripciones y analítica antes del Sampling. Se puede programar; como mucho hay una por flujo.
+- **Subconjunto de la descarga:** las conversaciones que la descarga de una caja insertó o actualizó; es lo único que recibe el Sampling de detrás.
+- **Ejecución end-to-end:** ejecución de un flujo con caja: descarga → sampling → prompt → output en una sola ejecución.
+- **All conversations:** opción del Sampling (`size: "all"`) que toma todas las conversaciones que cumplen los filtros, sin muestreo.
+- **Nodo omitido:** nodo que no se ejecuta porque la descarga de la caja no trajo conversaciones; no es un error.
 - **Configuración:** ajustes globales de la plataforma (no por usuario) que se aplican en caliente al resto de secciones: taxonomía, checks, KPIs, zona horaria, privacidad y modelo por defecto ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
 - **Taxonomía:** catálogo editable de main topics (`1TP`) y temas secundarios (`1TS`). Un tema en uso no se borra: se **desactiva**, deja de ofrecerse en los filtros y sus conversaciones lo conservan.
 - **Check por frases:** check de cumplimiento creado en Configuración que se cumple si el agente dice alguna de sus frases. Los seis checks de FE001 son **checks del análisis**: su resultado viene del análisis de cada conversación.
@@ -74,3 +79,4 @@ updated: 2026-10-12
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
 - [Spec FE006](../../features/FE006-gestion-de-usuarios-y-roles/spec.md)
+- [Spec FE017](../../features/FE017-caja-genesys-en-flujos-insights/spec.md)

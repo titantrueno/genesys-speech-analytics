@@ -169,6 +169,7 @@ Todos los errores llevan `detail`, pero su forma depende del endpoint. El front 
 | 29 | `PUT /api/flows/{id}/graph` | `flows:edit` | `flows/api.ts` |
 | 30 | `POST /api/flows/{id}/duplicate` | `flows:edit` | `flows/api.ts` |
 | 31–33 | `POST/GET /api/flows/{id}/runs`, `GET /api/flows/{id}/runs/{run_id}` | `flows:edit` / `flows:view` | `flows/api.ts` |
+| 33b | `GET /api/flows/{id}/runs/{run_id}/download` y `…/download/log` (FE017) | `flows:view` | `flows/RunPage.tsx`, `downloads/api.ts` |
 | 34 | `GET /api/config/public` | público | `config/api.ts` (layout y login) |
 | 35 | `GET /api/config` | `config:view` | `config/api.ts` |
 | 36–38 | `PUT /api/config/general`, `/privacy`, `/ai` | `config:edit` | `config/api.ts` |
@@ -406,8 +407,9 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
 - **Identificadores de nodo:** `1ND-…` o temporales `tmp-<1–40 caracteres>`. Al guardar, el backend asigna `1ND` a los temporales y devuelve `id_map`.
 - **Sampling:**
   - `method`: `aleatorio`, `estratificado` (exige `stratify_by`: `canal`, `cola` o `main_topic`) o `primeros_n` (exige `order_by`: `fecha`, `duracion`, `sentimiento` o `csat`, y `order`: `asc` o `desc`);
-  - `size` entre 1 y 1.000;
-  - `query` con el formato del explorador.
+  - `size` entre 1 y 1.000, o `"all"` («All conversations», FE017), que no exige método;
+  - `query` con el formato del explorador; detrás de una caja «Genesys download» es opcional y no se aplica su intervalo de fechas.
+- **Descarga (`descarga`, FE017):** `interval` (relativo u específico, como un flujo de descarga), `channels` (`voz`, `chat`), `overwrite`, `schedule` (`desactivada`, `cada_horas` o `diaria`; programada exige intervalo relativo) y `active`. Como mucho una por grafo.
 - **Prompt:**
   - `template` de hasta 4.000 caracteres, con variables `{{transcripcion}}`, `{{summary}}`, `{{main_topic}}`, `{{metadatos}}` y `{{resultado_anterior}}` (esta solo en prompts encadenados);
   - `provider` (FE013): `gemini`, `openai`, `anthropic` o `simulado`; sin él, el nodo es simulado (flujos anteriores);
@@ -417,18 +419,18 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
 - **Output:** `kind` es `tabla`, `metrica` (exige un prompt de etiqueta; `aggregation`: `recuento` o `porcentaje`), `informe` o `campo` (FE013); `destination` tiene hasta 80 caracteres y es único (no se pide en `campo`).
   - **`campo`** («Guardar en campos de la conversación»): hasta 60 `mappings: [{target, source?}]` (`source`, un campo del JSON del Prompt; sin él, la respuesta entera de un Prompt de texto o etiqueta, solo para summary o main topic) y `overwrite` (`false` por defecto). Solo con datos reales. Un Prompt JSON con varios campos guarda todos con una llamada por conversación.
   - `target` (FE014): `summary`, `main_topic`, `resolution`, `csat`, `effort`, `churn_risk`, `sentiment`, `secondary_topics`, `keywords`, `entity:<importe|producto|fecha|comercio>` o `compliance:<código de check>`. Cada destino exige un campo JSON de su tipo: texto con valores permitidos válidos para resolución, riesgo y checks (`cumple`, `no_cumple`, `no_aplica`), número para CSAT, esfuerzo y sentimiento, lista con temas secundarios activos o lista libre para palabras clave, y texto para entidades.
-- **Conexiones:** solo `sampling → prompt`, `prompt → prompt` y `prompt → output`, sin ciclos. Límites: 50 nodos y 100 conexiones.
+- **Conexiones:** solo `descarga → sampling` (FE017; la caja tiene una sola salida, rechazo `output_taken`), `sampling → prompt`, `prompt → prompt` y `prompt → output`, sin ciclos; un Sampling tiene como mucho una entrada. Límites: 50 nodos y 100 conexiones.
 - **Dos niveles de validación:**
   - **integridad**, siempre exigida al guardar (`422` E5: tipos, rangos, identificadores, conexiones imposibles);
-  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`; desde FE013, también `model_not_in_provider`, `provider_without_key`, `llm_unavailable`, `invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target` y `field_output_requires_real_data`, y el aviso (`severity: warning`) `simulated_values_to_real_data` cuando un Prompt simulado alimenta «Guardar en campos»; desde FE014, `unknown_check` (un `compliance:<código>` de un check borrado o desactivado).
+  - **completitud**, que no impide guardar, pero sí ejecutar. Devuelve incidencias E6 con `code`: `missing_sampling`, `missing_output`, `node_unconfigured`, `invalid_config`, `disconnected_node`, `prompt_without_variables`, `unknown_variable`, `previous_result_without_chain`, `metric_requires_labels` o `duplicate_destination`; desde FE013, también `model_not_in_provider`, `provider_without_key`, `llm_unavailable`, `invalid_mapping`, `summary_requires_text`, `main_topic_requires_taxonomy`, `duplicate_target` y `field_output_requires_real_data`, y el aviso (`severity: warning`) `simulated_values_to_real_data` cuando un Prompt simulado alimenta «Guardar en campos»; desde FE014, `unknown_check` (un `compliance:<código>` de un check borrado o desactivado); desde FE017, `download_needs_real_origin`, `ingestion_unavailable` y el aviso `large_sample` («All conversations» con más de 1.000 conversaciones).
 
 #### Endpoints
 
-- **`GET /api/flows`** → `{items: [{id, name, author: {id, name}, created_at, updated_at, status: "valido"|"con_errores", last_run: {id, created_at, status} | null}]}`, del modificado más recientemente al más antiguo.
+- **`GET /api/flows`** → `{items: [{id, name, author: {id, name}, created_at, updated_at, status: "valido"|"con_errores", last_run: {id, created_at, status} | null, next_run}]}`, del modificado más recientemente al más antiguo. `next_run` (FE017) es la próxima ejecución de un flujo con caja programada y activa, o `null`.
 - **`POST /api/flows`** `{name (1–80), template?}` → `201`, el flujo con su grafo vacío o, con `template` (`summary`, `main_topic`, `summary_main_topic`), ya configurado con la taxonomía activa y el proveedor por defecto (FE013); desde FE014, también `analisis_completo` («Generar análisis completo»), que responde `422` con el motivo si los checks activos no caben en una llamada.
 - **`GET /api/flows/catalog`** → opciones con `{value, label}` de `node_types`, `sampling_methods`, `strata`, `order_keys`, `orders`, `models`, `variables`, `output_formats`, `field_types`, `output_kinds`, `target_fields`, `templates` y `aggregations`; además, `providers` (con sus modelos y si admiten temperatura), `default_provider` y `default_model` (los de Configuración, que toma un Prompt nuevo), `origin` (origen de datos activo) y `limits` (con `max_mappings` desde FE014). `target_fields` lleva además `group` (`analisis`, `cumplimiento` o `entidades`) y un `compliance:<código>` por check activo (FE014).
 - **`POST /api/flows/validate`** (grafo) → `{valid, issues: [{code, message, node_id}]}`. Un grafo sin integridad responde `422` E5.
-- **`POST /api/flows/sampling/estimate`** `{query, size?}` → `{available, sample_size, period}`: cuántas conversaciones cumplen los filtros y cuántas tendría la muestra.
+- **`POST /api/flows/sampling/estimate`** `{query, size?, after_download?}` → `{available, sample_size, period}`: cuántas conversaciones cumplen los filtros y cuántas tendría la muestra. Con `size: "all"`, `sample_size` es `available`; con `after_download: true` (FE017) responde `{available: null, sample_size: null, period: null, depends_on_download: true}`.
 - **`GET /api/flows/{id}`** → el resumen más `graph`. **`PATCH`** `{name}` lo renombra. **`DELETE`** → `204` (borra también sus ejecuciones).
 - **`PUT /api/flows/{id}/graph`** (grafo completo, reemplaza el anterior) → el flujo más `id_map: {"tmp-s": "1ND-…"}`. El front reescribe sus claves con `id_map`.
 - **`POST /api/flows/{id}/duplicate`** → `201`, «Copia de …» con nodos `1ND` nuevos.
@@ -436,7 +438,8 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
   - `422` E6 si el flujo no es válido;
   - `409` si ya hay una ejecución en curso de ese flujo;
   - la ejecución corre en segundo plano, a un ritmo de `FLOW_RUN_STEP_DELAY_MS` (15 ms por elemento).
-- **`GET /api/flows/{id}/runs`** → `{items: [resumen]}`, de la más reciente a la más antigua. Se conservan las 50 últimas por flujo.
+- **`GET /api/flows/{id}/runs`** → `{items: [resumen]}`, de la más reciente a la más antigua. Se conservan las 50 últimas por flujo. Desde FE017, el resumen lleva `origin` (`manual` o `programada`; las programadas, con `user` `{id: "system", name: "Scheduler"}`).
+- **`GET /api/flows/{id}/runs/{run_id}/download`** (FE017) → el estado y los contadores de la descarga de la caja (esquema `DownloadRun`, con `flow_id: null` e `insight_flow_id`); `404` si la ejecución no tiene caja; `503` si la ingesta no responde. **`…/download/log`** → el log, con los mismos `after`, `level` y `format` que el de un flujo de descarga.
 - **`GET /api/flows/{id}/runs/{run_id}`** → la instantánea completa:
 
 ```json
@@ -450,7 +453,8 @@ Los main topics y temas secundarios desactivados no se ofrecen en `values`, pero
                                   "items": [{"label": "queja", "count": 1, "percent": 33.3}, "…"]}}}}
 ```
 
-- **Estados** (de la ejecución y de cada nodo): `pendiente`, `en_curso`, `ok` o `error`. `message` explica el error de un nodo.
+- **Estados** (de la ejecución y de cada nodo): `pendiente`, `en_curso`, `ok` o `error`. `message` explica el error de un nodo. Un nodo puede quedar además `omitido` (FE017) si la descarga de la caja no trajo conversaciones, con `message` «The download returned no conversations».
+- **FE017:** la instantánea lleva `origin`, `notes` (programadas omitidas o errores de validación de una programada) y `download` (`{node_id, run_id, status, counters, error}` o `null`).
 - **`result` según el tipo de output:**
   - `tabla`: `{rows: [{conversation: list_item, result}]}`, donde `result` es texto, etiqueta u objeto JSON según el prompt;
   - `metrica`: `{aggregation, total, items: [{label, count, percent}]}`, con porcentajes de un decimal que suman exactamente 100;
