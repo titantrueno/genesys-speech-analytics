@@ -171,7 +171,7 @@ function OriginCard({ origin, canEdit }: { origin: DataOrigin; canEdit: boolean 
           className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           <p>
             {target.value === 'real'
-              ? 'Todas las secciones pasarán a trabajar con las conversaciones reales de Genesys. El análisis de la plataforma (summary, main topic, CSAT…) aparecerá como pendiente.'
+              ? 'Todas las secciones pasarán a trabajar con las conversaciones reales de Genesys. El análisis de la plataforma (summary, main topic, CSAT…) aparecerá como pendiente hasta que lo genere un flujo de insights.'
               : 'Todas las secciones volverán a trabajar con el dataset sintético.'}
           </p>
           <div className="flex gap-2">

@@ -20,6 +20,8 @@ CHURN_RISKS = ("bajo", "medio", "alto")
 COMPLIANCE_ANSWERS = {"cumple": True, "no_cumple": False, "no_aplica": None}
 RANGES = {"csat": (1, 5), "effort": (1, 5), "sentiment": (-1, 1)}
 MAX_KEYWORDS = 10
+# Textos libres del LLM (hallazgo de /review): una respuesta desbocada no llega a la base ni a la interfaz.
+MAX_KEYWORD, MAX_ENTITY = 80, 200
 
 
 class ValueRejected(ValueError):
@@ -102,6 +104,8 @@ def coerce(target: str, value: Any) -> Any:
         if target == "keywords":
             if not all(values):
                 raise ValueRejected(f"{label}: hay una palabra clave vacía")
+            if any(len(v) > MAX_KEYWORD for v in values):
+                raise ValueRejected(f"{label}: una palabra clave pasa de {MAX_KEYWORD} caracteres")
             return values[:MAX_KEYWORDS]
         codes = []
         for item in values:
@@ -122,6 +126,8 @@ def coerce(target: str, value: Any) -> Any:
             raise ValueRejected(f"{label}: «{text[:80]}» no es cumple, no_cumple ni no_aplica")
         return answer
     if target.startswith(catalog.ENTITY_PREFIX):
+        if len(text) > MAX_ENTITY:
+            raise ValueRejected(f"{label}: pasa de {MAX_ENTITY} caracteres")
         return text or NO_VALUE
     if target == "summary":
         if not text:

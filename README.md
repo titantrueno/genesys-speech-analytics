@@ -2,7 +2,7 @@
 
 Plataforma web de analítica de conversaciones para la atención al cliente de un banco. Trabaja solo sobre **transcripciones de llamadas y chats** (nunca audio): dashboards de KPIs con drill-down al listado de conversaciones y un detalle de cada conversación como chat, con su análisis.
 
-> Por defecto la plataforma muestra datos **sintéticos**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). Un servicio de ingesta aparte (FE011) descarga conversaciones **reales** de Genesys Cloud a PostgreSQL y, desde FE012, **Configuración → Fuentes de datos** cambia toda la plataforma entre los dos orígenes. Con datos reales el análisis de la plataforma (summary, main topic, CSAT…) aparece como pendiente; desde FE013, un flujo de insights puede generar summary y main topic con un LLM (Gemini por defecto, u OpenAI o Anthropic) y guardarlos en las conversaciones. La API lee PostgreSQL con `DATABASE_URL` (solo lectura) y el origen vuelve a sintético al reiniciarla.
+> Por defecto la plataforma muestra datos **sintéticos**: se generan de forma determinista al arrancar el backend (1.000 conversaciones de los últimos 90 días). Un servicio de ingesta aparte (FE011) descarga conversaciones **reales** de Genesys Cloud a PostgreSQL y, desde FE012, **Configuración → Fuentes de datos** cambia toda la plataforma entre los dos orígenes. Con datos reales el análisis de la plataforma (summary, main topic, CSAT…) empieza pendiente; un flujo de insights lo genera con un LLM (Gemini por defecto, u OpenAI o Anthropic) y lo guarda en las conversaciones: summary y main topic desde FE013 y el resto del análisis desde FE014. Cada dato se muestra y cuenta en los KPIs en cuanto existe. La API lee PostgreSQL con `DATABASE_URL` (solo lectura) y el origen vuelve a sintético al reiniciarla.
 
 ## Estructura
 
@@ -64,7 +64,7 @@ El esquema se crea o actualiza al arrancar el servicio. Las descargas se crean e
 
 ### Servicio de LLM (FE013)
 
-Conecta los flujos de insights con un LLM para generar summary y main topic. Es otro proceso aparte y el único que lee las claves de los proveedores. En el `.env`: `LLM_TOKEN` y la clave de cada proveedor que uses (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
+Conecta los flujos de insights con un LLM para generar el análisis de las conversaciones reales. Es otro proceso aparte y el único que lee las claves de los proveedores. En el `.env`: `LLM_TOKEN` y la clave de cada proveedor que uses (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`).
 
 ```bash
 # Terminal 4 — servicio de LLM en http://localhost:8002 (/health sin token)
@@ -72,7 +72,7 @@ cd backend
 .venv/bin/uvicorn llm.main:app --port 8002
 ```
 
-El proveedor por defecto se elige en Configuración → Modelos de IA, que muestra qué proveedores tienen clave y permite «Probar». La plantilla «Generar summary y main topic» de «Nuevo flujo» obtiene los dos campos con una llamada por conversación. Ver el [runbook](vault/operaciones/runbook-servicio-llm.md).
+El proveedor por defecto se elige en Configuración → Modelos de IA, que muestra qué proveedores tienen clave y permite «Probar». La plantilla «Generar summary y main topic» de «Nuevo flujo» obtiene los dos campos con una llamada por conversación, y «Generar análisis completo» (FE014), todo el análisis: resolución, CSAT, esfuerzo, riesgo, sentimiento si Genesys no lo da, cada check activo, temas secundarios, palabras clave y entidades. Ver el [runbook](vault/operaciones/runbook-servicio-llm.md).
 
 ## Verificación
 

@@ -144,3 +144,32 @@ def test_a_conversation_whose_checks_do_not_apply_does_not_count_for_compliance(
     chat = next(c for c in get_dataset() if c.channel == "chat")
     unanalysed = chat.model_copy(update={"analysis": chat.analysis.model_copy(update={"compliance": {}, "pending": True})})
     assert has_compliance(unanalysed) is False
+
+
+# --- Hallazgos de /review ---
+
+def test_free_text_from_the_llm_has_a_maximum_length():
+    assert coerce("keywords", ["a" * 80]) == ["a" * 80]
+    with pytest.raises(ValueRejected, match="80"):
+        coerce("keywords", ["a" * 81])
+    assert coerce("entity:producto", "p" * 200) == "p" * 200
+    with pytest.raises(ValueRejected, match="200"):
+        coerce("entity:producto", "p" * 201)
+
+
+@pytest.mark.pg
+def test_the_ingestion_service_refuses_oversized_values(service, pg_url):
+    from tests.test_analysis_fields_pg import _post
+    cid = _ids(pg_url, 1)[0]
+    for values in ({"summary": "x" * 4001}, {"keywords": ["k"] * 101}, {"entity:importe": "€" * 4001}):
+        assert _post(service, [{"conversation_id": cid, "values": values}]).status_code == 422, values
+
+
+def test_a_taxonomy_too_large_for_the_template_is_explained(api, monkeypatch):
+    topics = get_config().secondary_topics
+    model = next(iter(topics.values()))
+    for i in range(catalog.MAX_OPTIONS + 1):
+        monkeypatch.setitem(topics, f"tema_{i}", replace(model, code=f"tema_{i}", name=f"Tema {i}", active=True))
+    response = api.post("/api/flows", json={"name": "x", "template": "analisis_completo"})
+    assert response.status_code == 422
+    assert "temas" in response.json()["detail"]

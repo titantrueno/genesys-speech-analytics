@@ -9,7 +9,7 @@ catálogo (con un check por cada check activo) y una línea de instrucciones por
 """
 from app.config.store import get_config
 from app.flows import catalog
-from app.flows.model import Graph, parse_graph
+from app.flows.model import Graph, GraphError, parse_graph
 
 TEMPLATES = {"summary": "Generar summary", "main_topic": "Generar main topic",
              "summary_main_topic": "Generar summary y main topic", "analisis_completo": "Generar análisis completo"}
@@ -114,4 +114,8 @@ def build(template: str) -> Graph:
         _node("tmp-output", "output", {"kind": "campo", "overwrite": False, "mappings": mappings}, 640),
     ]
     edges = [{"source": "tmp-sampling", "target": "tmp-prompt"}, {"source": "tmp-prompt", "target": "tmp-output"}]
-    return parse_graph({"version": 1, "nodes": nodes, "edges": edges})
+    try:
+        return parse_graph({"version": 1, "nodes": nodes, "edges": edges})
+    except GraphError:  # p. ej., más temas activos que valores permitidos (hallazgo de /review de FE014)
+        raise TemplateError(f"La taxonomía activa no cabe en la plantilla: un campo admite como mucho "
+                            f"{catalog.MAX_OPTIONS} valores permitidos y hay más temas activos.") from None

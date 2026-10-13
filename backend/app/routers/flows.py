@@ -124,7 +124,8 @@ def flow_catalog() -> dict:
         "limits": {
             "max_sample_size": catalog.MAX_SAMPLE_SIZE, "max_template": catalog.MAX_TEMPLATE,
             "max_labels": catalog.MAX_LABELS, "max_label": catalog.MAX_LABEL, "max_fields": catalog.MAX_FIELDS,
-            "max_field_name": catalog.MAX_FIELD_NAME, "max_mappings": catalog.MAX_MAPPINGS, "max_destination": catalog.MAX_DESTINATION,
+            "max_field_name": catalog.MAX_FIELD_NAME, "max_mappings": catalog.MAX_MAPPINGS,
+            "max_destination": catalog.MAX_DESTINATION,
             "max_flow_name": catalog.MAX_FLOW_NAME, "max_nodes": catalog.MAX_NODES, "max_edges": catalog.MAX_EDGES,
         },
     }

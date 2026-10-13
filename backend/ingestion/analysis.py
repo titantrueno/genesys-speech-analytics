@@ -35,12 +35,14 @@ ENTITY_TYPES = ("importe", "producto", "fecha", "comercio")
 ENTITY_TARGET = re.compile(rf"^entity:({'|'.join(ENTITY_TYPES)})$")
 KEYED = {"compliance": CHECK_TARGET, "entities": ENTITY_TARGET}
 MAX_ITEMS = 100
+# Límites de forma (hallazgo de /review de FE014): la API ya acota cada destino; esto protege la base.
+MAX_TEXT, MAX_LIST = 4000, 100
 KEPT, GENESYS_SENTIMENT = "Ya tenía valor", "Genesys ya da el sentimiento"
 
 
 def _text(value: Any) -> bool:
     # Un texto vacío dejaría el campo «escrito» pero vacío, y la siguiente ejecución lo volvería a tomar por pendiente.
-    return isinstance(value, str) and bool(value.strip())
+    return isinstance(value, str) and bool(value.strip()) and len(value) <= MAX_TEXT
 
 
 def _number(value: Any) -> bool:
@@ -49,11 +51,12 @@ def _number(value: Any) -> bool:
 
 def _shape_error(target: str, value: Any) -> str | None:
     if target in TEXT_COLUMNS:
-        return None if _text(value) else "se espera un texto no vacío"
+        return None if _text(value) else f"se espera un texto no vacío de hasta {MAX_TEXT} caracteres"
     if target in NUMBER_COLUMNS:
         return None if _number(value) else "se espera un número"
     if target in LIST_COLUMNS:
-        return None if isinstance(value, list) and all(_text(v) for v in value) else "se espera una lista de textos"
+        valid = isinstance(value, list) and len(value) <= MAX_LIST and all(_text(v) for v in value)
+        return None if valid else f"se espera una lista de hasta {MAX_LIST} textos"
     if CHECK_TARGET.match(target):
         return None if value is None or isinstance(value, bool) else "se espera true, false o null"
     if ENTITY_TARGET.match(target):

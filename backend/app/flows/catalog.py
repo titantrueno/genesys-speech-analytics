@@ -66,7 +66,6 @@ ANALYSIS_TARGETS = {"summary": "Summary", "main_topic": "Main topic", "resolutio
                     "keywords": "Palabras clave"}
 ENTITY_TYPES = {"importe": "Importe", "producto": "Producto", "fecha": "Fecha", "comercio": "Comercio"}
 CHECK_PREFIX, ENTITY_PREFIX = "compliance:", "entity:"
-TARGET_GROUPS = {"analisis": "Análisis", "cumplimiento": "Cumplimiento", "entidades": "Entidades"}
 # Destinos que no dependen de la configuración; un `compliance:` se acepta al guardar si su código tiene la forma de
 # un código de check, y la completitud comprueba que el check existe y está activo.
 FIXED_TARGETS = {**ANALYSIS_TARGETS, **{f"{ENTITY_PREFIX}{t}": label for t, label in ENTITY_TYPES.items()}}
