@@ -3,7 +3,7 @@ title: "ADR-007 — Configuración global en memoria, leída en caliente, y enma
 type: adr
 status: active
 owners: [equipo-del-proyecto]
-tags: [adr, configuracion, privacidad, pii, cumplimiento, fe005, fe014]
+tags: [adr, configuracion, privacidad, pii, cumplimiento, fe005, fe014, fe015]
 created: 2026-09-29
 updated: 2026-10-13
 ---
@@ -46,6 +46,7 @@ FE005 hace editables la taxonomía, los checks de cumplimiento, los umbrales de 
 
 - **FE012 (2026-10-12):** el **origen de datos** (`sintetico` o `real`) es una sección más (`fuentes`), global, auditada, en memoria y con `sintetico` por defecto. El ANI, el DNIS y el `externalTag` **no se enmascaran** en este desarrollo (se muestran, se buscan y se filtran); el texto de los turnos y las frases de los temas sí. Con datos reales se pueden contrastar los formatos de PII que se escapan: queda como hipótesis a validar con conversaciones de más días.
 - **FE013 (2026-10-12):** «Modelos de IA» ya no es una lista mock: proveedores Gemini (por defecto, `gemini-3.5-flash-lite`), OpenAI, Anthropic y Simulado, con el estado de las claves del servicio de LLM y «Probar» ([ADR-009](adr-009-servicio-llm-con-proveedores-intercambiables.md)). Las claves nunca están en la configuración. **Taxonomía:** borrar un main topic comprueba también las conversaciones reales de PostgreSQL, sea cual sea el origen activo (`409` con el recuento de cada origen; `503` si la base no responde), porque un flujo puede haberlo escrito en ellas. Los prompts que salen hacia un proveedor externo usan el texto enmascarado de esta decisión.
+- **FE015 (2026-10-13):** las secciones **General, Origen de datos, Privacidad y Modelos de IA** se guardan en PostgreSQL a través del servicio de ingesta y se recuperan al arrancar, así que ya no se pierden al reiniciar; siguen siendo globales, no por persona. La taxonomía, los checks, los KPIs y la auditoría siguen en memoria. Un cambio que no se puede guardar responde `503` y no se aplica ni se audita; si la configuración guardada no se puede leer al arrancar, la API usa los valores por defecto y lo reintenta cada 5 s ([spec FE015](../../features/FE015-persistencia-flujos-y-preferencias/spec.md)).
 - **FE014 (2026-10-13):** el cumplimiento de un check tiene un cuarto estado, **pendiente**, además de cumple, no cumple y no aplica (`app/config/compliance.py`). Orden de evaluación: un check que no aplica al canal es «no aplica»; si no, manda el **resultado guardado** en el análisis (el sintético o el que escribe un flujo con LLM, que puede rellenar cualquier check activo, también los personalizados); sin él, un check base queda pendiente y uno personalizado se evalúa por frases. Una conversación cuenta para el KPI de cumplimiento y para el filtro «cumple» si algún check que le aplica tiene resultado. La caché del cumplimiento efectivo se invalida también cuando cambia la conversación (una recarga de las reales), no solo la configuración. Un check creado después de ejecutar un flujo queda pendiente en las conversaciones reales hasta otra ejecución.
 
 ## Fuentes
@@ -56,4 +57,5 @@ FE005 hace editables la taxonomía, los checks de cumplimiento, los umbrales de 
 - [Enmascarado](../../backend/app/privacy/masking.py)
 - [Cumplimiento efectivo](../../backend/app/config/compliance.py)
 - [Spec FE014](../../features/FE014-analisis-completo-con-llm/spec.md)
+- [Spec FE015](../../features/FE015-persistencia-flujos-y-preferencias/spec.md)
 - [Gobierno del vault](../Governance.md)

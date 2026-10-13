@@ -94,7 +94,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 
 ### Configuración (FE005)
 
-- **Modelo:** una instantánea inmutable (`Config`) con versión: General, conectores, taxonomía, checks, KPIs, privacidad e IA. Es global, vive en memoria y se pierde al reiniciar. Toda escritura pasa por `apply_change`, que guarda y audita (`1AU`) bajo el mismo cerrojo ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
+- **Modelo:** una instantánea inmutable (`Config`) con versión: General, conectores, taxonomía, checks, KPIs, privacidad e IA. Es global y vive en memoria; desde FE015, General, Origen de datos, Privacidad y Modelos de IA se guardan en PostgreSQL a través del servicio de ingesta y se recuperan al arrancar. Toda escritura pasa por `apply_change`, que guarda y audita (`1AU`) bajo el mismo cerrojo ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
 - **Lectura en caliente:** ningún módulo fuera de `app/data/` y `app/config/` importa el catálogo fijo de FE001 (hay un test estructural). Los nombres de los topics salen de `topic_name()`, los campos del explorador de `get_fields()` y el cumplimiento de `effective_compliance()`, cacheados por identidad de instantánea.
 - **Propagación:**
   - **taxonomía:** `/api/catalog` (con `active`), esquema del explorador (que también usa el Sampling de FE004), etiquetas del listado, detalle, desgloses e informes;
@@ -169,13 +169,13 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 
 ## Límites y excepciones
 
-- Sin persistencia en la API: todo cambio de estado se pierde al reiniciar la API. La excepción son las conversaciones reales y los flujos de descarga (FE011), que guarda el servicio de ingesta en PostgreSQL. Desde FE012 la plataforma las muestra: el **origen de datos** se elige en Configuración → Fuentes de datos y toda la API lee del repositorio activo.
+- Sin persistencia propia en la API: lo que no guarda el servicio de ingesta se pierde al reiniciarla. El servicio de ingesta guarda en PostgreSQL las conversaciones reales y los flujos de descarga (FE011), y los flujos de insights y las preferencias de la configuración (FE015); si no responde, esos cambios se rechazan con `503`. Desde FE012 la plataforma las muestra: el **origen de datos** se elige en Configuración → Fuentes de datos y toda la API lee del repositorio activo.
 - **FCR:** para conversaciones de los últimos 7 días del dataset aún no ha pasado la ventana de recontacto, así que su FCR es optimista. Es un **hecho** del cálculo que hay que tener en cuenta al comparar periodos recientes.
 - El análisis (summary, main topic, sentimiento, CSAT…) sale de reglas del generador, no de un modelo.
 - Desde FE005, los DNI e IBAN ficticios de las conversaciones de voz se enmascaran por defecto y nunca llegan al índice de búsqueda ni a los prompts. Los patrones son españoles más email y tarjeta completa; con datos reales podrían escaparse formatos no previstos (hipótesis, [ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)).
-- La configuración es global y en memoria: se pierde al reiniciar, y si dos administradores la editan a la vez gana la última escritura.
+- La configuración es global: la taxonomía, los checks y los KPIs se pierden al reiniciar (General, Origen de datos, Privacidad y Modelos de IA se conservan desde FE015), y si dos administradores la editan a la vez gana la última escritura.
 - Usuarios y roles creados desde la UI se pierden al reiniciar (fuera de alcance de FE006). La contraseña demo es la misma para todos, también para los usuarios nuevos ([ADR-003](../decisiones/adr-003-auth-mock-por-roles.md)).
-- Flujos y ejecuciones viven en memoria. Si dos personas guardan el mismo flujo, gana el último guardado. Los resultados del prompt son simulados ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
+- Los flujos de insights se conservan al reiniciar (FE015); sus ejecuciones viven en memoria y se pierden. Si dos personas guardan el mismo flujo, gana el último guardado. Los resultados del prompt son simulados ([ADR-006](../decisiones/adr-006-ejecucion-de-prompts-simulada.md)).
 - La búsqueda semántica es léxica: sus limitaciones medidas (puntuaciones bajas, dependencia del diccionario, sesgo hacia texto plantillado) están en [ADR-005](../decisiones/adr-005-busqueda-vectorial-ligera.md).
 
 ## Fuentes

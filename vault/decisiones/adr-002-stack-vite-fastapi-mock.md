@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [adr, stack, frontend, backend, mock]
 created: 2026-09-27
-updated: 2026-10-12
+updated: 2026-10-13
 ---
 
 # ADR-002 — Stack Vite + FastAPI con datos mock deterministas
@@ -35,6 +35,7 @@ La plataforma de speech & text analytics para la atención al cliente del banco 
 
 ## Ampliaciones
 
+- **FE015 (2026-10-13):** los flujos de insights y las secciones General, Origen de datos, Privacidad y Modelos de IA de la configuración dejan de perderse al reiniciar: los guarda el servicio de ingesta en PostgreSQL ([ADR-008](adr-008-postgresql-y-servicio-de-ingesta.md), [spec FE015](../../features/FE015-persistencia-flujos-y-preferencias/spec.md)).
 - **FE012 (2026-10-12):** se cumple la consecuencia de la capa de repositorio. Los servicios obtienen las conversaciones de `ConversationRepository` (`backend/app/data/repository.py`), con dos orígenes: el dataset sintético en memoria y las conversaciones reales de PostgreSQL, que la API lee **directamente y en solo lectura** (`app/data/real.py`, sin importar `ingestion`). La instantánea completa se guarda con un testigo `(recuento, última actualización)` que se consulta una vez por petición, así que los datos nuevos aparecen en la siguiente sin canal de avisos entre procesos. El origen es una sección más de la configuración global ([plan FE012](../../features/FE012-switch-entre-datos-sinteticos-reales/plan.md)).
 - **FE011 (2026-10-12):** la alternativa «Base de datos (pospuesta)» se resuelve con **PostgreSQL** para las conversaciones reales de Genesys, que descarga y guarda un servicio de ingesta aparte ([ADR-008](adr-008-postgresql-y-servicio-de-ingesta.md)). El backend añade `psycopg[binary]` (3.3, LGPL-3.0). El dataset mock, la configuración, los usuarios y los flujos de insights siguen en memoria.
 - **FE010 (2026-10-03):** el front añade `swagger-ui-react` (Apache-2.0) para la pestaña «API» de Configuración. Va en un chunk diferido (unos 1,3 MB, 363 kB gzip, más 184 kB de CSS) que solo se descarga al abrir la pestaña; la carga inicial no cambia. Consecuencias aceptadas:
