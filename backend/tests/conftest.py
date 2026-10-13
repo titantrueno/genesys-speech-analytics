@@ -8,6 +8,9 @@ os.environ.setdefault("FLOW_RUN_STEP_DELAY_MS", "0")
 os.environ["DATABASE_URL"] = ""
 # Ni el servicio de LLM real (FE013): sin token, el cliente lo da por no disponible. Los tests usan un doble.
 os.environ["LLM_TOKEN"] = ""
+# Ni el servicio de ingesta (FE015): sin token, los flujos de insights y la configuración viven solo en memoria. Los
+# tests que los guardan pasan su propio almacén a `reset_flow_store` y `reset_config_store`.
+os.environ["INGESTION_TOKEN"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

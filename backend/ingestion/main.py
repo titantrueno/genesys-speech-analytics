@@ -24,6 +24,7 @@ from ingestion.pipeline.read import read_conversation
 from ingestion.scheduler import Job, Scheduler
 from ingestion.security import internal_token_guard
 from ingestion.settings import Settings, load_settings
+from ingestion.state import build_state_router
 
 VERSION = "0.11.0"  # se entrega con la plataforma
 MAX_PARALLEL_RUNS = 2
@@ -88,6 +89,7 @@ def create_app(settings: Settings | None = None, migrate_on_start: bool = True,
     app.include_router(build_router(ctx))
     app.include_router(build_status_router(ctx))
     app.include_router(build_analysis_router(settings.database_url, clock))
+    app.include_router(build_state_router(settings.database_url, clock))
     return app
 
 

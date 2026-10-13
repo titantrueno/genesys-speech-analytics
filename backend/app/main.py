@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app import auth
+from app.config.store import get_config
 from app.data.real import begin_request
 from app.data.repository import DataUnavailable
 from app.openapi.spec import API_VERSION, build_openapi
@@ -18,6 +19,7 @@ from app.routers import metrics as metrics_router
 from app.routers import query as query_router
 from app.routers import search as search_router
 from app.routers import users as users_router
+from app.state_backend import StateUnavailable
 
 
 AUTH_VERSION_HEADER = "X-Auth-Version"
@@ -26,7 +28,9 @@ DATA_UNAVAILABLE = "Los datos reales no están disponibles"
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # El índice de búsqueda se construye al arrancar, no en la primera búsqueda (FE003).
+    # La configuración guardada (el origen de datos, FE015) se carga antes de construir el índice de búsqueda, que se
+    # construye al arrancar y no en la primera búsqueda (FE003).
+    get_config()
     search_router.search_index.engine()
     yield
 
@@ -63,6 +67,11 @@ def create_app() -> FastAPI:
     async def data_unavailable(_: Request, __: DataUnavailable) -> JSONResponse:
         """El origen `real` no responde (FE012, criterio 3): las secciones de datos caen; Configuración sigue sirviendo."""
         return JSONResponse({"detail": DATA_UNAVAILABLE}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    @app.exception_handler(StateUnavailable)
+    async def state_unavailable(_: Request, exc: StateUnavailable) -> JSONResponse:
+        """No se pueden leer o guardar los flujos de insights o la configuración (FE015): el cambio no se aplica."""
+        return JSONResponse({"detail": exc.detail}, status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
 
     @app.get("/api/health")
     def health() -> dict:
