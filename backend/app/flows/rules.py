@@ -24,6 +24,8 @@ FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 # Proveedores con clave configurada según el servicio de LLM, o `None` si no responde (FE013). Se consulta una vez por
 # validación y solo si algún Prompt usa un proveedor real.
 LlmKeys = Callable[[], dict[str, bool] | None]
+# Si el servicio de ingesta responde (FE017): solo se consulta si el grafo tiene una caja «Genesys download».
+IngestionUp = Callable[[], bool]
 
 
 def active_origin() -> str:
@@ -66,7 +68,7 @@ def _missing(pairs: list[tuple[str, bool]]) -> list[str]:
     return [label for label, present in pairs if not present]
 
 
-def _download(node: DownloadNode) -> list[Issue]:
+def _download(node: DownloadNode, ingestion: IngestionUp | None = None) -> list[Issue]:
     """Caja «Genesys download» (FE017, criterio 3): completa, con datos reales y sin terminar en el futuro."""
     cfg = node.config
     missing = _missing([("interval", cfg.interval is not None), ("channels", bool(cfg.channels))])
@@ -76,6 +78,8 @@ def _download(node: DownloadNode) -> list[Issue]:
     interval = cfg.interval.root if cfg.interval is not None else None
     if isinstance(interval, SpecificInterval) and _localize(interval.to, get_config().general.timezone) > now():
         issues.append(Issue("invalid_config", "The interval cannot end in the future.", node.id))
+    if ingestion is not None and not ingestion():
+        issues.append(Issue("ingestion_unavailable", "The ingestion service is not available.", node.id))
     return issues
 
 
@@ -325,8 +329,9 @@ def _once(llm_keys: LlmKeys | None) -> LlmKeys | None:
     return read
 
 
-def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
-    """Sin `llm_keys` no se comprueban las claves de los proveedores (las reglas siguen siendo puras en los tests)."""
+def validate(graph: Graph, llm_keys: LlmKeys | None = None, ingestion: IngestionUp | None = None) -> list[Issue]:
+    """Sin `llm_keys` no se comprueban las claves de los proveedores, ni sin `ingestion` el servicio de ingesta (las
+    reglas siguen siendo puras en los tests)."""
     llm_keys = _once(llm_keys)
     types = [n.type for n in graph.nodes]
     issues: list[Issue] = []
@@ -338,7 +343,7 @@ def validate(graph: Graph, llm_keys: LlmKeys | None = None) -> list[Issue]:
     targets: set[str] = set()
     for node in graph.nodes:
         if isinstance(node, DownloadNode):
-            issues += _download(node)
+            issues += _download(node, ingestion)
         elif isinstance(node, SamplingNode):
             issues += _sampling(node, graph)
         elif isinstance(node, PromptNode):

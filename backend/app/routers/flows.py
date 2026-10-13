@@ -2,7 +2,7 @@
 import copy
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Response, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.auth import User, require_permission
@@ -11,6 +11,9 @@ from app.data.store import get_dataset
 from app.flows import catalog, templates
 from app.flows.model import Graph, GraphError, parse_graph
 from app.flows.analysis_writer import AnalysisWriter, get_analysis_writer
+from app.flows.downloader import Downloader, DownloaderUnavailable, get_downloader
+from app.ingestion_client import UNAVAILABLE
+from app.routers.downloads import relay
 from app.flows.llm_runner import build_runner
 from app.flows.prompting import PromptRunner
 from app.flows.runs import FlowExecutor, Run, get_run_store, step_delay_seconds
@@ -142,8 +145,9 @@ def flow_catalog() -> dict:
 
 
 @router.post("/validate", dependencies=[Depends(VIEW)])
-def validate_graph(graph: Graph = Depends(parsed_graph), client: LlmClient = Depends(get_llm_client)) -> dict:
-    issues = validate(graph, llm_keys(client))
+def validate_graph(graph: Graph = Depends(parsed_graph), client: LlmClient = Depends(get_llm_client),
+                   downloader: Downloader = Depends(get_downloader)) -> dict:
+    issues = validate(graph, llm_keys(client), downloader.available)
     return {"valid": not blocking(issues), "issues": [issue.to_dict() for issue in issues]}
 
 
@@ -199,16 +203,17 @@ def delete_flow(flow_id: str) -> Response:
 def start_run(flow_id: str, background: BackgroundTasks, user: User = Depends(EDIT),
               runner: PromptRunner = Depends(get_prompt_runner),
               client: LlmClient = Depends(get_llm_client),
-              writer: AnalysisWriter = Depends(get_analysis_writer)) -> dict:
+              writer: AnalysisWriter = Depends(get_analysis_writer),
+              downloader: Downloader = Depends(get_downloader)) -> dict:
     flow = _flow(flow_id)
-    issues = blocking(validate(flow.graph, llm_keys(client)))
+    issues = blocking(validate(flow.graph, llm_keys(client), downloader.available))
     if issues:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, detail=[issue.to_dict() for issue in issues])
     run = get_run_store().start(flow, user)
     if run is None:
         raise HTTPException(status.HTTP_409_CONFLICT, detail="This flow is already running")
     snapshot = run.snapshot()
-    background.add_task(FlowExecutor(runner, step_delay_seconds(), writer=writer).execute, run)
+    background.add_task(FlowExecutor(runner, step_delay_seconds(), writer=writer, downloader=downloader).execute, run)
     return snapshot
 
 
@@ -227,3 +232,39 @@ def list_runs(flow_id: str) -> dict:
 @router.get("/{flow_id}/runs/{run_id}", dependencies=[Depends(VIEW)])
 def get_run(flow_id: str, run_id: str) -> dict:
     return _run(flow_id, run_id).snapshot()
+
+
+def _download_id(flow_id: str, run_id: str) -> str:
+    download = _run(flow_id, run_id).snapshot()["download"]
+    if not download:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="This run has no Genesys download")
+    return download["run_id"]
+
+
+@router.get("/{flow_id}/runs/{run_id}/download", dependencies=[Depends(VIEW)])
+def get_run_download(flow_id: str, run_id: str, downloader: Downloader = Depends(get_downloader)) -> dict:
+    """Estado y contadores de la descarga de la caja «Genesys download» de una ejecución (FE017, criterio 5)."""
+    download_id = _download_id(flow_id, run_id)
+    try:
+        return downloader.status(download_id)
+    except DownloaderUnavailable:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=UNAVAILABLE) from None
+
+
+@router.get("/{flow_id}/runs/{run_id}/download/log", dependencies=[Depends(VIEW)])
+def get_run_download_log(flow_id: str, run_id: str, after: int = Query(0, ge=0),
+                         level: str | None = Query(None, pattern="^(info|aviso|error)$"),
+                         format: str = Query("json", pattern="^(json|text)$"),  # noqa: A002
+                         downloader: Downloader = Depends(get_downloader)):
+    """Log de la descarga de la caja, con los mismos filtros que el log de un flujo de descarga (FE011, criterio 18)."""
+    download_id = _download_id(flow_id, run_id)
+    params = {"after": after, "format": format, **({"level": level} if level else {})}
+    try:
+        response = downloader.log(download_id, params)
+    except DownloaderUnavailable:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail=UNAVAILABLE) from None
+    if format == "text" and response.status_code == status.HTTP_200_OK:
+        return Response(response.content, media_type="text/plain; charset=utf-8",
+                        headers={"Content-Disposition": response.headers.get("content-disposition", "attachment")})
+    return relay(response)
+

@@ -2315,6 +2315,175 @@ paths:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
       description: 'Permission: `flows:view`. Snapshot with the status of each node and the results of each Output.'
+  /api/flows/{flow_id}/runs/{run_id}/download:
+    get:
+      tags:
+      - flows
+      summary: Download of the run
+      description: 'Permission: `flows:view`. Status and counters of the download of the Genesys download box of the run (FE017).
+        `404` if the run has no box.'
+      operationId: get_run_download_api_flows__flow_id__runs__run_id__download_get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id011
+                $ref: '#/components/schemas/DownloadRun'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Missing permission `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: It does not exist (or the identifier is of another type).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Invalid parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: The ingestion service is not available.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+  /api/flows/{flow_id}/runs/{run_id}/download/log:
+    get:
+      tags:
+      - flows
+      summary: Download log of the run
+      description: 'Permission: `flows:view`. Log of the download of the Genesys download box, with the same `after`, `level`
+        and `format` as a download flow log. It never contains the text of the turns or secrets.'
+      operationId: get_run_download_log_api_flows__flow_id__runs__run_id__download_log_get
+      parameters:
+      - name: flow_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Flow Id
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: After
+      - name: level
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^(info|aviso|error)$
+          - type: 'null'
+          title: Level
+      - name: format
+        in: query
+        required: false
+        schema:
+          type: string
+          pattern: ^(json|text)$
+          default: json
+          title: Format
+      responses:
+        '200':
+          description: Correcto.
+          content:
+            application/json:
+              schema: &id012
+                $ref: '#/components/schemas/DownloadLog'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '401':
+          description: 'No valid session: the token is missing, tampered with or expired, or the user is deactivated.'
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '403':
+          description: Missing permission `flows:view`.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '404':
+          description: It does not exist (or the identifier is of another type).
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '422':
+          description: Invalid parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
+        '503':
+          description: The ingestion service is not available.
+          content:
+            application/json:
+              schema: *id001
+          headers:
+            X-Auth-Version:
+              $ref: '#/components/headers/XAuthVersion'
   /api/download-flows:
     get:
       tags:
@@ -2651,8 +2820,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id011
-                $ref: '#/components/schemas/DownloadRun'
+              schema: *id011
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2890,8 +3058,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema:
-                $ref: '#/components/schemas/DownloadLog'
+              schema: *id012
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -2964,7 +3131,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id012
+              schema: &id013
                 $ref: '#/components/schemas/PlatformConfig'
           headers:
             X-Auth-Version:
@@ -3003,7 +3170,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id012
+              schema: *id013
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3061,7 +3228,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id012
+              schema: *id013
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3117,7 +3284,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id012
+              schema: *id013
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3174,7 +3341,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id012
+              schema: *id013
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3522,7 +3689,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id020
+              schema: &id021
                 $ref: '#/components/schemas/AuditLog'
           headers:
             X-Auth-Version:
@@ -3608,16 +3775,16 @@ paths:
           application/json:
             schema:
               oneOf:
-              - &id013
-                $ref: '#/components/schemas/MainTopicIn'
               - &id014
+                $ref: '#/components/schemas/MainTopicIn'
+              - &id015
                 $ref: '#/components/schemas/SecondaryTopicIn'
       responses:
         '201':
           description: Correcto.
           content:
             application/json:
-              schema: &id015
+              schema: &id016
                 $ref: '#/components/schemas/TaxonomyTopic'
           headers:
             X-Auth-Version:
@@ -3679,14 +3846,14 @@ paths:
           application/json:
             schema:
               oneOf:
-              - *id013
               - *id014
+              - *id015
       responses:
         '200':
           description: Correcto.
           content:
             application/json:
-              schema: *id015
+              schema: *id016
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -3847,14 +4014,14 @@ paths:
         required: true
         content:
           application/json:
-            schema: &id016
+            schema: &id017
               $ref: '#/components/schemas/CheckIn'
       responses:
         '201':
           description: Correcto.
           content:
             application/json:
-              schema: &id017
+              schema: &id018
                 $ref: '#/components/schemas/ComplianceCheck'
           headers:
             X-Auth-Version:
@@ -3905,13 +4072,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: *id016
+            schema: *id017
       responses:
         '200':
           description: Correcto.
           content:
             application/json:
-              schema: *id017
+              schema: *id018
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -4041,7 +4208,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id012
+              schema: *id013
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -4159,7 +4326,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: &id018
+            schema: &id019
               $ref: '#/components/schemas/UserIn'
             example:
               name: Lucía Pérez
@@ -4170,7 +4337,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id019
+              schema: &id020
                 $ref: '#/components/schemas/ManagedUser'
           headers:
             X-Auth-Version:
@@ -4230,13 +4397,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: *id018
+            schema: *id019
       responses:
         '200':
           description: Correcto.
           content:
             application/json:
-              schema: *id019
+              schema: *id020
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -4300,7 +4467,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id020
+              schema: *id021
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -4375,7 +4542,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: &id021
+              schema: &id022
                 $ref: '#/components/schemas/RoleItem'
           headers:
             X-Auth-Version:
@@ -4441,7 +4608,7 @@ paths:
           description: Correcto.
           content:
             application/json:
-              schema: *id021
+              schema: *id022
           headers:
             X-Auth-Version:
               $ref: '#/components/headers/XAuthVersion'
@@ -6034,8 +6201,18 @@ components:
           title: Id
           type: string
         flow_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: Download flow; `null` in the download of a Genesys download box.
           title: Flow Id
-          type: string
+        insight_flow_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          description: Only in the download of a Genesys download box (FE017).
+          title: Insight Flow Id
         origin:
           enum:
           - manual
@@ -6590,6 +6767,7 @@ components:
           - unknown_check
           - download_needs_real_origin
           - large_sample
+          - ingestion_unavailable
           title: Code
           type: string
         message:
@@ -7576,6 +7754,7 @@ components:
           - en_curso
           - ok
           - error
+          - omitido
           title: Status
           type: string
         processed:
@@ -8319,6 +8498,11 @@ components:
           description: Per Prompt node with an LLM, the conversations excluded from the outputs (FE013).
           title: Failures
           type: object
+        download:
+          anyOf:
+          - $ref: '#/components/schemas/RunDownload'
+          - type: 'null'
+          description: Download of the Genesys download box (FE017); `null` in a flow without a box.
       required:
       - id
       - created_at
@@ -8334,7 +8518,45 @@ components:
       - nodes
       - outputs
       - failures
+      - download
       title: Run
+      type: object
+    RunDownload:
+      additionalProperties: false
+      properties:
+        node_id:
+          title: Node Id
+          type: string
+        run_id:
+          description: '`1RN-…` of the download in the ingestion service.'
+          title: Run Id
+          type: string
+        status:
+          enum:
+          - pendiente
+          - en_curso
+          - completada
+          - completada_con_avisos
+          - error
+          title: Status
+          type: string
+        counters:
+          additionalProperties: true
+          description: Counters of the download (as in a download flow run).
+          title: Counters
+          type: object
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+      required:
+      - node_id
+      - run_id
+      - status
+      - counters
+      - error
+      title: RunDownload
       type: object
     RunList:
       additionalProperties: false

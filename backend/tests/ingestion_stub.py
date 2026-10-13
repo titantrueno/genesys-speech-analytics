@@ -38,6 +38,7 @@ class Stub:
         self.runs: dict[str, dict] = {}
         self.received: list[tuple[str, str, object]] = []
         self.active = False  # con `True`, lanzar responde 409
+        self.subset: list[str] = []  # conversaciones que «descarga» la caja de un flujo de insights (FE017)
         self.app = self._build()
 
     def _build(self) -> FastAPI:
@@ -129,6 +130,37 @@ class Stub:
                 return PlainTextResponse("".join(f"{e['at']} [{e['level']}] {e['message']}\n" for e in entries),
                                          headers={"Content-Disposition": f'attachment; filename="log-{run_id}.txt"'})
             return {"items": entries}
+
+        @app.get("/health")
+        def health():
+            return {"status": "ok", "database": "ok"}
+
+        # Descargas de la caja «Genesys download» de un flujo de insights (FE017).
+        @app.post("/insight-downloads", status_code=202)
+        def start_insight_download(body: dict = Body(...)):
+            stub.received.append(("POST", "/insight-downloads", body))
+            run = {"id": _id("1RN"), "flow_id": None, "insight_flow_id": body["insight_flow_id"],
+                   "origin": body["origin"], "status": "pendiente",
+                   "interval": {"from": body["from"], "to": body["to"]}, "channels": body["channels"],
+                   "overwrite": body["overwrite"], "counters": COUNTERS, "error": None, "started_by": body.get("user"),
+                   "created_at": _now(), "started_at": None, "finished_at": None, "duration_s": None}
+            stub.runs[run["id"]] = run
+            return run
+
+        @app.get("/insight-downloads/{run_id}")
+        def insight_download(run_id: str):
+            if run_id not in stub.runs:
+                raise HTTPException(404, detail="Run not found")
+            return {**stub.runs[run_id], "status": "completada", "started_at": _now(), "finished_at": _now(),
+                    "duration_s": 3.0}
+
+        @app.get("/insight-downloads/{run_id}/conversations")
+        def insight_download_subset(run_id: str):
+            return {"items": list(stub.subset)}
+
+        @app.get("/insight-downloads/{run_id}/log")
+        def insight_download_log(run_id: str, after: int = 0, level: str | None = None, format: str = "json"):  # noqa: A002
+            return log("-", run_id, after, level, format)
 
         @app.get("/status")
         def status_():

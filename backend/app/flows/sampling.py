@@ -1,5 +1,6 @@
 """Sampling real sobre el dataset mock (FE004, criterio 5): filtros de FE002 y método aleatorio, estratificado o primeros N."""
 import copy
+from datetime import date
 import random
 from collections import defaultdict
 from math import floor
@@ -24,9 +25,17 @@ ORDER_KEYS = {
 }
 
 
-def candidates(config: SamplingConfig) -> list[Conversation]:
-    """Conversaciones que cumplen los filtros del nodo, en el orden del dataset."""
-    return run_query(parse_query(copy.deepcopy(config.query)), get_dataset())
+def candidates(config: SamplingConfig, subset: set[str] | None = None) -> list[Conversation]:
+    """Conversaciones que cumplen los filtros del nodo, en el orden del dataset.
+
+    Detrás de una caja «Genesys download» (FE017), solo las del subconjunto de la descarga: el intervalo de fechas de los
+    filtros no se aplica (lo da la descarga) y el resto de condiciones sí.
+    """
+    if subset is None:
+        return run_query(parse_query(copy.deepcopy(config.query)), get_dataset())
+    query = parse_query(copy.deepcopy(config.query) if config.query else {"root": {"op": "and", "conditions": []}})
+    query.date_from, query.date_to = date.min, date.max
+    return run_query(query, [c for c in get_dataset() if c.id in subset])
 
 
 def _chronological(conversations: list[Conversation]) -> list[Conversation]:

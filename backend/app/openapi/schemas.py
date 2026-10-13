@@ -67,7 +67,7 @@ IssueCode = Literal[
     # FE014: un check asignado que ya no existe o está desactivado.
     "unknown_check",
     # FE017: la caja «Genesys download» solo trabaja con datos reales; «All conversations» con muchas conversaciones.
-    "download_needs_real_origin", "large_sample",
+    "download_needs_real_origin", "large_sample", "ingestion_unavailable",
 ]
 
 
@@ -490,8 +490,12 @@ class RunList(Doc):
     items: list[RunSummary]
 
 
+# `omitido` (FE017): el nodo no se ejecuta porque la descarga de la caja no trajo conversaciones.
+NodeStatus = Literal["pendiente", "en_curso", "ok", "error", "omitido"]
+
+
 class NodeState(Doc):
-    status: RunStatus
+    status: NodeStatus
     processed: int
     total: int | None
     message: str | None
@@ -565,6 +569,16 @@ class Run(RunSummary):
     outputs: dict[str, RunOutput] = Field(description="Result per Output node identifier.")
     failures: dict[str, list[PromptFailure]] = Field(
         description="Per Prompt node with an LLM, the conversations excluded from the outputs (FE013).")
+    download: "RunDownload | None" = Field(
+        description="Download of the Genesys download box (FE017); `null` in a flow without a box.")
+
+
+class RunDownload(Doc):
+    node_id: str
+    run_id: str = Field(description="`1RN-…` of the download in the ingestion service.")
+    status: Literal["pendiente", "en_curso", "completada", "completada_con_avisos", "error"]
+    counters: dict[str, Any] = Field(description="Counters of the download (as in a download flow run).")
+    error: str | None
 
 
 # --- Configuración -------------------------------------------------------------------------------------------------
@@ -815,7 +829,8 @@ class DownloadRunInterval(Doc):
 
 class DownloadRun(Doc):
     id: str = Field(description="Identificador `1RN-…`.")
-    flow_id: str
+    flow_id: str | None = Field(description="Download flow; `null` in the download of a Genesys download box.")
+    insight_flow_id: str | None = Field(None, description="Only in the download of a Genesys download box (FE017).")
     origin: Literal["manual", "programada"]
     status: DownloadRunStatus
     interval: DownloadRunInterval = Field(description="Interval resolved when the run was started.")

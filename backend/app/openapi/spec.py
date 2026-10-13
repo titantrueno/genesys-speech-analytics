@@ -221,6 +221,15 @@ OPERATIONS: dict[tuple[str, str], Op] = {
     ("GET", "/api/flows/{flow_id}/runs/{run_id}"): Op(
         "Run", s.Run, "flows:view", "Snapshot with the status of each node and the results of each Output.",
         errors={404: (NOT_FOUND, s.ErrorText), 503: (STATE_503, s.ErrorText)}),
+    ("GET", "/api/flows/{flow_id}/runs/{run_id}/download"): Op(
+        "Download of the run", s.DownloadRun, "flows:view",
+        "Status and counters of the download of the Genesys download box of the run (FE017). `404` if the run has "
+        "no box.", errors={404: (NOT_FOUND, s.ErrorText), 503: (UNAVAILABLE_503, s.ErrorText)}),
+    ("GET", "/api/flows/{flow_id}/runs/{run_id}/download/log"): Op(
+        "Download log of the run", s.DownloadLog, "flows:view",
+        "Log of the download of the Genesys download box, with the same `after`, `level` and `format` as a "
+        "download flow log. It never contains the text of the turns or secrets.",
+        errors={404: (NOT_FOUND, s.ErrorText), 503: (UNAVAILABLE_503, s.ErrorText)}),
 
     # --- Flujos de descarga (FE011) ---
     ("GET", "/api/download-flows"): Op(

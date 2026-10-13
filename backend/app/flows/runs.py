@@ -19,20 +19,30 @@ from app import ids
 from app.auth import User
 from app.flows import catalog
 from app.flows.analysis_writer import BATCH_SIZE, FIELD_STATES, AnalysisWriter, WriterUnavailable
+from app.flows.download_config import resolve_interval
+from app.flows.downloader import Downloader, DownloaderUnavailable, DownloadRejected
 from app.flows.fields import NO_VALUE, ValueRejected, coerce
-from app.flows.model import Graph, OutputNode, PromptNode, SamplingNode
+from app.flows.model import DownloadNode, Graph, OutputNode, PromptNode, SamplingNode
 from app.flows.outputs import build_metric, build_report, build_table
 from app.services.listing import list_item
 from app.flows.prompting import PromptFailed, PromptRejected, PromptRunner, PromptUnavailable
 from app.flows.sampling import candidates, draw_sample
 from app.clock import now
 from app.config.store import get_config
+from app.data.real import begin_request
+from app.ingestion_client import UNAVAILABLE
 from app.flows.store import Flow
 from app.models import Conversation
 from app.privacy.masking import masked
 
 PENDING, RUNNING, OK, ERROR = "pendiente", "en_curso", "ok", "error"
+# Nodo que no se ejecuta porque la descarga de la caja no trajo conversaciones (FE017, criterio 6).
+SKIPPED = "omitido"
+NO_CONVERSATIONS = "The download returned no conversations"
 ACTIVE = {PENDING, RUNNING}
+DOWNLOAD_ACTIVE = {"pendiente", "en_curso"}
+# Cada cuánto se consulta el estado de la descarga de la caja (los tests lo ponen a 0).
+DOWNLOAD_POLL_S = 2.0
 DEFAULT_STEP_DELAY_MS = 15
 # Las ejecuciones viven en memoria y una tabla de 1.000 filas ocupa ~1 MB: se conservan las últimas por flujo.
 MAX_RUNS_PER_FLOW = 50
@@ -76,6 +86,9 @@ class Run:
     finished_at: datetime | None = None
     status: str = PENDING
     sample_size: int | None = None
+    origin: str = "manual"
+    # Descarga de la caja «Genesys download» (FE017): su `1RN` en la ingesta, su estado y sus contadores.
+    download: dict | None = None
     nodes: dict[str, NodeState] = field(default_factory=dict)
     outputs: dict[str, dict] = field(default_factory=dict)
     # Por nodo Prompt, las conversaciones excluidas de los outputs y el motivo (FE013).
@@ -112,6 +125,7 @@ class Run:
                 "nodes": {node_id: vars(state) for node_id, state in self.nodes.items()},
                 "outputs": self.outputs,
                 "failures": self.failures,
+                "download": self.download,
             })
 
     def update(self, **changes: Any) -> None:
@@ -182,11 +196,14 @@ def topological_order(graph: Graph) -> list[str]:
 
 class FlowExecutor:
     def __init__(self, runner: PromptRunner, delay_s: float, on_step: Callable[[Run], None] | None = None,
-                 writer: AnalysisWriter | None = None):
+                 writer: AnalysisWriter | None = None, downloader: Downloader | None = None,
+                 poll_s: float | None = None):
         self.runner = runner
         self.delay_s = delay_s
         self.on_step = on_step
         self.writer = writer  # solo lo usan los Output «campo» (FE013)
+        self.downloader = downloader  # solo lo usa la caja «Genesys download» (FE017)
+        self.poll_s = DOWNLOAD_POLL_S if poll_s is None else poll_s
 
     def _step(self, run: Run) -> None:
         if self.delay_s:
@@ -201,17 +218,25 @@ class FlowExecutor:
         sampled: dict[str, list[Conversation]] = {}
         reached: dict[str, list[Conversation]] = {}  # por Prompt, las conversaciones que le llegaron
         results: dict[str, dict[str, Any]] = {}
+        subsets: dict[str, set[str]] = {}  # por caja de descarga, las conversaciones que descargó (FE017)
+        skipped: set[str] = set()
         failed = False
         for node_id in topological_order(graph):
             node = graph.node(node_id)
             inputs = graph.inputs(node_id)
-            if any(source not in sampled for source in inputs):
-                continue  # su entrada ha fallado o no se ha ejecutado: queda pendiente
+            if node_id in skipped or any(source not in sampled for source in inputs):
+                continue  # su entrada ha fallado, no se ha ejecutado o no trajo nada: queda pendiente u omitido
             run.update_node(node_id, status=RUNNING)
             self._step(run)
             try:
-                if isinstance(node, SamplingNode):
-                    sampled[node_id] = self._sampling(run, node)
+                if isinstance(node, DownloadNode):
+                    subsets[node_id] = self._download(run, node)
+                    sampled[node_id] = []
+                    if not subsets[node_id]:
+                        skipped |= self._skip_after(run, graph, node_id)
+                elif isinstance(node, SamplingNode):
+                    subset = subsets.get(inputs[0]) if inputs else None
+                    sampled[node_id] = self._sampling(run, node, subset)
                 elif isinstance(node, PromptNode):
                     reached[node_id] = sampled[inputs[0]]
                     results[node_id] = self._prompt(run, node, sampled[inputs[0]], results.get(inputs[0]))
@@ -234,8 +259,56 @@ class FlowExecutor:
             self._step(run)
         run.update(status=ERROR if failed else OK, finished_at=now())
 
-    def _sampling(self, run: Run, node: SamplingNode) -> list[Conversation]:
-        available = candidates(node.config)
+    def _download(self, run: Run, node: DownloadNode) -> set[str]:
+        """Lanza la descarga en el servicio de ingesta, sigue sus contadores hasta que termina y devuelve su subconjunto
+        (FE017, criterios 4, 5 y 6). El intervalo se resuelve ahora, en la zona horaria de la plataforma."""
+        if self.downloader is None:
+            raise NodeFailure(UNAVAILABLE)
+        cfg, tz = node.config, get_config().general.timezone
+        start, end = resolve_interval(cfg.interval, tz, now())
+        try:
+            state = self.downloader.start(
+                insight_flow_id=run.flow_id, interval_from=start, interval_to=end, channels=list(cfg.channels),
+                overwrite=bool(cfg.overwrite), origin=run.origin, timezone=tz,
+                user={"id": run.user_id, "name": run.user_name})
+            self._follow(run, node, state)
+            while state["status"] in DOWNLOAD_ACTIVE:
+                if self.poll_s:
+                    time.sleep(self.poll_s)
+                state = self.downloader.status(state["id"])
+                self._follow(run, node, state)
+            if state["status"] == "error":
+                raise NodeFailure(f"The download failed: {state.get('error') or 'unknown error'}")
+            subset = set(self.downloader.subset(state["id"]))
+        except DownloadRejected as exc:
+            raise NodeFailure(str(exc)) from exc
+        except DownloaderUnavailable as exc:
+            raise NodeFailure(UNAVAILABLE) from exc
+        begin_request()  # la instantánea de los datos reales se recarga: el Sampling ve lo recién descargado
+        return subset
+
+    def _follow(self, run: Run, node: DownloadNode, state: dict) -> None:
+        counters = state.get("counters") or {}
+        done = sum(counters.get(k, 0) for k in ("inserted", "updated", "skipped", "skipped_existing", "errors"))
+        run.update(download={"node_id": node.id, "run_id": state["id"], "status": state["status"],
+                             "counters": counters, "error": state.get("error")})
+        run.update_node(node.id, processed=done, total=counters.get("found"))
+        self._step(run)
+
+    def _skip_after(self, run: Run, graph: Graph, node_id: str) -> set[str]:
+        """Marca como `omitido` todo lo que depende de una caja cuya descarga no trajo conversaciones."""
+        pending, skipped = list(graph.outputs(node_id)), set()
+        while pending:
+            current = pending.pop()
+            if current not in skipped:
+                skipped.add(current)
+                run.update_node(current, status=SKIPPED, message=NO_CONVERSATIONS)
+                pending += graph.outputs(current)
+        self._step(run)
+        return skipped
+
+    def _sampling(self, run: Run, node: SamplingNode, subset: set[str] | None = None) -> list[Conversation]:
+        available = candidates(node.config, subset)
         sample = draw_sample(available, node.config, run.seed)
         with run.lock:
             run.sample_size = (run.sample_size or 0) + len(sample)

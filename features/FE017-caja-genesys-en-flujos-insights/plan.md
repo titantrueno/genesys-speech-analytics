@@ -54,7 +54,7 @@
 | T1 ✅ | Ingesta: descargas de una caja y subconjunto por ejecución | — | 4, 5 y 6 (datos), 19 (ingesta) |
 | T2 ✅ | Modelo, reglas y validación de la caja `descarga` | — | 1, 2, 3 (salvo el servicio caído), 11 |
 | T3 ✅ | Sampling «All conversations» y aviso `large_sample` | T2 | 10, 11 |
-| T4 | Ejecución end-to-end: descarga, subconjunto y estado `omitido` | T1, T2, T3 | 3 (servicio caído), 4, 5, 6, 7, 8, 19 (API) |
+| T4 ✅ | Ejecución end-to-end: descarga, subconjunto y estado `omitido` | T1, T2, T3 | 3 (servicio caído), 4, 5, 6, 7, 8, 19 (API) |
 | T5 | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
 | T6 | Front del editor: caja, reglas, panel del Sampling y textos | T2, T3 | 12, 13, 14, 16, 17 |
 | T7 | Front de la ejecución, historial y listado | T4, T5, T6 | 15, 9 (próxima ejecución en el listado) |
@@ -134,6 +134,13 @@
   - en el test de punta a punta, el Output «Guardar en campos» escribe en las conversaciones del subconjunto;
   - una muestra vacía sin caja sigue siendo `error` (FE004);
   - ninguna respuesta nueva contiene secretos (se amplía el test de FE011).
+
+- **Ajustes en `/build`:**
+  - El progreso de la descarga va en `Run.download` (`node_id`, `run_id`, `status`, `counters` y `error`) y no en `NodeState`, porque el contrato de FE004 fija las claves de cada nodo. La caja informa además de `processed`/`total` como el resto de nodos.
+  - El descargador (`app/flows/downloader.py`, dependencia `get_downloader`) sigue el patrón de `AnalysisWriter`. La ingesta responde `404` si el flujo no está en `insight_flow` y `409` si ya hay una descarga activa, y los dos casos llegan al nodo como mensaje.
+  - **Hallazgo:** la descarga de la caja exige que el flujo esté persistido en `insight_flow`, porque la referencia de la base lo pide. Con la persistencia de FE015 (`INGESTION_TOKEN` configurado) siempre lo está. Sin token, tampoco hay ingesta. El test de punta a punta lo persiste a mano. Se documenta en T8.
+  - Tras la descarga, el ejecutor llama a `begin_request()` para que la instantánea de los datos reales se recargue antes del Sampling.
+  - El escenario de contrato (`test_openapi.py`) y su stub de ingesta cubren las rutas nuevas, el estado `omitido` y la estimación `after_download`.
 
 ### T5 — Programador de flujos de insights en la API
 - **Qué:**

@@ -161,7 +161,7 @@ def call(api):
     return Recorder(api)
 
 
-def test_real_responses_match_the_documented_schemas(call, api, ingestion_stub):
+def test_real_responses_match_the_documented_schemas(call, api, ingestion_stub, monkeypatch):
     anonymous = Recorder(TestClient(app))
     anonymous("GET", "/api/health", 200)
     anonymous("GET", "/api/config/public", 200)
@@ -243,6 +243,34 @@ def test_real_responses_match_the_documented_schemas(call, api, ingestion_stub):
     call("GET", f"/api/flows/{flow['id']}/runs", 200)
     call("GET", f"/api/flows/{flow['id']}/runs/1RN-00000000-0000-4000-8000-000000000000", 404)
     call("GET", "/api/flows", 200)
+
+    # Caja «Genesys download» (FE017): la validación exige datos reales; el dataset sintético hace de base.
+    from app.flows import rules as flow_rules, runs as flow_runs
+    monkeypatch.setattr(flow_rules, "active_origin", lambda: "real")
+    monkeypatch.setattr(flow_runs, "DOWNLOAD_POLL_S", 0)
+    ingestion_stub.subset = [conversation_id]
+    box = call("POST", "/api/flows", 201, json={"name": "De punta a punta"})
+    call("PUT", f"/api/flows/{box['id']}/graph", 200, json={"version": 1, "nodes": [
+        {"id": "tmp-d", "type": "descarga", "position": {"x": 0, "y": 0},
+         "config": {"interval": {"type": "relativo", "unit": "hoy"}, "channels": ["voz", "chat"],
+                    "schedule": {"type": "cada_horas", "hours": 1}, "active": True}},
+        {"id": "tmp-s", "type": "sampling", "position": {"x": 1, "y": 0}, "config": {"size": "all"}},
+        graph["nodes"][1], graph["nodes"][3]],
+        "edges": [{"source": "tmp-d", "target": "tmp-s"}, {"source": "tmp-s", "target": "tmp-p"},
+                  {"source": "tmp-p", "target": "tmp-t"}]})
+    call("POST", "/api/flows/sampling/estimate", 200, json={"after_download": True, "size": "all"})
+    box_run = call("POST", f"/api/flows/{box['id']}/runs", 202)
+    box_final = call("GET", f"/api/flows/{box['id']}/runs/{box_run['id']}", 200)
+    assert box_final["status"] == "ok" and box_final["download"]["status"] == "completada", box_final
+    call("GET", f"/api/flows/{box['id']}/runs/{box_run['id']}/download", 200)
+    call("GET", f"/api/flows/{box['id']}/runs/{box_run['id']}/download/log?level=aviso", 200)
+    call("GET", f"/api/flows/{flow['id']}/runs/{run['id']}/download", 404)
+    ingestion_stub.subset = []
+    empty_run = call("POST", f"/api/flows/{box['id']}/runs", 202)
+    empty = call("GET", f"/api/flows/{box['id']}/runs/{empty_run['id']}", 200)
+    assert {n["status"] for n in empty["nodes"].values()} == {"ok", "omitido"}
+    monkeypatch.undo()
+
     copy = call("POST", f"/api/flows/{flow['id']}/duplicate", 201)
     call("DELETE", f"/api/flows/{copy['id']}", 204)
     call("GET", f"/api/flows/{copy['id']}", 404)
