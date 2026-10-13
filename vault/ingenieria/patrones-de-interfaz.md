@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [ingenieria, frontend, ux, accesibilidad]
 created: 2026-09-27
-updated: 2026-10-12
+updated: 2026-10-13
 ---
 
 # Patrones de interfaz
@@ -94,8 +94,24 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 - En el chat, una línea separadora (`role="separator"`) marca la transferencia del asistente virtual al agente y un mensaje no entregado conserva su texto con la marca «No entregado».
 - Las columnas y la búsqueda de Genesys solo aparecen con el origen `real` (`catalog.origin`). Un `503` de datos se muestra en un aviso único sobre el contenido.
 
+### Textos de la interfaz (FE016, [ADR-010](../decisiones/adr-010-idioma-de-la-interfaz-y-api-en-ingles.md))
+
+**Cuándo:** siempre que un componente muestre un texto fijo. **Ningún texto de interfaz va escrito en el código**: sale de los diccionarios.
+
+**Cómo:**
+
+- Diccionarios por área en `frontend/src/i18n/es/<área>.ts` y `en/<área>.ts`, con claves planas con prefijo (`conv.title`, `dash.w.volume`). `es` define las claves; `en` debe tener las mismas y los mismos `{parámetros}`.
+- En un componente, `const { t, tOr } = useI18n()`. Plurales: `t('conv.count', { count, n: formatInteger(count) })` con `conv.count_one` y `conv.count_other`. Fuera de un componente, la función recibe `t` (o `Labeler`) como parámetro, con el español por defecto (`DEFAULT_I18N`).
+- Las etiquetas que llegan del backend (catálogos) se traducen por clave con `tOr('prefijo.<clave>', etiquetaDelBackend)`: una clave nueva del backend se ve con su etiqueta hasta que se añada al diccionario.
+- Números, porcentajes, fechas y duraciones salen de `lib/format.ts`, que sigue el idioma activo; nunca `toLocaleString('es-ES')` ni `Intl` directo en un componente.
+- No se traducen los datos (transcripciones, resúmenes, main topics, palabras clave, nombres de colas, agentes, roles, flujos, checks…). Un mensaje de la API se muestra tal cual (llega en inglés).
+- Añadir una pantalla: crear las claves en `es` y `en`, usar `t`, y comprobar con un test de render en inglés que cabeceras y botones salen en inglés y que los datos no cambian (ver `i18n/EnglishScreens.test.tsx`).
+
+**Cómo se prueba:** el test de paridad (`i18n/dictionaries.test.ts`), el que impide texto en español escrito a mano en cualquier archivo de `frontend/src` (`i18n/noHardcodedSpanish.test.ts`) y los tests de render en inglés por pantalla. En `es` los textos no cambian: la suite en español no se toca.
+
 ## Límites y excepciones
 
+- El idioma lo fija solo Configuración → General; no hay selector en el login ni en el panel.
 - No se aplica a tablas cuyas filas llevan a un listado filtrado (tablas de los dashboards): ahí el enlace está en la etiqueta de la fila.
 - La navegación por filas con las flechas del teclado queda fuera de alcance.
 
@@ -108,5 +124,7 @@ Patrones de UI reutilizables del front. Cada patrón indica cuándo usarlo, cóm
 - [Tests de la matriz de permisos](../../frontend/src/users/RolesTab.test.tsx) (FE006)
 - [Spec FE004](../../features/FE004-disenador-de-flujos-de-insights/spec.md)
 - [Spec FE005](../../features/FE005-configuracion-de-la-plataforma/spec.md)
+- [Spec FE016](../../features/FE016-idioma-ingles-de-la-interfaz/spec.md)
+- [ADR-010](../decisiones/adr-010-idioma-de-la-interfaz-y-api-en-ingles.md)
 - [React Flow · Testing](https://reactflow.dev/learn/advanced-use/testing)
 - [WAI-ARIA APG · Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/)

@@ -2,17 +2,16 @@ import { describe, expect, it } from 'vitest'
 
 /**
  * FE016, criterio 7: las pantallas migradas no llevan texto de interfaz en español escrito a mano; sale de los
- * diccionarios. Cada tarea añade sus carpetas a `MIGRATED`.
+ * diccionarios. Cubre todo `frontend/src` salvo los diccionarios, los códigos de idioma y los ayudantes de test.
  */
-const MIGRATED = ['layout/', 'pages/', 'auth/', 'components/', 'i18n/I18nProvider.tsx', 'dashboards/', 'conversations/', 'explorer/', 'search/', 'flows/', 'downloads/', 'users/', 'config/']
+const SKIPPED = ['./es/', './en/', './languages.ts', '../test/']
 
 const SPANISH = /[áéíóúñ¿¡]|\b(de|el|la|los|las|para|con|sin|una|por|del|al|en|se|que|su)\b/i
 
 const sources = import.meta.glob(['../**/*.tsx', '../**/*.ts', '!../**/*.test.*'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>
-// `kpiMeta.ts` lleva los códigos de unidad de la API (`índice`), no texto de interfaz.
-const EXCLUDED = ['../dashboards/kpiMeta.ts']
-const files = Object.entries(sources).filter(([path]) =>
-  MIGRATED.some((entry) => path.startsWith(`../${entry}`)) && !EXCLUDED.includes(path))
+// `índice` es un código de unidad de la API (`KpiUnit`), no texto de interfaz.
+const API_CODES = new Set(['índice'])
+const files = Object.entries(sources).filter(([path]) => !SKIPPED.some((skip) => path.startsWith(skip)))
 
 /** Literales de cadena y texto JSX, sin comentarios, imports ni errores de programación (`throw new Error`). */
 function literals(source: string): string[] {
@@ -30,12 +29,12 @@ function literals(source: string): string[] {
 
 describe('sin texto de interfaz en español escrito a mano (FE016, criterio 7)', () => {
   it('hay archivos migrados que comprobar', () => {
-    expect(files.length).toBeGreaterThan(5)
+    expect(files.length).toBeGreaterThan(100)
   })
 
   for (const [path, source] of files) {
     it(path.replace('../', ''), () => {
-      expect(literals(source).filter((text) => SPANISH.test(text))).toEqual([])
+      expect(literals(source).filter((text) => SPANISH.test(text) && !API_CODES.has(text))).toEqual([])
     })
   }
 })

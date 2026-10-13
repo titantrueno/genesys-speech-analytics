@@ -1,6 +1,6 @@
 # FE016 — Plan
 
-> Fase `/plan`. Spec: [spec.md](spec.md). Siguiente paso: `/build`, una tarea cada vez y en orden. Cada tarea deja `./scripts/ci.sh` en verde y la interfaz usable (lo no migrado sigue en español).
+> Fase `/plan`, construida en T1–T9 (2026-10-13). Spec: [spec.md](spec.md). Siguiente paso: `/build`, una tarea cada vez y en orden. Cada tarea deja `./scripts/ci.sh` en verde y la interfaz usable (lo no migrado sigue en español).
 
 ## Contraste con el vault y el código
 

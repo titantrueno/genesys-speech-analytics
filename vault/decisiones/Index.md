@@ -23,3 +23,4 @@ Registrar decisiones relevantes, el contexto que las motivó y sus consecuencias
 - [ADR-007 — Configuración global en memoria, leída en caliente, y enmascarado de PII por defecto](adr-007-configuracion-global-y-enmascarado.md)
 - [ADR-008 — PostgreSQL y servicio de ingesta de Genesys aparte](adr-008-postgresql-y-servicio-de-ingesta.md)
 - [ADR-009 — Servicio de LLM aparte con proveedores intercambiables](adr-009-servicio-llm-con-proveedores-intercambiables.md)
+- [ADR-010 — Idioma de la interfaz como ajuste de la plataforma y API solo en inglés](adr-010-idioma-de-la-interfaz-y-api-en-ingles.md)

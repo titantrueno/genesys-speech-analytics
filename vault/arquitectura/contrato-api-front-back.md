@@ -127,12 +127,19 @@ Todos los errores llevan `detail`, pero su forma depende del endpoint. El front 
 
 | # | Forma de `detail` | Dónde | Cómo lo lee el front |
 |---|---|---|---|
-| E1 | Texto: `"Conversación no encontrada"` | `401`, `403`, `404`, `409` de estado, y `422` de reglas sueltas (`from > to`, `queue` mal formado, nombre vacío, campo no categórico) | `ApiError.message` = el texto (`actionError` en usuarios y roles) |
+| E1 | Texto: `"Conversation not found"` | `401`, `403`, `404`, `409` de estado, y `422` de reglas sueltas (`from > to`, `queue` mal formado, nombre vacío, campo no categórico) | `ApiError.message` = el texto (`actionError` en usuarios y roles) |
 | E2 | Lista nativa de FastAPI: `[{type, loc: ["query", "page_size"], msg, input, ctx}]`, con `msg` **en inglés** | Parámetros de query o ruta fuera de rango o tipo, y cuerpos con modelo declarado (`LoginRequest`, `SavedQueryIn`, `FlowName`…) | Mensaje genérico «Error 422» |
-| E3 | Lista por campo en español: `[{loc: ["body", "campo"], msg, type}]` | Escrituras de configuración (`422`) y de usuarios y roles (`422` y `409` por duplicado) | `fieldErrors()` → error junto a cada campo (`ConfigField`) |
+| E3 | Lista por campo, en inglés: `[{loc: ["body", "campo"], msg, type}]` | Escrituras de configuración (`422`) y de usuarios y roles (`422` y `409` por duplicado) | `fieldErrors()` → error junto a cada campo (`ConfigField`) |
 | E4 | Lista de la consulta: `[{path: "root.conditions[0]", message}]` | `POST /api/query/run`, `/saved` (`query`), `/flows/sampling/estimate` | El explorador marca la condición por su ruta |
 | E5 | Lista del grafo: `[{path: "nodes[0].position.y", node_id, message}]` | `PUT /api/flows/{id}/graph` y `POST /api/flows/validate` (integridad) | El editor marca el nodo |
 | E6 | Lista de incidencias: `[{code, message, node_id}]` | `POST /api/flows/{id}/runs` (`422` si el flujo no es válido) | Igual que la respuesta de `/validate` |
+
+#### Idioma de los mensajes (FE016, [ADR-010](../decisiones/adr-010-idioma-de-la-interfaz-y-api-en-ingles.md))
+
+- **Todos los mensajes de la API están en inglés** y no dependen del idioma configurado ni de ninguna cabecera: `detail` de errores (E1 a E6), motivos por campo y mensajes de las ejecuciones, log de las descargas (etapas `start`, `authentication`, `search`, `download`, `normalization`, `analysis`, `load`), errores de los servicios de ingesta y de LLM, textos de auditoría y el OpenAPI. La API **no lee `Accept-Language`**.
+- **Qué no es un mensaje:** las etiquetas de catálogo (operadores y campos del explorador, KPIs, opciones de flujos, permisos y nombres de rol) y los datos llegan con su texto (en español); el front traduce el catálogo por clave.
+- **El front** muestra el `detail` tal cual, también con la interfaz en español. El 503 de datos reales se reconoce por su texto `Real data is not available` (`components/dataErrors.ts`).
+- **Prueba:** `backend/tests/test_api_messages_english.py` falla si un mensaje del código o una descripción del OpenAPI está en español, o si el mismo error cambia con el idioma configurado o con `Accept-Language`.
 
 ### 2. Mapa de endpoints
 
@@ -459,7 +466,7 @@ Toda escritura aceptada sube `version` y crea una entrada de auditoría `1AU`. U
 - **`GET /api/config/public`** (público) → `{platform_name, timezone, language}`. La usan el login y todos los roles.
 - **`GET /api/config`** → `{version, general, sources: {origin}, privacy: {pii_masking}, ai: {provider, model, simulated} (`simulated` solo con el proveedor `simulado`), kpis: [{code, label, unit, higher_is_better, target, green, amber, dashboards}], options: {languages, timezones, providers: [{value, label, models: [{value, label, temperature}]}], sections, dashboards}}`.
 - **`GET /api/config/ai/status`** (FE013) → `{service: "disponible", providers: [{value, label, key_configured}]}`; `503` si el servicio de LLM no responde. **`POST /api/config/ai/test/{provider}`** `{model}` (`config:edit`) → `{ok, provider, model, message}`; un error del proveedor (sin clave, clave rechazada) es `200` con `ok: false`; un modelo de otro proveedor, `422`.
-- **`PUT /api/config/general`** `{platform_name (1–60), timezone (IANA), language ("es-ES")}`. **`PUT /api/config/privacy`** `{pii_masking}`. **`PUT /api/config/ai`** `{provider, model}` (el modelo debe ser del proveedor). Las tres responden con la configuración completa.
+- **`PUT /api/config/general`** `{platform_name (1–60), timezone (IANA), language ("es-ES" o "en-US")}`. **`PUT /api/config/privacy`** `{pii_masking}`. **`PUT /api/config/ai`** `{provider, model}` (el modelo debe ser del proveedor). Las tres responden con la configuración completa.
 - **`PUT /api/config/kpis/{code}`** `{target, green, amber, dashboards}`:
   - los valores deben estar dentro del rango de la unidad;
   - `green` y `amber`, los dos o ninguno, y coherentes con el sentido del KPI (si más es mejor, `amber < green`);
@@ -572,6 +579,8 @@ La API no guarda nada: comprueba la sesión y los permisos y delega en el servic
 - Explorador: operadores `is_empty` e `is_not_empty` y campos `gc_*` solo con el origen `real`. Flujos: las incidencias de `/validate` pueden llevar `severity: "warning"`.
 
 ## Fuentes
+
+- [Spec FE016](../../features/FE016-idioma-ingles-de-la-interfaz/spec.md) y [ADR-010](../decisiones/adr-010-idioma-de-la-interfaz-y-api-en-ingles.md)
 
 - [Routers del backend](../../backend/app/routers/): `auth.py`, `metrics.py`, `conversations.py`, `query.py`, `search.py`, `flows.py`, `config.py` y `users.py`
 - [Aplicación, CORS y middleware](../../backend/app/main.py) · [Autenticación](../../backend/app/auth.py) · [Filtros](../../backend/app/services/filters.py) · [Paginación](../../backend/app/services/listing.py) · [Modelo de consulta](../../backend/app/query/model.py) · [Modelo de grafo](../../backend/app/flows/model.py)

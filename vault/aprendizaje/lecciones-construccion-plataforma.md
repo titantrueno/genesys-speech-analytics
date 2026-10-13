@@ -5,7 +5,7 @@ status: active
 owners: [equipo-del-proyecto]
 tags: [aprendizaje, testing, fastapi, react, recharts, usuarios, openapi, swagger, genesys, postgresql]
 created: 2026-09-27
-updated: 2026-10-12
+updated: 2026-10-13
 ---
 
 # Lecciones de la construcción de la plataforma
@@ -110,6 +110,7 @@ Supuestos implícitos sobre librerías y sobre el entorno de test que no se cont
 
 ## Acción preventiva
 
+- FE016: ningún texto de interfaz va escrito en el código (test que recorre `frontend/src`) y ningún mensaje de la API en español (test que recorre el AST del backend y el OpenAPI): buscar por palabras se deja los mensajes de una palabra («Credenciales incorrectas»), así que se buscan por posición sintáctica (excepciones, `detail=`, `message=`, log). Para comprobar la interfaz con la plataforma en inglés en local, arrancar con la variable de entorno `INGESTION_TOKEN` vacía.
 - FE013: el runner del LLM rechaza sin llamar al proveedor una conversación sin texto si la plantilla usa `{{transcripcion}}`; los adaptadores se validan con una llamada real cuando hay clave; en el navegador, antes de dudar de la app, comprobar `document.visibilityState`.
 - FE011: pruebas con servidores reales en puertos propios (18000 y 18001), parando cada proceso por su PID; `datetime-local` se prueba con `fireEvent.change`; las funciones que reciben una conexión fijan su propia fábrica de filas (`tuple_row`); los sondeos guardan la respuesta completa en un fichero antes de sacar conclusiones.
 - Tests de regresión añadidos para los puntos 5, 6, 7 y 9 (propiedad de 500 frases).

@@ -162,6 +162,12 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - **Cumplimiento:** estado pendiente además de cumple, no cumple y no aplica; el resultado guardado manda sobre las frases ([ADR-007](../decisiones/adr-007-configuracion-global-y-enmascarado.md)). El detalle devuelve `compliance` y `compliance_pending`.
 - **Filtros y explorador:** un campo con valor deja de estar vacío y se filtra con sus operadores de siempre; un check solo está vacío mientras está pendiente.
 
+### Idioma de la interfaz y mensajes de la API (FE016, [ADR-010](../decisiones/adr-010-idioma-de-la-interfaz-y-api-en-ingles.md))
+
+- **Front:** `I18nProvider` (dentro de `QueryClientProvider`, fuera de `AuthProvider`) toma el idioma de `GET /api/config/public`, así que también vale en el login; si no es uno de los dos con diccionario, usa `es-ES`. Diccionarios planos por área en `frontend/src/i18n/{es,en}/`, `t()` y `tOr()` con parámetros y plurales; `lib/format.ts` usa el idioma activo para números, porcentajes, fechas y duraciones. El idioma se cambia **solo** en Configuración → General; `AppLayout` vuelve a montar el contenido al cambiarlo.
+- **Qué no se traduce:** los datos (conversaciones, resúmenes, main topics, palabras clave, taxonomía, checks, nombres). Las etiquetas de catálogo que da el backend se traducen por clave con respaldo a la etiqueta recibida.
+- **Back:** los mensajes de error, validación, estado y log, y el OpenAPI, están **solo en inglés**; la API no lee `Accept-Language` ni el idioma configurado. `LANGUAGES` (`app/config/model.py`) lista `es-ES` y `en-US`.
+
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
@@ -193,5 +199,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 - [Spec FE010](../../features/FE010-especificacion-openapi-en-configuracion/spec.md)
 - [Spec FE011](../../features/FE011-ingesta-de-conversaciones-genesys/spec.md)
 - [Spec FE014](../../features/FE014-analisis-completo-con-llm/spec.md)
+- [Spec FE016](../../features/FE016-idioma-ingles-de-la-interfaz/spec.md)
+- [ADR-010](../decisiones/adr-010-idioma-de-la-interfaz-y-api-en-ingles.md)
 - [Contrato de la API entre front y back](contrato-api-front-back.md)
 - [Gobierno del vault](../Governance.md)
