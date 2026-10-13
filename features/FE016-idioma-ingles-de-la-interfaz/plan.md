@@ -70,6 +70,7 @@
 ### T8 — Mensajes del backend con `Accept-Language`
 - **Qué:** el cliente HTTP (`frontend/src/api/client.ts`) envía `Accept-Language`; catálogo de mensajes en el backend (`app/i18n.py`) para los `detail` y errores de validación de configuración; lo no catalogado sigue en español; OpenAPI documenta la cabecera.
 - **Hecho cuando:** tests de backend: un mensaje catalogado sale en `en` con `Accept-Language: en-US`, en `es` sin cabecera o con `es-ES`, y uno no catalogado sale en español; test de front: el cliente envía el idioma activo.
+- **Atención:** `frontend/src/components/dataErrors.ts` reconoce el `503` de datos reales comparando el texto en español del mensaje; al traducir los mensajes debe pasar a reconocerlo por otra señal (código de error o `status` + ruta) o dejaría de mostrarse el aviso con `Accept-Language: en-US`. Hoy está excluido del test de «sin español a mano».
 - **Criterios de la spec:** 12, 13.
 - **Depende de:** T2. (Pendiente de confirmar con la persona usuaria; si prefiere dejarlos en español, se mueve a fuera de alcance.)
 

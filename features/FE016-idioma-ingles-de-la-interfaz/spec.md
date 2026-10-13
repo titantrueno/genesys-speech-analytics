@@ -20,7 +20,7 @@ Permitir usar la interfaz en inglés además de en español, eligiendo el idioma
 
 1. `GET /api/config/public` y `GET /api/config` aceptan `language: "en-US"`; `PUT` con un idioma fuera de `LANGUAGES` sigue devolviendo error de validación (test de backend). `LANGUAGES` expone `es-ES` y `en-US`.
 2. Sin elección personal, la interfaz usa el idioma global, incluido el login (sin sesión) (test de front con `/api/config/public` mockeado a `en-US`).
-3. El selector de la cabecera ofrece los idiomas de `languages`; elegir uno cambia toda la interfaz sin recargar y se conserva tras recargar (`localStorage`); «Usar el idioma de la plataforma» borra la elección personal (test de front).
+3. El selector (barra lateral y login) ofrece los idiomas con diccionario (`es-ES` y `en-US`, los mismos que `languages`; sin sesión no hay `options`); elegir uno cambia toda la interfaz sin recargar y se conserva tras recargar (`localStorage`); «Usar el idioma de la plataforma» borra la elección personal (test de front).
 4. La elección personal prevalece sobre el cambio posterior del idioma global; el atributo `<html lang>` refleja el idioma activo.
 5. Si `localStorage` no está disponible o contiene un valor no soportado, se usa el idioma global sin error.
 6. Los diccionarios `es` y `en` tienen exactamente las mismas claves y los mismos parámetros por clave (test que falla si falta, sobra o difiere alguna).

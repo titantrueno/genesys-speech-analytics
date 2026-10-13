@@ -1,5 +1,6 @@
 import { Check, ChevronDown } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { useI18n } from '../i18n/useI18n'
 
 interface Option { value: string; label: string }
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function MultiSelect({ label, allLabel, options, selected, onChange }: Props) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const panelId = useId()
@@ -31,7 +33,7 @@ export function MultiSelect({ label, allLabel, options, selected, onChange }: Pr
   }, [open])
 
   const labels = options.filter((o) => selected.includes(o.value)).map((o) => o.label)
-  const summary = labels.length === 0 ? allLabel : labels.length === 1 ? labels[0] : `${labels.length} seleccionados`
+  const summary = labels.length === 0 ? allLabel : labels.length === 1 ? labels[0] : t('common.selected', { count: labels.length })
 
   function toggle(value: string) {
     onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value])
@@ -69,7 +71,7 @@ export function MultiSelect({ label, allLabel, options, selected, onChange }: Pr
           })}
           {selected.length > 0 && (
             <button type="button" onClick={() => onChange([])} className="mt-1 w-full rounded px-2 py-1.5 text-left text-sm text-brand-600 hover:bg-slate-50">
-              Quitar selección
+              {t('common.clearSelection')}
             </button>
           )}
         </div>

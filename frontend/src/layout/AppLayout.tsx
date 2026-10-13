@@ -3,15 +3,18 @@ import { NavLink, Outlet } from 'react-router'
 import { useAuth } from '../auth/useAuth'
 import { DataUnavailableBanner } from '../components/DataUnavailable'
 import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
+import { LanguageSelect } from '../i18n/LanguageSelect'
+import { useI18n } from '../i18n/useI18n'
 import { setDisplayTimeZone } from '../lib/format'
 import { NAV_ITEMS } from './navigation'
 
 export function AppLayout() {
   const { user, can, logout } = useAuth()
+  const { t, language } = useI18n()
   const items = NAV_ITEMS.filter((item) => can(item.permission))
   const { data: settings } = usePublicConfig()
   // Se fija durante el render para que las páginas de este mismo render ya formateen en la zona de la plataforma;
-  // la `key` del contenido lo vuelve a montar si la zona cambia (FE005).
+  // la `key` del contenido lo vuelve a montar si la zona o el idioma cambian (FE005, FE016).
   setDisplayTimeZone(settings?.timezone)
 
   return (
@@ -22,12 +25,12 @@ export function AppLayout() {
             <AudioLines className="size-5" aria-hidden />
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold">Banco Horizonte</p>
+            <p className="text-sm font-semibold">{t('layout.org')}</p>
             <p className="text-xs text-slate-300">{settings?.platform_name ?? DEFAULT_PLATFORM_NAME}</p>
           </div>
         </div>
-        <nav aria-label="Principal" className="flex-1 space-y-1 px-3 py-2">
-          {items.map(({ path, label, icon: Icon }) => (
+        <nav aria-label={t('layout.nav.label')} className="flex-1 space-y-1 px-3 py-2">
+          {items.map(({ path, labelKey, icon: Icon }) => (
             <NavLink
               key={path}
               to={path}
@@ -38,26 +41,27 @@ export function AppLayout() {
               }
             >
               <Icon className="size-4 shrink-0" aria-hidden />
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
         </nav>
         <div className="border-t border-white/10 p-4">
           <p className="truncate text-sm font-medium">{user?.name}</p>
           <p className="truncate text-xs text-slate-300">{user?.role_name}</p>
+          <div className="mt-3"><LanguageSelect tone="dark" /></div>
           <button
             type="button"
             onClick={logout}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-md border border-white/20 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/10"
           >
             <LogOut className="size-4" aria-hidden />
-            Cerrar sesión
+            {t('layout.logout')}
           </button>
         </div>
       </aside>
       <main className="min-w-0 flex-1 space-y-4 px-8 py-6">
         <DataUnavailableBanner />
-        <Outlet key={settings?.timezone ?? ''} />
+        <Outlet key={`${settings?.timezone ?? ''}|${language}`} />
       </main>
     </div>
   )

@@ -4,13 +4,15 @@ import { Navigate, useLocation, useNavigate, type Location } from 'react-router'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/useAuth'
 import { DEFAULT_PLATFORM_NAME, usePublicConfig } from '../config/api'
+import { LanguageSelect } from '../i18n/LanguageSelect'
+import { useI18n } from '../i18n/useI18n'
 
 const DEMO_ACCOUNTS = [
-  { role: 'Administrador', email: 'admin@bancohorizonte.demo' },
-  { role: 'Supervisor', email: 'supervisor@bancohorizonte.demo' },
-  { role: 'Analista', email: 'analista@bancohorizonte.demo' },
-  { role: 'Consulta', email: 'viewer@bancohorizonte.demo' },
-]
+  { roleKey: 'login.demo.admin', email: 'admin@bancohorizonte.demo' },
+  { roleKey: 'login.demo.supervisor', email: 'supervisor@bancohorizonte.demo' },
+  { roleKey: 'login.demo.analyst', email: 'analista@bancohorizonte.demo' },
+  { roleKey: 'login.demo.viewer', email: 'viewer@bancohorizonte.demo' },
+] as const
 const DEMO_PASSWORD = 'demo'
 
 function redirectTarget(location: Location): string {
@@ -21,6 +23,7 @@ function redirectTarget(location: Location): string {
 export function LoginPage() {
   const { data: settings } = usePublicConfig()
   const { status, login } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -39,8 +42,8 @@ export function LoginPage() {
       navigate(redirectTarget(location), { replace: true })
     } catch (err) {
       setError(err instanceof ApiError && err.status === 401
-        ? 'Credenciales incorrectas'
-        : 'No se ha podido conectar con el servidor')
+        ? t('login.badCredentials')
+        : t('login.unreachable'))
     } finally {
       setSubmitting(false)
     }
@@ -55,19 +58,19 @@ export function LoginPage() {
           </div>
           <div>
             <h1 className="text-lg font-semibold">{settings?.platform_name ?? DEFAULT_PLATFORM_NAME}</h1>
-            <p className="text-sm text-slate-500">Banco Horizonte · Atención al cliente</p>
+            <p className="text-sm text-slate-500">{t('login.subtitle')}</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-slate-700">{t('login.email')}</label>
             <input id="email" type="email" autoComplete="username" required value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none" />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">Contraseña</label>
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700">{t('login.password')}</label>
             <input id="password" type="password" autoComplete="current-password" required value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none" />
@@ -78,18 +81,20 @@ export function LoginPage() {
           <button type="submit" disabled={submitting}
             className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-600 px-4 py-2 font-medium text-white hover:bg-brand-700 disabled:opacity-60">
             {submitting && <Loader2 className="size-4 animate-spin" aria-hidden />}
-            Entrar
+            {t('login.submit')}
           </button>
         </form>
 
-        <div className="mt-8 rounded-lg bg-slate-50 p-4">
-          <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">Usuarios demo · contraseña «{DEMO_PASSWORD}»</p>
+        <div className="mt-6"><LanguageSelect /></div>
+
+        <div className="mt-6 rounded-lg bg-slate-50 p-4">
+          <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">{t('login.demo', { password: DEMO_PASSWORD })}</p>
           <ul className="mt-2 space-y-1">
             {DEMO_ACCOUNTS.map((account) => (
               <li key={account.email}>
                 <button type="button" onClick={() => { setEmail(account.email); setPassword(DEMO_PASSWORD) }}
                   className="text-left text-sm text-brand-600 hover:underline">
-                  {account.role}: {account.email}
+                  {t(account.roleKey)}: {account.email}
                 </button>
               </li>
             ))}

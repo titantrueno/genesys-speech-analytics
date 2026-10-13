@@ -1,3 +1,4 @@
+import { formatUpToOneDecimal } from '../lib/format'
 import type { DownloadInterval, DownloadRunStatus, DownloadSchedule, LogLevel, RelativeUnit } from './types'
 
 export const DOWNLOAD_STATUS: Record<DownloadRunStatus, { label: string; className: string }> = {
@@ -41,5 +42,5 @@ export function describeSchedule(schedule: DownloadSchedule): string {
 
 export function formatSeconds(seconds: number | null): string {
   if (seconds === null) return '—'
-  return `${seconds.toLocaleString('es-ES', { maximumFractionDigits: 1 })} s`
+  return `${formatUpToOneDecimal(seconds)} s`
 }

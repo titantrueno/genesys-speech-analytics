@@ -1,12 +1,48 @@
 import type { KpiSummary, KpiUnit } from '../api/metrics'
 
-const LOCALE = 'es-ES'
-const integer = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0, useGrouping: 'always' })
-const oneDecimal = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1, useGrouping: 'always' })
-const twoDecimals = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const signedTwo = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' })
-const signedOne = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: 'exceptZero' })
-const shortDate = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', timeZone: 'UTC' })
+/**
+ * Idioma de los números y las fechas (FE016). Lo fija `I18nProvider` durante el render, igual que la zona horaria;
+ * los formateadores se crean una vez por idioma.
+ */
+let locale = 'es-ES'
+
+export function setDisplayLocale(next: string) {
+  locale = next
+}
+
+interface NumberFormats {
+  integer: Intl.NumberFormat
+  oneDecimal: Intl.NumberFormat
+  twoDecimals: Intl.NumberFormat
+  signedTwo: Intl.NumberFormat
+  signedOne: Intl.NumberFormat
+  upToOneDecimal: Intl.NumberFormat
+  shortDate: Intl.DateTimeFormat
+  /** Español: «12,3 %» con espacio; inglés: «12.3%». */
+  percent: string
+}
+
+const numberFormats = new Map<string, NumberFormats>()
+
+function formats(): NumberFormats {
+  let cached = numberFormats.get(locale)
+  if (!cached) {
+    const decimals = (digits: number, extra: Intl.NumberFormatOptions = {}) =>
+      new Intl.NumberFormat(locale, { minimumFractionDigits: digits, maximumFractionDigits: digits, ...extra })
+    cached = {
+      integer: new Intl.NumberFormat(locale, { maximumFractionDigits: 0, useGrouping: 'always' }),
+      oneDecimal: decimals(1, { useGrouping: 'always' }),
+      twoDecimals: decimals(2),
+      signedTwo: decimals(2, { signDisplay: 'exceptZero' }),
+      signedOne: decimals(1, { signDisplay: 'exceptZero' }),
+      upToOneDecimal: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }),
+      shortDate: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+      percent: locale.startsWith('es') ? ' %' : '%',
+    }
+    numberFormats.set(locale, cached)
+  }
+  return cached
+}
 
 /**
  * Zona horaria de la plataforma (Configuración › General). Sin configurar, la del navegador.
@@ -20,7 +56,7 @@ export function setDisplayTimeZone(zone: string | undefined) {
 }
 
 function dateTimeFormat(kind: 'short' | 'year' | 'long'): Intl.DateTimeFormat {
-  const key = `${kind}|${displayZone ?? ''}`
+  const key = `${locale}|${kind}|${displayZone ?? ''}`
   let format = formatters.get(key)
   if (!format) {
     const options: Intl.DateTimeFormatOptions = {
@@ -28,7 +64,7 @@ function dateTimeFormat(kind: 'short' | 'year' | 'long'): Intl.DateTimeFormat {
       year: { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' } as const,
       long: { dateStyle: 'long', timeStyle: 'short' } as const,
     }[kind]
-    format = new Intl.DateTimeFormat(LOCALE, { ...options, timeZone: displayZone })
+    format = new Intl.DateTimeFormat(locale, { ...options, timeZone: displayZone })
     formatters.set(key, format)
   }
   return format
@@ -44,25 +80,25 @@ export function formatDuration(seconds: number): string {
 }
 
 export function formatInteger(value: number): string {
-  return integer.format(value)
+  return formats().integer.format(value)
 }
 
 export function formatKpi(value: number | null | undefined, unit: KpiUnit): string {
   if (value === null || value === undefined) return EMPTY_VALUE
   switch (unit) {
-    case 'conversaciones': return integer.format(value)
+    case 'conversaciones': return formats().integer.format(value)
     case 's': return formatDuration(value)
-    case '%': return `${oneDecimal.format(value)} %`
-    case 'índice': return signedTwo.format(value)
-    case '1-5': return twoDecimals.format(value)
-    case 'turnos': return oneDecimal.format(value)
+    case '%': return `${formats().oneDecimal.format(value)}${formats().percent}`
+    case 'índice': return formats().signedTwo.format(value)
+    case '1-5': return formats().twoDecimals.format(value)
+    case 'turnos': return formats().oneDecimal.format(value)
   }
 }
 
 export function formatDelta(kpi: Pick<KpiSummary, 'delta' | 'delta_pct' | 'unit'>): string | null {
-  if (kpi.delta_pct !== null) return `${signedOne.format(kpi.delta_pct)} %`
+  if (kpi.delta_pct !== null) return `${formats().signedOne.format(kpi.delta_pct)}${formats().percent}`
   if (kpi.delta === null) return null
-  return kpi.unit === 'índice' || kpi.unit === '1-5' ? signedTwo.format(kpi.delta) : signedOne.format(kpi.delta)
+  return kpi.unit === 'índice' || kpi.unit === '1-5' ? formats().signedTwo.format(kpi.delta) : formats().signedOne.format(kpi.delta)
 }
 
 export type Trend = 'mejora' | 'empeora' | 'estable'
@@ -74,7 +110,7 @@ export function trendOf(kpi: Pick<KpiSummary, 'delta' | 'higher_is_better'>): Tr
 }
 
 export function formatShortDate(iso: string): string {
-  return shortDate.format(new Date(`${iso}T00:00:00Z`))
+  return formats().shortDate.format(new Date(`${iso}T00:00:00Z`))
 }
 
 export function formatOffset(seconds: number): string {
@@ -86,11 +122,16 @@ export function shortId(id: string): string {
 }
 
 export function formatDecimal(value: number, digits: 1 | 2): string {
-  return (digits === 1 ? oneDecimal : twoDecimals).format(value)
+  return (digits === 1 ? formats().oneDecimal : formats().twoDecimals).format(value)
+}
+
+/** Hasta un decimal, sin ceros finales («2,5», «3»). */
+export function formatUpToOneDecimal(value: number): string {
+  return formats().upToOneDecimal.format(value)
 }
 
 export function formatSigned(value: number): string {
-  return signedTwo.format(value)
+  return formats().signedTwo.format(value)
 }
 
 /** Fecha y hora en la zona de la plataforma («27 sept, 10:30»). */

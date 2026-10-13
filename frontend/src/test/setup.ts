@@ -12,6 +12,7 @@ vi.mock('swagger-ui-react', () => import('./swaggerStub'))
 afterEach(() => {
   cleanup()
   sessionStorage.clear()
+  localStorage.clear()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
 })

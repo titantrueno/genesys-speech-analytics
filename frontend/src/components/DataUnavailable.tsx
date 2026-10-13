@@ -1,17 +1,18 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useSyncExternalStore } from 'react'
 import { Link } from 'react-router'
+import { useI18n } from '../i18n/useI18n'
 import { isDataUnavailable } from './dataErrors'
 
 export function DataUnavailable({ error }: { error: unknown }) {
+  const { t } = useI18n()
   if (!isDataUnavailable(error)) return null
   return (
     <div role="alert" className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
       <p className="font-medium">{error.message}</p>
       <p>
-        La plataforma está usando las conversaciones reales y PostgreSQL no responde. Puedes volver a los datos
-        sintéticos en{' '}
-        <Link to="/configuracion?tab=fuentes" className="font-medium underline">Configuración · Fuentes de datos</Link>.
+        {t('dataUnavailable.help')}{' '}
+        <Link to="/configuracion?tab=fuentes" className="font-medium underline">{t('dataUnavailable.link')}</Link>.
       </p>
     </div>
   )

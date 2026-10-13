@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { RouterProvider } from 'react-router'
 import { AuthProvider } from './auth/AuthContext'
+import { I18nProvider } from './i18n/I18nProvider'
 import type { AppRouter } from './router'
 
 export function AppProviders({ router }: { router: AppRouter }) {
@@ -10,9 +11,11 @@ export function AppProviders({ router }: { router: AppRouter }) {
   }))
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </I18nProvider>
     </QueryClientProvider>
   )
 }
