@@ -342,3 +342,24 @@ def test_real_responses_match_the_documented_schemas(call, api, ingestion_stub):
     assert set(OPERATIONS) - successes == set(), "operaciones sin respuesta correcta en el contrato"
     assert seen <= set(OPERATIONS)
     assert catalog["reference_date"]
+
+
+# --- FE014: códigos de validación, estados por campo y cumplimiento pendiente -------------------------------------
+
+def test_every_flow_issue_code_is_documented():
+    """Cada `Issue("código", …)` de los flujos está en `IssueCode` (faltaban los de FE013 y FE014)."""
+    import re
+    from typing import get_args
+    from app.openapi.schemas import IssueCode
+    flows = Path(__file__).resolve().parents[1] / "app" / "flows"
+    used = {code for f in flows.glob("*.py") for code in re.findall(r'Issue\(\s*"([a-z_]+)"', f.read_text())}
+    assert used and used <= set(get_args(IssueCode)), sorted(used - set(get_args(IssueCode)))
+
+
+def test_field_states_and_pending_checks_are_documented():
+    from typing import get_args
+    from app.flows.analysis_writer import FIELD_STATES
+    from app.openapi.schemas import ConversationDetail, FieldRow, FieldState
+    assert set(get_args(FieldState)) == set(FIELD_STATES)
+    assert "reasons" in FieldRow.model_fields
+    assert "compliance_pending" in ConversationDetail.model_fields["analysis"].annotation.model_fields

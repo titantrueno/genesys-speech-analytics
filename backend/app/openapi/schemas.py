@@ -60,6 +60,12 @@ IssueCode = Literal[
     "missing_sampling", "missing_output", "node_unconfigured", "invalid_config", "disconnected_node",
     "prompt_without_variables", "unknown_variable", "previous_result_without_chain", "metric_requires_labels",
     "duplicate_destination", "analysis_pending",
+    # FE013: proveedores de LLM y «Guardar en campos».
+    "llm_unavailable", "provider_without_key", "model_not_in_provider", "field_output_requires_real_data",
+    "simulated_values_to_real_data", "duplicate_target", "invalid_mapping", "summary_requires_text",
+    "main_topic_requires_taxonomy",
+    # FE014: un check asignado que ya no existe o está desactivado.
+    "unknown_check",
 ]
 
 
@@ -255,6 +261,14 @@ class ConversationPage(Doc):
     items: list[ConversationItem]
 
 
+class DetailAnalysis(Analysis):
+    """Análisis del detalle: cada campo se da en cuanto existe (FE014); los que faltan son `null` o vacíos."""
+    compliance: dict[str, bool | None] = Field(
+        description="Checks activos con resultado: `true` cumple, `false` no cumple, `null` no aplica. Un resultado "
+                    "guardado (de un flujo con LLM) manda sobre la evaluación por frases (FE014).")
+    compliance_pending: list[str] = Field(description="Checks activos aún sin resultado (FE014).")
+
+
 class ConversationDetail(Doc):
     id: str
     channel: Literal["voz", "chat"]
@@ -266,8 +280,7 @@ class ConversationDetail(Doc):
     agent: str | None
     customer_id: str | None
     turns: list[Turn]
-    analysis: Analysis = Field(description="`compliance` es el cumplimiento efectivo con los checks activos "
-                                           "(`true`, `false` o `null` si no aplica).")
+    analysis: "DetailAnalysis"
     main_topic_label: str | None
     genesys: GenesysInfo | None = Field(None, description="Analítica de Genesys; solo con el origen `real` (FE012).")
 
@@ -519,19 +532,24 @@ class ReportResult(Doc):
     text: str
 
 
-FieldState = Literal["escrito", "omitido", "rechazado", "error"]
+FieldState = Literal["escrito", "omitido", "rechazado", "sin_valor", "error"]
 
 
 class FieldRow(Doc):
     conversation: ConversationItem
-    values: dict[str, str] = Field(description="Valor guardado (o que se intentó guardar) por campo destino; "
-                                               "`main_topic`, por su código.")
-    states: dict[str, FieldState] = Field(description="Estado por campo destino.")
-    reason: str | None = Field(description="Motivo de un `rechazado` o `error`.")
+    values: dict[str, str | float | bool | list[str] | None] = Field(
+        description="Valor validado que se envió a guardar, por campo destino: `main_topic` y temas secundarios por "
+                    "su código, los checks como `true`, `false` o `null` (no aplica) (FE014).")
+    states: dict[str, FieldState] = Field(
+        description="Estado por campo destino; `sin_valor`: la respuesta dice que no hay nada (FE014).")
+    reason: str | None = Field(description="Motivo de un `rechazado` o `error` de la conversación entera.")
+    reasons: dict[str, str] = Field(
+        description="Motivo por campo destino (FE014): valor rechazado, ya tenía valor, Genesys ya da el sentimiento.")
 
 
 class FieldsResult(Doc):
-    targets: list[Literal["summary", "main_topic"]]
+    targets: list[str] = Field(description="Campos destino: los del análisis, `compliance:<código>` y "
+                                           "`entity:<tipo>` (FE014).")
     rows: list[FieldRow] = Field(description="Una fila por conversación que llegó al Prompt.")
     counts: dict[str, dict[FieldState, int]] = Field(description="Recuento de cada estado por campo destino.")
 

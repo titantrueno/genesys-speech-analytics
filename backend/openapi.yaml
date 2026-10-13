@@ -4736,99 +4736,6 @@ components:
       - message
       title: AiTestResult
       type: object
-    Analysis:
-      description: 'Análisis de la plataforma. Con `pending`, los campos que aún no existen son `None` (FE012): quien los
-        lee los
-
-        trata como vacíos, nunca como 0.'
-      properties:
-        summary:
-          title: Summary
-          type: string
-        main_topic:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Main Topic
-        secondary_topics:
-          items:
-            type: string
-          title: Secondary Topics
-          type: array
-        sentiment:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Sentiment
-        sentiment_timeline:
-          items:
-            type: number
-          title: Sentiment Timeline
-          type: array
-        resolution:
-          anyOf:
-          - enum:
-            - resuelta
-            - no_resuelta
-            - escalada
-            type: string
-          - type: 'null'
-          title: Resolution
-        csat:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Csat
-        effort:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Effort
-        churn_risk:
-          anyOf:
-          - enum:
-            - bajo
-            - medio
-            - alto
-            type: string
-          - type: 'null'
-          title: Churn Risk
-        compliance:
-          additionalProperties:
-            anyOf:
-            - type: boolean
-            - type: 'null'
-          title: Compliance
-          type: object
-        entities:
-          items:
-            $ref: '#/components/schemas/Entity'
-          title: Entities
-          type: array
-        keywords:
-          items:
-            type: string
-          title: Keywords
-          type: array
-        pending:
-          default: false
-          title: Pending
-          type: boolean
-      required:
-      - summary
-      - main_topic
-      - secondary_topics
-      - sentiment
-      - sentiment_timeline
-      - resolution
-      - csat
-      - effort
-      - churn_risk
-      - compliance
-      - entities
-      - keywords
-      title: Analysis
-      type: object
     AuditEntry:
       additionalProperties: false
       properties:
@@ -5348,8 +5255,7 @@ components:
           title: Turns
           type: array
         analysis:
-          $ref: '#/components/schemas/Analysis'
-          description: '`compliance` es el cumplimiento efectivo con los checks activos (`true`, `false` o `null` si no aplica).'
+          $ref: '#/components/schemas/DetailAnalysis'
         main_topic_label:
           anyOf:
           - type: string
@@ -5529,6 +5435,105 @@ components:
       - pages
       - items
       title: ConversationPage
+      type: object
+    DetailAnalysis:
+      description: 'Análisis del detalle: cada campo se da en cuanto existe (FE014); los que faltan son `null` o vacíos.'
+      properties:
+        summary:
+          title: Summary
+          type: string
+        main_topic:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Main Topic
+        secondary_topics:
+          items:
+            type: string
+          title: Secondary Topics
+          type: array
+        sentiment:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Sentiment
+        sentiment_timeline:
+          items:
+            type: number
+          title: Sentiment Timeline
+          type: array
+        resolution:
+          anyOf:
+          - enum:
+            - resuelta
+            - no_resuelta
+            - escalada
+            type: string
+          - type: 'null'
+          title: Resolution
+        csat:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Csat
+        effort:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Effort
+        churn_risk:
+          anyOf:
+          - enum:
+            - bajo
+            - medio
+            - alto
+            type: string
+          - type: 'null'
+          title: Churn Risk
+        compliance:
+          additionalProperties:
+            anyOf:
+            - type: boolean
+            - type: 'null'
+          description: 'Checks activos con resultado: `true` cumple, `false` no cumple, `null` no aplica. Un resultado guardado
+            (de un flujo con LLM) manda sobre la evaluación por frases (FE014).'
+          title: Compliance
+          type: object
+        entities:
+          items:
+            $ref: '#/components/schemas/Entity'
+          title: Entities
+          type: array
+        keywords:
+          items:
+            type: string
+          title: Keywords
+          type: array
+        pending:
+          default: false
+          title: Pending
+          type: boolean
+        compliance_pending:
+          description: Checks activos aún sin resultado (FE014).
+          items:
+            type: string
+          title: Compliance Pending
+          type: array
+      required:
+      - summary
+      - main_topic
+      - secondary_topics
+      - sentiment
+      - sentiment_timeline
+      - resolution
+      - csat
+      - effort
+      - churn_risk
+      - compliance
+      - entities
+      - keywords
+      - compliance_pending
+      title: DetailAnalysis
       type: object
     DownloadCounters:
       additionalProperties: false
@@ -6104,8 +6109,16 @@ components:
           $ref: '#/components/schemas/ConversationItem'
         values:
           additionalProperties:
-            type: string
-          description: Valor guardado (o que se intentó guardar) por campo destino; `main_topic`, por su código.
+            anyOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - items:
+                type: string
+              type: array
+            - type: 'null'
+          description: 'Valor validado que se envió a guardar, por campo destino: `main_topic` y temas secundarios por su
+            código, los checks como `true`, `false` o `null` (no aplica) (FE014).'
           title: Values
           type: object
         states:
@@ -6114,32 +6127,38 @@ components:
             - escrito
             - omitido
             - rechazado
+            - sin_valor
             - error
             type: string
-          description: Estado por campo destino.
+          description: 'Estado por campo destino; `sin_valor`: la respuesta dice que no hay nada (FE014).'
           title: States
           type: object
         reason:
           anyOf:
           - type: string
           - type: 'null'
-          description: Motivo de un `rechazado` o `error`.
+          description: Motivo de un `rechazado` o `error` de la conversación entera.
           title: Reason
+        reasons:
+          additionalProperties:
+            type: string
+          description: 'Motivo por campo destino (FE014): valor rechazado, ya tenía valor, Genesys ya da el sentimiento.'
+          title: Reasons
+          type: object
       required:
       - conversation
       - values
       - states
       - reason
+      - reasons
       title: FieldRow
       type: object
     FieldsResult:
       additionalProperties: false
       properties:
         targets:
+          description: 'Campos destino: los del análisis, `compliance:<código>` y `entity:<tipo>` (FE014).'
           items:
-            enum:
-            - summary
-            - main_topic
             type: string
           title: Targets
           type: array
@@ -6158,6 +6177,7 @@ components:
               - escrito
               - omitido
               - rechazado
+              - sin_valor
               - error
             type: object
           description: Recuento de cada estado por campo destino.
@@ -6338,6 +6358,16 @@ components:
           - metric_requires_labels
           - duplicate_destination
           - analysis_pending
+          - llm_unavailable
+          - provider_without_key
+          - model_not_in_provider
+          - field_output_requires_real_data
+          - simulated_values_to_real_data
+          - duplicate_target
+          - invalid_mapping
+          - summary_requires_text
+          - main_topic_requires_taxonomy
+          - unknown_check
           title: Code
           type: string
         message:
