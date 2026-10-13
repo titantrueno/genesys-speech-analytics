@@ -4,7 +4,8 @@ import { conversationDetailFixture, conversationItem, fakeId, QUEUE } from './fi
 
 const PENDING = {
   summary: '', main_topic: null, secondary_topics: [], sentiment: 0.0, sentiment_timeline: [], resolution: null,
-  csat: null, effort: null, churn_risk: null, compliance: {}, entities: [], keywords: [], pending: true,
+  csat: null, effort: null, churn_risk: null, compliance: {}, compliance_pending: ['saludo'], entities: [], keywords: [],
+  pending: true,
 }
 
 const BASE_GENESYS = {

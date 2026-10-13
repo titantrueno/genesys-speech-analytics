@@ -193,3 +193,8 @@
 - **Hecho:** el desplegable de destino agrupa con `<optgroup>` «Análisis», «Cumplimiento» y «Entidades»; el de «Campo del JSON» ofrece solo los campos del tipo que necesita el destino (número para CSAT, esfuerzo y sentimiento; lista para temas y palabras clave; texto para el resto). El editor de esquema admite «Lista» con valores permitidos.
 - **Hecho:** la tabla del resultado ordena y agrupa las columnas en Análisis, Cumplimiento, Temas y Entidades (la fila de grupos solo aparece con más de un grupo, así que «Summary + Main topic» se ve igual que en FE013), muestra «Sin valor», el motivo de cada campo bajo su estado y los valores legibles (resolución y riesgo con su etiqueta, checks como «Cumple», «No cumple» o «No aplica», listas separadas por comas).
 - **Ajuste de tests de FE013:** el catálogo de prueba es el de FE014; «Añadir campo destino» ya no se agota con dos destinos (se comprueba que un destino usado sale desactivado) y los recuentos incluyen «sin valor».
+
+## Notas de T7
+
+- **Hecho:** el panel «Análisis» del detalle tiene un único camino: muestra cada dato que existe y, en una conversación real, «Pendiente» en los que faltan; el aviso solo nombra lo que falta («El esfuerzo, el riesgo de abandono y 1 check de cumplimiento aún no se han generado.»). El cumplimiento distingue «Cumple», «No cumple», «No aplica» y «Pendiente» (`compliance_pending`). Temas secundarios, entidades y palabras clave solo aparecen si tienen algo.
+- **Ajuste de tests de FE012 y FE013:** con el análisis pendiente, las métricas se ven con «Pendiente» en lugar de ocultarse (criterio 12), y el texto del aviso cambia.

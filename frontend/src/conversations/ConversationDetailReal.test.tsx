@@ -23,6 +23,8 @@ async function open(id: string, details: Array<{ id: string }> = DETAILS) {
 }
 
 const turns = () => within(screen.getByRole('list', { name: 'Transcripción' })).getAllByRole('listitem')
+/** El valor (`dd`) de una métrica del panel por su etiqueta (`dt`). */
+const metric = (panel: HTMLElement, label: string) => within(panel).getByText(label, { selector: 'dt' }).nextElementSibling as HTMLElement
 const genesys = () => screen.getByRole('complementary', { name: 'Analítica de Genesys' })
 
 describe('detalle de una llamada real bot → agente', () => {
@@ -47,7 +49,8 @@ describe('detalle de una llamada real bot → agente', () => {
     expect(within(header).getAllByText('Análisis pendiente').length).toBeGreaterThan(0)
     const analysis = screen.getByRole('complementary', { name: 'Análisis' })
     expect(within(analysis).getByText('Análisis pendiente')).toBeInTheDocument()
-    expect(within(analysis).queryByText(/CSAT predicho/)).not.toBeInTheDocument()
+    // Campo a campo (FE014): cada dato que falta dice «Pendiente», nunca 0.
+    expect(metric(analysis, 'CSAT predicho')).toHaveTextContent('Pendiente')
     expect(within(analysis).queryByText(/0,0 \/ 5/)).not.toBeInTheDocument()
     expect(within(genesys()).getByText('Análisis pendiente')).toBeInTheDocument()
   })
@@ -57,8 +60,8 @@ describe('detalle de una llamada real bot → agente', () => {
     await open(REAL_VOICE_ID, [written])
     expect(screen.getByRole('region', { name: 'Resumen de la conversación' })).toHaveTextContent('Resumen generado por el LLM.')
     const analysis = screen.getByRole('complementary', { name: 'Análisis' })
-    expect(analysis).toHaveTextContent('La resolución, el cumplimiento y las puntuaciones llegarán con el análisis de la plataforma.')
-    expect(analysis).not.toHaveTextContent(/El summary, el main topic/)
+    expect(analysis).toHaveTextContent('La resolución, el CSAT, el esfuerzo, el riesgo de abandono y 1 check de cumplimiento aún no se han generado.')
+    expect(analysis).not.toHaveTextContent(/el summary|el main topic/)
   })
 
   it('el panel de Genesys muestra teléfonos, etiqueta, recorrido, wrap-up, cierre y contención', async () => {
@@ -134,5 +137,56 @@ describe('detalle de un chat real', () => {
     expect(within(route).getAllByRole('listitem')).toHaveLength(6)
     expect(screen.getAllByRole('separator')).toHaveLength(2)
     expect(within(genesys()).getByText('Reconexión')).toBeInTheDocument()
+  })
+})
+
+describe('análisis parcial de una conversación real (FE014)', () => {
+  const partial = {
+    ...realVoiceDetail,
+    analysis: {
+      ...realVoiceDetail.analysis, summary: 'Resumen.', main_topic: 'cajeros', resolution: 'escalada', csat: 4,
+      compliance: { saludo: false, despedida: null }, compliance_pending: ['verificacion_identidad'],
+      secondary_topics: ['fraude'], entities: [{ type: 'importe', value: '30 €' }], keywords: [],
+    },
+  }
+  const checks = [{ code: 'saludo', label: 'Saludo e identificación del agente' },
+    { code: 'verificacion_identidad', label: 'Verificación de identidad del cliente' },
+    { code: 'despedida', label: 'Despedida con resumen de la gestión' }]
+
+  async function openPartial() {
+    signedInAs(USERS.viewer, {
+      'GET /api/catalog': () => ({ status: 200, body: { ...realCatalog, compliance_checks: checks } }),
+      [`GET /api/conversations/${REAL_VOICE_ID}`]: () => ({ status: 200, body: partial }),
+    })
+    renderApp(`/conversaciones/${REAL_VOICE_ID}`)
+    await screen.findByRole('heading', { level: 1, name: new RegExp(REAL_VOICE_ID) })
+    return screen.getByRole('complementary', { name: 'Análisis' })
+  }
+
+  it('muestra cada dato que existe y «Pendiente» en los que faltan', async () => {
+    const analysis = await openPartial()
+    expect(metric(analysis, 'Resolución')).toHaveTextContent('Escalada')
+    expect(metric(analysis, 'CSAT predicho')).toHaveTextContent('4,0 / 5')
+    expect(metric(analysis, 'Esfuerzo del cliente')).toHaveTextContent('Pendiente')
+    expect(metric(analysis, 'Riesgo de abandono')).toHaveTextContent('Pendiente')
+    expect(metric(analysis, 'Sentimiento global')).not.toHaveTextContent('Pendiente')
+    expect(analysis).toHaveTextContent('El esfuerzo, el riesgo de abandono y 1 check de cumplimiento aún no se han generado.')
+  })
+
+  it('el cumplimiento dice el resultado de cada check o que está pendiente', async () => {
+    const analysis = await openPartial()
+    const list = within(analysis).getByRole('list', { name: 'Cumplimiento' })
+    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(3))  // cuando llega el catálogo
+    expect(within(list).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'Saludo e identificación del agenteNo cumple', 'Verificación de identidad del clientePendiente',
+      'Despedida con resumen de la gestiónNo aplica'])
+  })
+
+  it('temas secundarios y entidades aparecen si existen; las palabras clave vacías no', async () => {
+    const analysis = await openPartial()
+    expect(within(analysis).getByRole('heading', { name: 'Temas secundarios' })).toBeInTheDocument()
+    expect(analysis).toHaveTextContent('fraude')
+    expect(metric(analysis, 'Importe')).toHaveTextContent('30 €')
+    expect(within(analysis).queryByRole('heading', { name: 'Palabras clave' })).not.toBeInTheDocument()
   })
 })

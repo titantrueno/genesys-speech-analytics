@@ -145,10 +145,14 @@ export interface ConversationDetail {
     csat: number | null
     effort: number | null
     churn_risk: 'bajo' | 'medio' | 'alto' | null
+    /** Checks activos con resultado: `true` cumple, `false` no cumple, `null` no aplica. */
     compliance: Record<string, boolean | null>
+    /** Checks activos aún sin resultado (FE014): la UI dice «Pendiente», no «No aplica». */
+    compliance_pending?: string[]
     entities: Array<{ type: 'importe' | 'producto' | 'fecha' | 'comercio'; value: string }>
     keywords: string[]
-    /** Sin el análisis de la plataforma (conversaciones reales, FE012): los campos que faltan son `null` o vacíos. */
+    /** Conversación real a la que aún le falta algún campo del análisis (FE012); cada campo que falta es `null` o vacío y
+     *  los que existen se muestran (FE014). */
     pending?: boolean
   }
   /** Solo en conversaciones reales. */
