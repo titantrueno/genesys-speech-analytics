@@ -95,7 +95,6 @@ export const config: Record<keyof typeof es, string> = {
   'cfg.origin.toSynthetic': 'All sections will go back to working with the synthetic dataset.',
   'cfg.origin.confirm': 'Confirm change',
   'cfg.origin.error': 'The data origin could not be changed.',
-  'cfg.tax.title': 'Taxonomy',
   'cfg.tax.description': 'Main topics and secondary topics. The code is the key in filters, queries and flows: it does not change. A topic in use is not deleted; it is deactivated and no longer offered in filters, but its conversations keep it.',
   'cfg.tax.loading': 'Loading taxonomy…',
   'cfg.tax.error': 'The taxonomy could not be loaded.',

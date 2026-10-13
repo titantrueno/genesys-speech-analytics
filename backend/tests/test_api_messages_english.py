@@ -47,7 +47,7 @@ def message_strings(path: Path) -> list[tuple[int, str]]:
             name = _call_name(node)
             if name.endswith(("Error", "Exception")) or name in MESSAGE_CALLS:
                 parts += list(node.args) + [k.value for k in node.keywords]
-            if name == "log" and path.parts[-2] == "ingestion" or name == "log" and "ingestion" in path.parts:
+            if name == "log" and "ingestion" in path.parts:
                 parts += list(node.args)
             if name == "append" and _receiver(node) in LIST_RECEIVERS:
                 parts += list(node.args)

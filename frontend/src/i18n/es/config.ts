@@ -93,7 +93,6 @@ export const config = {
   'cfg.origin.toSynthetic': 'Todas las secciones volverán a trabajar con el dataset sintético.',
   'cfg.origin.confirm': 'Confirmar cambio',
   'cfg.origin.error': 'No se ha podido cambiar el origen de datos.',
-  'cfg.tax.title': 'Taxonomía',
   'cfg.tax.description': 'Main topics y temas secundarios. El código es la clave en filtros, consultas y flujos: no cambia. Un tema en uso no se borra; se desactiva y deja de ofrecerse en los filtros, pero sus conversaciones lo conservan.',
   'cfg.tax.loading': 'Cargando taxonomía…',
   'cfg.tax.error': 'No se ha podido cargar la taxonomía.',

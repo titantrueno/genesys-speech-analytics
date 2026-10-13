@@ -17,7 +17,7 @@ export interface I18nContextValue {
 export const DEFAULT_I18N: I18nContextValue = {
   language: DEFAULT_LANGUAGE,
   t: (key, params) => translate(es, DEFAULT_LANGUAGE, key, params),
-  tOr: (key, fallback) => (key in es ? translate(es, DEFAULT_LANGUAGE, key) : fallback),
+  tOr: (key, fallback) => (Object.hasOwn(es, key) ? translate(es, DEFAULT_LANGUAGE, key) : fallback),
 }
 
 export const I18nContext = createContext<I18nContextValue>(DEFAULT_I18N)

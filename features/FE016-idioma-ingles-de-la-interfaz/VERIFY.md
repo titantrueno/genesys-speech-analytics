@@ -44,6 +44,8 @@ Entorno: `./scripts/dev.sh --no-db` con puertos propios (18000, 18001, 18002, 15
 - Las descargas de Genesys (T6) no se vieron en el navegador (sin servicio de ingesta); las cubren los tests de `downloads/`.
 - Se paró cada servidor por PID; el proceso del puerto 8002 de la persona usuaria no se tocó.
 
+> Actualización tras `/review` (2026-10-13): el gate se repitió con las correcciones de la review; ver [REVIEW.md](REVIEW.md).
+
 ## Grounding (fuentes oficiales)
 
 - `Intl.PluralRules.select` devuelve una de `zero`, `one`, `two`, `few`, `many`, `other`, y `select(0)` en inglés da `"other"` ([MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/PluralRules/select)). La página no afirma que el inglés use solo `one` y `other`; esa asunción se comprobó con un test en tiempo de ejecución (`dictionaries.test.ts`: 0 → «conversations», 1 → «conversation», 2 → «conversations»).

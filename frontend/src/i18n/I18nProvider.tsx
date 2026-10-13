@@ -21,7 +21,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const value = useMemo<I18nContextValue>(() => ({
     language,
     t: (key, params) => translate(DICTIONARIES[language], language, key, params),
-    tOr: (key, fallback) => (key in DICTIONARIES[language] ? translate(DICTIONARIES[language], language, key) : fallback),
+    tOr: (key, fallback) => (Object.hasOwn(DICTIONARIES[language], key) ? translate(DICTIONARIES[language], language, key) : fallback),
   }), [language])
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>

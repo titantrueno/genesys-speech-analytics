@@ -39,6 +39,11 @@ describe('translate', () => {
     expect(translate(dictionary, 'es-ES', 'a.items', { count: 0 })).toBe('0 elementos')
   })
 
+  it('una clave heredada del objeto (`constructor`) no se toma por una traducción', () => {
+    expect(translate(dictionary, 'es-ES', 'constructor')).toBe('constructor')
+    expect(translate(dictionary, 'es-ES', '__proto__', { count: 2 })).toBe('__proto__')
+  })
+
   it('una clave desconocida devuelve la propia clave', () => {
     expect(translate(dictionary, 'es-ES', 'a.nope')).toBe('a.nope')
   })

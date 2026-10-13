@@ -46,6 +46,8 @@ Hechos que quedan como decisión vigente:
 - Los roles sin permiso para editar la configuración no pueden cambiar el idioma: usan el de la plataforma.
 - El intérprete de lenguaje natural del explorador y la búsqueda semántica trabajan con frases en español (las conversaciones lo están); en inglés la interfaz lo indica en la etiqueta y el ejemplo.
 - El texto del Output «informe» de un flujo y las entradas de auditoría ya guardadas conservan el español con el que se generaron.
+- Los datos en español dentro de una interfaz inglesa (transcripciones, resúmenes, palabras clave) no llevan `lang="es"`: un lector de pantalla los leerá con la voz del idioma de la página (WCAG 3.1.2). Queda como mejora futura.
+- Los diccionarios `es` y `en` se cargan juntos en la carga inicial: unos 135 kB (40 kB comprimidos). Cargar `en` bajo demanda ahorraría la mitad a costa de un estado de carga; no compensa con dos idiomas.
 - Añadir un idioma es: un diccionario por área con las mismas claves, su código en `frontend/src/i18n/languages.ts` y en `LANGUAGES` del backend (`backend/app/config/model.py`); los tests de paridad guían el resto.
 - Con `INGESTION_TOKEN` configurado y sin el servicio de ingesta, guardar el idioma responde `503` ([ADR-008](adr-008-postgresql-y-servicio-de-ingesta.md)): para probarlo en local sin base, arrancar con la variable de entorno `INGESTION_TOKEN` vacía.
 

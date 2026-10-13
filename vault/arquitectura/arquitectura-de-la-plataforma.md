@@ -171,7 +171,7 @@ La plataforma es una SPA (Vite, React, TypeScript, Tailwind) que consume una API
 ### Rendimiento
 
 - Con el dataset completo, cada endpoint responde en menos de 500 ms (hay tests con ese umbral). Una ejecución de flujo tarda unos 15 ms por conversación y prompt (retardo simulado configurable): 40 conversaciones con 2 prompts, unos 2 s. La búsqueda semántica tarda unos 12 ms de mediana sobre 90 días (55 ms en el peor caso medido, con consultas de 500 caracteres). A cambio, el arranque tarda unos 2,5 s y el índice retiene unos 52 MB, con un pico transitorio de unos 260 MB durante la construcción.
-- En el front, el dashboard y los flujos se cargan en diferido: la carga inicial ocupa unos 448 kB, Recharts va en el chunk de dashboards (unos 353 kB) y React Flow, en otro de unos 176 kB, compartido por el editor y la vista de ejecución. Las barras en HTML (`dashboards/bars.tsx`) no dependen de Recharts, así que la vista de ejecución no lo descarga.
+- En el front, el dashboard y los flujos se cargan en diferido: la carga inicial ocupa unos 575 kB (440 kB del paquete principal y 135 kB de los diccionarios `es` y `en`, que se cargan juntos desde FE016), Recharts va en el chunk de dashboards (unos 353 kB) y React Flow, en otro de unos 176 kB, compartido por el editor y la vista de ejecución. Las barras en HTML (`dashboards/bars.tsx`) no dependen de Recharts, así que la vista de ejecución no lo descarga.
 
 ## Límites y excepciones
 
