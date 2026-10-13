@@ -268,7 +268,8 @@ def test_history_lists_runs_newest_first_with_their_summary(api):
     second = api.post(f"/api/flows/{flow['id']}/runs", headers={"Authorization": f"Bearer {auth.create_token(analyst)}"}).json()
     items = api.get(f"/api/flows/{flow['id']}/runs").json()["items"]
     assert [i["id"] for i in items] == [second["id"], first["id"]]
-    assert set(items[0]) == {"id", "created_at", "started_at", "finished_at", "duration_ms", "status", "sample_size", "user"}
+    assert set(items[0]) == {"id", "created_at", "started_at", "finished_at", "duration_ms", "status", "sample_size", "user",
+                             "origin"}  # `origin`, desde FE017
     assert items[0]["user"]["name"] == "Analista Demo" and items[1]["user"]["name"] == "Admin Demo"
     assert all(i["status"] == "ok" and i["sample_size"] == 40 for i in items)
     listed = api.get("/api/flows").json()["items"][0]["last_run"]

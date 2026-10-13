@@ -55,7 +55,7 @@
 | T2 ✅ | Modelo, reglas y validación de la caja `descarga` | — | 1, 2, 3 (salvo el servicio caído), 11 |
 | T3 ✅ | Sampling «All conversations» y aviso `large_sample` | T2 | 10, 11 |
 | T4 ✅ | Ejecución end-to-end: descarga, subconjunto y estado `omitido` | T1, T2, T3 | 3 (servicio caído), 4, 5, 6, 7, 8, 19 (API) |
-| T5 | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
+| T5 ✅ | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
 | T6 | Front del editor: caja, reglas, panel del Sampling y textos | T2, T3 | 12, 13, 14, 16, 17 |
 | T7 | Front de la ejecución, historial y listado | T4, T5, T6 | 15, 9 (próxima ejecución en el listado) |
 | T8 | OpenAPI, conocimiento, recorrido en Chrome y gate | T1–T7 | 18, 20, 21 y conocimiento afectado |
@@ -156,6 +156,14 @@
   - tras recrear el `FlowStore` desde la persistencia (doble de FE015), el flujo sigue programado y no lanza las perdidas;
   - con origen «Sintético», la ejecución programada queda en el historial como `error` con `download_needs_real_origin`;
   - permisos: con solo `flows:view`, `403` al guardar un grafo con programación y al ejecutar.
+
+- **Ajustes en `/build`:**
+  - El programador (`app/flows/scheduler.py`) usa como autoría `Actor("system", "Scheduler")`, no una persona usuaria.
+  - La última vez que miró cada flujo se guarda en memoria y se inicializa cuando lo ve por primera vez. Así, al programar un flujo o al reiniciar, la primera ejecución es la siguiente hora programada y las perdidas no se recuperan.
+  - Las ejecuciones guardan `origin` (en el resumen y el historial) y `notes` (en el detalle). En `notes` van las programadas que se omitieron y los errores de validación (`código: mensaje`) de una programada que no pudo arrancar.
+  - `next_run` aparece en `GET /api/flows` para todos los flujos (`null` si no tienen caja programada y activa).
+  - El hilo arranca en el `lifespan` de la API. `FLOW_SCHEDULER=0` lo apaga, y `tests/conftest.py` lo fija así.
+  - Los tests de FE004 que fijan las claves del historial y del listado incluyen ahora `origin` y `next_run`.
 
 ### T6 — Front del editor: caja, reglas, panel del Sampling y textos
 - **Qué:**

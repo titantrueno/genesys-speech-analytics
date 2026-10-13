@@ -6898,6 +6898,13 @@ components:
           anyOf:
           - $ref: '#/components/schemas/LastRun'
           - type: 'null'
+        next_run:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          description: Next scheduled run of a flow with an active, scheduled Genesys download box (FE017).
+          title: Next Run
       required:
       - id
       - name
@@ -6906,6 +6913,7 @@ components:
       - updated_at
       - status
       - last_run
+      - next_run
       title: FlowListItem
       type: object
     GeneralConfig:
@@ -8469,6 +8477,14 @@ components:
           title: Sample Size
         user:
           $ref: '#/components/schemas/Person'
+          description: Who started it; a scheduled run is started by `system` (“Scheduler”).
+        origin:
+          description: Started by hand or by the scheduler (FE017).
+          enum:
+          - manual
+          - programada
+          title: Origin
+          type: string
         flow_id:
           title: Flow Id
           type: string
@@ -8498,6 +8514,13 @@ components:
           description: Per Prompt node with an LLM, the conversations excluded from the outputs (FE013).
           title: Failures
           type: object
+        notes:
+          description: Scheduled runs skipped because another was in progress, or the validation errors of a scheduled run
+            that could not start (FE017).
+          items:
+            type: string
+          title: Notes
+          type: array
         download:
           anyOf:
           - $ref: '#/components/schemas/RunDownload'
@@ -8512,12 +8535,14 @@ components:
       - status
       - sample_size
       - user
+      - origin
       - flow_id
       - seed
       - graph
       - nodes
       - outputs
       - failures
+      - notes
       - download
       title: Run
       type: object
@@ -8645,6 +8670,14 @@ components:
           title: Sample Size
         user:
           $ref: '#/components/schemas/Person'
+          description: Who started it; a scheduled run is started by `system` (“Scheduler”).
+        origin:
+          description: Started by hand or by the scheduler (FE017).
+          enum:
+          - manual
+          - programada
+          title: Origin
+          type: string
       required:
       - id
       - created_at
@@ -8654,6 +8687,7 @@ components:
       - status
       - sample_size
       - user
+      - origin
       title: RunSummary
       type: object
     SampleEstimate:

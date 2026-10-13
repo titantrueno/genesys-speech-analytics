@@ -12,6 +12,7 @@ from app.flows import catalog, templates
 from app.flows.model import Graph, GraphError, parse_graph
 from app.flows.analysis_writer import AnalysisWriter, get_analysis_writer
 from app.flows.downloader import Downloader, DownloaderUnavailable, get_downloader
+from app.flows.scheduler import get_scheduler
 from app.ingestion_client import UNAVAILABLE
 from app.routers.downloads import relay
 from app.flows.llm_runner import build_runner
@@ -92,8 +93,10 @@ def llm_keys(client: LlmClient) -> LlmKeys:
 def _summary(flow: Flow) -> dict:
     runs = get_run_store().list(flow.id)
     last = runs[0].summary() if runs else None
+    next_run = get_scheduler().next_run(flow)  # solo los flujos con caja programada y activa (FE017)
     return {**flow.summary(),
-            "last_run": {"id": last["id"], "created_at": last["created_at"], "status": last["status"]} if last else None}
+            "last_run": {"id": last["id"], "created_at": last["created_at"], "status": last["status"]} if last else None,
+            "next_run": next_run.isoformat() if next_run else None}
 
 
 @router.get("", dependencies=[Depends(VIEW)])

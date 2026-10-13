@@ -11,6 +11,8 @@ os.environ["LLM_TOKEN"] = ""
 # Ni el servicio de ingesta (FE015): sin token, los flujos de insights y la configuración viven solo en memoria. Los
 # tests que los guardan pasan su propio almacén a `reset_flow_store` y `reset_config_store`.
 os.environ["INGESTION_TOKEN"] = ""
+# Ni el programador de flujos de insights (FE017): los tests llaman a `tick()` con un reloj simulado.
+os.environ["FLOW_SCHEDULER"] = "0"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

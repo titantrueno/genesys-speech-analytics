@@ -57,7 +57,8 @@ def test_list_shows_the_columns_ordered_by_last_modification(api):
     api.patch(f"/api/flows/{first['id']}", json={"name": "Primero renombrado"})
     items = api.get("/api/flows").json()["items"]
     assert [f["id"] for f in items] == [first["id"], second["id"]]
-    assert set(items[0]) == {"id", "name", "author", "created_at", "updated_at", "last_run", "status"}
+    assert set(items[0]) == {"id", "name", "author", "created_at", "updated_at", "last_run", "status",
+                             "next_run"}  # `next_run`, desde FE017
     assert items[0]["last_run"] is None
 
 

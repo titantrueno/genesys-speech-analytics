@@ -86,7 +86,8 @@ class Run:
     finished_at: datetime | None = None
     status: str = PENDING
     sample_size: int | None = None
-    origin: str = "manual"
+    origin: str = "manual"  # o `programada` (FE017)
+    notes: list[str] = field(default_factory=list)  # ejecuciones programadas omitidas o errores de validación
     # Descarga de la caja «Genesys download» (FE017): su `1RN` en la ingesta, su estado y sus contadores.
     download: dict | None = None
     nodes: dict[str, NodeState] = field(default_factory=dict)
@@ -109,6 +110,7 @@ class Run:
             "status": self.status,
             "sample_size": self.sample_size,
             "user": {"id": self.user_id, "name": self.user_name},
+            "origin": self.origin,
         }
 
     def summary(self) -> dict:
@@ -126,6 +128,7 @@ class Run:
                 "outputs": self.outputs,
                 "failures": self.failures,
                 "download": self.download,
+                "notes": self.notes,
             })
 
     def update(self, **changes: Any) -> None:
@@ -144,9 +147,9 @@ class RunStore:
         self._by_flow: dict[str, list[Run]] = defaultdict(list)
         self._lock = threading.Lock()
 
-    def _add(self, flow: Flow, user: User, seed: int | None) -> Run:
+    def _add(self, flow: Flow, user: User, seed: int | None, origin: str = "manual") -> Run:
         run = Run(ids.new_id(ids.RUN, _rng), flow.id, user.id, user.name, flow.graph.model_copy(deep=True),
-                  _rng.randrange(2**31) if seed is None else seed)
+                  _rng.randrange(2**31) if seed is None else seed, origin=origin)
         runs = self._by_flow[flow.id]
         runs.insert(0, run)
         finished = [r for r in runs if r.summary()["status"] not in ACTIVE]
@@ -154,14 +157,14 @@ class RunStore:
             runs.remove(old)
         return run
 
-    def create(self, flow: Flow, user: User, seed: int | None = None) -> Run:
+    def create(self, flow: Flow, user: User, seed: int | None = None, origin: str = "manual") -> Run:
         with self._lock:
-            return self._add(flow, user, seed)
+            return self._add(flow, user, seed, origin)
 
-    def start(self, flow: Flow, user: User) -> Run | None:
+    def start(self, flow: Flow, user: User, origin: str = "manual") -> Run | None:
         """Crea una ejecución si no hay otra en curso del mismo flujo; la comprobación y el alta son atómicas."""
         with self._lock:
-            return None if self.active(flow.id) else self._add(flow, user, None)
+            return None if self.active(flow.id) else self._add(flow, user, None, origin)
 
     def list(self, flow_id: str) -> list[Run]:
         return list(self._by_flow.get(flow_id, []))

@@ -9,6 +9,7 @@ from app import auth
 from app.config.store import get_config
 from app.data.real import begin_request
 from app.data.repository import DataUnavailable
+from app.flows.scheduler import get_scheduler, scheduler_enabled
 from app.openapi.spec import API_VERSION, build_openapi
 from app.routers import auth as auth_router
 from app.routers import config as config_router
@@ -32,7 +33,13 @@ async def lifespan(_: FastAPI):
     # construye al arrancar y no en la primera búsqueda (FE003).
     get_config()
     search_router.search_index.engine()
+    # Programador de los flujos de insights con caja «Genesys download» (FE017).
+    scheduler = get_scheduler() if scheduler_enabled() else None
+    if scheduler:
+        scheduler.start()
     yield
+    if scheduler:
+        scheduler.stop()
 
 
 def create_app() -> FastAPI:

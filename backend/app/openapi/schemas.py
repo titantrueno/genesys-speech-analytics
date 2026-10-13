@@ -406,6 +406,8 @@ class FlowListItem(Doc):
     updated_at: datetime
     status: Literal["valido", "con_errores"]
     last_run: LastRun | None
+    next_run: datetime | None = Field(
+        description="Next scheduled run of a flow with an active, scheduled Genesys download box (FE017).")
 
 
 class FlowList(Doc):
@@ -483,7 +485,8 @@ class RunSummary(Doc):
     duration_ms: int | None
     status: RunStatus
     sample_size: int | None
-    user: Person
+    user: Person = Field(description="Who started it; a scheduled run is started by `system` (“Scheduler”).")
+    origin: Literal["manual", "programada"] = Field(description="Started by hand or by the scheduler (FE017).")
 
 
 class RunList(Doc):
@@ -569,6 +572,8 @@ class Run(RunSummary):
     outputs: dict[str, RunOutput] = Field(description="Result per Output node identifier.")
     failures: dict[str, list[PromptFailure]] = Field(
         description="Per Prompt node with an LLM, the conversations excluded from the outputs (FE013).")
+    notes: list[str] = Field(description="Scheduled runs skipped because another was in progress, or the "
+                                         "validation errors of a scheduled run that could not start (FE017).")
     download: "RunDownload | None" = Field(
         description="Download of the Genesys download box (FE017); `null` in a flow without a box.")
 
