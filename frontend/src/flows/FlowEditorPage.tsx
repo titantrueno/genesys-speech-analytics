@@ -22,29 +22,36 @@ import type { Flow, Issue, NodeType } from './types'
 const button = 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50'
 const secondary = `${button} border border-slate-300 bg-white text-slate-700 hover:bg-slate-50`
 const PALETTE: Array<{ type: NodeType; description: TKey }> = [
+  { type: 'descarga', description: 'flows.palette.descarga' },
   { type: 'sampling', description: 'flows.palette.sampling' },
   { type: 'prompt', description: 'flows.palette.prompt' },
   { type: 'output', description: 'flows.palette.output' },
 ]
 
-function Palette({ onAdd }: { onAdd: (type: NodeType) => void }) {
+function Palette({ onAdd, hasDownload }: { onAdd: (type: NodeType) => void; hasDownload: boolean }) {
   const { t } = useI18n()
   return (
     <aside aria-label={t('flows.palette.aria')} className="w-44 shrink-0 space-y-2">
       <h2 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">{t('flows.palette.title')}</h2>
       <p className="text-xs text-slate-500">{t('flows.palette.hint')}</p>
-      {PALETTE.map(({ type, description }) => (
-        <button key={type} type="button" draggable aria-label={t('flows.palette.add', { node: NODE_LABELS[type] })}
+      {PALETTE.map(({ type, description }) => {
+        // Un flujo tiene como mucho una caja «Genesys download» (FE017).
+        const taken = type === 'descarga' && hasDownload
+        const hintId = `palette-${type}-taken`
+        return (
+        <button key={type} type="button" draggable={!taken} disabled={taken} aria-label={t('flows.palette.add', { node: NODE_LABELS[type] })}
+          aria-describedby={taken ? hintId : undefined}
           onDragStart={(event) => {
             event.dataTransfer.setData(NODE_DRAG_TYPE, type)
             event.dataTransfer.effectAllowed = 'move'
           }}
           onClick={() => onAdd(type)}
-          className="block w-full cursor-grab rounded-lg border border-slate-200 bg-white p-2.5 text-left shadow-sm hover:border-brand-500 active:cursor-grabbing">
+          className="block w-full cursor-grab rounded-lg border border-slate-200 bg-white p-2.5 text-left shadow-sm hover:border-brand-500 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-slate-200">
           <span className="block text-sm font-semibold text-slate-800">{NODE_LABELS[type]}</span>
-          <span className="block text-xs text-slate-500">{t(description)}</span>
+          <span id={taken ? hintId : undefined} className="block text-xs text-slate-500">{t(taken ? 'flows.palette.downloadTaken' : description)}</span>
         </button>
-      ))}
+        )
+      })}
     </aside>
   )
 }
@@ -190,6 +197,10 @@ function Editor({ flow }: { flow: Flow }) {
   }
 
   function addNode(type: NodeType, position?: XYPosition) {
+    if (type === 'descarga' && nodes.some((n) => n.type === 'descarga')) {
+      setNotice(t('flows.palette.downloadTaken'))
+      return
+    }
     let at = position
     if (!at) {
       const rect = canvasRef.current?.getBoundingClientRect()
@@ -289,7 +300,7 @@ function Editor({ flow }: { flow: Flow }) {
         </p>
       )}
       <div className="flex min-h-0 flex-1 gap-3">
-        {editable && <Palette onAdd={(type) => addNode(type)} />}
+        {editable && <Palette onAdd={(type) => addNode(type)} hasDownload={nodes.some((n) => n.type === 'descarga')} />}
         <div ref={canvasRef} className="min-w-0 flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white">
           <FlowCanvas nodes={shownNodes} edges={edges} editable={editable} label={t('flows.editor.canvas')}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}

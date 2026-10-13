@@ -89,12 +89,19 @@ export function useStartRun(id: string) {
   })
 }
 
-export interface Estimate { available: number; sample_size: number | null; period: { from: string; to: string } }
+/** Detrás de una caja «Genesys download» (FE017) no hay número: `depends_on_download`. */
+export interface Estimate {
+  available: number | null
+  sample_size: number | null
+  period: { from: string; to: string } | null
+  depends_on_download?: boolean
+}
 
-export function useEstimate(query: ExplorerQuery | undefined, size: number | undefined) {
+export function useEstimate(query: ExplorerQuery | undefined, size: number | 'all' | undefined, afterDownload = false) {
   return useQuery({
-    queryKey: ['flow-estimate', query, size],
-    queryFn: ({ signal }) => apiRequest<Estimate>('/api/flows/sampling/estimate', { method: 'POST', body: { query, size }, signal }),
+    queryKey: ['flow-estimate', query, size, afterDownload],
+    queryFn: ({ signal }) => apiRequest<Estimate>('/api/flows/sampling/estimate', {
+      method: 'POST', body: afterDownload ? { query, size, after_download: true } : { query, size }, signal }),
     enabled: query !== undefined,
     placeholderData: keepPreviousData,
     staleTime: 60_000,

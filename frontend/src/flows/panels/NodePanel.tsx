@@ -2,8 +2,9 @@ import { Trash2, Unlink, X } from 'lucide-react'
 import { useI18n } from '../../i18n/useI18n'
 import type { CanvasEdge, CanvasNode } from '../graph'
 import { NODE_LABELS } from '../rules'
-import type { OutputConfig, PromptConfig, SamplingConfig } from '../types'
+import type { DownloadConfig, OutputConfig, PromptConfig, SamplingConfig } from '../types'
 import { control, Section } from './controls'
+import { DownloadPanel } from './DownloadPanel'
 import { useNodeNames } from './nodeNames'
 import { OutputPanel } from './OutputPanel'
 import { PromptPanel } from './PromptPanel'
@@ -46,7 +47,7 @@ function Connections({ node, nodes, edges, editable, onConnect, onDisconnect }: 
   )
   return (
     <Section title={t('flows.conn.title')}>
-      {node.type !== 'sampling' && (
+      {node.type !== 'descarga' && (
         <div className="space-y-1">
           <p className="text-xs font-medium text-slate-600">{t('flows.conn.input')}</p>
           {incoming.length ? <ul>{incoming.map((e) => row(e, e.source))}</ul> : <p className="text-xs text-slate-500">{t('flows.conn.noInput')}</p>}
@@ -69,6 +70,8 @@ export function NodePanel(props: Props) {
   const { node, edges, nodes, editable, onChange, onDelete, onClose } = props
   const chained = edges.some((e) => e.target === node.id && nodes.find((n) => n.id === e.source)?.type === 'prompt')
   // El Prompt de entrada de un Output: sus campos JSON alimentan los campos destino de «Guardar en campos» (FE013).
+  // Detrás de una caja «Genesys download», el Sampling trabaja con lo que descarga (FE017).
+  const afterDownload = edges.some((e) => e.target === node.id && nodes.find((n) => n.id === e.source)?.type === 'descarga')
   const inputPrompt = nodes.find((n) => n.type === 'prompt' && edges.some((e) => e.source === n.id && e.target === node.id))
   return (
     <section aria-label={t('flows.panel.aria', { node: NODE_LABELS[node.type] })} className="space-y-3 rounded-xl border border-slate-200 bg-white p-3">
@@ -89,7 +92,10 @@ export function NodePanel(props: Props) {
       {!editable && <p className="text-xs text-slate-500">{t('flows.panel.readOnly')}</p>}
       <fieldset disabled={!editable} className="min-w-0 space-y-3">
         <legend className="sr-only">{t('flows.panel.legend')}</legend>
-        {node.type === 'sampling' && <SamplingPanel config={node.data.config as SamplingConfig} onChange={onChange} />}
+        {node.type === 'descarga' && <DownloadPanel key={node.id} config={node.data.config as DownloadConfig} onChange={onChange} />}
+        {node.type === 'sampling' && (
+          <SamplingPanel config={node.data.config as SamplingConfig} afterDownload={afterDownload} onChange={onChange} />
+        )}
         {node.type === 'prompt' && <PromptPanel config={node.data.config as PromptConfig} chained={chained} onChange={onChange} />}
         {node.type === 'output' && (
           <OutputPanel config={node.data.config as OutputConfig} prompt={inputPrompt?.data.config as PromptConfig | undefined} onChange={onChange} />

@@ -33,7 +33,8 @@ export interface SamplingConfig {
   stratify_by?: Stratum
   order_by?: OrderKey
   order?: 'asc' | 'desc'
-  size?: number
+  /** Un número, o «All conversations» (`'all'`, FE017): todas las que cumplen los filtros. */
+  size?: number | 'all'
 }
 
 export interface SchemaField {

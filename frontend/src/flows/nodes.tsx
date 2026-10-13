@@ -30,7 +30,7 @@ export function FlowNodeCard({ type, data, selected, isConnectable }: NodeProps<
   return (
     <article aria-label={`${NODE_LABELS[type]}: ${first}`}
       className={`w-60 rounded-lg border border-t-4 border-slate-200 bg-white text-left shadow-sm ${ACCENT[type]} ${ring}`}>
-      {type !== 'sampling' && <Handle type="target" position={Position.Left} className={handle} isConnectable={isConnectable} />}
+      {type !== 'descarga' && <Handle type="target" position={Position.Left} className={handle} isConnectable={isConnectable} />}
       <header className="flex items-center justify-between gap-2 px-3 pt-2">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-slate-500 uppercase">
           <Icon className="size-3.5" aria-hidden />{NODE_LABELS[type]}

@@ -10,9 +10,9 @@ import { FlowNodeCard } from './nodes'
 import type { NodeType } from './types'
 
 export const NODE_DRAG_TYPE = 'application/x-insight-node'
-const NODE_TYPES = { sampling: FlowNodeCard, prompt: FlowNodeCard, output: FlowNodeCard }
+const NODE_TYPES = { descarga: FlowNodeCard, sampling: FlowNodeCard, prompt: FlowNodeCard, output: FlowNodeCard }
 const DELETE_KEYS = ['Delete', 'Backspace']
-const NODE_KINDS: NodeType[] = ['sampling', 'prompt', 'output']
+const NODE_KINDS: NodeType[] = ['descarga', 'sampling', 'prompt', 'output']
 
 interface Props {
   nodes: CanvasNode[]

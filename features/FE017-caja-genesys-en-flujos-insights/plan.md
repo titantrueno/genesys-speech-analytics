@@ -56,7 +56,7 @@
 | T3 ✅ | Sampling «All conversations» y aviso `large_sample` | T2 | 10, 11 |
 | T4 ✅ | Ejecución end-to-end: descarga, subconjunto y estado `omitido` | T1, T2, T3 | 3 (servicio caído), 4, 5, 6, 7, 8, 19 (API) |
 | T5 ✅ | Programador de flujos de insights en la API | T4 | 9, 18 (API) |
-| T6 | Front del editor: caja, reglas, panel del Sampling y textos | T2, T3 | 12, 13, 14, 16, 17 |
+| T6 ✅ | Front del editor: caja, reglas, panel del Sampling y textos | T2, T3 | 12, 13, 14, 16, 17 |
 | T7 | Front de la ejecución, historial y listado | T4, T5, T6 | 15, 9 (próxima ejecución en el listado) |
 | T8 | OpenAPI, conocimiento, recorrido en Chrome y gate | T1–T7 | 18, 20, 21 y conocimiento afectado |
 
@@ -182,6 +182,12 @@
   - el test de paridad de i18n sigue en verde;
   - `DownloadFlows.test.tsx` sigue en verde tras la extracción;
   - `npm run lint` y `npm run build` terminan sin errores.
+
+- **Ajustes en `/build`:**
+  - Los campos compartidos con el flujo de descarga están en `downloads/DownloadSettingsFields.tsx` (componente) y `downloads/settingsDraft.ts` (borrador y conversión). En la caja, un intervalo o una programación a medio escribir se guardan como `undefined` («sin configurar») en lugar de un valor que el backend rechazaría con `422`.
+  - El lienzo registra el tipo `descarga` (antes se pintaba como nodo genérico de React Flow). El Sampling tiene ahora un conector de entrada y la caja no.
+  - En «Conexiones», solo la caja oculta la entrada; el Sampling la muestra.
+  - Al desmarcar «All conversations» se vuelve al método `aleatorio` con tamaño 100, como un Sampling nuevo.
 
 ### T7 — Front de la ejecución, historial y listado
 - **Qué:**

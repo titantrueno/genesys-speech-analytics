@@ -48,7 +48,7 @@ export function nodeSummary(node: NodeContent, catalog: FlowCatalog, i18n: Label
     }
     const conditions = query?.root.conditions.length ?? 0
     return [
-      size ? `${how} · ${count(size, 'flows.sum.conversations')}` : how,
+      size === 'all' ? t('flows.sampling.all') : size ? `${how} · ${count(size, 'flows.sum.conversations')}` : how,
       conditions ? count(conditions, 'flows.sum.filters') : t('flows.sum.noFilters'),
     ]
   }
