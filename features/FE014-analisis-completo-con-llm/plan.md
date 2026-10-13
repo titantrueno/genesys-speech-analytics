@@ -179,3 +179,10 @@
 - **Decisión:** un KPI del análisis está «pendiente» solo si ninguna conversación tiene su dato **y** alguna espera análisis (`kpi_pending`); un periodo vacío no está pendiente. El desglose por main topic agrupa las que ya lo tienen.
 - **Hallazgo y corrección:** la caché de resultados de los checks se indexaba por identificador de conversación; tras escribir un resultado y recargar la instantánea, devolvía el anterior. Ahora se invalida si cambia el objeto de la conversación, como la caché de textos del agente.
 - **Ajuste:** el proveedor simulado resume el primer turno del cliente cuando falta el summary (antes, cuando el análisis estaba pendiente).
+
+## Notas de T5
+
+- **Hecho:** «Generar análisis completo» (`analisis_completo`) crea con la configuración por defecto un Prompt JSON de 19 campos (7 del análisis, 2 listas, 6 checks y 4 entidades) en el orden del catálogo de destinos, una línea de instrucciones por campo y un Output con todas las asignaciones. El Sampling usa «está vacío» sobre los seis escalares y cada check activo; las listas y entidades no, porque vacías pueden ser la respuesta correcta.
+- **Decisión:** los campos JSON de los checks se llaman `check_<código>` y los de entidades `entidad_<tipo>`; el resto, como su destino.
+- **Decisión:** si los checks activos no caben en `MAX_FIELDS` (más de 27) o las instrucciones superan `MAX_TEMPLATE`, la plantilla responde `422` con el motivo, en vez de crear un flujo que no valida.
+- **Ajuste de tests de FE013:** el catálogo de plantillas incluye la nueva.

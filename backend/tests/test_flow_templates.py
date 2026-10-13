@@ -27,6 +27,7 @@ def test_the_catalog_lists_the_templates_and_the_data_origin(api):
         {"value": "summary", "label": "Generar summary"},
         {"value": "main_topic", "label": "Generar main topic"},
         {"value": "summary_main_topic", "label": "Generar summary y main topic"},
+        {"value": "analisis_completo", "label": "Generar análisis completo"},  # FE014
     ]
     assert flows_catalog["origin"] == "sintetico"
 

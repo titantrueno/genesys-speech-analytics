@@ -4529,6 +4529,7 @@ components:
             - summary
             - main_topic
             - summary_main_topic
+            - analisis_completo
           - type: 'null'
           title: Template
       type: object
