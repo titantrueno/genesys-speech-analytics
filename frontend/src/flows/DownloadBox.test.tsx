@@ -112,6 +112,8 @@ describe('caja «Genesys download» en el editor (FE017)', () => {
     await within(panel).findByLabelText('Método')
     expect(within(panel).queryByLabelText('Desde')).not.toBeInTheDocument()
     expect(within(panel).getByText(/Las conversaciones las da la Genesys download/)).toBeInTheDocument()
+    expect(within(panel).getByText('Todas las conversaciones de la descarga')).toBeInTheDocument()
+    expect(within(panel).queryByText(/del periodo/)).not.toBeInTheDocument()
     expect(await within(panel).findByText('El número de conversaciones depende de la descarga.')).toBeInTheDocument()
     await waitFor(() => expect(ctx.estimates.at(-1)).toMatchObject({ after_download: true }))
     // Su entrada, en Conexiones.

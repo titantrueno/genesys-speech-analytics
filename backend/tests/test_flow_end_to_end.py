@@ -312,3 +312,13 @@ def test_a_view_only_role_reads_the_download_of_a_run(api, real_origin, download
     assert api.get(base, headers=reader).status_code == 200
     assert api.get(f"{base}/log", headers=reader).status_code == 200
     assert api.post(f"/api/flows/{flow['id']}/runs", headers=reader).status_code == 403
+
+
+def test_a_download_that_disappears_says_so(api, real_origin, downloader):
+    """Si la descarga deja de existir a mitad (se borró el flujo), el nodo no culpa a la ingesta."""
+    def gone(run_id):
+        raise DownloaderUnavailable(f"The download {run_id} is not available (404)")
+    downloader.status = gone
+    flow = flow_with(api, _graph())
+    final = detail(api, flow, run(api, flow)["id"])
+    assert "(404)" in final["nodes"][_nodes(flow)["descarga"]]["message"]

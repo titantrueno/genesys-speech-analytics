@@ -285,8 +285,8 @@ class FlowExecutor:
             subset = set(self.downloader.subset(state["id"]))
         except DownloadRejected as exc:
             raise NodeFailure(str(exc)) from exc
-        except DownloaderUnavailable as exc:
-            raise NodeFailure(UNAVAILABLE) from exc
+        except DownloaderUnavailable as exc:  # la ingesta no responde, o la descarga ya no existe (flujo borrado)
+            raise NodeFailure(str(exc) or UNAVAILABLE) from exc
         begin_request()  # la instantánea de los datos reales se recarga: el Sampling ve lo recién descargado
         return subset
 

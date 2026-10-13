@@ -86,7 +86,8 @@ export function SamplingPanel({ config, onChange, afterDownload = false }: {
         )}
         <GroupEditor group={query.root} path={[]} schema={schema} from={from} to={to} errors={new Map()} handlers={handlers} />
         <p className="rounded-md bg-slate-50 px-2.5 py-2 text-xs text-slate-700">
-          <span className="font-medium text-slate-900">{t('flows.sampling.filters')}</span> {queryToText(query, schema, i18n)}
+          <span className="font-medium text-slate-900">{t('flows.sampling.filters')}</span>{' '}
+          {afterDownload && query.root.conditions.length === 0 ? t('flows.sampling.allDownloaded') : queryToText(query, schema, i18n)}
         </p>
       </Section>
       <Section title={t('flows.sampling.sample')}>

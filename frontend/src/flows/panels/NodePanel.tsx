@@ -69,9 +69,9 @@ export function NodePanel(props: Props) {
   const { t } = useI18n()
   const { node, edges, nodes, editable, onChange, onDelete, onClose } = props
   const chained = edges.some((e) => e.target === node.id && nodes.find((n) => n.id === e.source)?.type === 'prompt')
-  // El Prompt de entrada de un Output: sus campos JSON alimentan los campos destino de «Guardar en campos» (FE013).
   // Detrás de una caja «Genesys download», el Sampling trabaja con lo que descarga (FE017).
   const afterDownload = edges.some((e) => e.target === node.id && nodes.find((n) => n.id === e.source)?.type === 'descarga')
+  // El Prompt de entrada de un Output: sus campos JSON alimentan los campos destino de «Guardar en campos» (FE013).
   const inputPrompt = nodes.find((n) => n.type === 'prompt' && edges.some((e) => e.source === n.id && e.target === node.id))
   return (
     <section aria-label={t('flows.panel.aria', { node: NODE_LABELS[node.type] })} className="space-y-3 rounded-xl border border-slate-200 bg-white p-3">

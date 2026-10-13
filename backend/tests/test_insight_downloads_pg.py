@@ -5,6 +5,7 @@ conversaciones que insertó o actualizó. Las que ya existían sin «Sobrescribi
 """
 import json
 import random
+from datetime import timedelta
 
 import psycopg
 import pytest
@@ -156,6 +157,8 @@ def test_unknown_runs_and_download_flow_runs_are_not_box_downloads(pg_url):
         assert api.post("/insight-downloads", json={**_body(flow_id), "origin": "otra"}).status_code == 422
         reversed_ = {**_body(flow_id), "from": DAY_END.isoformat(), "to": DAY_START.isoformat()}
         assert api.post("/insight-downloads", json=reversed_).status_code == 422
+        too_long = {**_body(flow_id), "from": (DAY_END - timedelta(days=91)).isoformat()}
+        assert api.post("/insight-downloads", json=too_long).status_code == 422
 
 
 def test_without_the_internal_token_the_routes_answer_401(pg_url):

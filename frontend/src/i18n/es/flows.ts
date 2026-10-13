@@ -181,6 +181,7 @@ export const flows = {
   'flows.sampling.allHint': 'Todas las conversaciones que cumplen los filtros, sin muestreo.',
   'flows.sampling.filtersOnly': 'Filtros',
   'flows.sampling.afterDownload': 'Las conversaciones las da la Genesys download: en cada ejecución, el Sampling trabaja solo con las que descarga y les aplica estos filtros.',
+  'flows.sampling.allDownloaded': 'Todas las conversaciones de la descarga',
   'flows.sampling.dependsOnDownload': 'El número de conversaciones depende de la descarga.',
   'flows.sampling.estimateError': 'No se ha podido estimar: revisa los filtros.',
   'flows.sampling.estimating': 'Estimando conversaciones disponibles…',

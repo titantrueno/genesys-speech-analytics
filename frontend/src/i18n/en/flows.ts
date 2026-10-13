@@ -183,6 +183,7 @@ export const flows: Record<keyof typeof es, string> = {
   'flows.sampling.allHint': 'Every conversation that matches the filters, without sampling.',
   'flows.sampling.filtersOnly': 'Filters',
   'flows.sampling.afterDownload': 'The Genesys download provides the conversations: in each run, the Sampling only works with the ones it downloads and applies these filters to them.',
+  'flows.sampling.allDownloaded': 'Every conversation of the download',
   'flows.sampling.dependsOnDownload': 'The number of conversations depends on the download.',
   'flows.sampling.estimateError': 'The estimate could not be made: check the filters.',
   'flows.sampling.estimating': 'Estimating available conversations…',

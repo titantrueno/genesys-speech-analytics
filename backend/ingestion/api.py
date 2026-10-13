@@ -4,7 +4,7 @@ La API comprueba la sesión y los permisos y envía la persona que crea o lanza,
 """
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -172,6 +172,9 @@ class InsightDownloadIn(BaseModel):
     def _order(self) -> "InsightDownloadIn":
         if self.from_ >= self.to:
             raise ValueError("“From” must be before “to”")
+        # Como un flujo de descarga (FE011): la API ya lo garantiza al resolver la caja; aquí, por defensa en profundidad.
+        if self.to - self.from_ > timedelta(days=flows.MAX_SPECIFIC_DAYS):
+            raise ValueError(f"The interval cannot exceed {flows.MAX_SPECIFIC_DAYS} days")
         return self
 
 
